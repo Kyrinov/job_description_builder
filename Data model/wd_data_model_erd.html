@@ -1,0 +1,292 @@
+
+<style>
+#erd svg { max-width: 100%; }
+#erd svg .label { font-family: var(--font-sans) !important; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 4px; }
+.leg { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary); }
+.leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.src-pill { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 500; margin: 2px 2px; }
+.src-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 16px; }
+.src-table th { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--color-border-tertiary); color: var(--color-text-secondary); font-weight: 500; font-size: 12px; }
+.src-table td { padding: 6px 10px; border-bottom: 1px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: top; line-height: 1.5; }
+.src-table tr:last-child td { border-bottom: none; }
+.section-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin: 20px 0 6px; }
+.org-pill { background: #E1F5EE; color: #0F6E56; }
+.job-pill { background: #EEEDFE; color: #3C3489; }
+.admin-pill { background: #F1EFE8; color: #444441; }
+.pay-eq { background: #FAC775; color: #412402; }
+</style>
+
+<div id="erd"></div>
+
+<div class="legend">
+  <div class="leg"><div class="leg-dot" style="background:#1D9E75"></div> Org-level elements (reusable)</div>
+  <div class="leg"><div class="leg-dot" style="background:#7F77DD"></div> Job-level elements (position-specific)</div>
+  <div class="leg"><div class="leg-dot" style="background:#888780"></div> Administrative metadata</div>
+  <div class="leg"><div class="leg-dot" style="background:#BA7517"></div> Pay equity factors (JES)</div>
+</div>
+
+<div class="section-label">Element → source-of-truth mapping</div>
+<table class="src-table">
+  <thead><tr><th>WD element</th><th>Type</th><th>Policy authority</th><th>Data source</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Organizational context</td>
+      <td><span class="src-pill org-pill">Org</span></td>
+      <td>Directive on Classification, App. B §B.2.2.1</td>
+      <td>DND Intranet L1–L3 mandate pages; DRF</td>
+    </tr>
+    <tr>
+      <td>Client service results</td>
+      <td><span class="src-pill org-pill">Org</span></td>
+      <td>Directive on Classification, App. B §B.2.2.1</td>
+      <td>Departmental Results Framework (DRF); business capability model (BCDS)</td>
+    </tr>
+    <tr>
+      <td>Working conditions</td>
+      <td><span class="src-pill org-pill">Org / context</span></td>
+      <td>JES pay equity factor — Working Conditions; Directive on Classification</td>
+      <td>JES degree descriptors; site/location data; org context</td>
+    </tr>
+    <tr>
+      <td>Key activities</td>
+      <td><span class="src-pill job-pill">Job</span></td>
+      <td>PSEA merit criteria; JES pay equity — Skill / Responsibility</td>
+      <td>Job architecture; JES benchmark WDs; NOC descriptions</td>
+    </tr>
+    <tr>
+      <td>Skills</td>
+      <td><span class="src-pill job-pill">Job</span></td>
+      <td>PSEA §30 merit principle; JES pay equity — Skill</td>
+      <td>JES degree descriptors; occupational group definitions; job architecture</td>
+    </tr>
+    <tr>
+      <td>Effort</td>
+      <td><span class="src-pill job-pill">Job</span></td>
+      <td>JES pay equity — Effort; Directive on Classification</td>
+      <td>JES degree descriptors (sensory, physical, psychological effort elements)</td>
+    </tr>
+    <tr>
+      <td>Responsibilities</td>
+      <td><span class="src-pill job-pill">Job</span></td>
+      <td>PSEA §30; JES pay equity — Responsibility</td>
+      <td>JES degree descriptors; position hierarchy; job architecture</td>
+    </tr>
+    <tr>
+      <td>Position title</td>
+      <td><span class="src-pill admin-pill">Admin</span></td>
+      <td>Directive on Classification, App. B §B.2.2.1</td>
+      <td>Job architecture; occupational group definitions</td>
+    </tr>
+    <tr>
+      <td>Position number</td>
+      <td><span class="src-pill admin-pill">Admin</span></td>
+      <td>Directive on Classification, App. B §B.2.2.2</td>
+      <td>PeopleSoft / departmental HR system</td>
+    </tr>
+    <tr>
+      <td>Supervisor position, group &amp; level</td>
+      <td><span class="src-pill admin-pill">Admin</span></td>
+      <td>Directive on Classification, App. B §B.2.2.2</td>
+      <td>Org chart; PeopleSoft; position hierarchy</td>
+    </tr>
+    <tr>
+      <td>Occupational group &amp; level (proposed)</td>
+      <td><span class="src-pill pay-eq">Classification</span></td>
+      <td>JES; Directive on Classification §4; Occupational Group Definitions</td>
+      <td>JES point ranges; occupational group allocation guide (TBS)</td>
+    </tr>
+    <tr>
+      <td>Effective date</td>
+      <td><span class="src-pill admin-pill">Admin</span></td>
+      <td>Directive on Classification, App. B §B.2.2.3–B.2.2.10</td>
+      <td>Manager input; classification action trigger</td>
+    </tr>
+    <tr>
+      <td>Manager signature &amp; date</td>
+      <td><span class="src-pill admin-pill">Admin</span></td>
+      <td>Directive on Classification, App. B §B.2.2.1</td>
+      <td>Manager approval workflow</td>
+    </tr>
+    <tr>
+      <td>Security level / language designation</td>
+      <td><span class="src-pill admin-pill">Admin</span></td>
+      <td>Classification action form (EPAR); Official Languages Act</td>
+      <td>Position profile; departmental security registry</td>
+    </tr>
+  </tbody>
+</table>
+
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '12px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+    primaryColor: dark ? '#3C3489' : '#EEEDFE',
+    primaryTextColor: dark ? '#CECBF6' : '#26215C',
+    primaryBorderColor: dark ? '#7F77DD' : '#534AB7',
+    secondaryColor: dark ? '#085041' : '#E1F5EE',
+    tertiaryColor: dark ? '#444441' : '#F1EFE8',
+    nodeBorder: dark ? '#7F77DD' : '#534AB7',
+  },
+});
+const diagram = `erDiagram
+  ORGANIZATION ||--o{ POSITION : "hosts"
+  ORGANIZATION ||--|{ ORG_ELEMENT : "provides"
+  JOB ||--o{ POSITION : "instantiated as"
+  JOB ||--|{ JOB_ELEMENT : "defined by"
+  JOB_EVALUATION_STANDARD ||--o{ JOB_ELEMENT : "rates"
+  POSITION ||--|| WORK_DESCRIPTION : "described by"
+  WORK_DESCRIPTION ||--|{ ORG_ELEMENT : "contains"
+  WORK_DESCRIPTION ||--|{ JOB_ELEMENT : "contains"
+  WORK_DESCRIPTION ||--|{ ADMIN_FIELD : "contains"
+  WORK_DESCRIPTION ||--o| CLASSIFICATION_DECISION : "triggers"
+  CLASSIFICATION_DECISION ||--|| JOB_EVALUATION_STANDARD : "applies"
+  WORK_DESCRIPTION ||--o| STAFFING_POSTER : "informs"
+  STAFFING_POSTER ||--|{ SOMC_CRITERION : "generates"
+  JOB_ELEMENT ||--|{ SOMC_CRITERION : "maps to"
+
+  ORGANIZATION {
+    string org_id PK
+    string L1_name
+    string L2_name
+    string L3_name
+    string mandate_statement
+    string DRF_capability_code FK
+  }
+
+  POSITION {
+    string position_number PK
+    string org_id FK
+    string job_id FK
+    string supervisor_position_number FK
+    string language_designation
+    string security_level
+    string bilingual_imperative_profile
+    string location
+    string employment_status
+  }
+
+  JOB {
+    string job_id PK
+    string job_family
+    string job_architecture_code
+    string NOC_code FK
+    string occupational_group FK
+    string subgroup
+    string level_proposed
+  }
+
+  WORK_DESCRIPTION {
+    string WD_id PK
+    string position_number FK
+    string job_id FK
+    string WD_type
+    string effective_date
+    string manager_signature
+    date signed_date
+    boolean is_standardized
+  }
+
+  ORG_ELEMENT {
+    string element_id PK
+    string WD_id FK
+    string org_id FK
+    string element_type
+    string content_text
+    string source_ref
+  }
+
+  JOB_ELEMENT {
+    string element_id PK
+    string WD_id FK
+    string job_id FK
+    string element_type
+    string content_text
+    string JES_element FK
+    int JES_degree
+  }
+
+  ADMIN_FIELD {
+    string field_id PK
+    string WD_id FK
+    string field_name
+    string field_value
+    string policy_ref
+  }
+
+  JOB_EVALUATION_STANDARD {
+    string JES_id PK
+    string occupational_group
+    string version_year
+    string pay_equity_factor
+    string element_name
+    int max_points
+  }
+
+  CLASSIFICATION_DECISION {
+    string decision_id PK
+    string WD_id FK
+    string JES_id FK
+    string occupational_group
+    string subgroup
+    int level
+    int total_points
+    string evaluation_rationale
+    date decision_date
+    string evaluator_id
+  }
+
+  STAFFING_POSTER {
+    string poster_id PK
+    string WD_id FK
+    string process_type
+    string area_of_selection
+    date closing_date
+  }
+
+  SOMC_CRITERION {
+    string criterion_id PK
+    string poster_id FK
+    string element_id FK
+    string criterion_type
+    string criterion_text
+    boolean is_essential
+    boolean is_asset
+  }
+`;
+const { svg } = await mermaid.render('erd-inner', diagram);
+document.getElementById('erd').innerHTML = svg;
+
+document.querySelectorAll('#erd svg .node').forEach(node => {
+  const firstPath = node.querySelector('path[d]');
+  if (!firstPath) return;
+  const d = firstPath.getAttribute('d');
+  const nums = d.match(/-?[\d.]+/g)?.map(Number);
+  if (!nums || nums.length < 8) return;
+  const xs = [nums[0], nums[2], nums[4], nums[6]];
+  const ys = [nums[1], nums[3], nums[5], nums[7]];
+  const x = Math.min(...xs), y = Math.min(...ys);
+  const w = Math.max(...xs) - x, h = Math.max(...ys) - y;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', x); rect.setAttribute('y', y);
+  rect.setAttribute('width', w); rect.setAttribute('height', h);
+  rect.setAttribute('rx', '8');
+  for (const a of ['fill', 'stroke', 'stroke-width', 'class', 'style']) {
+    if (firstPath.hasAttribute(a)) rect.setAttribute(a, firstPath.getAttribute(a));
+  }
+  firstPath.replaceWith(rect);
+});
+document.querySelectorAll('#erd svg .row-rect-odd path, #erd svg .row-rect-even path').forEach(p => {
+  p.setAttribute('stroke', 'none');
+});
+</script>
