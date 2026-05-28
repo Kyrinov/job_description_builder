@@ -10,7 +10,7 @@
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | Project Foundation | Not started |
+| 1 | Project Foundation | Ready to execute (3 plans) |
 | 2 | NOC Data Pipeline | Not started |
 | 3 | CA + JES Data Pipeline | Not started |
 | 4 | NL→NOC Mapping | Not started |
@@ -75,13 +75,13 @@ See: `.planning/PROJECT.md`
 | Phases total | 9 |
 | Phases complete | 0 |
 | Requirements mapped | 19/19 |
-| Plans created | 0 |
+| Plans created | 3 (Phase 1) |
 
 ---
 
 ## Session Continuity
 
-**Next action:** `/gsd-plan-phase 1`
+**Next action:** `/gsd-execute-phase 1`
 
 **Context for next session:**
 - Roadmap finalized: 9 phases, 19/19 v1 requirements mapped

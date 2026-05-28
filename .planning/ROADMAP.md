@@ -138,7 +138,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Project Foundation | 0/3 | In progress | - |
+| 1. Project Foundation | 0/3 | Ready to execute | - |
 | 2. NOC Data Pipeline | 0/? | Not started | - |
 | 3. CA + JES Data Pipeline | 0/? | Not started | - |
 | 4. NL→NOC Mapping | 0/? | Not started | - |

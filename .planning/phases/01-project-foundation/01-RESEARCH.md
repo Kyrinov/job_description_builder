@@ -654,22 +654,25 @@ def build_draft_duty_from_noc(row: dict) -> DraftDuty:
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Which model should be the default generation model in `.env.example`?**
+1. **Which model should be the default generation model in `.env.example`?** [RESOLVED]
    - What we know: `qwen3.6:latest` (23 GB base), `qwen3.6-planner:latest`, and other role variants are all present
    - What's unclear: Whether the role variants have different system prompts baked in that would conflict with the app's own prompts
    - Recommendation: Use `qwen3.6:latest` as the default; document that role variants should not be used as `OLLAMA_GENERATION_MODEL`
+   - **Resolution:** Plans use `qwen3.6:latest` in `.env.example`; role variants excluded from `OLLAMA_GENERATION_MODEL`
 
-2. **Should the `WorkDescription` model include a `schema_version` field now?**
+2. **Should the `WorkDescription` model include a `schema_version` field now?** [RESOLVED]
    - What we know: The WD is persisted as JSON to SQLite; Pydantic model changes after Phase 2 require migration scripts
    - What's unclear: Whether a simple integer version field is sufficient or whether a formal migration library (Alembic, yoyo) is needed
    - Recommendation: Add `schema_version: int = 1` to `WorkDescription` now; implement a `migrate_wd_json()` function stub; defer formal migration tooling to when a schema change actually occurs
+   - **Resolution:** `schema_version: int = 1` added to WorkDescription in Plan 01-02; migration tooling deferred
 
-3. **Should `wd_audit_log` track model version alongside event data?**
+3. **Should `wd_audit_log` track model version alongside event data?** [RESOLVED]
    - What we know: DATA-01 requires `wd_audit_log`; PITFALLS.md CRITICAL-05 requires version tracking for defensibility
    - What's unclear: Whether audit log entries need `ollama_model_version` in `detail JSON` or if that belongs only in `work_descriptions.data`
    - Recommendation: Add `model_name` to `detail JSON` for any audit event triggered by an LLM call; store it in the `ProvenanceTag` on the WD entity, not duplicated in the log
+   - **Resolution:** `model_name` stored in ProvenanceTag only; `detail JSON` in audit log is unstructured — model name not duplicated
 
 ---
 
