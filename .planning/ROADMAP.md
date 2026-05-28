@@ -32,7 +32,11 @@
 2. Starting the app with a missing required environment variable produces an immediate startup failure with a descriptive error message naming the missing variable.
 3. Starting the app when the configured Ollama model is absent produces a loud startup failure — the app does not silently degrade.
 4. The WorkDescription Pydantic model includes all TBS-required WD fields and every content element carries a ProvenanceTag; the SQLite schema including `wd_audit_log` is created on first startup.
-**Plans:** TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 01-01-PLAN.md — Project scaffold, sqlite-vec install, all Wave 0 test stubs
+- [ ] 01-02-PLAN.md — app/config.py, app/models/work_description.py, app/db.py (DATA-01, DATA-02)
+- [ ] 01-03-PLAN.md — app/main.py, app/api/health.py, app/templates/base.html + human verify (DATA-03)
 
 ### Phase 2: NOC Data Pipeline
 **Goal:** Developer can run the NOC ingest script and confirm that NOC 2021 unit group profiles are queryable via FTS5 full-text search, vector search via sqlite-vec using nomic-embed-text, and that each source document has a content hash and version label recorded; the app refuses to start if the embedding model in the index metadata does not match the configured model.
@@ -134,7 +138,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Project Foundation | 0/? | Not started | - |
+| 1. Project Foundation | 0/3 | In progress | - |
 | 2. NOC Data Pipeline | 0/? | Not started | - |
 | 3. CA + JES Data Pipeline | 0/? | Not started | - |
 | 4. NL→NOC Mapping | 0/? | Not started | - |
