@@ -44,8 +44,24 @@ def mock_healthy_ollama():
     from unittest.mock import AsyncMock, MagicMock
 
     mock = MagicMock()
+    entries = []
     for name in ("gemma4:31b", "nomic-embed-text:latest"):
         entry = MagicMock()
         entry.model = name
-        mock.list = AsyncMock(return_value=MagicMock(models=[entry]))
+        entries.append(entry)
+    mock.list = AsyncMock(return_value=MagicMock(models=entries))
     return mock
+
+
+@pytest.fixture
+def noc_db(tmp_path):
+    """
+    Temp-file SQLite connection with NOC schema and sqlite_vec loaded.
+    Used by test_noc_ingest.py tests — does NOT require Ollama to be running.
+    """
+    from app.db import get_connection, create_schema
+    db_path = str(tmp_path / "test_noc.db")
+    con = get_connection(db_path)
+    create_schema(con)
+    yield con
+    con.close()
