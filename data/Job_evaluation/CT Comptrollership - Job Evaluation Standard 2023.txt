@@ -1,0 +1,145 @@
+SOURCE: https://www.canada.ca/en/treasury-board-secretariat/services/collective-agreements/job-evaluation/comptrollership-job-evaluation-standard.html
+TITLE ON INDEX PAGE: CT Comptrollership - Job Evaluation Standard 2023
+EFFECTIVE DATE: September 28, 2023
+
+================================================================================
+COMPTROLLERSHIP GROUP JOB EVALUATION STANDARD
+================================================================================
+
+GROUP DEFINITION
+----------------
+The Comptrollership group comprises positions that are primarily engaged in internal audits, financial management and external audits.
+
+Three subgroups:
+1. Internal Audit (CT-IAU)
+2. Financial Management (CT-FIN)
+3. External Audit (CT-EAV)
+
+This standard replaces: Management (FI) 2016, Auditing (AU) 1987, and amends Administrative Services (AS) 1965.
+
+INCLUSIONS:
+1. Planning, developing, conducting or managing internal audit work in accordance with the internal audit policy of the Government of Canada, to assess the effectiveness of risk management, control or governance processes.
+2. Planning, development, analysis, delivery or management of internal public service financial policies, programs, services or other related activities.
+3. The application of a comprehensive knowledge of generally accepted accounting principles and auditing standards to the planning, delivery, and management of external audit programs.
+
+EXCLUSIONS:
+1. Evaluation of actuarial liabilities and premiums/contributions for insurance, annuity and pension plans.
+2. Application of comprehensive knowledge of economics, sociology or statistics to economic, socio-economic and sociological research.
+3. Planning, development, delivery or management of administrative and federal government policies, programs, services or other activities directed to the public service.
+4. Provision of strategic advice or management of human resources policies, programs, services and activities.
+5. Development, application or enforcement of standards and quality assurance for IT processing systems.
+
+================================================================================
+CT-IAU: INTERNAL AUDIT SUBGROUP
+================================================================================
+
+SUBGROUP DEFINITION:
+Positions primarily engaged in planning, developing, conducting, or managing internal audit work, in accordance with the internal audit policy of the Government of Canada, to assess the effectiveness of risk management, control or governance processes.
+
+FOUR PAY EQUITY FACTORS AND ELEMENTS:
+1. Skill
+   - Knowledge
+   - Analytical and critical thinking
+   - Communication
+2. Effort
+   - Physical effort
+   - Sensory effort
+3. Responsibility
+   - Decision making
+4. Working conditions
+   - Physical environment
+   - Psychological environment
+
+ELEMENT DEFINITIONS:
+1. Knowledge - Captures subject matter knowledge (standards, principles, practices of professional internal audit and project management) and contextual knowledge (organizational context, machinery of government).
+2. Analytical and critical thinking - Captures analytical and critical thinking requirement. Varies with nature of information, multiplicity/diversity of sources, and complexity of analysis. Does NOT measure use of judgment (all CT-IAU incumbents exercise sound professional judgment throughout).
+3. Decision making - Captures level of complexity and latitude available. Complexity includes: stakeholders involved, political sensitivity, public sensitivity, scope and size of file, newness of issues. Latitude refers to "freedom to act" or amount of guidance available (policies, frameworks, guidelines, precedents, management direction, supervisory advice). Decisions include advice and recommendations.
+4. Communication - Captures oral and written communication skills required. Varies with purpose of interactions, nature of information, necessity to adapt to diverse audiences. Does NOT distinguish level or importance of persons contacted.
+5. Effort - Captures physical and sensory effort required.
+6. Working conditions - Captures physical and psychological environment.
+
+LEVEL DESCRIPTION CHART:
+
+LEVEL 1: Carry out assigned internal audit tasks as a member of an operational internal audit team.
+- Knowledge: Knowledge of GoC internal audit policy and professional standards and practices. Knowledge of organizational mandate, policies, programs, activities, and priorities relevant to area being audited.
+- Analytical/critical thinking: Analysis is limited and prescribed. Compile, organize, analyze, and summarize straightforward information; identify issues that may warrant further analysis.
+- Decision making: Issues of limited scope, risks and impacts negligible. Select internal audit tools based on instructions; raise issues to superiors.
+- Communication: Request and convey factual and straightforward information. Present summary of analysis and findings. Draft internal audit working papers.
+- Effort: Physical - long periods sitting, occasional carrying/moving. Sensory - regular prolonged reviewing of data or documentation.
+- Working conditions: Physical - controlled office environment. Psychological - may include off-site travel; minimal exposure to unpleasant situations.
+
+LEVEL 2: Lead low or moderate-complexity internal audits OR conduct segments of high complexity internal audit activities.
+- Knowledge: Internal audit policy, professional standards AND risk management, controls, and governance processes to carry out work autonomously. Knowledge of organizational mandate relevant to area being audited to develop evidence-based recommendations. Knowledge of GoC policies and priorities to contextualize work. Knowledge of project management.
+- Analytical/critical thinking: Analyze and probe information from various sources to identify issues, potential causes, and risks. Assess sufficiency and relevance of evidence.
+- Decision making: Issues routine to low/moderate complexity, risks and impacts moderate and apparent. Develop work plan, prepare tools, develop conclusions and evidence-based recommendations for review by superiors.
+- Communication: Conduct interviews. Explain segments of internal audit activities. Write a variety of internal audit products.
+- Effort: Same as Level 1.
+- Working conditions: Same as Level 1.
+
+LEVEL 3: Lead high complexity internal audits OR conduct high complexity practice management internal audit activities.
+- Knowledge: Internal audit policy, professional standards AND risk management, controls, and governance processes to assess or adapt approaches and tools. Knowledge of organizational mandate to identify linkages and interrelations between activities. Knowledge of GoC policies and priorities to contextualize work. Knowledge of project management for high complexity activities.
+- Analytical/critical thinking: Integrate research, analysis, and recommendations to identify linkages and relationships. Assess approaches and tools. Assess soundness of findings and conclusions.
+- Decision making: Issues varied, highly complex or broad scope, risks significant and difficult to ascertain. Adapt approaches; develop exhaustive recommendations for review by superiors.
+- Communication: Defend approaches, conclusions, and recommendations. Provide advice and recommendations to auditee management. Promote auditee management collaboration. Review or write complex internal audit products.
+- Effort: Same as Level 1.
+- Working conditions: Physical - controlled office environment. Psychological - may include off-site travel; some exposure to stressful situations (contentious or sensitive findings).
+
+LEVEL 4: Manage concurrent internal audits and resources OR manage all internal audit practice management activities within an organization.
+- Knowledge: Internal audit policy, professional standards AND PRINCIPLES of risk management, controls, and governance to challenge, approve and defend approaches. Knowledge of organizational mandate to authoritatively recommend courses of action to executives. Knowledge of GoC policies and priorities to review recommendations in broader governmental context. Knowledge of project management for concurrent activities.
+- Analytical/critical thinking: Identify risks and impacts from concurrent activities. Challenge approaches and recommendations. Assess strategic implications on business/policy direction and broader governmental context. OR assess quality of internal audit activities and implications on other units.
+- Decision making: Some issues highly complex, multi-dimensional; political and business risks significant; potential impacts complex and could be precedent setting. Prioritize activities; review and recommend courses of action to executives.
+- Communication: Defend a variety of internal audit activities. Provide expert advice on complex issues. Influence and persuade auditee management to implement recommendations. Review or write high complexity or strategic internal audit products.
+- Effort: Long periods sitting, occasional carrying/moving work materials. Regular prolonged reviewing of data.
+- Working conditions: Physical - controlled office environment. Psychological - may include off-site travel; some exposure to stressful situations; requirement to work on many complex issues concurrently.
+
+BENCHMARK POSITION INDEX:
+BM 1: Junior Internal Auditor, Operations - Level 1 - CT-IAU-01
+BM 2: Internal Auditor, Operations - Level 2 - CT-IAU-02
+BM 3: Internal Audit Team Leader, Operations - Level 3 - CT-IAU-03
+BM 4: Internal Audit Project Leader, Practice Management - Level 3 - CT-IAU-03
+BM 5: Internal Audit Principal, Operations - Level 4 - CT-IAU-04
+
+APPENDIX A - PROGRESSION CHART BY ELEMENT (Summary):
+
+Knowledge progression across levels:
+- L1: Carry out assigned internal audit tasks
+- L2: Carry out work autonomously; includes risk management, controls, governance
+- L3: Assess or adapt approaches and tools
+- L4: Challenge, approve and defend approaches
+
+Decision making progression:
+- L1: Limited scope, negligible risks
+- L2: Routine to low/moderate complexity, moderate and apparent risks
+- L3: Varied, highly complex or broad scope, significant and difficult to ascertain
+- L4: Highly complex, multi-dimensional, significant political/business risks; potentially precedent setting
+
+================================================================================
+CT-FIN: FINANCIAL MANAGEMENT SUBGROUP
+================================================================================
+
+SUBGROUP DEFINITION:
+Positions primarily engaged in planning, development, analysis, delivery or management of internal public service financial policies, programs, services or other related activities.
+
+FACTORS: Three factors
+1. Expertise
+2. Nature of work
+3. Nature of impact
+
+[Note: Full benchmark position descriptions available at source URL]
+
+================================================================================
+CT-EAV: EXTERNAL AUDIT SUBGROUP
+================================================================================
+
+SUBGROUP DEFINITION:
+Positions primarily engaged in the application of a comprehensive knowledge of generally accepted accounting principles and auditing standards to the planning, delivery, and management of external audit programs.
+
+FACTORS: Four factors
+1. Knowledge
+2. Responsibility for activities
+3. Responsibility for contacts
+4. Operational responsibility
+
+[Note: Full benchmark position descriptions available at source URL]
+
+================================================================================

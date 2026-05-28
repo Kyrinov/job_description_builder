@@ -1,0 +1,282 @@
+[
+  {
+    "abbreviation": "(AI)",
+    "group": "Air Traffic Control",
+    "group_subgroup": "Air Traffic Control (AI)",
+    "code": "402",
+    "union": "Canadian Air Traffic Control Association (CATCA) Unifor Local 5454",
+    "signing_date": "2025-12-19",
+    "expiry_date": "2026-06-30",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/ai.html"
+  },
+  {
+    "abbreviation": "(AO)",
+    "group": "Aircraft Operations",
+    "group_subgroup": "Aircraft Operations (AO)",
+    "code": "401",
+    "union": "Canadian Federal Pilots Association",
+    "signing_date": "2025-03-17",
+    "expiry_date": "2027-01-25",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/ao.html"
+  },
+  {
+    "abbreviation": "(CP)(AV)",
+    "group": "Commerce and Purchasing",
+    "group_subgroup": "Commerce and Purchasing (CP [CO, PG])",
+    "code": "309/311",
+    "union": "Professional Institute of the Public Service of Canada",
+    "signing_date": "2024-12-18",
+    "expiry_date": "2026-06-21",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/cp.html"
+  },
+  {
+    "abbreviation": "(CT)(FI)",
+    "group": "Comptrollership",
+    "group_subgroup": "Comptrollership (CT [EAV, FIN, IAU])",
+    "code": "30401/30402/30403",
+    "union": "Association of Canadian Financial Officers",
+    "signing_date": "2022-12-02",
+    "expiry_date": "2026-11-06",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/ct.html"
+  },
+  {
+    "abbreviation": "(CX)",
+    "group": "Correctional Services",
+    "group_subgroup": "Correctional Services (CX)",
+    "code": "601",
+    "union": "Union of Canadian Correctional Officers",
+    "signing_date": "2025-02-26",
+    "expiry_date": "2026-05-31",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/cx.html"
+  },
+  {
+    "abbreviation": "(EB)",
+    "group": "Education and Library Science",
+    "group_subgroup": "Education and Library Science (EB [ED, EU, LS])",
+    "code": "209/215/414",
+    "union": "Public Service Alliance of Canada",
+    "signing_date": "2023-07-11",
+    "expiry_date": "2025-06-30",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/eb.html"
+  },
+  {
+    "abbreviation": "(EC)",
+    "group": "Economics and Social Science Services",
+    "group_subgroup": "Economics and Social Science Services (EC)",
+    "code": "231",
+    "union": "Canadian Association of Professional Employees",
+    "signing_date": "2023-06-29",
+    "expiry_date": "2026-06-21",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/ec.html"
+  },
+  {
+    "abbreviation": "(EL)",
+    "group": "Electronics",
+    "group_subgroup": "Electronics (EL)",
+    "code": "404",
+    "union": "Local 2228 of the International Brotherhood of Electrical Workers",
+    "signing_date": "2023-06-20",
+    "expiry_date": "2026-08-31",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/el.html"
+  },
+  {
+    "abbreviation": "(FB)",
+    "group": "Border Services",
+    "group_subgroup": "Border Services (FB)",
+    "code": "610",
+    "union": "Public Service Alliance of Canada",
+    "signing_date": "2024-08-08",
+    "expiry_date": "2026-06-20",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/fb.html"
+  },
+  {
+    "abbreviation": "(FS)",
+    "group": "Foreign Service",
+    "group_subgroup": "Foreign Service (FS)",
+    "code": "312",
+    "union": "Professional Association of Foreign Service Officers",
+    "signing_date": "2023-06-30",
+    "expiry_date": "2026-06-30",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/fs.html"
+  },
+  {
+    "abbreviation": "(IT)(CS)",
+    "group": "Information Technology",
+    "group_subgroup": "Information Technology (IT)",
+    "code": "303",
+    "union": "Professional Institute of the Public Service of Canada",
+    "signing_date": "2023-12-22",
+    "expiry_date": "2025-12-21",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/it.html"
+  },
+  {
+    "abbreviation": "(LP)(LA)",
+    "group": "Law Practitioner",
+    "group_subgroup": "Law Practitioner (LP)",
+    "code": "214",
+    "union": "Association of Justice Counsel",
+    "signing_date": "2024-05-03",
+    "expiry_date": "2026-05-09",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/lp.html"
+  },
+  {
+    "abbreviation": "(NR)",
+    "group": "Architecture, Engineering and Land Survey",
+    "group_subgroup": "Architecture, Engineering & Land Survey (NR [AR, EN])",
+    "code": "203/210",
+    "union": "Professional Institute of the Public Service of Canada",
+    "signing_date": "2024-03-08",
+    "expiry_date": "2026-09-30",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/nr.html"
+  },
+  {
+    "abbreviation": "(PA)",
+    "group": "Program and Administrative Services",
+    "group_subgroup": "Program and Administrative Services (PA [AS, CM, CR, DA, IS, OE, PM, ST, WP])",
+    "code": "301/305/308/310/501/502/503/504/505",
+    "union": "Public Service Alliance of Canada",
+    "signing_date": "2023-06-27",
+    "expiry_date": "2025-06-20",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/pa.html"
+  },
+  {
+    "abbreviation": "(PO)",
+    "group": "Law Enforcement Support and Police Operations Support",
+    "group_subgroup": "Law Enforcement Support and Police Operations Support (LES-PO [LES, PO])",
+    "code": "45012/45022/60801/60802",
+    "union": "Canadian Union of Public Employees, Local 104",
+    "signing_date": "2023-07-19",
+    "expiry_date": "2025-12-31",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/po.html"
+  },
+  {
+    "abbreviation": "(RE)",
+    "group": "Research",
+    "group_subgroup": "Research (RE [DS, HR, MA, SE])",
+    "code": "212/216/225/229",
+    "union": "Professional Institute of the Public Service of Canada",
+    "signing_date": "2024-03-01",
+    "expiry_date": "2026-09-30",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/re.html"
+  },
+  {
+    "abbreviation": "(RM)",
+    "group": "RCMP Regular Members and Reservists",
+    "group_subgroup": "RCMP Regular Members (below the rank of inspector) and Reservists (RM)",
+    "code": "999",
+    "union": "National Police Federation",
+    "signing_date": "2024-06-24",
+    "expiry_date": "2025-03-31",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/rm.html"
+  },
+  {
+    "abbreviation": "(RO)",
+    "group": "Radio Operations",
+    "group_subgroup": "Radio Operations (RO)",
+    "code": "409",
+    "union": "Unifor Local 2182",
+    "signing_date": "2023-10-20",
+    "expiry_date": "2026-04-30",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/ro.html"
+  },
+  {
+    "abbreviation": "(SH)",
+    "group": "Health Services",
+    "group_subgroup": "Health Services (SH [DE, MD, ND, NU, OP, PH, PS, SW, VM])",
+    "code": "207/213/217/219/220/221/223/226/228",
+    "union": "Professional Institute of the Public Service of Canada",
+    "signing_date": "2024-11-12",
+    "expiry_date": "2026-09-30",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/sh.html"
+  },
+  {
+    "abbreviation": "(SO)",
+    "group": "Ships’ Officers",
+    "group_subgroup": "Ships’ Officers (SO)",
+    "code": "410",
+    "union": "Canadian Merchant Service Guild",
+    "signing_date": "2024-03-01",
+    "expiry_date": "2026-03-31",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/so.html"
+  },
+  {
+    "abbreviation": "(SP)(AP)",
+    "group": "Applied Science and Patent Examination",
+    "group_subgroup": "Applied Science & Patent Examination (SP [AC, AG, BI, CH, FO, MT, PC, SG-PAT, SG-SRE])",
+    "code": "201/202/205/206/211/218/222/224/230",
+    "union": "Professional Institute of the Public Service of Canada",
+    "signing_date": "2023-12-14",
+    "expiry_date": "2026-09-30",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/sp.html"
+  },
+  {
+    "abbreviation": "(SRC)",
+    "group": "Ship Repair (All Chargehand and Production Supervisor Employees Located on the East Coast)",
+    "group_subgroup": "Ship Repair (All Chargehand and Production Supervisor Employees Located on the East Coast) (SR (C))",
+    "code": "663",
+    "union": "Federal Government Dockyard Chargehands Association",
+    "signing_date": "2025-07-17",
+    "expiry_date": "2026-03-31",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/src.html"
+  },
+  {
+    "abbreviation": "(SRE)",
+    "group": "Ship Repair (East)",
+    "group_subgroup": "Ship Repair (East) (SR (E))",
+    "code": "611",
+    "union": "Federal Government Dockyard Trades and Labour Council (East)",
+    "signing_date": "2025-04-25",
+    "expiry_date": "2026-12-31",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/sre.html"
+  },
+  {
+    "abbreviation": "(SRW)",
+    "group": "Ship Repair (West)",
+    "group_subgroup": "Ship Repair (West) (SR (W))",
+    "code": "614",
+    "union": "Federal Government Dockyard Trades and Labour Council (Esquimalt)",
+    "signing_date": "2019-08-30",
+    "expiry_date": "2023-01-30",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/srw.html"
+  },
+  {
+    "abbreviation": "(SV)",
+    "group": "Operational Services",
+    "group_subgroup": "Operational Services (SV [FR, GL, GS, HP, HS, LI, PR(S), SC])",
+    "code": "602/603/604/605/606/607/612/652/653/654/655/656/657/659/662",
+    "union": "Public Service Alliance of Canada",
+    "signing_date": "2023-07-11",
+    "expiry_date": "2025-08-04",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/sv.html"
+  },
+  {
+    "abbreviation": "(TC)",
+    "group": "Technical Services",
+    "group_subgroup": "Technical Services (TC [DD, EG, GT, PI, PY, TI])",
+    "code": "403/405/406/407/408/413",
+    "union": "Public Service Alliance of Canada",
+    "signing_date": "2023-06-27",
+    "expiry_date": "2025-06-21",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/tc.html"
+  },
+  {
+    "abbreviation": "(TR)",
+    "group": "Translation",
+    "group_subgroup": "Translation (TR)",
+    "code": "313",
+    "union": "Canadian Association of Professional Employees",
+    "signing_date": "2023-06-29",
+    "expiry_date": "2026-04-18",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/tr.html"
+  },
+  {
+    "abbreviation": "(UT)",
+    "group": "University Teaching",
+    "group_subgroup": "University Teaching (UT)",
+    "code": "227",
+    "union": "Canadian Military Colleges Faculty Association",
+    "signing_date": "2019-08-30",
+    "expiry_date": "2022-06-30",
+    "url": "/en/treasury-board-secretariat/topics/pay/collective-agreements/ut.html"
+  }
+]

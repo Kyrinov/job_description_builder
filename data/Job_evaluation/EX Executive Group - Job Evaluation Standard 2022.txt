@@ -1,0 +1,172 @@
+SOURCE: https://www.canada.ca/en/treasury-board-secretariat/services/collective-agreements/job-evaluation/executive-group-position-evaluation-plan-2022.html
+TITLE ON INDEX PAGE: EX Executive Group - Job Evaluation Standard 2022
+EFFECTIVE DATE: October 3, 2022 (amended 2024)
+
+================================================================================
+EXECUTIVE (EX) GROUP JOB EVALUATION STANDARD 2022
+================================================================================
+
+Based on the Korn Ferry Hay Guide Chart – Profile Methodology (the Hay Plan). Used to evaluate Executive Group positions since 1980. This latest version came into effect October 3, 2022, replacing the September 2005 version.
+
+Changes in 2022 version:
+- Revised guide charts and updated language to facilitate use and reduce potential bias.
+- Revised benchmark positions to reflect full range of modern EX Group jobs.
+- Revised Accountability Magnitude Index (AMI) from 8.0 to 9.0.
+
+2024 Amendment:
+- Addition of a new Ombuds benchmark position (BM-19-B).
+- Minor technical amendments to numerous benchmark positions.
+
+GROUP DEFINITION:
+The Executive Group comprises jobs located no more than three hierarchical levels below the Deputy or Associate Deputy level that have significant executive managerial or executive policy roles and responsibilities or other significant influence on the direction of a department or agency. Jobs are responsible and accountable for exercising executive managerial authority or providing recommendations and advice on the exercise of that authority.
+
+INCLUSIONS:
+- Managing programs authorized by an Act of Parliament or Order-in-Council, or major functions of such programs.
+- Managing substantial scientific or professional activities.
+- Providing recommendations on development of significant policies, programs or scientific, professional, or technical activities.
+- Exercising primary influence over development of policies or programs for human, financial or material resources in major organizational units or program activities.
+
+THREE EVALUATION FACTORS:
+1. Know-How
+2. Problem Solving
+3. Accountability
+
+NUMBERING SYSTEM: Geometric progression, values increasing approximately 15% per step. Values double every five steps. Each 15% step represents the smallest perceptible difference on which consensus can be established.
+
+CLASSIFICATION LEVELS: EX-01 through EX-05
+
+================================================================================
+FACTOR 1: KNOW-HOW
+================================================================================
+
+Know-How is the sum of every kind of knowledge and skill required for fully competent job performance. Three sub-factors:
+
+A. PRACTICAL, TECHNICAL, SPECIALIZED KNOW-HOW
+Measures depth and scope of subject matter knowledge; recognizes increasing specialization (depth) and/or breadth of knowledge.
+
+EX Group range: F to G (EX positions unlikely below F or above G).
+
+Guidance by degree:
+F-: Senior practitioners providing guidance to more junior colleagues but not approval authority; OR roles requiring breadth of knowledge to provide leadership to multiple disciplines without technical authority.
+F: Roles providing technical leadership and guidance to specialists; recognized technical specialists. Roles requiring breadth of knowledge across multiple disciplines. E.g., Director, Financial Accounting; Director, Health Program Integrity and Control.
+F+: Roles requiring complete knowledge of a domain with new/emerging applications; OR roles requiring breadth across multiple domains including corporate services. E.g., Director, Drug Policy; Director, Contracting, Materiel Management and Systems.
+G-: Very deep specialization with authoritative insights but limited by direction from central authority or peer position; OR management of a complex organization with considerable organizational guidance. E.g., Assistant Deputy Commissioner, Correctional Operations; CEO, Canadian Forces Housing Agency.
+G: Very deep specialization providing authoritative insights to the organization; OR substantial comprehension of all relevant fields providing leadership to multiple disciplines in a large complex organization. E.g., VP, Health Security Infrastructure; ADM, Americas.
+G+: Pull towards H as "Global Authority" where Canada has a global leadership role; OR first hierarchical level expected to be the subject matter authority vs. an integrator. E.g., ADM, International Trade and Finance; ADM, Science and Technology.
+
+B. PLANNING, ORGANIZING AND INTEGRATING KNOW-HOW
+Measures knowledge required for integrating and managing programs/functions. Related to size of organization, functional and geographic diversity, diversity and complexity of stakeholder relationships, and time horizon.
+
+Levels (POI):
+- II+/III-: Related management of generally related operations; months to annual time horizon; local/internal stakeholders; 20-60 FTEs. E.g., Director, Program Evaluation.
+- III: Management of major program with differing objectives OR integration of multiple business lines; regional/some external; current year and next; 60-200 FTEs. E.g., Director General, Operations and Departmental Security Officer.
+- III+/IV-: Integration and management of multiple programs with divergent purposes OR significant function critical to a broader mandate; national/cross government; two to three years; 200-600 FTEs. E.g., Director General, Human Resources Operations.
+- IV: Strategic integration of programs with significant differences and divergent purposes OR strategic functions affecting the whole organization; international/all levels of government; three to five years; 600-2,000 FTEs. E.g., ADM, Small Business, Tourism and Marketplace Services.
+- IV+: National delivery of multiple major programs OR government-wide leadership of broad key initiatives; global/alignment around government priorities; five years+; 2,000-6,000+ FTEs. E.g., ADM, Real Property Services.
+
+C. COMMUNICATING AND INFLUENCING
+Three levels for EX work:
+Level 1: Common courtesy; straightforward information exchange. NOT consistent with EX Group work.
+Level 2: Tact and diplomacy beyond normal courtesy required. EXTREMELY UNLIKELY for EX Group work.
+Level 3: Achievement hinges on effective interpersonal relationships with subordinates, colleagues, superiors, and clients inside or outside government. Skills of persuasiveness, assertiveness, empathy and sensitivity essential. Standard for essentially all EX Group positions.
+
+COMBINING KNOW-HOW ELEMENTS:
+The three sub-factors together lead to a cell on the Guide Chart containing three values. The final value is selected based on strength of fit:
+- Middle value: solid fit on all three sub-factors.
+- Upper value (+): pull-up when approaching the upper end of one sub-factor.
+- Lower value (-): pull-down when approaching the lower end of one sub-factor.
+
+STEP RELATIONSHIPS (Know-How relative to superior):
+- No difference (e.g., 608 to 608): Administrative reporting only; extremely rare.
+- One-step difference (e.g., 460 to 528): Point of compression; question need for organizational layers.
+- Two-step difference (e.g., 460 to 608): Typical/logical relationship in same or related domains.
+- Three-step difference (e.g., 460 to 700): Relatively homogenous/well-defined work; broad span of control.
+- Four-step difference (e.g., 460 to 800): Very significant; may suggest a missing level.
+
+================================================================================
+FACTOR 2: PROBLEM SOLVING
+================================================================================
+
+Problem Solving is the requirement to put Know-How to use in original, self-starting thinking to deal with issues and solve problems. Treated as a percentage of Know-How.
+
+Two sub-factors:
+
+A. THINKING ENVIRONMENT
+Measures the constraints on thinking. Ranges from highly structured (where problems are defined and solutions are well-known) to challenging (where problems are ambiguous and solutions require significant creativity).
+
+B. THINKING CHALLENGE
+Measures the complexity and novelty of the thinking required.
+
+EX Group thinking environments typically involve:
+- Some problems that appear routine but require deeper analysis.
+- Many problems where established solutions must be adapted.
+- Significant problems with no established solutions, requiring creative or innovative approaches.
+
+PROFILE VALIDATION:
+Jobs focused on operations and services will have relatively high Accountability scores.
+Jobs focused on long-term planning and policy development will have relatively high Problem Solving scores.
+
+================================================================================
+FACTOR 3: ACCOUNTABILITY
+================================================================================
+
+Three sub-factors:
+
+A. FREEDOM TO ACT
+Measures the degree to which a position is constrained in making decisions and the extent to which guidance (policies, supervisory oversight) is available.
+
+B. AREA OF IMPACT (MAGNITUDE)
+Measured through the Accountability Magnitude Index (AMI = 9.0 in 2022 version). The Magnitude is the measure of the most relevant financial dimension of the end results for which the position is fully or primarily accountable, typically reflecting the scope of the operation managed or influenced.
+
+C. NATURE OF IMPACT
+How the position contributes to or has impact on the results. Ranges from Remote (many intermediaries between the position and results) to Primary (the position is directly responsible for the results).
+
+================================================================================
+CLASSIFICATION LEVEL POINT RANGES
+================================================================================
+
+[Note: Exact point ranges are contained in the Guide Charts (Appendix A) available on the GC network via GCxchange. Classification levels are determined by the sum of Know-How, Problem Solving, and Accountability point values.]
+
+EX-01: Director level and equivalent
+EX-02: Senior Director / Director General level and equivalent
+EX-03: Director General / ADM equivalent (smaller organizations)
+EX-04: ADM level and equivalent
+EX-05: Senior ADM level and equivalent
+
+================================================================================
+BENCHMARK POSITIONS (available in Appendix C, organized by level):
+================================================================================
+
+EX-01 Benchmarks (BM 1-26): Available at:
+https://www.canada.ca/en/treasury-board-secretariat/services/collective-agreements/job-evaluation/executive-group-position-evaluation-plan-2022/app-c-benchmark-positions-ex-01.html
+
+EX-02 Benchmarks (BM 27-40): Available at:
+https://www.canada.ca/en/treasury-board-secretariat/services/collective-agreements/job-evaluation/executive-group-position-evaluation-plan-2022/app-c-benchmark-positions-ex-02.html
+
+EX-03 Benchmarks (BM 41-48): Available at:
+https://www.canada.ca/en/treasury-board-secretariat/services/collective-agreements/job-evaluation/executive-group-position-evaluation-plan-2022/app-c-benchmark-positions-ex-03.html
+
+EX-04 Benchmarks (BM 49-60): Available at:
+https://www.canada.ca/en/treasury-board-secretariat/services/collective-agreements/job-evaluation/executive-group-position-evaluation-plan-2022/app-c-benchmark-positions-ex-04.html
+
+EX-05 Benchmarks (BM 61-72): Available at:
+https://www.canada.ca/en/treasury-board-secretariat/services/collective-agreements/job-evaluation/executive-group-position-evaluation-plan-2022/app-c-benchmark-positions-ex-05.html
+
+Notable benchmark examples referenced in the standard:
+- Director, Financial Accounting (EX-01)
+- Director, Health Program Integrity and Control (EX-01)
+- Director, Drug Policy (EX-01)
+- Director, Contracting, Materiel Management and Systems (EX-01)
+- Director, Program Evaluation (EX-01)
+- Director General, Operations and Departmental Security Officer (EX-02)
+- Director General, Human Resources Operations (EX-03)
+- Assistant Deputy Commissioner, Correctional Operations, Prairie Region (EX-03)
+- Chief Executive Officer, Canadian Forces Housing Agency (EX-03)
+- ADM, Small Business, Tourism and Marketplace Services (EX-04)
+- VP, Health Security Infrastructure (EX-04)
+- ADM, Americas (EX-05)
+- ADM, International Trade and Finance (EX-05)
+- ADM, Science and Technology (EX-05)
+- ADM, Real Property Services (EX-05)
+
+[Note: The EX Group Job Evaluation Standard does not apply to non-EX positions. For non-EX positions, see the relevant occupational group JES (CT, EC, ED, FB, FS, IT, LC, LP, MT, ND, NU, PO, PS, SW, WP).]

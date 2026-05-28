@@ -1,0 +1,162 @@
+# Constable (Cst.): annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2,Step 3,Step 4,Step 5
+"$) April 1, 2022","65,776","85,461","92,722","99,988","106,576"
+"A) April 1, 2023","67,749","88,025","95,504","102,988","109,773"
+"U) April 1, 2023 - Market adjustment","68,426","88,905","96,459","104,018","110,871"
+"B) April 1, 2024","69,795","90,683","98,388","106,098","113,088"
+"V) April 1, 2024 - Market adjustment","71,191","92,497","100,356","108,220","115,350"
+
+# Corporal (Cpl.): annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2
+"$) April 1, 2022","112,435","116,703"
+"A) April 1, 2023","115,808","120,204"
+"X) April 1, 2023 - Market adjustment","116,966","121,406"
+"B) April 1, 2024","119,305","123,834"
+"Y) April 1, 2024 - Market adjustment","121,691","126,311"
+
+# Sergeant (Sgt.): annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2
+"$) April 1, 2022","123,509","127,204"
+"A) April 1, 2023","127,214","131,020"
+"X) April 1, 2023 - Market adjustment","128,486","132,330"
+"B) April 1, 2024","131,056","134,977"
+"Y) April 1, 2024 - Market adjustment","133,677","137,677"
+
+# Staff Sergeant (S/Sgt.): annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2
+"$) April 1, 2022","134,912","138,657"
+"A) April 1, 2023","138,959","142,817"
+"X) April 1, 2023 - Market adjustment","140,349","144,245"
+"B) April 1, 2024","143,156","147,130"
+"Y) April 1, 2024 - Market adjustment","146,019","150,073"
+
+"# Staff Sergeant Major (S/S/M.), Sergeant Major (S/M), Corps Sergeant Major (C/S/M), Constable (Cst.): annual rates of pay (in dollars)"
+# Section: Appendix A
+Effective date,Step 1
+"$) April 1, 2022","139,075"
+"A) April 1, 2023","143,247"
+"X) April 1, 2023 - Market adjustment","144,679"
+"B) April 1, 2024","147,573"
+"Y) April 1, 2024 - Market adjustment","150,524"
+
+# AME-01: annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2,Step 3,Step 4
+"$) April 1, 2022","103,752","107,902","112,216","116,703"
+"A) April 1, 2023","106,865","111,139","115,582","120,204"
+"X) April 1, 2023 - Market adjustment","107,934","112,250","116,738","121,406"
+"B) April 1, 2024","110,093","114,495","119,073","123,834"
+"Y) April 1, 2024 - Market adjustment","112,295","116,785","121,454","126,311"
+
+# AME-02: annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1
+"$) April 1, 2022","140,032"
+"A) April 1, 2023","144,233"
+"X) April 1, 2023 - Market adjustment","145,675"
+"B) April 1, 2024","148,589"
+"Y) April 1, 2024 - Market adjustment","151,561"
+
+# AME-03: annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1
+"$) April 1, 2022","161,044"
+"A) April 1, 2023","165,875"
+"X) April 1, 2023 - Market adjustment","167,534"
+"B) April 1, 2024","170,885"
+"Y) April 1, 2024 - Market adjustment","174,303"
+
+# PRO-01: annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2,Step 3,Step 4,Step 5
+"$) April 1, 2022","67,115","69,794","72,588","75,490","78,509"
+"A) April 1, 2023","69,128","71,888","74,766","77,755","80,864"
+"X) April 1, 2023 - Market adjustment","69,819","72,607","75,514","78,533","81,673"
+"B) April 1, 2024","71,215","74,059","77,024","80,104","83,306"
+"Y) April 1, 2024 - Market adjustment","72,639","75,540","78,564","81,706","84,972"
+
+# PRO-02: annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2,Step 3,Step 4,Step 5
+"$) April 1, 2022","73,154","76,077","79,119","82,286","85,576"
+"A) April 1, 2023","75,349","78,359","81,493","84,755","88,143"
+"Y) April 1, 2023 - Market adjustment","76,102","79,143","82,308","85,603","89,024"
+"B) April 1, 2024","77,624","80,726","83,954","87,315","90,804"
+"Y) April 1, 2024 - Market adjustment","79,176","82,341","85,633","89,061","92,620"
+
+# PT-01: annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2,Step 3,Step 4,Step 5,Step 6
+"$) April 1, 2022","108,806","111,656","114,589","117,604","120,706","123,892"
+"A) April 1, 2023","112,070","115,006","118,027","121,132","124,327","127,609"
+"X) April 1, 2023 - Market adjustment","113,191","116,156","119,207","122,343","125,570","128,885"
+"B) April 1, 2024","115,455","118,479","121,591","124,790","128,081","131,463"
+"Y) April 1, 2024 - Market adjustment","117,764","120,849","124,023","127,286","130,643","134,092"
+
+# PT-02: annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2,Step 3,Step 4,Step 5,Step 6,Step 7
+"$) April 1, 2022","115,823","118,873","122,010","125,237","128,552","131,965","135,472"
+"A) April 1, 2023","119,298","122,439","125,670","128,994","132,409","135,924","139,536"
+"X) April 1, 2023 - Market adjustment","120,491","123,663","126,927","130,284","133,733","137,283","140,931"
+"B) April 1, 2024","122,901","126,136","129,466","132,890","136,408","140,029","143,750"
+"Y) April 1, 2024 - Market adjustment","125,359","128,659","132,055","135,548","139,136","142,830","146,625"
+
+# PT-03: annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2,Step 3,Step 4,Step 5,Step 6,Step 7
+"$) April 1, 2022","131,775","135,277","138,886","142,594","146,406","150,325","154,355"
+"A) April 1, 2023","135,728","139,335","143,053","146,872","150,798","154,835","158,986"
+"X) April 1, 2023 - Market adjustment","137,085","140,728","144,484","148,341","152,306","156,383","160,576"
+"B) April 1, 2024","139,827","143,543","147,374","151,308","155,352","159,511","163,788"
+"Y) April 1, 2024 - Market adjustment","142,624","146,414","150,321","154,334","158,459","162,701","167,064"
+
+# SE-01: annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2,Step 3,Step 4,Step 5
+"$) April 1, 2022","64,081","66,773","69,474","72,178","75,275"
+"A) April 1, 2023","66,003","68,776","71,558","74,343","77,533"
+"X) April 1, 2023 - Market adjustment","66,663","69,464","72,274","75,086","78,308"
+"B) April 1, 2024","67,996","70,853","73,719","76,588","79,874"
+"Y) April 1, 2024 - Market adjustment","69,356","72,270","75,193","78,120","81,471"
+
+# SE-02: annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2,Step 3,Step 4,Step 5
+"$) April 1, 2022","70,203","72,921","75,609","78,351","81,488"
+"A) April 1, 2023","72,309","75,109","77,877","80,702","83,933"
+"X) April 1, 2023 - Market adjustment","73,032","75,860","78,656","81,509","84,772"
+"B) April 1, 2024","74,493","77,377","80,229","83,139","86,467"
+"Y) April 1, 2024 - Market adjustment","75,983","78,925","81,834","84,802","88,196"
+
+# SE-03: annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2,Step 3,Step 4,Step 5
+"$) April 1, 2022","75,278","78,400","81,520","84,611","88,812"
+"A) April 1, 2023","77,536","80,752","83,966","87,149","91,476"
+"X) April 1, 2023 - Market adjustment","78,311","81,560","84,806","88,020","92,391"
+"B) April 1, 2024","79,877","83,191","86,502","89,780","94,239"
+"Y) April 1, 2024 - Market adjustment","81,475","84,855","88,232","91,576","96,124"
+
+# SE-04: annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2,Step 3,Step 4,Step 5
+"$) April 1, 2022","93,160","97,208","101,257","105,304","109,509"
+"A) April 1, 2023","95,955","100,124","104,295","108,463","112,794"
+"X) April 1, 2023 - Market adjustment","96,915","101,125","105,338","109,548","113,922"
+"B) April 1, 2024","98,853","103,148","107,445","111,739","116,200"
+"Y) April 1, 2024 - Market adjustment","100,830","105,211","109,594","113,974","118,524"
+
+# SE-05: annual rates of pay (in dollars)
+# Section: Appendix A
+Effective date,Step 1,Step 2,Step 3,Step 4,Step 5
+"$) April 1, 2022","103,605","107,626","111,684","115,745","120,108"
+"A) April 1, 2023","106,713","110,855","115,035","119,217","123,711"
+"X) April 1, 2023 - Market adjustment","107,780","111,964","116,185","120,409","124,948"
+"B) April 1, 2024","109,936","114,203","118,509","122,817","127,447"
+"Y) April 1, 2024 - Market adjustment","112,135","116,487","120,879","125,273","129,996"
+

@@ -1,0 +1,156 @@
+SOURCE: https://www.canada.ca/en/treasury-board-secretariat/services/collective-agreements/job-evaluation/border-services-group-job-evaluation-standard.html
+TITLE ON INDEX PAGE: FB Border Services - Job Evaluation Standard 2005
+EFFECTIVE DATE: October 6, 2023 (Border Services group and JES effective August 26, 2005)
+
+================================================================================
+BORDER SERVICES JOB EVALUATION STANDARD
+================================================================================
+
+Applies exclusively to positions in the Canada Border Services Agency (CBSA).
+Must be used in conjunction with the Application Guidelines (Appendix A).
+
+GROUP DEFINITION:
+The Border Services Group comprises positions in the Canada Border Services Agency that are primarily involved in the planning, development, delivery, or management of the inspection and control of people and goods entering Canada.
+
+INCLUSIONS:
+1. Determining the admissibility of people or goods entering Canada.
+2. Post-entry verification of people or goods that have entered Canada.
+3. Arresting, detaining or removing those in violation of Canada's laws.
+4. Investigating the illegal entry of people or goods.
+5. Conducting intelligence activities related to monitoring, inspection or control of people or goods entering Canada.
+6. Developing CBSA operational directives for carrying out the above activities.
+7. The leadership of any of the above activities.
+
+EXCLUSIONS:
+1. Collecting, recording, arranging, transmitting and processing of information, filing and distribution, and direct application of rules and regulations.
+2. Planning, development, delivery or management of government policies, programs, services or other activities directed to the public other than those involving inspection and control of people and goods entering Canada.
+
+TYPE OF STANDARD: Point-rating plan
+
+TEN ELEMENTS:
+1. Knowledge (Skill) - 17.0% - max 170 pts
+2. Analytical Skills (Skill) - 15.0% - max 150 pts
+3. Communication Skills (Skill) - 10.0% - max 100 pts
+4. Interaction (Responsibility) - 15.0% - max 150 pts
+5. People and Operational Management (Responsibility) - 15.0% - max 150 pts
+6. Decision Making (Responsibility) - 20.0% - max 200 pts
+7. Physical Effort (Effort) - 3.0% - max 30 pts (two-dimensional: Intensity A/B/C x Frequency 1/2/3)
+8. Sensory Effort (Effort) - 1.0% - max 10 pts
+9. Risk to Health (Working Conditions) - 2.0% - max 20 pts
+10. Work Environment (Working Conditions) - 2.0% - max 20 pts (two sub-elements: 10A Psychological, 10B Physical, each 1%)
+TOTAL: 100% - 1,000 pts
+
+POINT BOUNDARIES:
+Level 1: 96-185
+Level 2: 186-290
+Level 3: 291-400
+Level 4: 401-510
+Level 5: 511-620
+Level 6: 621-730
+Level 7: 731-850
+Level 8: 851-1,000
+
+RATING SCALE (degree/points):
+Element 1 (Knowledge): D1=17, D2=30, D3=50, D4=80, D5=135, D6=170
+Element 2 (Analytical Skills): D1=15, D2=30, D3=50, D4=80, D5=115, D6=150
+Element 3 (Communication Skills): D1=10, D2=25, D3=45, D4=70, D5=100
+Element 4 (Interaction): D1=15, D2=35, D3=70, D4=110, D5=150
+Element 5 (People & Operational Mgmt): D1=10, D2=30, D3=80, D4=125, D5=150
+Element 6 (Decision Making): D1=20, D2=30, D3=60, D4=100, D5=140, D6=175, D7=200
+Element 7 (Physical Effort - two dimensional):
+  A (Light): A1=1, A2=2, A3=5
+  B (Moderate): B1=1, B2=3, B3=10
+  C (Heavy): C1=1, C2=10, C3=30
+Element 8 (Sensory Effort): D1=1, D2=4, D3=10
+Element 9 (Risk to Health): D1=2, D2=10, D3=20
+Element 10A (Psychological Work Environment): D1=2, D2=6, D3=10
+Element 10B (Physical Work Environment): D1=2, D2=10
+
+ELEMENT DEFINITIONS:
+
+ELEMENT 1 - KNOWLEDGE:
+Measures level of technical or domain knowledge of job-related concepts, principles, practices, processes or approaches, as well as contextual knowledge including knowledge of people, organizations, external circumstances, legislation, regulations, etc.
+- D1 (17): Well-defined range of work; knowledge applied to specific and practical work situations.
+- D2 (30): Working knowledge of delivery activities within a defined program or service area; basic understanding of operational and legislative contexts.
+- D3 (50): Full working knowledge of service delivery activities within a defined program or service area; strong understanding of relevant operational and legislative contexts.
+- D4 (80): Thorough knowledge of current theories, trends and practices in a relevant field; broad understanding of current business context; knowledge applied by adapting business concepts to program/policy development.
+- D5 (135): In-depth knowledge of a relevant field including operational management approaches; sound understanding of various programs and services and how they fit together in overall delivery of Agency business.
+- D6 (170): Extensive knowledge at the strategic level including knowledge of diverse disciplines and business processes related to public security; fully developed operational management expertise; extensive understanding of external environment including political, economic and socio-cultural conditions.
+
+ELEMENT 2 - ANALYTICAL SKILLS:
+Measures requirement to gather, compile, research and analyze information.
+- D1 (15): Reviews data or information to ensure accuracy and completeness; processes information using well-defined processes within prescribed guidelines.
+- D2 (30): Assesses information requirements; determines information sources; gathers and organizes information to input to further analyses; may require fact-finding.
+- D3 (50): Compiles and synthesizes information from multiple and diverse sources to determine best course of action in resolving individual issues/situations.
+- D4 (80): Identifies patterns and trends, inconsistencies or missing pieces; studies and evaluates a variety of information and analyses to formulate recommendations, provide advice or resolve client issues.
+- D5 (115): Investigates, probes and integrates a diversity of complex information, analytical findings and previous analyses from a variety of sources; formulates recommendations on program design or delivery approaches or case treatment.
+- D6 (150): Challenges existing frameworks and analyses; identifies linkages and interplay with other program/operational/business areas and broader portfolio/business contexts; makes recommendations for service delivery strategies and program direction.
+
+ELEMENT 3 - COMMUNICATION SKILLS:
+Measures written and verbal communication skills required.
+- D1 (10): Basic communication skills to relay straightforward fact-oriented verbal or written messages; complete forms; explain work procedures; resolve straightforward client service situations.
+- D2 (25): Developed communication skills to conduct research interviews; compose original content for a variety of business documents; reformat and rearrange content prepared by others.
+- D3 (45): Well-developed communication skills to conduct investigation-style interviews; influence or persuade individual clients on specific cases; consult and provide advice on program/operational delivery issues; represent organization at public events.
+- D4 (70): Advanced communication skills to conduct formal consultations with stakeholders; compose complex project proposals or business plans; facilitate sensitive or complex group discussions; present and defend highly technical analyses.
+- D5 (100): Extensive communication skills to officially present, defend or advocate Agency's strategic position on complex sensitive issues; lobby, persuade and negotiate on highly complex or sensitive strategic program and operational issues; compose strategy papers or strategic business cases/reports.
+
+ELEMENT 4 - INTERACTION:
+Measures responsibility for interaction that stems from complexity and difficulty of situations, sensitivity of issues, and variety of opinions and interests to be reconciled. Does NOT value level or importance of persons contacted.
+- D1 (15): Exchanging, providing or seeking straightforward information; responding to non-routine requests requiring questioning.
+- D2 (35): Presenting, explaining or providing interpretation of technical information; sharing expertise to resolve problems or advance issues.
+- D3 (70): Probing or exploring problems or client situations where objectives are not forthcoming and interaction may be contentious in nature; questioning/consultation to extract required information and bring issues to resolution.
+- D4 (110): Promoting and advocating positions and policies within and outside the organization; achieving collaboration, consensus or resolution to meet broad program and operational objectives.
+- D5 (150): Persuading others and influencing the setting and achievement of strategic objectives; extensive horizontal management within and outside the organization to advance broad organizational and business interests.
+
+ELEMENT 5 - PEOPLE AND OPERATIONAL MANAGEMENT:
+Measures responsibility for planning, leading and being accountable for resources assigned.
+- D1 (10): Working with others; contributing to maintenance of a shared team spirit; assisting colleagues in adapting; explaining or demonstrating work functions; may lead ad hoc work teams.
+- D2 (30): Formal people supervision; develops work plans and priorities; adjusts team members' priorities and workloads; ensures quality through active monitoring, feedback and performance evaluation; some complex situations referred to senior managers.
+- D3 (80): Management of people formally assigned to delivery of a program/service area; may include management of subordinate supervisors; establishes HR plans, standards, and priorities; modifies operating procedures; allocates and adjusts resources; measures and manages operational results and employee performance.
+- D4 (125): Management of people and operations in delivery of a program/service area involving managing through a subordinate layer of management; involves long-term planning, directing and controlling of physical, financial and human resources to meet program or major goals.
+- D5 (150): Management of people and operations involving multiple subordinate layers of management; involves significant planning, directing and controlling involving a multiplicity and/or diversity of major programs or functions, layers of management accountability, fluctuating workforces, and geographic dispersion.
+
+ELEMENT 6 - DECISION MAKING:
+Measures level of responsibility for decision making based on level of judgment and latitude applied and the impact of decisions made.
+- D1 (20): Issue specific and straightforward; guidance available (supervisory support, standard instructions and operational procedures); selects from predetermined set of options.
+- D2 (30): Impacts activities of immediate work team; guidance in form of established procedures and protocols; decisions related to ensuring day-to-day operational tasks are met.
+- D3 (60): Impacts how individual situations will be dealt with; some latitude in determining approach; decisions based on observation, guidelines, regulations and established precedents; interpretation required.
+- D4 (100): Impacts how program operational or case-related issues will be managed; significant latitude in determining approach; decisions based on extensive research, review, interpretation and challenge of established precedents; considerable judgment and interpretation for diverse and complex cases.
+- D5 (140): Impacts implementation and delivery of programs and services; decisions require autonomy and independence; typically related to organization and coordination of program service objectives.
+- D6 (175): Impacts overall determination of approaches to program development or delivery within a variety of integrated operations or program/project areas; decisions based on significant managerial or subject matter expertise.
+- D7 (200): Impacts establishment and achievement of broad operational objectives; typically affects how component program/operational areas will achieve Agency's overall objectives.
+
+ELEMENT 7 - PHYSICAL EFFORT (two-dimensional: Intensity x Frequency):
+Intensity categories:
+A. Light Physical Effort: Prolonged sitting/standing/bending/reaching with limited opportunity or freedom to shift activity, OR carrying/lifting/moving objects <5 kg, OR prolonged light machinery/equipment work.
+B. Moderate Physical Effort: Carrying/lifting/moving objects 5-20 kg, OR heavy machinery/equipment work, OR working in awkward position requiring moderate physical exertion and discomfort.
+C. Heavy Physical Effort: Carrying/lifting/moving objects >20 kg, OR carrying/lifting/moving/restraining people.
+
+Frequency:
+1 = Rarely: 1 pt
+2 = Occasionally: A2=2, B2=3, C2=10
+3 = Regularly: A3=5, B3=10, C3=30
+
+ELEMENT 8 - SENSORY EFFORT:
+Measures sensory effort required by considering frequency (on a prolonged basis).
+- D1 (1): Rarely requires prolonged use of senses with limited opportunity or freedom to rest or shift activity.
+- D2 (4): Occasionally requires prolonged use of senses.
+- D3 (10): Regularly requires prolonged use of senses.
+
+ELEMENT 9 - RISK TO HEALTH:
+Measures exposure to unavoidable risks or hazards to health resulting directly from performance of work. Captures only risks remaining after application of normal safety precautions.
+- D1 (2): Work performed in highly controlled environment; exposure to accidents, injuries or illness minimal; risks readily managed.
+- D2 (10): Work performed in controlled environment; may involve greater exposure to risks from heavy equipment or potentially contentious situations; risks cannot be readily managed despite precautions.
+- D3 (20): Work performed in less controlled environment; exposure to potentially dangerous situations from dangerous substances and highly unpredictable situations; potential for serious accidents, injuries or illness; risks cannot be managed due to unpredictability.
+
+ELEMENT 10 - WORK ENVIRONMENT (both components rated separately):
+10A - Psychological conditions:
+- D1 (2): Lack of control over pace of work, multiple or competing demands, changing deadlines and priorities, disruption to normal work and personal life due to frequent travel or jet lag.
+- D2 (6): Disagreeable, abusive interactions with people; hostile, or confrontational situations.
+- D3 (10): Disturbing sights and sounds (pornography, hate propaganda, accounts of persecution and torture, etc.).
+
+10B - Physical conditions:
+- D1 (2): Glare from computer screens; noise from office equipment or surrounding office conversations; closed office environment; or open-concept office, etc.
+- D2 (10): Wearing cumbersome or protective clothing, fumes/vehicle exhaust, working outside in adverse weather conditions, confined space, grease, oil, noxious odours; or exposure to human waste, exposure to potentially infectious substances or persons.
+
+[Application Guidelines - full element-by-element guidance with examples of work activities (EWAs) - available at: https://www.canada.ca/en/treasury-board-secretariat/services/collective-agreements/job-evaluation/border-services-group-application-guidelines.html]
