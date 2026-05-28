@@ -1,0 +1,30 @@
+# Web framework
+fastapi==0.128.8
+uvicorn[standard]==0.40.0
+jinja2==3.1.6
+python-multipart==0.0.20
+
+# Data validation and config
+pydantic==2.12.5
+pydantic-settings==2.14.1
+
+# LLM
+ollama==0.6.1
+instructor==1.15.1
+
+# Database
+sqlite-vec==0.1.9
+duckdb==1.5.3
+
+# Data pipeline (Phase 2+)
+polars==1.41.1
+
+# Export (Phase 8)
+python-docx==1.1.2
+docxtpl==0.18.0
+weasyprint==63.1
+
+# Dev / test
+pytest==9.0.2
+pytest-asyncio==0.25.3
+httpx==0.28.1
