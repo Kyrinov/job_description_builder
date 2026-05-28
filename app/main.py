@@ -16,10 +16,11 @@ from typing import AsyncGenerator
 
 import ollama
 from fastapi import FastAPI
+from fastapi.templating import Jinja2Templates
 
 from app.api import health
 from app.config import settings
-from app.db import create_schema, get_connection
+from app.db import assert_noc_index_model, create_schema, get_connection
 
 
 def ollama_client_factory():
@@ -78,6 +79,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await assert_ollama_ready()
     con = get_connection(settings.db_path)
     create_schema(con)
+    assert_noc_index_model(con, settings.ollama_embed_model)  # PIPE-05
     con.close()
 
     yield
@@ -94,3 +96,4 @@ app = FastAPI(
 )
 
 app.include_router(health.router)
+templates = Jinja2Templates(directory="app/templates")
