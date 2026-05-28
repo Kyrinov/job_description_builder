@@ -6,6 +6,7 @@ at import time with the field name in the error message (DATA-02).
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from pydantic import Field, field_validator
@@ -71,9 +72,8 @@ class Settings(BaseSettings):
             return str(resolved)
         except ValueError:
             pass
-        # Outside project root: only allow if any part of the resolved path
-        # contains "pytest" (covers test temp directories like pytest-of-user/pytest-N/)
-        if any("pytest" in part for part in resolved.parts):
+        # Outside project root: only allow pytest's own temp directories during tests.
+        if "PYTEST_CURRENT_TEST" in os.environ and any("pytest" in part for part in resolved.parts):
             return str(resolved)
         raise ValueError(
             f"db_path must be under the project root ({PROJECT_ROOT}). "
