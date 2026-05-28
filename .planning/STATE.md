@@ -11,7 +11,7 @@
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | Project Foundation | Ready to execute (3 plans) |
-| 2 | NOC Data Pipeline | Not started |
+| 2 | NOC Data Pipeline | Ready to execute (4 plans) |
 | 3 | CA + JES Data Pipeline | Not started |
 | 4 | NL→NOC Mapping | Not started |
 | 5 | OG Classification | Not started |
@@ -31,7 +31,7 @@ See: `.planning/PROJECT.md`
 **Architecture non-negotiables (do not change without a phase transition):**
 - ProvenanceTag on every domain object — set at write time, rendered at export
 - WorkDescription Pydantic model finalized in Phase 1 before any service code
-- One Qwen3 call per JES factor (no array-collapse), instructor retry, Pydantic validation
+- One configured local generation model call per JES factor (no array-collapse), instructor retry, Pydantic validation
 - LLM selects duty text from indexed records — never generates free-form duty text
 - CA restriction clauses pre-extracted at ingest, not loaded from full CA at validation time
 - Startup assertion: embedding model name in index metadata must match configured model
@@ -51,12 +51,12 @@ See: `.planning/PROJECT.md`
 | HTMX 2.x + Alpine.js 3.x | No build step; ~29KB combined; server-rendered wizard pattern |
 | DuckDB 1.5.3 (pinned) | aarch64 wheels broken in 1.4.x |
 | nomic-embed-text via Ollama | Already resident; eliminates 500MB sentence-transformers cold-start problem |
-| instructor over raw Ollama format | Mandatory retry wrapper for Qwen3 structured output edge cases |
+| instructor over raw Ollama format | Mandatory retry wrapper for local model structured output edge cases |
 | Fresh codebase (not fork) | 25 phases of prototype debt; clean slate |
 | SQLite + sqlite-vec (not DuckDB) for app state | App state and vector search co-located; DuckDB for parquet pipeline transforms only |
 
 ### Active Blockers
-- NOC 2021 unit group profiles not yet acquired — resolve before planning Phase 2
+- ~~NOC 2021 unit group profiles not yet acquired~~ — RESOLVED: CSVs present in `data/nationa_occupational_competencies/` (516 unit groups, 44k element rows)
 - TBS OCHRO OG definitions not yet collected — resolve before planning Phase 5
 
 ### Todos
@@ -75,16 +75,16 @@ See: `.planning/PROJECT.md`
 | Phases total | 9 |
 | Phases complete | 0 |
 | Requirements mapped | 19/19 |
-| Plans created | 3 (Phase 1) |
+| Plans created | 7 (Phase 1: 3, Phase 2: 4) |
 
 ---
 
 ## Session Continuity
 
-**Next action:** `/gsd-execute-phase 1`
+**Next action:** `/gsd-execute-phase 1` then `/gsd-execute-phase 2`
 
 **Context for next session:**
 - Roadmap finalized: 9 phases, 19/19 v1 requirements mapped
 - Phase 1 scope: FastAPI skeleton + WorkDescription/ProvenanceTag Pydantic models + SQLite schema + env config validation + Ollama pre-warm
-- Do NOT begin Phase 2 until NOC 2021 data is acquired
+- Phase 2 planned: 4 plans (Wave 0→2), NOC CSVs confirmed present — data blocker resolved
 - All architecture decisions in "Decisions Locked" above are non-negotiable — no service code before DATA-01 model is finalized
