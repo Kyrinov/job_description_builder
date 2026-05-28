@@ -10,7 +10,7 @@
 ### Data Pipeline
 
 - [ ] **PIPE-01**: Developer can run an ingest pipeline that loads NOC 2021 unit group profiles, producing an FTS5 full-text index and a sqlite-vec embedding index (nomic-embed-text), with a content hash and version label recorded per source document
-- [ ] **PIPE-02**: Developer can run an ingest pipeline that processes collective agreement JSON files, extracting restriction/scope/exclusion clauses per OG using Qwen3, storing them as structured records in a queryable index keyed by OG code
+- [ ] **PIPE-02**: Developer can run an ingest pipeline that processes collective agreement JSON files, extracting restriction/scope/exclusion clauses per OG using the configured local generation model (`gemma4:31b` by default), storing them as structured records in a queryable index keyed by OG code
 - [ ] **PIPE-03**: Developer can run an ingest pipeline that parses JES documents per OG, producing structured factor objects (og_code, factor_name, degree_descriptors, point_range) stored in SQLite
 - [ ] **PIPE-04**: Every source document ingested records a content hash and version label; every derived record stores the source document version hash it was derived from
 - [ ] **PIPE-05**: On startup, the system asserts the embedding model name in the vector index metadata matches the currently configured model — the app refuses to serve queries on mismatch
@@ -23,23 +23,25 @@
 
 ### NL→NOC Mapping
 
-- [ ] **MAP-01**: Advisor can describe work to be performed in natural language; the system runs a three-stage pipeline — FTS5 keyword shortlist → nomic-embed-text embedding rerank → Qwen3 structured justification — and returns ranked NOC unit group candidates
+- [ ] **MAP-01**: Advisor can describe work to be performed in natural language; the system runs a three-stage pipeline — FTS5 keyword shortlist → nomic-embed-text embedding rerank → configured local generation model structured justification — and returns ranked NOC unit group candidates
 - [ ] **MAP-02**: Each NOC candidate returned includes the NOC code, unit group title, TEER level, and the specific NOC duty statements from the source profile that best match the described work
 
 ### OG Classification
 
 - [ ] **CLASS-01**: For the advisor-confirmed NOC match, the system presents the top 3 occupational group candidates side-by-side — each showing OG code, name, definition excerpt, relevant inclusions, and relevant exclusions, cited from TBS source documents
 - [ ] **CLASS-02**: Advisor confirms an occupational group and level before JD content generation proceeds — this is a hard workflow gate; no generation starts without explicit OG confirmation
+- [ ] **CLASS-03**: For positions where the work description contains policy-related duties, the system surfaces the AS vs. EC distinction explicitly — showing the TBS definition test (internal departmental guidance → AS; shaping policy for the Canadian public → EC), with the relevant inclusion/exclusion statements from the applicable OG definitions cited verbatim; this logic runs before OG confirmation and must be grounded in `data/directive_on_classification.txt`
 
 ### JD Content Generation
 
 - [ ] **JD-01**: System drafts key duties/activities for the confirmed NOC and OG by selecting verbatim text from NOC profile statements stored in the database — the LLM ranks and selects from indexed records, it does not generate free-form duty text
 - [ ] **JD-02**: Every duty and content element in the WD carries a structured ProvenanceTag: source type, NOC code, section name, statement text, and source document version hash
 - [ ] **JD-03**: Any content added by the advisor that has no source record is tagged "advisor-added / not from authoritative source" in the data model and rendered with a distinct visual indicator in the export
+- [ ] **JD-04**: After duties are drafted, the system runs an orphan statement check — scanning each duty against a pre-indexed set of functional authority rules (e.g., "provides HR advice" is reserved to PE positions per DAOD/functional authority) and flagging any duty that contradicts the established authority for that OG; each flag cites the source rule by document and article
 
 ### JES Scoring
 
-- [ ] **JES-01**: System generates a JES scoring sheet for the confirmed OG by making one Qwen3 call per JES factor — in `/think` mode, with the full factor descriptor and degree definitions injected fresh per call — returning a structured scoring object validated by Pydantic via `instructor` (max 3-attempt retry)
+- [ ] **JES-01**: System generates a JES scoring sheet for the confirmed OG by making one configured local generation model call per JES factor — with the full factor descriptor and degree definitions injected fresh per call — returning a structured scoring object validated by Pydantic via `instructor` (max 3-attempt retry)
 
 ### CA Validation Infrastructure
 
@@ -75,8 +77,8 @@
 
 ### JD Generation Enhancements
 
-- **JD-04**: AI drafts an organizational context / position overview paragraph; advisor edits with modification tracking
-- **JD-05**: Duties include relative time/importance weighting as required by some collective agreements
+- **JD-05**: AI drafts an organizational context / position overview paragraph; advisor edits with modification tracking
+- **JD-06**: Duties include relative time/importance weighting as required by some collective agreements
 
 ### Search UX
 
@@ -126,17 +128,19 @@
 | MAP-02 | Phase 4 | Pending |
 | CLASS-01 | Phase 5 | Pending |
 | CLASS-02 | Phase 5 | Pending |
+| CLASS-03 | Phase 5 | Pending |
 | JD-01 | Phase 6 | Pending |
 | JD-02 | Phase 6 | Pending |
 | JD-03 | Phase 6 | Pending |
+| JD-04 | Phase 6 | Pending |
 | JES-01 | Phase 7 | Pending |
 | CA-01 | Phase 3 | Pending |
 | EXP-01 | Phase 8 | Pending |
 | DRF-01 | Phase 9 | Pending |
 
 **Coverage:**
-- v1 requirements: 19 total
-- Mapped to phases: 19/19
+- v1 requirements: 21 total
+- Mapped to phases: 21/21
 - Unmapped: 0
 
 ---

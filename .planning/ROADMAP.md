@@ -12,9 +12,9 @@
 | 2 | NOC Data Pipeline | NOC 2021 unit group profiles are fully indexed in FTS5 + sqlite-vec with version hashes and embedding model assertion | PIPE-01, PIPE-04, PIPE-05 |
 | 3 | CA + JES Data Pipeline | Collective agreement restriction clauses and JES factor objects are indexed in SQLite, keyed by OG code | PIPE-02, PIPE-03, CA-01 |
 | 4 | NL→NOC Mapping | Advisor inputs plain-language work description and receives ranked NOC candidates with cited duty matches | MAP-01, MAP-02 |
-| 5 | OG Classification | System presents top 3 OG candidates with inclusions/exclusions; advisor confirms OG and level before generation | CLASS-01, CLASS-02 |
-| 6 | JD Generation | System drafts verbatim NOC-sourced duties with full ProvenanceTag; advisor additions are flagged; WD persisted | JD-01, JD-02, JD-03 |
-| 7 | JES Scoring | System produces a per-factor JES scoring sheet via Qwen3 in `/think` mode with Pydantic-validated structured output | JES-01 |
+| 5 | OG Classification | System presents top 3 OG candidates with inclusions/exclusions; advisor confirms OG and level before generation; AS vs EC disambiguation surfaced for policy-adjacent positions | CLASS-01, CLASS-02, CLASS-03 |
+| 6 | JD Generation | System drafts verbatim NOC-sourced duties with full ProvenanceTag; advisor additions are flagged; orphan statement check runs post-draft; WD persisted | JD-01, JD-02, JD-03, JD-04 |
+| 7 | JES Scoring | System produces a per-factor JES scoring sheet via the configured local generation model (`gemma4:31b` by default) with Pydantic-validated structured output | JES-01 |
 | 8 | Export | Advisor exports completed WD to DOCX and PDF with rendered source citations and a version manifest | EXP-01 |
 | 9 | DND DRF Integration | For DND positions, system surfaces DRF program linkages connecting position duties to departmental expected results | DRF-01 |
 
@@ -51,7 +51,7 @@ Plans:
 **Plans:** TBD
 
 ### Phase 3: CA + JES Data Pipeline
-**Goal:** Developer can run the CA ingest script and confirm that restriction, scope, and exclusion clauses are extracted per OG code and stored as structured records; developer can run the JES ingest script and confirm that per-factor degree descriptors and point ranges are stored as structured factor objects queryable by `(og_code, factor_name)`.
+**Goal:** Developer can run the CA ingest script and confirm that restriction, scope, and exclusion clauses are extracted per OG code and stored as structured records; developer can run the JES ingest script and confirm that per-factor degree descriptors and point ranges are stored as structured factor objects queryable by `(og_code, factor_name)`; TBS policy documents (`data/directive_on_classification.txt`, `data/policy_on_people_management.txt`) are ingested and indexed for use in OG classification logic.
 **Depends on:** Phase 1
 **Requirements:** PIPE-02, PIPE-03, CA-01
 **UI hint:** no
@@ -63,49 +63,51 @@ Plans:
 **Plans:** TBD
 
 ### Phase 4: NL→NOC Mapping
-**Goal:** Advisor can submit a plain-language description of work to the `/map-to-noc` endpoint and receive a ranked list of NOC unit group candidates — each showing the NOC code, unit group title, TEER level, and the specific NOC duty statements that best matched — produced by the three-stage FTS5 → embedding rerank → Qwen3 justification pipeline.
+**Goal:** Advisor can submit a plain-language description of work to the `/map-to-noc` endpoint and receive a ranked list of NOC unit group candidates — each showing the NOC code, unit group title, TEER level, and the specific NOC duty statements that best matched — produced by the three-stage FTS5 → embedding rerank → configured local generation model justification pipeline.
 **Depends on:** Phase 2
 **Requirements:** MAP-01, MAP-02
 **UI hint:** yes
 **Success criteria:**
 1. `POST /map-to-noc` with a plain-language work description returns a ranked list of NOC unit group candidates without error.
 2. Each candidate includes NOC code, unit group title, TEER level, and the verbatim NOC duty statements from the database that supported the match.
-3. The pipeline runs all three stages in sequence (FTS5 shortlist → embedding rerank → Qwen3 justification); the LLM only sees pre-screened candidates, not all 900 profiles.
+3. The pipeline runs all three stages in sequence (FTS5 shortlist → embedding rerank → configured local generation model justification); the LLM only sees pre-screened candidates, not all 900 profiles.
 4. Advisor can confirm a NOC match; the confirmed match is stored on the WorkDescription record.
 **Plans:** TBD
 
 ### Phase 5: OG Classification
-**Goal:** For a confirmed NOC match, the system presents the top 3 occupational group candidates side-by-side — each citing the relevant TBS OG definition excerpt, inclusions, and exclusions — and will not begin JD content generation until the advisor explicitly confirms an OG and level.
+**Goal:** For a confirmed NOC match, the system presents the top 3 occupational group candidates side-by-side — each citing the relevant TBS OG definition excerpt, inclusions, and exclusions — and will not begin JD content generation until the advisor explicitly confirms an OG and level. For positions with policy-related duties, the system surfaces the AS vs. EC distinction test with verbatim citations from `data/directive_on_classification.txt` before the advisor confirms.
 **Depends on:** Phase 3, Phase 4
-**Requirements:** CLASS-01, CLASS-02
+**Requirements:** CLASS-01, CLASS-02, CLASS-03
 **UI hint:** yes
 **Success criteria:**
 1. `POST /classify-og` with a confirmed NOC match returns 3 OG candidates, each with OG code, name, definition excerpt, and relevant inclusions and exclusions cited from TBS source documents.
 2. Attempting to call the JD generation endpoint without a confirmed OG returns a 422 error — the gate is enforced at the API layer.
 3. Advisor can confirm an OG and level; the confirmed classification is stored on the WorkDescription record.
+4. When the work description contains policy-related duties, the response includes an AS vs. EC disambiguation block showing the TBS internal-vs-public-facing test with verbatim citations from `data/directive_on_classification.txt`.
 **Plans:** TBD
 
 ### Phase 6: JD Generation
-**Goal:** With a confirmed NOC match and OG classification, the system drafts key duties by selecting verbatim text from NOC profile records in the database; every duty carries a structured ProvenanceTag; advisor-added content that has no source record is tagged distinctly; the WD is persisted to SQLite after each state transition.
+**Goal:** With a confirmed NOC match and OG classification, the system drafts key duties by selecting verbatim text from NOC profile records in the database; every duty carries a structured ProvenanceTag; advisor-added content that has no source record is tagged distinctly; after drafting, an orphan statement check flags any duty that contradicts the established functional authority for the confirmed OG; the WD is persisted to SQLite after each state transition.
 **Depends on:** Phase 5
-**Requirements:** JD-01, JD-02, JD-03
+**Requirements:** JD-01, JD-02, JD-03, JD-04
 **UI hint:** yes
 **Success criteria:**
 1. `POST /generate-duties` returns a list of duties where every item is verbatim text from a NOC profile record in the database — no free-form generated text appears as a duty.
 2. Every duty carries a structured ProvenanceTag with source type, NOC code, section name, statement text, and source document version hash.
 3. Any content the advisor adds that has no source record is tagged `advisor-added / not from authoritative source` in the data model and visually distinguished in the UI.
 4. After duty confirmation, the WorkDescription record is persisted to SQLite with all ProvenanceTags intact.
+5. `POST /check-orphan-statements` runs against the confirmed duty list and returns a list of flagged duties, each citing the functional authority rule violated (document name and article/section) — a clean result returns an empty flag list, not an error.
 **Plans:** TBD
 
 ### Phase 7: JES Scoring
-**Goal:** With a confirmed WD and duty list, the system generates a JES scoring sheet for the confirmed OG by making one Qwen3 `/think` call per JES factor — injecting the full factor descriptor and degree definitions fresh per call — returning a structured scoring object validated by Pydantic via `instructor` with up to 3 retries.
+**Goal:** With a confirmed WD and duty list, the system generates a JES scoring sheet for the confirmed OG by making one configured local generation model call per JES factor — injecting the full factor descriptor and degree definitions fresh per call — returning a structured scoring object validated by Pydantic via `instructor` with up to 3 retries.
 **Depends on:** Phase 3, Phase 6
 **Requirements:** JES-01
 **UI hint:** yes
 **Success criteria:**
 1. `POST /score-jes` returns a complete JES scoring sheet with one structured result object per factor, each containing a degree rating and rationale.
 2. Each factor call injects the full factor descriptor and all degree definitions from the database record for that `(og_code, factor_name)` — never from a summary or cached prompt.
-3. If a Qwen3 call returns malformed output, `instructor` retries up to 3 times; a failure after 3 attempts returns a descriptive error for that factor, not a silent null.
+3. If a model call returns malformed output, `instructor` retries up to 3 times; a failure after 3 attempts returns a descriptive error for that factor, not a silent null.
 4. The scoring sheet is stored on the WorkDescription record with ProvenanceTags linking each factor rating to its JES source record.
 **Plans:** TBD
 
