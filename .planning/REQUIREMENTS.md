@@ -112,35 +112,33 @@
 
 ## Traceability
 
-*Populated during roadmap creation.*
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PIPE-01 | — | Pending |
-| PIPE-02 | — | Pending |
-| PIPE-03 | — | Pending |
-| PIPE-04 | — | Pending |
-| PIPE-05 | — | Pending |
-| DATA-01 | — | Pending |
-| DATA-02 | — | Pending |
-| DATA-03 | — | Pending |
-| MAP-01 | — | Pending |
-| MAP-02 | — | Pending |
-| CLASS-01 | — | Pending |
-| CLASS-02 | — | Pending |
-| JD-01 | — | Pending |
-| JD-02 | — | Pending |
-| JD-03 | — | Pending |
-| JES-01 | — | Pending |
-| CA-01 | — | Pending |
-| EXP-01 | — | Pending |
-| DRF-01 | — | Pending |
+| PIPE-01 | Phase 2 | Pending |
+| PIPE-02 | Phase 3 | Pending |
+| PIPE-03 | Phase 3 | Pending |
+| PIPE-04 | Phase 2, 3 | Pending |
+| PIPE-05 | Phase 2 | Pending |
+| DATA-01 | Phase 1 | Pending |
+| DATA-02 | Phase 1 | Pending |
+| DATA-03 | Phase 1 | Pending |
+| MAP-01 | Phase 4 | Pending |
+| MAP-02 | Phase 4 | Pending |
+| CLASS-01 | Phase 5 | Pending |
+| CLASS-02 | Phase 5 | Pending |
+| JD-01 | Phase 6 | Pending |
+| JD-02 | Phase 6 | Pending |
+| JD-03 | Phase 6 | Pending |
+| JES-01 | Phase 7 | Pending |
+| CA-01 | Phase 3 | Pending |
+| EXP-01 | Phase 8 | Pending |
+| DRF-01 | Phase 9 | Pending |
 
 **Coverage:**
 - v1 requirements: 19 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 19 ⚠️
+- Mapped to phases: 19/19
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-05-28*
-*Last updated: 2026-05-28 after initial definition*
+*Last updated: 2026-05-28 after roadmap creation (19/19 requirements mapped)*
