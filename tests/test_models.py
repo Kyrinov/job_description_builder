@@ -34,6 +34,19 @@ def test_draft_duty_has_provenance():
         DraftDuty(text="Analyzes policy options")
 
 
+def test_og_recommendation_has_provenance():
+    """OGRecommendation must directly carry a ProvenanceTag."""
+    import pydantic
+    from app.models.work_description import OGRecommendation
+    with pytest.raises(pydantic.ValidationError):
+        OGRecommendation(
+            og_code="EC",
+            og_name="Economics and Social Science Services",
+            confidence=0.8,
+            rationale="Policy analysis duties align to EC.",
+        )
+
+
 def test_work_description_instantiation():
     """WorkDescription instantiates with only the required raw_input and session_id fields."""
     from app.models.work_description import WorkDescription

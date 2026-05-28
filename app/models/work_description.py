@@ -63,6 +63,7 @@ class OGRecommendation(BaseModel):
     level: Optional[str] = None
     confidence: float = Field(ge=0.0, le=1.0)
     rationale: str
+    provenance: ProvenanceTag
     evidence_quotes: list[str] = Field(default_factory=list)
     cited_articles: list[ProvenanceTag] = Field(default_factory=list)
     confirmed_by_advisor: bool = False
