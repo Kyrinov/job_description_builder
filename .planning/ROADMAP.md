@@ -48,7 +48,12 @@ Plans:
 2. Each ingested NOC source document has a `content_hash` and `version_label` recorded; each derived record stores the source version hash it was derived from.
 3. Changing the configured embedding model name and restarting the app produces a startup error citing a model name mismatch — the app does not serve queries.
 4. Re-running the ingest script with unchanged source files is idempotent (no duplicate records, hashes match).
-**Plans:** TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 02-01-PLAN.md — Wave 0 test stubs (test_noc_ingest.py, test_noc_startup.py, conftest noc_db fixture)
+- [ ] 02-02-PLAN.md — app/db.py NOC schema DDL + assert_noc_index_model() (PIPE-04, PIPE-05)
+- [ ] 02-03-PLAN.md — scripts/ingest_noc.py all 5 stages (PIPE-01, PIPE-04)
+- [ ] 02-04-PLAN.md — app/main.py lifespan integration + full suite green (PIPE-05)
 
 ### Phase 3: CA + JES Data Pipeline
 **Goal:** Developer can run the CA ingest script and confirm that restriction, scope, and exclusion clauses are extracted per OG code and stored as structured records; developer can run the JES ingest script and confirm that per-factor degree descriptors and point ranges are stored as structured factor objects queryable by `(og_code, factor_name)`; TBS policy documents (`data/directive_on_classification.txt`, `data/policy_on_people_management.txt`) are ingested and indexed for use in OG classification logic.
@@ -141,7 +146,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Project Foundation | 0/3 | Ready to execute | - |
-| 2. NOC Data Pipeline | 0/? | Not started | - |
+| 2. NOC Data Pipeline | 0/4 | Ready to execute | - |
 | 3. CA + JES Data Pipeline | 0/? | Not started | - |
 | 4. NL→NOC Mapping | 0/? | Not started | - |
 | 5. OG Classification | 0/? | Not started | - |
