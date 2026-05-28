@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}JD Builder{% endblock %}</title>
+
+    {# Alpine.js must load before DOMContentLoaded — defer attribute handles this #}
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <h1>Job Description Builder</h1>
+        <p>Government of Canada — Classification &amp; Job Evaluation Tool</p>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>All content citations rendered from ProvenanceTag source records.</p>
+    </footer>
+
+    {# HTMX 2.x — loaded at end of body for fast initial render #}
+    <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
