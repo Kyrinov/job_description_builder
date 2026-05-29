@@ -1,8 +1,8 @@
 # Project State
 
-**Status:** Planning complete — ready to build
-**Current phase:** None (not started)
-**Last updated:** 2026-05-28
+**Status:** Phase 2 complete — Phase 3 ready to execute
+**Current phase:** Phase 3 — CA + JES Data Pipeline
+**Last updated:** 2026-05-29
 
 ---
 
@@ -10,9 +10,9 @@
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | Project Foundation | Ready to execute (3 plans) |
-| 2 | NOC Data Pipeline | Ready to execute (4 plans) |
-| 3 | CA + JES Data Pipeline | Not started |
+| 1 | Project Foundation | Complete (3/3 plans verified) |
+| 2 | NOC Data Pipeline | Complete (4/4 plans verified) |
+| 3 | CA + JES Data Pipeline | Ready to execute (4 plans) |
 | 4 | NL→NOC Mapping | Not started |
 | 5 | OG Classification | Not started |
 | 6 | JD Generation | Not started |
@@ -73,18 +73,21 @@ See: `.planning/PROJECT.md`
 | Metric | Value |
 |--------|-------|
 | Phases total | 9 |
-| Phases complete | 0 |
-| Requirements mapped | 19/19 |
-| Plans created | 7 (Phase 1: 3, Phase 2: 4) |
+| Phases complete | 2 |
+| Requirements mapped | 21/21 |
+| Plans created | 11 (Phase 1: 3 complete, Phase 2: 4 complete, Phase 3: 4 ready) |
 
 ---
 
 ## Session Continuity
 
-**Next action:** `/gsd-execute-phase 1` then `/gsd-execute-phase 2`
+**Next action:** `/gsd-execute-phase 3`
 
 **Context for next session:**
-- Roadmap finalized: 9 phases, 19/19 v1 requirements mapped
-- Phase 1 scope: FastAPI skeleton + WorkDescription/ProvenanceTag Pydantic models + SQLite schema + env config validation + Ollama pre-warm
-- Phase 2 planned: 4 plans (Wave 0→2), NOC CSVs confirmed present — data blocker resolved
-- All architecture decisions in "Decisions Locked" above are non-negotiable — no service code before DATA-01 model is finalized
+- Phase 2 complete: 28 CA JSONs + 18 JES TXTs + 2 TBS policy docs confirmed present
+- Phase 3 planned: 4 plans (Wave 0→3), LLM extraction via gemma4:31b + instructor retry
+- Phase 3 plan structure: Wave 0 test stubs → Wave 1 schema DDL → Wave 2 ingest scripts → Wave 3 real-data run + human spot-check
+- CA data: data/agreements/{OG}/{OG}_full.json (consistent JSON schema across all 28 OGs); multi-OG CAs: IT_CS, CT_FI, LP_LA, SP_AP
+- JES data: data/Job_evaluation/*.txt (18 files; skip FB Application Guidelines file; extract first word of filename for og_code)
+- New tables: ca_clauses, jes_factors, policy_chunks, policy_fts — added to app/db.py via CA_JES_SCHEMA_DDL
+- All architecture decisions in "Decisions Locked" above are non-negotiable
