@@ -67,7 +67,7 @@ Plans:
 4. Both ingest scripts are idempotent on unchanged source files.
 **Plans:** 4 plans
 Plans:
-- [ ] 03-01-PLAN.md — Wave 0 test stubs (test_ca_ingest.py, test_jes_ingest.py, test_policy_ingest.py, ca_jes_db fixture)
+- [x] 03-01-PLAN.md — Wave 0 test stubs (test_ca_ingest.py, test_jes_ingest.py, test_policy_ingest.py, ca_jes_db fixture)
 - [ ] 03-02-PLAN.md — app/db.py CA_JES_SCHEMA_DDL extension (ca_clauses, jes_factors, policy_chunks, policy_fts)
 - [ ] 03-03-PLAN.md — scripts/ingest_ca.py + ingest_jes.py + ingest_policy.py (PIPE-02, PIPE-03, CA-01)
 - [ ] 03-04-PLAN.md — Real-data ingest run + human spot-check on LLM extraction quality
