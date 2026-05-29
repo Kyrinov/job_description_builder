@@ -65,3 +65,22 @@ def noc_db(tmp_path):
     create_schema(con)
     yield con
     con.close()
+
+
+@pytest.fixture
+def ca_jes_db(tmp_path):
+    """
+    Temp-file SQLite connection with full schema (NOC + CA/JES) and sqlite_vec loaded.
+    Used by test_ca_ingest.py, test_jes_ingest.py, test_policy_ingest.py.
+    Does NOT require Ollama to be running.
+
+    Note: uses a different db_path ('test_ca_jes.db') than the noc_db fixture
+    to avoid sharing state across test modules.
+    """
+    from app.db import get_connection, create_schema
+
+    db_path = str(tmp_path / "test_ca_jes.db")
+    con = get_connection(db_path)
+    create_schema(con)  # creates all tables — NOC + CA_JES once Plan 03-02 lands
+    yield con
+    con.close()
