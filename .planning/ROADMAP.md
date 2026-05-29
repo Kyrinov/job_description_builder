@@ -65,7 +65,12 @@ Plans:
 2. Running the JES ingest script produces structured factor objects with `og_code`, `factor_name`, `degree_descriptors`, and `point_range`; querying by `(og_code, factor_name)` returns the correct factor descriptor.
 3. Both ingest scripts record content hashes per source document and link derived records to their source hash (PIPE-04 coverage for these corpora).
 4. Both ingest scripts are idempotent on unchanged source files.
-**Plans:** TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 03-01-PLAN.md — Wave 0 test stubs (test_ca_ingest.py, test_jes_ingest.py, test_policy_ingest.py, ca_jes_db fixture)
+- [ ] 03-02-PLAN.md — app/db.py CA_JES_SCHEMA_DDL extension (ca_clauses, jes_factors, policy_chunks, policy_fts)
+- [ ] 03-03-PLAN.md — scripts/ingest_ca.py + ingest_jes.py + ingest_policy.py (PIPE-02, PIPE-03, CA-01)
+- [ ] 03-04-PLAN.md — Real-data ingest run + human spot-check on LLM extraction quality
 
 ### Phase 4: NL→NOC Mapping
 **Goal:** Advisor can submit a plain-language description of work to the `/map-to-noc` endpoint and receive a ranked list of NOC unit group candidates — each showing the NOC code, unit group title, TEER level, and the specific NOC duty statements that best matched — produced by the three-stage FTS5 → embedding rerank → configured local generation model justification pipeline.
@@ -147,7 +152,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Project Foundation | 3/3 | Complete | 2026-05-28 |
 | 2. NOC Data Pipeline | 4/4 | Complete | 2026-05-28 |
-| 3. CA + JES Data Pipeline | 0/? | Not started | - |
+| 3. CA + JES Data Pipeline | 0/4 | Planned | - |
 | 4. NL→NOC Mapping | 0/? | Not started | - |
 | 5. OG Classification | 0/? | Not started | - |
 | 6. JD Generation | 0/? | Not started | - |
