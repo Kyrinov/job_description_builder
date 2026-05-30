@@ -79,11 +79,11 @@ class JESExtractionResult(BaseModel):
 
 
 class GroupMetadataResult(BaseModel):
-    group_definition: str | None = None
-    inclusions: str | None = None
-    exclusions: str | None = None
-    methodology: str | None = Field(
-        None,
+    group_definition: str = Field(default="", description="Formal definition of the occupational group")
+    inclusions: str = Field(default="", description="Verbatim inclusions text; empty string if absent")
+    exclusions: str = Field(default="", description="Verbatim exclusions text; empty string if absent")
+    methodology: str = Field(
+        default="",
         description="e.g. 'point-rating', 'Hay Guide Chart', 'level-descriptions'",
     )
     subgroups: list[str] = Field(
@@ -588,6 +588,9 @@ def upsert_og_metadata(
 ) -> None:
     """Insert or replace occupational group metadata (definition, inclusions, exclusions)."""
     subgroups = metadata.get("subgroups") or []
+    def _nonempty(v: str | None) -> str | None:
+        return v if v else None
+
     with con:
         con.execute(
             """INSERT INTO jes_og_metadata(
@@ -603,10 +606,10 @@ def upsert_og_metadata(
                    source_hash      = excluded.source_hash""",
             [
                 og_code,
-                metadata.get("group_definition"),
-                metadata.get("inclusions"),
-                metadata.get("exclusions"),
-                metadata.get("methodology"),
+                _nonempty(metadata.get("group_definition")),
+                _nonempty(metadata.get("inclusions")),
+                _nonempty(metadata.get("exclusions")),
+                _nonempty(metadata.get("methodology")),
                 json.dumps(subgroups) if subgroups else None,
                 source_hash,
             ],
