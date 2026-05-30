@@ -490,9 +490,11 @@ def extract_factors_from_chunks(
                 request_timeout=request_timeout,
             )
         except Exception as exc:
-            raise RuntimeError(
-                f"{og_code} chunk {index}/{len(chunks)} extraction failed: {exc}"
-            ) from exc
+            print(
+                f"  [{og_code}] chunk {index}/{len(chunks)} FAILED (skipping): {exc}",
+                flush=True,
+            )
+            continue
         print(f"  [{og_code}] chunk {index}/{len(chunks)} returned {len(factors)} factor(s)", flush=True)
         all_factors.extend(factors)
 
@@ -776,20 +778,26 @@ def main() -> int:
         f"(num_ctx={args.num_ctx}, num_predict={args.num_predict}, endpoint={args.base_url}) ...",
         flush=True,
     )
+    failed_ogs: list[str] = []
     for i, jes_path in enumerate(jes_files, 1):
         print(f"  ({i}/{len(jes_files)}) {jes_path.name}", flush=True)
-        process_one_jes(
-            con,
-            jes_path,
-            args.model,
-            args.version_label,
-            args.num_ctx,
-            args.num_predict,
-            args.base_url,
-            args.chunk_chars,
-            args.chunk_overlap,
-            args.request_timeout,
-        )
+        try:
+            process_one_jes(
+                con,
+                jes_path,
+                args.model,
+                args.version_label,
+                args.num_ctx,
+                args.num_predict,
+                args.base_url,
+                args.chunk_chars,
+                args.chunk_overlap,
+                args.request_timeout,
+            )
+        except Exception as exc:
+            og_code = jes_path.stem.split()[0]
+            print(f"  [{og_code}] FAILED (skipping file): {exc}", flush=True)
+            failed_ogs.append(og_code)
 
     factor_total = con.execute("SELECT COUNT(*) FROM jes_factors").fetchone()[0]
     og_meta_total = con.execute("SELECT COUNT(*) FROM jes_og_metadata").fetchone()[0]
@@ -798,6 +806,8 @@ def main() -> int:
         f"jes_og_metadata {og_meta_total:,} rows",
         flush=True,
     )
+    if failed_ogs:
+        print(f"  FAILED OGs ({len(failed_ogs)}): {', '.join(failed_ogs)}", flush=True)
 
     con.close()
     return 0
