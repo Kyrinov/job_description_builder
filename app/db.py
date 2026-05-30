@@ -93,6 +93,18 @@ CA_JES_SCHEMA_DDL = """
 
     CREATE INDEX IF NOT EXISTS idx_jes_factors_og ON jes_factors(og_code);
 
+    -- JES occupational group metadata: group definition, inclusions, exclusions (PIPE-03)
+    CREATE TABLE IF NOT EXISTS jes_og_metadata (
+        id               INTEGER PRIMARY KEY AUTOINCREMENT,
+        og_code          TEXT NOT NULL UNIQUE,
+        group_definition TEXT,
+        inclusions       TEXT,   -- verbatim inclusions text from the standard
+        exclusions       TEXT,   -- verbatim exclusions text from the standard
+        methodology      TEXT,   -- e.g. 'point-rating', 'Hay Guide Chart', 'level-descriptions'
+        subgroups        TEXT,   -- JSON: ["CT-IAU", "CT-FIN", "CT-EAV"] or null
+        source_hash      TEXT NOT NULL
+    );
+
     -- TBS policy doc chunks (FTS5 source table; Phase 5 CLASS-03 prereq)
     CREATE TABLE IF NOT EXISTS policy_chunks (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -142,7 +154,7 @@ def create_schema(con: sqlite3.Connection) -> None:
     - _vec_health_check: validates sqlite-vec loaded cleanly
     - source_documents, index_metadata: provenance + model assertion (Phase 2)
     - noc_units, noc_elements, noc_fts, noc_chunks_vec: NOC data (Phase 2)
-    - ca_clauses, jes_factors: CA + JES structured records (Phase 3, PIPE-02/PIPE-03/CA-01)
+    - ca_clauses, jes_factors, jes_og_metadata: CA + JES structured records (Phase 3, PIPE-02/PIPE-03/CA-01)
     - policy_chunks, policy_fts: TBS policy doc FTS5 index (Phase 3, Phase 5 prereq)
     """
     con.executescript("""
