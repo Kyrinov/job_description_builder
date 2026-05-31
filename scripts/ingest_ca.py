@@ -157,7 +157,25 @@ def select_relevant_sections(ca_json: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Stage 3: LLM extraction (instructor + Pydantic + 3 retries)
+# Model lifecycle helpers
+# ---------------------------------------------------------------------------
+
+def unload_model(model: str, base_url: str = "http://localhost:11434") -> None:
+    """Force-unload the model from VRAM to reset KV cache state between files."""
+    import httpx
+    try:
+        httpx.post(
+            f"{base_url.rstrip('/')}/api/chat",
+            json={"model": model, "messages": [{"role": "user", "content": ""}],
+                  "stream": False, "keep_alive": 0},
+            timeout=15,
+        )
+    except Exception:
+        pass  # Best-effort — if Ollama is hung this will fail silently
+
+
+# ---------------------------------------------------------------------------
+# Stage 3: LLM extraction (httpx + Pydantic)
 # ---------------------------------------------------------------------------
 
 def extract_clauses_via_llm(
@@ -385,6 +403,7 @@ def main() -> int:
         print(f"  ({i}/{len(ca_files)}) {ca_path.name}", flush=True)
         _, inserted = process_one_ca(con, ca_path, args.model, args.version_label, args.num_ctx, args.num_predict, args.base_url)
         total_inserted += inserted
+        unload_model(args.model, args.base_url)
 
     ca_total = con.execute("SELECT COUNT(*) FROM ca_clauses").fetchone()[0]
     print(f"\nIngest complete: ca_clauses {ca_total:,} rows ({total_inserted} new/refreshed this run)", flush=True)
