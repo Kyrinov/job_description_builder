@@ -258,6 +258,7 @@ def process_one_jes(
     chunk_chars: int,
     chunk_overlap: int,
     max_tokens: int,
+    force: bool = False,
 ) -> tuple[str, int]:
     """Returns (og_code, factors_stored). Skips on unchanged hash."""
     file_hash = compute_file_hash(str(jes_path))
@@ -271,7 +272,7 @@ def process_one_jes(
         "SELECT content_hash FROM source_documents WHERE source_name = ?",
         [source_name],
     ).fetchone()
-    if existing and existing["content_hash"] == file_hash and _derived_count_for_og(con, og_code) > 0:
+    if not force and existing and existing["content_hash"] == file_hash and _derived_count_for_og(con, og_code) > 0:
         print(f"  [{og_code}] Unchanged — skipping LLM extraction", flush=True)
         return og_code, 0
 
@@ -340,6 +341,10 @@ def parse_args() -> argparse.Namespace:
                         help=f"Overlap chars between chunks (default: {DEFAULT_CHUNK_OVERLAP})")
     parser.add_argument("--max-tokens", type=int, default=DEFAULT_MAX_TOKENS,
                         help=f"Max output tokens per API call (default: {DEFAULT_MAX_TOKENS})")
+    parser.add_argument("--og-filter", nargs="+", metavar="OG",
+                        help="Only process these OG codes, e.g. --og-filter NT CT EX WP")
+    parser.add_argument("--force", action="store_true",
+                        help="Re-extract even if source hash is unchanged")
     return parser.parse_args()
 
 
@@ -371,6 +376,11 @@ def main() -> int:
         flush=True,
     )
 
+    og_filter = {og.upper() for og in args.og_filter} if args.og_filter else None
+    if og_filter:
+        jes_files = [p for p in jes_files if extract_og_code(p.name).upper() in og_filter]
+        print(f"  Filtered to {len(jes_files)} file(s): {', '.join(og_filter)}")
+
     failed_ogs: list[str] = []
     for i, jes_path in enumerate(jes_files, 1):
         print(f"  ({i}/{len(jes_files)}) {jes_path.name}", flush=True)
@@ -383,6 +393,7 @@ def main() -> int:
                 chunk_chars=args.chunk_chars,
                 chunk_overlap=args.chunk_overlap,
                 max_tokens=args.max_tokens,
+                force=args.force,
             )
         except Exception as exc:
             og_code = jes_path.stem.split()[0]

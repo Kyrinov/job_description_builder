@@ -123,7 +123,7 @@ _WEB_NAV_MARKER = re.compile(r"^\s*Skip to main content", re.MULTILINE)
 # Individual benchmark / IPD position descriptions start at these section markers.
 # These come after the rating scales and are noisy for factor extraction.
 _BENCHMARK_SECTION_RE = re.compile(
-    r"^(Benchmark \d+:\s+\S|Illustrative Position Descriptions Index\s*$)",
+    r"^(Benchmark \d+:\s+\S|Illustrative Position Descriptions Index\s*$|Part II:\s*Benchmarks\s*$|BM \d+:\s+\S)",
     re.MULTILINE,
 )
 
