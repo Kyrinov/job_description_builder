@@ -27,6 +27,11 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+# Ensure project root is on sys.path so imports from app.* work
+_project_root = Path(__file__).resolve().parent.parent
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -159,21 +164,19 @@ def extract_clauses_via_llm(
     text: str,
     og_codes: list[str],
     model: str = "gemma4:31b",
+    num_ctx: int = 32768,
+    num_predict: int = 4096,
+    base_url: str = "http://localhost:11434",
+    request_timeout: float = 600.0,
     max_retries: int = 3,
 ) -> list[dict]:
     """
-    Call Ollama via instructor to extract structured clauses.
+    Call Ollama native /api/chat endpoint to extract structured clauses.
 
     Returns list of {clause_type, article_ref, clause_text} dicts.
     Wrapped so tests can patch this single function to inject synthetic clauses.
     """
-    import instructor
-    from openai import OpenAI  # instructor uses OpenAI client against the Ollama OpenAI-compat endpoint
-
-    client = instructor.from_openai(
-        OpenAI(base_url="http://localhost:11434/v1", api_key="ollama"),
-        mode=instructor.Mode.JSON,
-    )
+    import httpx
 
     prompt = (
         f"You are extracting clauses from a Canadian federal public service collective agreement "
@@ -185,16 +188,31 @@ def extract_clauses_via_llm(
         f"  - definition:  defined terms used in the agreement\n\n"
         f"For each, return article_ref (e.g. 'Article 7'), clause_type, and the verbatim clause_text "
         f"(minimum 10 characters).\n\n"
-        f"TEXT:\n{text[:30000]}"  # cap input to ~30k chars to stay under context window
+        f"TEXT:\n{text[:30000]}"
     )
 
-    result: CAExtractionResult = client.chat.completions.create(
-        model=model,
-        response_model=CAExtractionResult,
-        max_retries=max_retries,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return [c.model_dump() for c in result.clauses if c.clause_type in VALID_CLAUSE_TYPES]
+    endpoint = f"{base_url.rstrip('/')}/api/chat"
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": False,
+        "format": CAExtractionResult.model_json_schema(),
+        "options": {"num_ctx": num_ctx, "num_predict": num_predict, "temperature": 0},
+    }
+
+    last_error: Exception | None = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = httpx.post(endpoint, json=payload, timeout=request_timeout)
+            response.raise_for_status()
+            content = response.json()["message"]["content"]
+            result = CAExtractionResult.model_validate_json(content)
+            return [c.model_dump() for c in result.clauses if c.clause_type in VALID_CLAUSE_TYPES]
+        except Exception as exc:
+            last_error = exc
+            print(f"  request attempt {attempt}/{max_retries} failed: {exc}", flush=True)
+
+    raise RuntimeError(f"extraction failed after {max_retries} attempts: {last_error}") from last_error
 
 
 # ---------------------------------------------------------------------------
@@ -277,6 +295,9 @@ def process_one_ca(
     ca_json_path: Path,
     model: str,
     version_label: str,
+    num_ctx: int = 32768,
+    num_predict: int = 4096,
+    base_url: str = "http://localhost:11434",
 ) -> tuple[list[str], int]:
     """
     Returns (og_codes, clauses_inserted_or_skipped_count).
@@ -309,7 +330,7 @@ def process_one_ca(
 
     text = select_relevant_sections(ca_json)
     print(f"  [{'+'.join(og_codes)}] extracting clauses via {model} ...", flush=True)
-    clauses = extract_clauses_via_llm(text, og_codes, model=model)
+    clauses = extract_clauses_via_llm(text, og_codes, model=model, num_ctx=num_ctx, num_predict=num_predict, base_url=base_url)
     upsert_ca_clauses(con, og_codes, clauses, file_hash)
     return og_codes, len(clauses) * len(og_codes)
 
@@ -330,6 +351,12 @@ def parse_args() -> argparse.Namespace:
                         help="Ollama model for clause extraction (default: gemma4:31b)")
     parser.add_argument("--version-label", default="CA 2023-2026 v1.0",
                         help="Version label stored in source_documents")
+    parser.add_argument("--num-ctx", type=int, default=32768,
+                        help="Ollama context window size (default: 32768)")
+    parser.add_argument("--num-predict", type=int, default=4096,
+                        help="Maximum output tokens per call (default: 4096)")
+    parser.add_argument("--base-url", default="http://localhost:11434",
+                        help="Ollama API endpoint (default: http://localhost:11434)")
     return parser.parse_args()
 
 
@@ -356,7 +383,7 @@ def main() -> int:
     total_inserted = 0
     for i, ca_path in enumerate(ca_files, 1):
         print(f"  ({i}/{len(ca_files)}) {ca_path.name}", flush=True)
-        _, inserted = process_one_ca(con, ca_path, args.model, args.version_label)
+        _, inserted = process_one_ca(con, ca_path, args.model, args.version_label, args.num_ctx, args.num_predict, args.base_url)
         total_inserted += inserted
 
     ca_total = con.execute("SELECT COUNT(*) FROM ca_clauses").fetchone()[0]
