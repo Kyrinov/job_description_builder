@@ -120,7 +120,7 @@ pip install ollama==0.6.1 instructor==1.15.1
 
 # Ollama server must be running before any call is made:
 ollama serve
-ollama pull gemma4:27b
+ollama pull gemma4:31b
 ollama pull nomic-embed-text
 ```
 
@@ -178,7 +178,7 @@ class NOCRankingResult(BaseModel):
 async def rank_noc_candidates(
     work_description: str,
     candidate_profiles: str,  # pre-formatted string of retrieved NOC profiles
-    model: str = "gemma4:27b",
+    model: str = "gemma4:31b",
 ) -> NOCRankingResult:
     return await instructor_client.chat.completions.create(
         model=model,
@@ -273,13 +273,13 @@ job_description_builder/
 
 | Parameter | Value | Rationale |
 |-----------|-------|-----------|
-| Generation model | `gemma4:27b` (default, configurable via settings) | Sufficient instruction-following and citation accuracy for ranking; swap to `gemma4:12b` if latency is unacceptable on the AGX Orin |
+| Generation model | `gemma4:31b` (default, configurable via settings) | Sufficient instruction-following and citation accuracy for ranking; swap to `gemma4:12b` if latency is unacceptable on the AGX Orin |
 | Embedding model | `nomic-embed-text` (768-dim) | Already used in Phase 3; noc_embeddings table is already populated with these vectors |
 | `temperature` | `0.0` | Deterministic ranking; the task is selection and verbatim citation, not creative generation |
 | `max_tokens` | `2048` | Sufficient for 5 candidates with code + title + 3 cited duties + justification; never leave unbounded |
 | `num_ctx` (Ollama option) | `32768` | Fits 10 NOC candidate profiles (~1 k tokens each) plus the work description and system prompt with headroom |
 | `max_retries` (instructor) | `3` | Instructor appends the `ValidationError` to the conversation on each retry; 3 is the production ceiling before raising |
-| Request timeout | `300.0` s | gemma4:27b on AGX Orin takes 60–180 s for a ~2 k token response; 300 s provides buffer for cold-start |
+| Request timeout | `300.0` s | gemma4:31b on AGX Orin takes 60–180 s for a ~2 k token response; 300 s provides buffer for cold-start |
 
 **Core Pattern — Three-Stage Pipeline:**
 
@@ -304,7 +304,7 @@ async def map_work_description(
     *,
     fts_limit: int = 30,     # Stage 1: FTS5 BM25 shortlist size
     rerank_limit: int = 10,  # Stage 2: post-embedding rerank size
-    model: str = "gemma4:27b",
+    model: str = "gemma4:31b",
 ) -> NOCRankingResult:
     """
     Three-stage NL->NOC pipeline.
@@ -672,8 +672,8 @@ Do not stream partial JSON to manage context. The entire prompt is assembled bef
 | FTS5 keyword query | < 5 ms | SQLite BM25 on ~900 rows, in-process |
 | nomic-embed-text (1 text) | 50–150 ms | AGX Orin, model warm |
 | sqlite-vec cosine search (900 rows) | < 10 ms | In-process, no network |
-| gemma4:27b LLM call (model warm, ~10 k context) | 30–90 s | AGX Orin INT4 quant |
-| gemma4:27b LLM call (cold start) | 60–180 s | Model loading from disk |
+| gemma4:31b LLM call (model warm, ~10 k context) | 30–90 s | AGX Orin INT4 quant |
+| gemma4:31b LLM call (cold start) | 60–180 s | Model loading from disk |
 | **Total pipeline (model warm)** | **~30–90 s** | Dominated entirely by Stage 3 |
 
 **Latency reduction options (if 30 s is too slow for interactive use):**
@@ -780,7 +780,7 @@ prompts:
   - file://../../app/ai/prompts/noc_ranking_system.txt
 
 providers:
-  - id: ollama:gemma4:27b
+  - id: ollama:gemma4:31b
     config:
       apiBaseUrl: http://localhost:11434/v1
 
