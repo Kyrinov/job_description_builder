@@ -107,56 +107,357 @@ The three-stage retrieval pipeline (FTS5 → sqlite-vec → LLM justification) i
 > Fetched from official docs by `gsd-ai-researcher`. Distilled for this specific use case.
 
 ### Installation
+
+Both packages are already installed. No action required.
+
 ```bash
-# Install command(s)
+# Already in requirements.txt — confirming installed versions:
+# ollama==0.6.1
+# instructor==1.15.1
+#
+# If setting up a fresh environment:
+pip install ollama==0.6.1 instructor==1.15.1
+
+# Ollama server must be running before any call is made:
+ollama serve
+ollama pull gemma4:27b
+ollama pull nomic-embed-text
 ```
 
 ### Core Imports
+
 ```python
-# Key imports for this use case
+# Structured LLM call via instructor wrapping the OpenAI-compatible Ollama endpoint
+import instructor
+from openai import AsyncOpenAI
+from pydantic import BaseModel, Field
+
+# Native Ollama async client for embeddings (Stage 2 rerank)
+from ollama import AsyncClient as OllamaAsyncClient
+
+# SQLite retrieval infrastructure — already built in Phases 2-3
+import sqlite3
+import sqlite_vec
 ```
 
 ### Entry Point Pattern
+
+Minimal working example for the instructor + Ollama structured call pattern:
+
 ```python
-# Minimal working example for this system type
+import asyncio
+import instructor
+from openai import AsyncOpenAI
+from pydantic import BaseModel, Field
+
+# Build the async instructor client pointing at Ollama's OpenAI-compatible endpoint.
+# instructor.Mode.JSON tells instructor to request JSON output and validate against
+# the Pydantic model. Do NOT use Mode.TOOLS — tool-calling support varies by model
+# in Ollama and will silently fail on most models.
+_async_openai = AsyncOpenAI(
+    base_url="http://localhost:11434/v1",
+    api_key="ollama",  # required by the OpenAI SDK; not validated by Ollama
+)
+instructor_client = instructor.from_openai(_async_openai, mode=instructor.Mode.JSON)
+
+
+class NOCCandidate(BaseModel):
+    noc_code: str = Field(..., description="5-digit NOC 2021 unit group code, e.g. '11201'")
+    title: str
+    rank: int = Field(..., ge=1, le=10)
+    matched_duties: list[str] = Field(
+        ..., description="Verbatim duty statements from the NOC profile that support this match"
+    )
+    justification: str = Field(..., min_length=20)
+
+
+class NOCRankingResult(BaseModel):
+    candidates: list[NOCCandidate] = Field(..., min_length=1, max_length=5)
+
+
+async def rank_noc_candidates(
+    work_description: str,
+    candidate_profiles: str,  # pre-formatted string of retrieved NOC profiles
+    model: str = "gemma4:27b",
+) -> NOCRankingResult:
+    return await instructor_client.chat.completions.create(
+        model=model,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a Government of Canada HR classification expert. "
+                    "Rank the provided NOC 2021 unit groups by fit with the work description. "
+                    "Only cite duty statements that appear verbatim in the provided profiles."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"WORK DESCRIPTION:\n{work_description}\n\n"
+                    f"NOC CANDIDATES (pre-screened):\n{candidate_profiles}"
+                ),
+            },
+        ],
+        response_model=NOCRankingResult,
+        max_retries=3,      # instructor retries with the validation error appended to conversation
+        max_tokens=2048,
+        temperature=0.0,
+    )
+
+
+if __name__ == "__main__":
+    result = asyncio.run(
+        rank_noc_candidates(
+            work_description="Provides policy advice on procurement regulations...",
+            candidate_profiles="[11201] Financial auditors and accountants\nMain duties: ...",
+        )
+    )
+    print(result.model_dump_json(indent=2))
 ```
 
 ### Key Abstractions
-<!-- Framework-specific concepts the developer must understand before coding -->
+
 | Concept | What It Is | When You Use It |
 |---------|-----------|-----------------|
-| | | |
+| `instructor.from_openai(client, mode=Mode.JSON)` | Wraps an OpenAI-compatible async client to inject `response_model=` validation and automatic retry into `.chat.completions.create()` | One-time setup at module level; reuse the same client across all requests |
+| `response_model=` on `.create()` | Declares which Pydantic class to parse and validate the LLM's JSON output against; failed validation triggers a retry with the error appended to the conversation | Every structured LLM call in this pipeline |
+| `max_retries=` on `.create()` | Number of times instructor re-prompts the LLM after Pydantic validation failure; each retry adds the `ValidationError` text to the conversation so the model can self-correct | Set to 3 in production; log a `WARNING` whenever a retry fires — frequent retries signal the prompt or schema needs tightening |
+| `instructor.Mode.JSON` | Tells instructor to instruct the model to output raw JSON and to parse it directly, rather than using OpenAI function-calling tool syntax | Always use this mode with Ollama; `Mode.TOOLS` requires the model to support the OpenAI tools API, which most Ollama models do not |
+| `AsyncOpenAI(base_url=..., api_key="ollama")` | OpenAI Python SDK configured to talk to Ollama's `/v1` compatibility endpoint; `api_key` is a required-but-ignored placeholder | Client construction only; actual inference runs on the local Ollama server |
 
 ### Common Pitfalls
-<!-- Gotchas specific to this framework and system type — from docs, issues, and community reports -->
-1.
-2.
-3.
+
+1. **Using `Mode.TOOLS` instead of `Mode.JSON` with Ollama.** Most models served by Ollama do not implement OpenAI-style function/tool calling. Using `Mode.TOOLS` causes instructor to inject a `tools` array into the request that the model ignores, returning free-text that fails Pydantic validation on every attempt and silently exhausts all retries before raising. Always use `Mode.JSON` unless the specific model in use is confirmed to support tool-calling (e.g. a `llama3.1` tool-calling variant).
+
+2. **Calling `asyncio.run()` inside a running FastAPI event loop.** FastAPI runs coroutines on an existing event loop. Wrapping an `await` call in `asyncio.run()` inside a route handler raises `RuntimeError: This event loop is already running`. The fix is to declare route handlers `async def` and `await` the coroutine directly. All test functions that call async pipeline code must also be `async def` with `@pytest.mark.asyncio` (or `asyncio_mode = "auto"` in `pytest.ini`).
+
+3. **Building the instructor client inside the route handler on every request.** `instructor.from_openai(AsyncOpenAI(...))` creates an httpx connection pool. Constructing it per-request creates and tears down that pool on every call, adding 50–200 ms overhead and risking connection exhaustion under concurrent load. Build the client once at module level and inject it via FastAPI's `Depends` mechanism or import it directly from `app/ai/noc_ranking.py`.
+
+4. **Injecting the full NOC corpus into the LLM prompt.** The ~900 NOC profiles total several hundred thousand tokens — far beyond any useful context window and causing severe quality degradation as the model attends to irrelevant content. The three-stage funnel (FTS5 → sqlite-vec → LLM) exists specifically to reduce the candidate pool to 5–10 profiles before any token reaches the LLM. Never bypass Stage 1 or Stage 2.
+
+5. **Skipping the `format=` / `Mode.JSON` parameter and relying solely on prompt instructions.** Without a structured output directive, even capable models will occasionally deviate from the schema (extra prose, missing fields, wrong JSON types). The existing JES scripts use `format=model_json_schema()` on the native Ollama endpoint; for Phase 4 using instructor, `Mode.JSON` achieves the same enforcement plus adds retry-on-failure. Never rely on "please respond in JSON" in the system prompt alone.
 
 ### Recommended Project Structure
+
 ```
-project/
-├── # Framework-specific folder layout
+job_description_builder/
+├── app/
+│   ├── api/
+│   │   └── noc_mapping.py        # FastAPI router: POST /api/noc/map
+│   ├── services/
+│   │   └── noc_mapper.py         # Three-stage pipeline orchestration
+│   ├── ai/
+│   │   └── noc_ranking.py        # instructor client + NOCRankingResult Pydantic models
+│   ├── models/
+│   │   └── noc.py                # Dataclass / response models for NOC rows
+│   └── db.py                     # Existing sqlite-vec connection factory
+└── tests/
+    ├── test_noc_mapping.py        # Integration tests: full 3-stage pipeline, FastAPI route
+    └── test_noc_ranking.py        # Unit tests: Pydantic model validators, retry edge cases
 ```
+
+### Sources
+
+- Instructor + Ollama structured output: https://python.useinstructor.com/examples/ollama
+- Instructor async client pattern: https://python.useinstructor.com/integrations/ollama
+- Instructor retry and validation docs: https://python.useinstructor.com/why
+- Ollama Python SDK README (async, embeddings): https://github.com/ollama/ollama-python/blob/main/README.md
+- Ollama OpenAI compatibility endpoint: https://ollama.com/blog/openai-compatibility
 
 ---
 
 ## 4. Implementation Guidance
 
 **Model Configuration:**
-<!-- Which model(s), temperature, max tokens, and other key parameters -->
 
-**Core Pattern:**
-<!-- The primary implementation pattern for this system type in this framework -->
+| Parameter | Value | Rationale |
+|-----------|-------|-----------|
+| Generation model | `gemma4:27b` (default, configurable via settings) | Sufficient instruction-following and citation accuracy for ranking; swap to `gemma4:12b` if latency is unacceptable on the AGX Orin |
+| Embedding model | `nomic-embed-text` (768-dim) | Already used in Phase 3; noc_embeddings table is already populated with these vectors |
+| `temperature` | `0.0` | Deterministic ranking; the task is selection and verbatim citation, not creative generation |
+| `max_tokens` | `2048` | Sufficient for 5 candidates with code + title + 3 cited duties + justification; never leave unbounded |
+| `num_ctx` (Ollama option) | `32768` | Fits 10 NOC candidate profiles (~1 k tokens each) plus the work description and system prompt with headroom |
+| `max_retries` (instructor) | `3` | Instructor appends the `ValidationError` to the conversation on each retry; 3 is the production ceiling before raising |
+| Request timeout | `300.0` s | gemma4:27b on AGX Orin takes 60–180 s for a ~2 k token response; 300 s provides buffer for cold-start |
+
+**Core Pattern — Three-Stage Pipeline:**
+
+```python
+# app/services/noc_mapper.py
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import sqlite3
+
+import sqlite_vec
+from ollama import AsyncClient as OllamaAsyncClient
+
+from app.ai.noc_ranking import instructor_client, NOCRankingResult
+from app.config import settings
+
+
+async def map_work_description(
+    work_description: str,
+    db_path: str,
+    *,
+    fts_limit: int = 30,     # Stage 1: FTS5 BM25 shortlist size
+    rerank_limit: int = 10,  # Stage 2: post-embedding rerank size
+    model: str = "gemma4:27b",
+) -> NOCRankingResult:
+    """
+    Three-stage NL->NOC pipeline.
+
+    Stage 1 — FTS5 keyword shortlist:
+        SQLite BM25 full-text search over noc_profiles returns up to
+        `fts_limit` candidates ordered by keyword relevance.
+
+    Stage 2 — sqlite-vec embedding rerank:
+        Embed the work description with nomic-embed-text, cosine-search
+        the noc_embeddings virtual table restricted to Stage 1 candidates,
+        and keep the top `rerank_limit` by vector similarity.
+
+    Stage 3 — instructor LLM call:
+        Inject the top `rerank_limit` NOC profiles as context. The LLM
+        returns a Pydantic-validated NOCRankingResult with ranked candidates
+        and verbatim cited duties.
+    """
+    # SQLite is synchronous — run in a thread to avoid blocking the event loop
+    # under concurrent FastAPI requests. For single-request scripts, the direct
+    # call is fine.
+    conn = await asyncio.to_thread(_open_db, db_path)
+
+    # --- Stage 1: FTS5 keyword shortlist -----------------------------------
+    fts_rows = await asyncio.to_thread(
+        conn.execute,
+        """
+        SELECT noc_code, title, teer, main_duties
+        FROM noc_fts
+        WHERE noc_fts MATCH ?
+        ORDER BY rank
+        LIMIT ?
+        """,
+        (work_description, fts_limit),
+    )
+    fts_rows = fts_rows.fetchall()
+
+    if not fts_rows:
+        conn.close()
+        raise ValueError(
+            "FTS5 shortlist returned zero results for the given work description. "
+            "Check that the noc_fts index is populated and the query is non-empty."
+        )
+
+    # --- Stage 2: sqlite-vec embedding rerank ------------------------------
+    ollama = OllamaAsyncClient(host=settings.ollama_base_url)
+    embed_resp = await ollama.embed(
+        model="nomic-embed-text",
+        input=work_description,
+    )
+    query_vec: list[float] = embed_resp.embeddings[0]
+
+    fts_codes = [row[0] for row in fts_rows]
+    placeholders = ",".join("?" * len(fts_codes))
+
+    vec_rows = await asyncio.to_thread(
+        lambda: conn.execute(
+            f"""
+            SELECT n.noc_code, n.title, n.teer, n.main_duties,
+                   vec_distance_cosine(e.embedding, ?) AS dist
+            FROM noc_profiles n
+            JOIN noc_embeddings e ON e.noc_code = n.noc_code
+            WHERE n.noc_code IN ({placeholders})
+            ORDER BY dist ASC
+            LIMIT ?
+            """,
+            (sqlite_vec.serialize_float32(query_vec), *fts_codes, rerank_limit),
+        ).fetchall()
+    )
+    conn.close()
+
+    # --- Stage 3: instructor LLM call for ranked justification -------------
+    candidate_block = _format_candidates(vec_rows)
+
+    result: NOCRankingResult = await instructor_client.chat.completions.create(
+        model=model,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a Government of Canada HR classification specialist. "
+                    "Rank the provided NOC 2021 unit group candidates by how well they "
+                    "match the work description. For each candidate you select, cite the "
+                    "specific duty statements from the profile that support the match. "
+                    "CRITICAL: Only cite statements that appear verbatim in the provided "
+                    "profiles. Do not paraphrase or fabricate duties."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"WORK DESCRIPTION:\n{work_description}\n\n"
+                    f"NOC CANDIDATES (top {rerank_limit} by semantic similarity):\n"
+                    f"{candidate_block}"
+                ),
+            },
+        ],
+        response_model=NOCRankingResult,
+        max_retries=3,
+        max_tokens=2048,
+        temperature=0.0,
+        extra_body={"options": {"num_ctx": 32768}},  # Ollama-specific parameter
+    )
+    return result
+
+
+def _open_db(db_path: str) -> sqlite3.Connection:
+    conn = sqlite3.connect(db_path)
+    conn.enable_load_extension(True)
+    sqlite_vec.load(conn)
+    conn.enable_load_extension(False)
+    return conn
+
+
+def _format_candidates(rows: list[tuple]) -> str:
+    """Format sqlite-vec rerank rows into a prompt-injectable block."""
+    blocks = []
+    for noc_code, title, teer, main_duties, dist in rows:
+        # Truncate abnormally long duty text to keep tokens bounded
+        duties_text = main_duties[:1500] if len(main_duties) > 1500 else main_duties
+        blocks.append(
+            f"[{noc_code}] {title} (TEER {teer})\n"
+            f"Main duties:\n{duties_text}\n"
+            f"(vector distance: {dist:.4f})"
+        )
+    return "\n\n---\n\n".join(blocks)
+```
 
 **Tool Use:**
-<!-- Tools/integrations needed and how to configure them -->
+
+The LLM makes no external tool calls. Retrieval (FTS5 + sqlite-vec) is deterministic Python code that runs before the LLM receives any input. The LLM's only job is ranking the injected candidates and citing verbatim duties from its context window. This design is intentional: tool-calling adds latency and a second failure mode; pre-retrieval is faster, deterministic, and produces an auditable paper trail of exactly what context the model was given.
 
 **State Management:**
-<!-- How state is persisted, retrieved, and updated -->
+
+This pipeline is stateless per-request. No conversation history or session state is maintained between calls. Each invocation receives a complete, self-contained context (work description + pre-screened profiles) and returns a complete result. This matches FastAPI's request/response model and makes the system trivially restartable and testable in isolation.
+
+Advisor refinement (e.g., "show me more options" or "try a TEER 3 filter") is implemented at the API layer by re-invoking the pipeline with adjusted parameters, not by maintaining LLM conversation state.
 
 **Context Window Strategy:**
-<!-- How to manage context limits for this system type -->
+
+The three-stage funnel is the context management strategy. The LLM never sees the full corpus.
+
+| Stage | Token Budget |
+|-------|-------------|
+| System prompt | ~200 tokens |
+| Work description | ~100–400 tokens |
+| 10 NOC profiles (avg 1 k each, truncated at 1,500 chars) | ~8,000–12,000 tokens |
+| LLM response (`max_tokens`) | 2,048 tokens |
+| Total (worst case) | ~14,648 tokens of 32,768 available |
+
+If a profile's `main_duties` field exceeds 1,500 characters, truncate it before injection and log a warning with the NOC code. The full text remains in the database for display; the LLM only needs enough to discriminate between candidates.
+
+Do not increase `rerank_limit` beyond 15 without recalculating the token budget and re-testing latency on the AGX Orin. Each additional profile adds approximately 1,000 tokens of context.
 
 ---
 
@@ -166,28 +467,250 @@ project/
 
 ### Structured Outputs with Pydantic
 
-<!-- Framework-specific Pydantic integration pattern for this use case -->
-<!-- Include: output model definition, how the framework uses it, retry logic on validation failure -->
+**Output model for the NOC ranking pipeline:**
 
 ```python
-# Pydantic output model for this system type
+# app/ai/noc_ranking.py
+from __future__ import annotations
+
+import instructor
+from openai import AsyncOpenAI
+from pydantic import BaseModel, Field, field_validator
+
+from app.config import settings
+
+
+class NOCCandidate(BaseModel):
+    noc_code: str = Field(
+        ...,
+        pattern=r"^\d{5}$",
+        description="5-digit NOC 2021 unit group code",
+    )
+    title: str = Field(..., min_length=3)
+    teer: int = Field(..., ge=0, le=5, description="TEER level 0-5")
+    rank: int = Field(..., ge=1, le=10)
+    matched_duties: list[str] = Field(
+        ...,
+        min_length=1,
+        description=(
+            "Verbatim duty statements copied from the provided NOC profile. "
+            "Each entry must be an exact substring of the provided profile text."
+        ),
+    )
+    justification: str = Field(
+        ...,
+        min_length=30,
+        description="Why this unit group matches the work description",
+    )
+
+    @field_validator("noc_code")
+    @classmethod
+    def noc_code_all_digits(cls, v: str) -> str:
+        if not v.isdigit():
+            raise ValueError(f"noc_code must be all digits, got: {v!r}")
+        return v
+
+    @field_validator("matched_duties")
+    @classmethod
+    def duties_not_blank(cls, v: list[str]) -> list[str]:
+        if any(not s.strip() for s in v):
+            raise ValueError("matched_duties must not contain blank strings")
+        return v
+
+
+class NOCRankingResult(BaseModel):
+    candidates: list[NOCCandidate] = Field(
+        ...,
+        min_length=1,
+        max_length=5,
+        description="Ranked list of NOC candidates, best match first (rank=1)",
+    )
+
+    @field_validator("candidates")
+    @classmethod
+    def ranks_are_sequential(cls, v: list[NOCCandidate]) -> list[NOCCandidate]:
+        ranks = sorted(c.rank for c in v)
+        if ranks != list(range(1, len(ranks) + 1)):
+            raise ValueError(
+                f"candidate ranks must be 1..N with no gaps or duplicates, got: {ranks}"
+            )
+        return v
+
+
+# Module-level client — built once at import time, reused for the application lifetime.
+# AsyncOpenAI is required so the client is safe to await inside FastAPI route handlers.
+instructor_client = instructor.from_openai(
+    AsyncOpenAI(
+        base_url=settings.ollama_base_url.rstrip("/") + "/v1",
+        api_key="ollama",       # placeholder; Ollama does not validate this
+    ),
+    mode=instructor.Mode.JSON,  # Required for Ollama; see pitfall #1 in Section 3
+)
 ```
+
+**How instructor uses the model:** When `response_model=NOCRankingResult` is passed to `.create()`, instructor appends a JSON schema instruction to the system prompt and wraps the response parser to call `NOCRankingResult.model_validate()`. If `ValidationError` is raised, instructor appends the error text as a new user message and calls the model again — up to `max_retries` times. The model receives its own invalid output alongside the exact field and error that failed, which is generally sufficient for self-correction on well-specified schemas.
+
+**Retry logic for production:**
+- Log a `WARNING` on the first retry, including the `noc_code` from the work description hash and the `ValidationError` message.
+- Log an `ERROR` and raise a `503` to the API caller if all retries are exhausted.
+- If `noc_code` regex validation or `ranks_are_sequential` fires more than once per 50 requests in production, tighten the system prompt to explicitly state the format constraint.
+- Do not catch and silence `ValidationError` — surface it so the FastAPI exception handler returns a structured error response rather than a generic 500.
 
 ### Async-First Design
 
-<!-- How async is handled in this framework, the one common mistake, and when to stream vs. await -->
+**How async works in this stack:**
+
+The pipeline has two genuine async I/O points: the Ollama embedding call (Stage 2, `await ollama.embed(...)`) and the instructor LLM call (Stage 3, `await instructor_client.chat.completions.create(...)`). SQLite queries are synchronous; wrap them in `asyncio.to_thread()` inside a FastAPI route to avoid blocking the event loop under concurrent requests.
+
+```python
+# FastAPI route — correct async pattern
+from fastapi import APIRouter
+from app.services.noc_mapper import map_work_description
+from app.config import settings
+
+router = APIRouter()
+
+@router.post("/api/noc/map", response_model=NOCRankingResult)
+async def map_noc(body: WorkDescriptionRequest) -> NOCRankingResult:
+    # Both the embedding call and the LLM call are awaited inside this coroutine.
+    # FastAPI runs this inside the existing event loop.
+    # Do NOT call asyncio.run() here.
+    return await map_work_description(
+        work_description=body.text,
+        db_path=settings.db_path,
+    )
+```
+
+**The one common mistake — `asyncio.run()` inside an async context:**
+
+```python
+# WRONG — raises RuntimeError: This event loop is already running
+@router.post("/api/noc/map")
+async def map_noc(body: WorkDescriptionRequest):
+    return asyncio.run(map_work_description(body.text, settings.db_path))
+
+# CORRECT — await the coroutine directly
+@router.post("/api/noc/map")
+async def map_noc(body: WorkDescriptionRequest):
+    return await map_work_description(body.text, settings.db_path)
+```
+
+**Stream vs. await:** Use `await` (not streaming) for this pipeline. The structured output must be fully received and Pydantic-validated before it can be returned — partial JSON is not a valid `NOCRankingResult`. Streaming is appropriate for free-text generation (Phase 5 JD draft) where partial tokens improve perceived responsiveness. For ranking and structured extraction, always await the complete response.
+
+**pytest-asyncio:** Test functions that exercise the pipeline must be `async def`. Add `asyncio_mode = "auto"` to `pyproject.toml` under `[tool.pytest.ini_options]` to avoid decorating every test with `@pytest.mark.asyncio`. The project already has `pytest-asyncio==0.25.3` installed.
 
 ### Prompt Engineering Discipline
 
-<!-- System vs. user prompt separation, few-shot guidance, token budget strategy -->
+**System vs. user prompt separation:**
+
+The system prompt carries the standing persona and hard constraints. The user prompt carries per-request data. Always keep them in separate message objects — never concatenate them into a single user message.
+
+```python
+messages=[
+    {
+        "role": "system",
+        "content": (
+            # Persona
+            "You are a Government of Canada HR classification specialist with "
+            "expertise in NOC 2021 occupational taxonomy.\n\n"
+            # Hard citation constraint — the most important single line
+            "CRITICAL: You may only cite duty statements that appear verbatim "
+            "in the provided NOC profiles. Do not paraphrase, summarize, or "
+            "invent duties. If no duty directly supports a match, reduce the "
+            "candidate's rank rather than fabricating a citation.\n\n"
+            # Output shape expectation
+            "Return 1 to 5 candidates ranked best-first (rank=1 is best fit)."
+        ),
+    },
+    {
+        "role": "user",
+        "content": (
+            f"WORK DESCRIPTION:\n{work_description}\n\n"
+            f"NOC CANDIDATES:\n{candidate_block}"
+        ),
+    },
+]
+```
+
+**Few-shot guidance:** Do not inject inline few-shot examples for this pipeline. The pre-screened NOC profiles are the grounding context; adding ranked examples would consume 2,000–4,000 tokens that are better spent on additional candidate profiles. If evaluation reveals consistent TEER-level confusion (e.g., TEER 2 vs. TEER 3 administrative positions), add one static few-shot pair demonstrating correct TEER-aware ranking (~600 tokens), placed in the system prompt after the persona and before the constraint.
+
+**`max_tokens` discipline:** Always pass `max_tokens=2048` explicitly. Never pass `None` in production. Without a bound, a 27 B model will occasionally emit chain-of-thought reasoning before the JSON output, consuming the full context window on an AGX Orin and triggering a timeout rather than a clean validation error.
 
 ### Context Window Management
 
-<!-- Strategy specific to this system type: RAG chunking / conversation summarisation / agent compaction -->
+**The funnel is the strategy.** There is no mid-pipeline truncation needed because the three stages reduce the candidate set to a manageable size before the first token reaches the LLM:
+
+```
+Stage 1 (FTS5):   ~900 profiles  → 30 candidates (titles only, no duties in query)
+Stage 2 (vec):    30 candidates  → 10 full profiles injected into LLM context
+Stage 3 (LLM):    ~10-14 k tokens context → 2,048 tokens response
+```
+
+**Truncation rule:** If any single profile's `main_duties` field exceeds 1,500 characters, truncate to 1,500 chars before injecting. The full text remains in the database for advisor display; the LLM only needs enough to discriminate between candidates. Log the truncation at `WARNING` level with the NOC code so it can be spotted in production.
+
+**Context budget sanity check before increasing rerank_limit:**
+
+```
+system prompt:         ~200 tokens
+work description:      ~300 tokens (typical)
+N profiles × 1k each:  N × 1,000 tokens
+max_tokens (response):  2,048 tokens
+num_ctx ceiling:       32,768 tokens
+
+Maximum safe N = (32,768 - 200 - 300 - 2,048) / 1,000 ≈ 30 profiles
+Recommended N = 10 (leaves 18k tokens of headroom for longer profiles)
+```
+
+Do not stream partial JSON to manage context. The entire prompt is assembled before the call. Manage context window usage by controlling Stage 2's `rerank_limit`.
 
 ### Cost and Latency Budget
 
-<!-- Per-call cost estimate, caching strategy, sub-task model routing -->
+**Local Ollama — cost is GPU time, not API dollars:**
+
+| Stage | Latency Estimate | Notes |
+|-------|-----------------|-------|
+| FTS5 keyword query | < 5 ms | SQLite BM25 on ~900 rows, in-process |
+| nomic-embed-text (1 text) | 50–150 ms | AGX Orin, model warm |
+| sqlite-vec cosine search (900 rows) | < 10 ms | In-process, no network |
+| gemma4:27b LLM call (model warm, ~10 k context) | 30–90 s | AGX Orin INT4 quant |
+| gemma4:27b LLM call (cold start) | 60–180 s | Model loading from disk |
+| **Total pipeline (model warm)** | **~30–90 s** | Dominated entirely by Stage 3 |
+
+**Latency reduction options (if 30 s is too slow for interactive use):**
+- Switch generation model to `gemma4:12b` — approximately 2x faster; benchmark accuracy loss on the NOC test set before deploying
+- Reduce `rerank_limit` from 10 to 5 — halves Stage 3 context, reducing time-to-first-token
+- Pre-warm the model at FastAPI startup with a probe request (send a minimal dummy prompt when the server starts so the model is loaded in Ollama's memory before the first real request)
+
+**Caching strategy:** Cache at the result level, keyed on a hash of the work description, the generation model name, and the NOC database version. The pipeline is deterministic at `temperature=0.0`, so identical inputs always produce identical outputs.
+
+```python
+import hashlib
+
+NOC_DB_VERSION = "noc_2021_v1"  # bump when the noc_profiles table is rebuilt
+
+cache_key = hashlib.sha256(
+    f"{work_description}|{model}|{NOC_DB_VERSION}".encode()
+).hexdigest()
+
+# Check cache before running the pipeline
+cached = conn.execute(
+    "SELECT result_json FROM noc_mapping_cache WHERE cache_key = ?",
+    (cache_key,),
+).fetchone()
+if cached:
+    return NOCRankingResult.model_validate_json(cached[0])
+
+# ... run pipeline ...
+
+# Store result after Stage 3 completes
+conn.execute(
+    "INSERT OR REPLACE INTO noc_mapping_cache (cache_key, result_json) VALUES (?, ?)",
+    (cache_key, result.model_dump_json()),
+)
+conn.commit()
+```
+
+**Sub-task model routing:** `nomic-embed-text` is already the correct lightweight model for Stage 2. There is no routing decision for Stage 3 — it requires a capable reasoning model to produce accurate rankings with verbatim citations. Do not route Stage 3 to a smaller model to reduce latency without first running accuracy benchmarks on a labeled NOC test set. A wrong NOC code at this step propagates through all downstream phases.
 
 ---
 
@@ -265,8 +788,8 @@ project/
 - [x] Domain expert roles defined for evaluation involvement
 - [ ] Framework selected with rationale documented
 - [ ] Alternatives considered and ruled out
-- [ ] Framework quick reference written (install, imports, pattern, pitfalls)
-- [ ] AI systems best practices written (Section 4b: Pydantic, async, prompt discipline, context)
+- [x] Framework quick reference written (install, imports, pattern, pitfalls)
+- [x] AI systems best practices written (Section 4b: Pydantic, async, prompt discipline, context)
 - [ ] Evaluation dimensions grounded in domain rubric ingredients
 - [ ] Each eval dimension has a concrete rubric (Good/Bad in domain language)
 - [ ] Eval tooling selected — Arize Phoenix default confirmed or override noted
