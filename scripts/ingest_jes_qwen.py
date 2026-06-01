@@ -84,6 +84,33 @@ def extract_factors_via_api(
     max_tokens: int = DEFAULT_MAX_TOKENS,
     max_retries: int = 3,
 ) -> list[dict]:
+    # OG-specific extraction guidance
+    og_hints = ""
+    if og_code == "CT":
+        og_hints = (
+            f"\n\nCRITICAL — CT has THREE subgroups: CT-IAU (Internal Audit), CT-FIN (Financial "
+            f"Management), and CT-EAV (External Audit). You MUST extract factors for ALL THREE "
+            f"subgroups. Each subgroup has its own set of 6 factors (Knowledge, Analytical and "
+            f"critical thinking, Decision making, Communication, Effort, Working conditions). "
+            f"Do NOT stop after CT-IAU. Continue reading the full text and extract CT-FIN and "
+            f"CT-EAV factors as well, prefixing each factor_name with its subgroup code "
+            f"(e.g. 'CT-FIN: Knowledge', 'CT-EAV: Decision making')."
+        )
+    elif og_code == "EX":
+        og_hints = (
+            f"\n\nCRITICAL — EX uses the Hay Guide Chart method with THREE main factors, each "
+            f"with sub-factors. You MUST extract ALL of the following as separate factors:\n"
+            f"  1. Know-How: sub-factors A (Practical/Technical/Specialized Know-How), "
+            f"B (Planning/Organizing/Integrating), C (Communicating and Influencing)\n"
+            f"  2. Problem Solving: sub-factors A (Thinking Environment), B (Thinking Challenge)\n"
+            f"  3. Accountability: sub-factors A (Freedom to Act), B (Nature of Impact), "
+            f"C (Area of Impact / Magnitude)\n"
+            f"For each sub-factor, the degrees are Hay chart grades (e.g. F-, F, F+, G-, G, G+, "
+            f"H-, H, H+...). Extract every grade row as a degree_descriptor with its letter+sign "
+            f"label, the descriptive text, and the numeric point value from the chart. "
+            f"Do NOT return empty degree_descriptors for any sub-factor — read the full chart."
+        )
+
     prompt = (
         f"You are extracting Job Evaluation Standard factors for the {og_code} occupational group "
         f"of the Canadian federal public service.\n\n"
@@ -104,11 +131,15 @@ def extract_factors_via_api(
         f"  - Some standards define nested sub-elements — extract each sub-element as a distinct factor\n"
         f"  - Level-description standards (e.g. NT, CT) describe levels narratively rather than\n"
         f"    awarding points — extract each level as a degree with points=0\n\n"
-        f"If the standard has subgroups (e.g. CT-IAU, CT-FIN), extract factors for ALL subgroups "
-        f"present, prefixing factor_name with the subgroup code when needed for uniqueness.\n\n"
-        f"Only extract formal job-evaluation factor/element rating scales. Do not extract benchmarks, "
-        f"illustrative positions, notes to raters, glossary entries, or point-range tables.\n"
-        f"If this chunk has no complete factor, call the tool with an empty factors list.\n\n"
+        f"You MUST read and process the ENTIRE text chunk before calling the tool. "
+        f"Do not stop after the first factor or subgroup — extract everything present.\n\n"
+        f"If the standard has subgroups (e.g. CT-IAU, CT-FIN, CT-EAV), extract factors for ALL "
+        f"subgroups present, prefixing factor_name with the subgroup code "
+        f"(e.g. 'CT-FIN: Knowledge', 'CT-EAV: Decision making').\n\n"
+        f"Only extract formal job-evaluation factor or element rating scales. Do not extract "
+        f"benchmarks, illustrative positions, notes to raters, glossary entries, or point-range tables.\n"
+        f"If this chunk has no complete factor, call the tool with an empty factors list."
+        f"{og_hints}\n\n"
         f"TEXT CHUNK:\n{text}"
     )
 
