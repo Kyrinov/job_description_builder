@@ -2,8 +2,8 @@
 phase: 4
 slug: nl-noc-mapping
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-06-01
 ---
 
@@ -60,10 +60,10 @@ created: 2026-06-01
 
 ## Wave 0 Requirements
 
-- [ ] `tests/test_noc_ranking.py` — unit test stubs for Pydantic validators, instructor client mode, TEER int cast, retry logic, guardrail logic
-- [ ] `tests/test_noc_mapping.py` — integration test stubs for 3-stage pipeline, FastAPI route, FTS5 empty guardrail, verbatim guardrail, confirm endpoint
-- [ ] `tests/conftest.py` update — add `noc_mapping_db` fixture (pre-populated with synthetic NOC data + 768-dim fake vectors; does NOT require Ollama)
-- [ ] `scripts/rebuild_noc_vectors.py` — standalone script to rebuild `noc_chunks_vec` as FLOAT[768] using `nomic-embed-text` via Ollama; run before any Phase 4 tests against real DB
+- [x] `tests/test_noc_ranking.py` — unit test stubs for Pydantic validators, instructor client mode, TEER int cast, retry logic, guardrail logic
+- [x] `tests/test_noc_mapping.py` — integration test stubs for 3-stage pipeline, FastAPI route, FTS5 empty guardrail, verbatim guardrail, confirm endpoint
+- [x] `tests/conftest.py` update — add `noc_mapping_db` fixture (pre-populated with synthetic NOC data + 768-dim fake vectors; does NOT require Ollama)
+- [x] `scripts/rebuild_noc_vectors.py` — standalone script to rebuild `noc_chunks_vec` as FLOAT[768] using `nomic-embed-text` via Ollama; run before any Phase 4 tests against real DB
 
 *Existing `noc_db` fixture creates the schema but does not populate FTS5 or vec — the `noc_mapping_db` fixture must extend it with synthetic data.*
 
@@ -81,11 +81,11 @@ created: 2026-06-01
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 30s (unit) / 300s (integration)
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 30s (unit) / 300s (integration)
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved

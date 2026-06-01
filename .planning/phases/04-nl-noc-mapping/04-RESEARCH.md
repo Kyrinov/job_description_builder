@@ -648,22 +648,25 @@ async def map_noc(body: NocMapRequest):
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **noc_chunks_vec rebuild strategy**
    - What we know: `ingest_noc.py` is DashScope-only; `nomic-embed-text` is available via Ollama
    - What's unclear: Should the planner modify `ingest_noc.py` to add `--embed-backend ollama` support, or create a standalone `scripts/rebuild_noc_vectors.py`? The planner should choose based on whether ingest_noc.py is likely to be run again by another developer with DashScope access.
    - Recommendation: Write `scripts/rebuild_noc_vectors.py` (standalone, Ollama-only, ~80 lines) rather than modifying the existing ingest script — separation of concerns, simpler to test.
+   - **RESOLVED:** `scripts/rebuild_noc_vectors.py` (standalone, Ollama-only, no `app.*` imports) is created in Plan 04-01 Task 4.
 
 2. **WorkDescription persistence on NOC confirm**
    - What we know: `WorkDescription.confirmed_noc: Optional[NOCMatch]` exists; `work_descriptions` table stores `data JSON NOT NULL`
    - What's unclear: No write-to-DB helper exists yet for WorkDescription — Phase 4 needs to introduce `save_work_description(conn, wd)` and `load_work_description(conn, wd_id)` helpers. This is new code, not a blocker, but the planner should allocate a task for it.
    - Recommendation: Include `app/services/wd_store.py` with save/load helpers in Plan 04-03 alongside the mapper service.
+   - **RESOLVED:** `app/services/wd_store.py` (save/load helpers) is created in Plan 04-03 Task 1.
 
 3. **HTMX partial template scope**
    - What we know: `base.html` exists; no wizard templates exist yet
    - What's unclear: Does Phase 4 create just the NOC results partial, or also the full wizard shell (step_noc.html extending base.html)?
    - Recommendation: Create both — `templates/wizard/step_noc.html` (full page, extends base.html) and `templates/partials/noc_results.html` (HTMX swap target). Phase 4's "UI hint: yes" implies a usable advisor-facing step, not just an API endpoint.
+   - **RESOLVED:** Both `templates/wizard/step_noc.html` (full wizard page) and `templates/partials/noc_results.html` (HTMX swap target) are created in Plan 04-04 Task 1a.
 
 ---
 

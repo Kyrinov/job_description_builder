@@ -73,12 +73,12 @@ Plans:
 - [x] 03-04-PLAN.md — Real-data ingest run + human spot-check on LLM extraction quality
 
 ### Phase 4: NL→NOC Mapping
-**Goal:** Advisor can submit a plain-language description of work to the `/map-to-noc` endpoint and receive a ranked list of NOC unit group candidates — each showing the NOC code, unit group title, TEER level, and the specific NOC duty statements that best matched — produced by the three-stage FTS5 → embedding rerank → configured local generation model justification pipeline.
+**Goal:** Advisor can submit a plain-language description of work to the `/api/noc/map` endpoint and receive a ranked list of NOC unit group candidates — each showing the NOC code, unit group title, TEER level, and the specific NOC duty statements that best matched — produced by the three-stage FTS5 → embedding rerank → configured local generation model justification pipeline.
 **Depends on:** Phase 2
 **Requirements:** MAP-01, MAP-02
 **UI hint:** yes
 **Success criteria:**
-1. `POST /map-to-noc` with a plain-language work description returns a ranked list of NOC unit group candidates without error.
+1. `POST /api/noc/map` with a plain-language work description returns a ranked list of NOC unit group candidates without error.
 2. Each candidate includes NOC code, unit group title, TEER level, and the verbatim NOC duty statements from the database that supported the match.
 3. The pipeline runs all three stages in sequence (FTS5 shortlist → embedding rerank → configured local generation model justification); the LLM only sees pre-screened candidates, not all 900 profiles.
 4. Advisor can confirm a NOC match; the confirmed match is stored on the WorkDescription record.
