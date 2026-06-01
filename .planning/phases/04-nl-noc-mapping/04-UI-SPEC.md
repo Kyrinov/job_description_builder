@@ -115,6 +115,10 @@ Exceptions: none for Phase 4.
 
 ## Interaction Contract
 
+### Primary Visual Anchor
+
+Primary visual anchor: the Display-size page heading ("NL→NOC Mapping") and the "Find NOC Candidates" button (accent background, #1A4A8A). These two elements are the first focal point the advisor's eye lands on. All other elements — the textarea, card grid, and loading indicator — are subordinate to this anchor pair.
+
 ### Wizard Step: `templates/wizard/step_noc.html`
 
 This is the only full-page template for Phase 4. It extends `base.html`.
@@ -171,7 +175,7 @@ The `/api/noc/map` route returns HTTP 422 with `{"detail": "..."}` for empty FTS
 </div>
 ```
 
-CSS for `.error-state`: border-left 4px solid destructive (#C0392B), padding-left 12px, colour #C0392B.
+CSS for `.error-state`: border-left 4px solid destructive (#C0392B), padding-left: var(--space-sm), colour #C0392B.
 
 ---
 
