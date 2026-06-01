@@ -718,33 +718,127 @@ conn.commit()
 
 ### Dimensions
 
-| Dimension | Rubric (Pass/Fail or 1-5) | Measurement Approach | Priority |
-|-----------|--------------------------|---------------------|----------|
-| | | Code / LLM Judge / Human | Critical / High / Medium |
+All five dimensions are derived directly from the Section 1b domain rubric. Each rubric is expressed in the language a DND classification advisor uses when accepting or rejecting a result.
+
+| Dimension | PASS | FAIL | Measurement | Priority |
+|-----------|------|------|-------------|----------|
+| **Shortlist completeness** (Recall@3) | The ground-truth NOC unit group for the work description appears in the top-3 ranked candidates returned by the pipeline | The correct NOC is absent from all returned candidates — the advisor cannot select it regardless of their expertise | Code — compare `noc_code` values in `NOCRankingResult.candidates` against labeled ground truth; assert `correct_noc in [c.noc_code for c in result.candidates[:3]]` | Critical |
+| **Duty citation verbatim fidelity** | Every string in `matched_duties` for every candidate is an exact substring of the `main_duties` text stored in the database for that `noc_code` | Any `matched_duties` entry that is paraphrased, reworded, or not found as a substring in the source record — even if plausible-sounding — constitutes a fabricated citation | Code — for each `(noc_code, duty)` pair, query `noc_profiles` and assert `duty in main_duties`; log the duty string and NOC code on failure | Critical |
+| **TEER level correctness** | The `teer` field on each returned `NOCCandidate` matches the TEER value stored in `noc_profiles` for the same `noc_code` | `teer` is missing, zero when it should not be, or inconsistent with the `noc_code` — signals a structural retrieval or LLM fabrication failure, not a cosmetic one | Code — query `SELECT teer FROM noc_profiles WHERE noc_code = ?` for each candidate and assert equality | High |
+| **Ranking signal quality** | The NOC unit group with the highest semantic duty-match to the work description is ranked 1 or 2; no pure keyword-collision false positive occupies rank 1 | Rank-1 candidate shares surface vocabulary with the query (e.g., "analyst", "advisor") but belongs to a different occupational domain than the described work — keyword overlap drove the rank, not semantic fit | LLM Judge — provide the work description, the rank-1 candidate's duties, and the rubric to a local judge model; score 1–5 where 1 = clear keyword collision and 5 = duties clearly describe the stated work. Calibrate against human scores on 5 reference examples before using in CI. | High |
+| **Justification groundedness** | The `justification` field for each candidate contains no claims about the role that are not directly supported by the duty statements in `matched_duties` or in the retrieved NOC profile text | `justification` contains characterisations of scope, seniority, or context ("this is a senior policy position") that have no basis in any retrieved duty statement — the advisor cannot trace the claim to a source | LLM Judge — provide the justification text, the matched duties, and the retrieved profile text; ask whether every factual claim in the justification is supported by the provided source text. Score pass/fail. Calibrate on 5 examples with classification officer before trusting in CI. | High |
+
+**Additional structural check (code-based, Critical):** Schema validity — assert that `NOCRankingResult` deserialises without error, `noc_code` matches `^\d{5}$`, `rank` values are sequential from 1, and `matched_duties` is non-empty for every candidate. This is enforced by the Pydantic model at runtime but must also be asserted explicitly in the eval suite to distinguish instructor retry exhaustion from a clean pass.
 
 ### Eval Tooling
 
-**Primary Tool:** <!-- e.g., RAGAS + Langfuse -->
+**Tracing and observability:** Arize Phoenix (self-hosted, no cloud dependency). No eval platform was detected in the existing codebase. Arize Phoenix is the correct default: open-source, runs locally via `pip install`, instrumented via OpenTelemetry, and does not require a cloud account. LangSmith is not applicable — this project does not use LangChain. RAGAS is not added as a dependency because the two LLM-judge dimensions (ranking quality and justification groundedness) use domain-specific rubrics that RAGAS generic metrics cannot evaluate; the code-based checks cover what RAGAS would handle for citation fidelity.
 
-**Setup:**
+**Prompt regression / CI:** Promptfoo — CLI-first, no platform account, runs locally, integrates with pytest via subprocess.
+
+**Install:**
+
 ```bash
-# Install and configure
+pip install arize-phoenix opentelemetry-sdk opentelemetry-exporter-otlp
+npm install -g promptfoo          # or: npx promptfoo
 ```
 
-**CI/CD Integration:**
+**Phoenix instrumentation (add to `app/main.py` FastAPI startup):**
+
+```python
+import phoenix as px
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+
+# Launch local Phoenix UI — http://localhost:6006
+px.launch_app()
+
+# Wire up the tracer to send spans to Phoenix
+provider = TracerProvider()
+provider.add_span_processor(
+    BatchSpanProcessor(OTLPSpanExporter(endpoint="http://localhost:6006/v1/traces"))
+)
+trace.set_tracer_provider(provider)
+
+# No framework instrumentor available for direct Ollama SDK calls.
+# Instrument manually by wrapping map_work_description with a span:
+#
+# tracer = trace.get_tracer("noc_mapper")
+# with tracer.start_as_current_span("noc_pipeline") as span:
+#     span.set_attribute("work_description_hash", hashlib.sha256(wd.encode()).hexdigest())
+#     result = await map_work_description(wd, db_path)
+#     span.set_attribute("shortlist_size", len(result.candidates))
+#     span.set_attribute("rank1_noc_code", result.candidates[0].noc_code)
+```
+
+**Promptfoo configuration** (`tests/evals/promptfooconfig.yaml`):
+
+```yaml
+prompts:
+  - file://../../app/ai/prompts/noc_ranking_system.txt
+
+providers:
+  - id: ollama:gemma4:27b
+    config:
+      apiBaseUrl: http://localhost:11434/v1
+
+tests:
+  - file://noc_eval_dataset.yaml
+
+defaultTest:
+  assert:
+    - type: javascript
+      value: |
+        const result = JSON.parse(output);
+        return result.candidates && result.candidates.length >= 1;
+      threshold: 1.0
+    - type: javascript
+      value: |
+        const result = JSON.parse(output);
+        return result.candidates.every(c => /^\d{5}$/.test(c.noc_code));
+      threshold: 1.0
+```
+
+**CI/CD eval command (run locally before merging):**
+
 ```bash
-# Command to run evals in CI/CD pipeline
+# Run code-based eval suite (verbatim fidelity, TEER correctness, schema validity, recall@3)
+pytest tests/evals/test_noc_eval.py -v --tb=short
+
+# Run promptfoo prompt regression tests
+npx promptfoo eval --config tests/evals/promptfooconfig.yaml --output tests/evals/results.json
+
+# View Phoenix traces (if server is running)
+# open http://localhost:6006
 ```
 
 ### Reference Dataset
 
-**Size:** <!-- e.g., 20 examples to start -->
+**Size:** 18 labeled examples (start during implementation, not after).
 
 **Composition:**
-<!-- What scenario types the dataset covers: critical paths, edge cases, failure modes -->
 
-**Labeling:**
-<!-- Who labels examples and how (domain expert, LLM judge with calibration, etc.) -->
+| Category | Count | What It Tests |
+|----------|-------|---------------|
+| Clean match — unambiguous work description matching a single NOC | 4 | Baseline recall@3 and verbatim fidelity on easy cases |
+| DND jargon / military acronym queries | 3 | FTS5 terminology gap failure mode — correct NOC must still be retrieved despite lexical mismatch |
+| AS/EC vocabulary bleed cases | 4 | Policy/analysis/advice language that appears in both AS and EC profiles; both groups should appear in shortlist; rank-1 correctness measured against advisor label |
+| TEER collision cases | 3 | Near-identical duty vocabulary at different TEER levels (e.g., TEER 2 admin vs. TEER 3 admin); correct TEER must be rank-1 |
+| FTS5 zero-result edge case | 1 | Fully jargon-heavy query expected to produce empty FTS5 shortlist; pipeline must raise cleanly rather than silently degrade |
+| Fabrication stress test | 3 | Work descriptions where no retrieved NOC profile is a strong match; verify that `matched_duties` still cites only verbatim text rather than inventing plausible duties |
+
+**Labeling approach:**
+
+- Ground-truth `noc_code` and `teer` for each example labeled by the Senior Classification Advisor (Whitney Chalebois or equivalent) before implementation begins — not by engineers.
+- AS/EC cases require explicit advisor label indicating which group is correct and why (internal guidance vs. public-facing policy).
+- Fabrication stress test examples are labeled by checking that every `matched_duties` entry is a substring of the database record — automated check, no human scoring needed.
+- LLM judge rubric for ranking quality and justification groundedness calibrated against human scores on 5 examples before running on the full dataset. Target: ≥ 0.7 agreement with human judgment on pass/fail.
+
+**Dataset location:** `tests/evals/noc_eval_dataset.yaml` — checked into the repository alongside the test suite. Dataset is versioned: bump the dataset version label when examples are added.
+
+**Creation timeline:** Build the first 10 examples (4 clean + 3 jargon + 3 AS/EC) during Sprint 1 implementation. Add TEER collision and fabrication stress cases during Sprint 2 before final evaluation run.
 
 ---
 
@@ -752,48 +846,92 @@ conn.commit()
 
 ### Online (Real-Time)
 
-| Guardrail | Trigger | Intervention |
-|-----------|---------|--------------|
-| | | Block / Escalate / Flag |
+Three online guardrails run on every pipeline response before the result is returned to the advisor. Each is a fast code check — no LLM call, no network round-trip. Total added latency: < 2 ms.
+
+| Guardrail | Trigger | Implementation | Intervention |
+|-----------|---------|---------------|--------------|
+| **Empty shortlist guard** | `NOCRankingResult.candidates` is empty, or the pipeline raises `ValueError` from FTS5 returning zero rows | Assert `len(result.candidates) >= 1` after `map_work_description` returns; catch the `ValueError` from the FTS5 stage | Return HTTP 422 with a structured error body: `{"error": "no_noc_candidates", "message": "The work description did not match any NOC profiles. Try rephrasing using plain-language duty descriptions rather than internal acronyms or position titles."}` — do not return a partial or empty result silently |
+| **Duty citation verbatim check** | Any string in `matched_duties` for any candidate is not an exact substring of the `main_duties` field in `noc_profiles` for that `noc_code` | After the pipeline returns, query the database for each `(noc_code, duty)` pair: `SELECT 1 FROM noc_profiles WHERE noc_code=? AND instr(main_duties, ?)>0`; flag any row that returns no result | Strip the fabricated duty from `matched_duties`, log `ERROR` with the NOC code, duty string, and work description hash; if all duties for a candidate are fabricated, remove that candidate from the result; if all candidates are stripped, return HTTP 422 with `{"error": "citation_fabrication", "message": "Pipeline could not produce verifiable duty citations. The result has been withheld. Please retry or contact support."}` |
+| **TEER range validator** | `teer` field on any candidate is outside `[0, 5]` or does not match the value stored in `noc_profiles` for that `noc_code` | Pydantic `ge=0, le=5` constraint on `NOCCandidate.teer` catches out-of-range values at instructor parse time; a second database check compares against the stored value after the pipeline returns | For a Pydantic failure: instructor retry fires automatically (counted against `max_retries=3`). For a database mismatch: log `WARNING` with the NOC code, the returned TEER, and the stored TEER; correct the `teer` field in the response to the database value before returning to the advisor — do not surface a wrong TEER silently |
 
 ### Offline (Flywheel)
 
-| Metric | Sampling Strategy | Action on Degradation |
-|--------|------------------|----------------------|
-| | | |
+These metrics are not checked on every request. They are computed in batch over a rolling sample of logged responses and used to detect quality degradation over time. Log the structured fields needed to compute them (`noc_code`, `matched_duties`, `teer`, `instructor_retries`, `pipeline_latency_ms`, `fts_result_count`) to a `noc_mapping_log` SQLite table on every request.
+
+| Metric | Sampling Strategy | Degradation Threshold | Action on Degradation |
+|--------|------------------|----------------------|----------------------|
+| **Shortlist recall@3 drift** | Run the full labeled eval dataset (18 examples) weekly against the production pipeline; compute the fraction where the ground-truth NOC appears in the top 3 | Drop below 0.80 (currently targeting ≥ 0.85 at launch based on domain research baseline of 58.7% rank-1 accuracy) | Review FTS5 index freshness; check whether new work descriptions use terminology not in the NOC corpus; add terminology synonyms or expand FTS5 query pre-processing |
+| **Fabrication rate** | On a random 20% sample of production requests, run the verbatim fidelity check against the database (same logic as the online guardrail but logged rather than blocking) | More than 5% of sampled requests have at least one fabricated `matched_duties` entry that passed the online guardrail (i.e., the online check was bypassed or the duty was a near-match that `instr()` passed but is not semantically verbatim) | Tighten the system prompt verbatim constraint; add a few-shot negative example showing a paraphrase being rejected; review whether `main_duties` truncation at 1,500 chars is causing the LLM to cite truncated text that partially mismatches the stored record |
+| **Instructor retry rate** | Logged on every request; compute rolling 7-day mean | Mean retries per request exceeds 0.5 (i.e., more than half of requests require at least one retry) | The schema is not being followed reliably; review the Pydantic validator that fires most often (from `ValidationError` logs) and tighten the corresponding system prompt constraint |
+| **AS/EC ambiguity miss rate** | Human review of a purposive sample: advisor flags responses as "wrong group" in the UI (requires a thumbs-down feedback button on the `/api/noc/map` response); review flagged cases monthly | More than 2 advisor-flagged AS/EC cases in any 30-day period | Review whether the AS/EC boundary language from the TBS Directive is present in the injected profiles; consider adding an explicit AS/EC disambiguation note to the system prompt when both groups appear in the shortlist |
 
 ---
 
 ## 7. Production Monitoring
 
-**Tracing Tool:** <!-- e.g., Langfuse self-hosted -->
+**Tracing Tool:** Arize Phoenix, self-hosted on the AGX Orin dev machine (no cloud account, no external network dependency).
+
+Phoenix UI: `http://localhost:6006` — launch with `python -c "import phoenix as px; px.launch_app()"` before starting the FastAPI server. Instrument the pipeline by wrapping `map_work_description` in an OpenTelemetry span (see Section 5 setup code). Each span records: work description hash, FTS5 result count, rerank result count, rank-1 NOC code, instructor retry count, total pipeline latency, and whether the verbatim guardrail fired.
 
 **Key Metrics to Track:**
-<!-- 3-5 metrics that will be monitored in production -->
+
+| Metric | How Measured | Expected Baseline |
+|--------|-------------|-------------------|
+| **Shortlist recall@3** | Weekly batch eval against labeled dataset (18 examples); fraction where correct NOC is in top-3 | ≥ 0.85 at launch |
+| **Verbatim fidelity rate** | Fraction of production requests (sampled 20%) where all `matched_duties` entries pass the substring check | ≥ 0.95 |
+| **TEER accuracy** | Fraction of candidates in the sampled batch where returned `teer` matches stored value | 1.00 — any TEER mismatch is a structural failure, not acceptable degradation |
+| **p95 pipeline latency** | Recorded per-request in the `noc_mapping_log` table; read from Phoenix span data | ≤ 120 s on AGX Orin with model warm; ≤ 300 s cold-start (acceptable for a single-user tool) |
+| **Instructor retry rate (7-day rolling mean)** | Logged per request; computed from `noc_mapping_log` | ≤ 0.2 retries per request (occasional schema correction is expected; frequent retries signal a prompt problem) |
 
 **Alert Thresholds:**
-<!-- When to page/alert -->
+
+This is a single-user internal tool running on a local machine. There is no paging infrastructure. "Alerting" is implemented as structured log entries at `ERROR` or `CRITICAL` level that are visible in the FastAPI console output and recorded in `noc_mapping_log`.
+
+| Condition | Log Level | Entry |
+|-----------|-----------|-------|
+| Online verbatim guardrail fires (fabricated duty detected and stripped) | `ERROR` | `noc_guardrail=citation_fabrication noc_code=<code> duty_preview=<first 80 chars> wd_hash=<hash>` |
+| All instructor retries exhausted (pipeline returns 503) | `ERROR` | `noc_instructor_retry_exhausted wd_hash=<hash> validation_errors=<list>` |
+| FTS5 returns zero results (empty shortlist) | `WARNING` | `noc_fts_empty_shortlist wd_hash=<hash> query_preview=<first 100 chars>` |
+| Weekly recall@3 batch eval drops below 0.80 | `CRITICAL` | Printed to console and written to `noc_mapping_log` with `metric=recall_at_3 value=<float> threshold=0.80` |
+| 7-day instructor retry mean exceeds 0.5 | `WARNING` | Written to `noc_mapping_log` with `metric=retry_rate_7d value=<float>` |
 
 **Smart Sampling Strategy:**
-<!-- How to select interactions for human review — signal-based filters -->
+
+The 20% random production sample for offline flywheel checks is weighted toward interactions that carry the highest risk of undetected failure. The sampling logic runs as a post-request hook that writes a `sample_for_review` flag to `noc_mapping_log`.
+
+Priority weights for inclusion in the review sample:
+
+1. **Any request where the online verbatim guardrail fired** — always included regardless of the 20% rate. These are confirmed or near-confirmed fabrications and must be reviewed to determine whether the guardrail caught the full failure or only part of it.
+
+2. **Requests where `instructor_retries > 0`** — weight 3x. Retries indicate the schema was not followed on the first attempt; the final output should be verified even if it passed Pydantic validation.
+
+3. **Requests where the work description contains "policy", "advice", "analysis", "EC", or "AS"** — weight 2x. These are the AS/EC vocabulary bleed cases identified as the #1 failure mode by the domain SME.
+
+4. **Requests where the top-3 candidates span more than one TEER level** — weight 2x. Multiple TEER levels in the shortlist signal a potential TEER collision; the rank-1 choice is higher risk.
+
+5. **Requests where FTS5 returned fewer than 5 results** — weight 2x. A thin FTS5 shortlist means the embedding rerank had a degraded pool; the result is more likely to be a vocabulary-gap failure.
+
+6. **All other requests** — included at random to fill the 20% target.
+
+Human review of sampled cases is done by the HR advisor as part of the monthly flywheel review. The advisor sees the work description, the top-3 candidates, the cited duties, and the justification — the same view they see in normal use. They mark each case as acceptable, wrong group, or fabricated citation using a simple review form written to `noc_review_log`.
 
 ---
 
 ## Checklist
 
-- [ ] System type classified
-- [ ] Critical failure modes identified (≥ 3)
+- [x] System type classified
+- [x] Critical failure modes identified (≥ 3)
 - [x] Domain context researched (Section 1b: vertical, stakes, expert criteria, failure modes)
 - [x] Regulatory/compliance context identified or explicitly noted as none
 - [x] Domain expert roles defined for evaluation involvement
-- [ ] Framework selected with rationale documented
-- [ ] Alternatives considered and ruled out
+- [x] Framework selected with rationale documented
+- [x] Alternatives considered and ruled out
 - [x] Framework quick reference written (install, imports, pattern, pitfalls)
 - [x] AI systems best practices written (Section 4b: Pydantic, async, prompt discipline, context)
-- [ ] Evaluation dimensions grounded in domain rubric ingredients
-- [ ] Each eval dimension has a concrete rubric (Good/Bad in domain language)
-- [ ] Eval tooling selected — Arize Phoenix default confirmed or override noted
-- [ ] Reference dataset spec written (size ≥ 10, composition + labeling defined)
-- [ ] CI/CD eval integration specified
-- [ ] Online guardrails defined
-- [ ] Production monitoring configured (tracing tool + sampling strategy)
+- [x] Evaluation dimensions grounded in domain rubric ingredients
+- [x] Each eval dimension has a concrete rubric (Good/Bad in domain language)
+- [x] Eval tooling selected — Arize Phoenix (self-hosted) confirmed; Promptfoo for CI/CD prompt regression
+- [x] Reference dataset spec written (18 examples, composition defined, labeling approach defined)
+- [x] CI/CD eval integration specified (`pytest tests/evals/` + `npx promptfoo eval`)
+- [x] Online guardrails defined (empty shortlist guard, verbatim citation check, TEER range validator)
+- [x] Production monitoring configured (Arize Phoenix local + structured log alerts + smart sampling)
