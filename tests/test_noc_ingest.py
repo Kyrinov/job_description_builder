@@ -20,36 +20,35 @@ import pytest
 # ---------------------------------------------------------------------------
 
 SYNTHETIC_STRUCTURE_ROWS = [
-    {"Level": "5", "Code": "21232", "Class title": "Software engineers and designers",
-     "Definition": "Design, develop, and maintain software systems."},
-    {"Level": "5", "Code": "41402", "Class title": "Policy researchers",
-     "Definition": "Conduct research and advise on policy."},
-    {"Level": "5", "Code": "11200", "Class title": "Financial auditors",
-     "Definition": "Audit financial records for accuracy."},
+    {"Level": "5", "Code - NOC 2021 V1.0": "21232", "Class title": "Software engineers and designers",
+     "Class definition": "Design, develop, and maintain software systems."},
+    {"Level": "5", "Code - NOC 2021 V1.0": "41402", "Class title": "Policy researchers",
+     "Class definition": "Conduct research and advise on policy."},
+    {"Level": "5", "Code - NOC 2021 V1.0": "11200", "Class title": "Financial auditors",
+     "Class definition": "Audit financial records for accuracy."},
 ]
 
 SYNTHETIC_ELEMENTS_ROWS = [
-    # noc_code, Element Type, Element
-    {"NOC": "21232", "Element Type": "Main duties",
-     "Element": "This group performs some or all of the following duties:"},
-    {"NOC": "21232", "Element Type": "Main duties",
-     "Element": "Develop and maintain application software."},
-    {"NOC": "21232", "Element Type": "Main duties",
-     "Element": "Analyze and resolve technical problems."},
-    {"NOC": "41402", "Element Type": "Main duties",
-     "Element": "This group performs some or all of the following duties:"},
-    {"NOC": "41402", "Element Type": "Main duties",
-     "Element": "Research and analyze policy alternatives."},
-    {"NOC": "11200", "Element Type": "Main duties",
-     "Element": "Examine and analyze accounting records."},
-    {"NOC": "11200", "Element Type": "Employment requirements",
-     "Element": "A bachelor's degree in accounting is required."},
+    {"Code - NOC 2021 V1.0": "21232", "Element Type Label English": "Main duties",
+     "Element Description English": "This group performs some or all of the following duties:"},
+    {"Code - NOC 2021 V1.0": "21232", "Element Type Label English": "Main duties",
+     "Element Description English": "Develop and maintain application software."},
+    {"Code - NOC 2021 V1.0": "21232", "Element Type Label English": "Main duties",
+     "Element Description English": "Analyze and resolve technical problems."},
+    {"Code - NOC 2021 V1.0": "41402", "Element Type Label English": "Main duties",
+     "Element Description English": "This group performs some or all of the following duties:"},
+    {"Code - NOC 2021 V1.0": "41402", "Element Type Label English": "Main duties",
+     "Element Description English": "Research and analyze policy alternatives."},
+    {"Code - NOC 2021 V1.0": "11200", "Element Type Label English": "Main duties",
+     "Element Description English": "Examine and analyze accounting records."},
+    {"Code - NOC 2021 V1.0": "11200", "Element Type Label English": "Employment requirements",
+     "Element Description English": "A bachelor's degree in accounting is required."},
 ]
 
-MOCK_EMBEDDINGS = [[0.1] * 768] * len(
+MOCK_EMBEDDINGS = [[0.1] * 1024] * len(
     [r for r in SYNTHETIC_ELEMENTS_ROWS
-     if r["Element Type"] == "Main duties"
-     and r["Element"].strip() != "This group performs some or all of the following duties:"]
+     if r["Element Type Label English"] == "Main duties"
+     and r["Element Description English"].strip() != "This group performs some or all of the following duties:"]
 )
 
 

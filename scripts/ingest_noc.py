@@ -182,12 +182,13 @@ def upsert_noc_units(
     Upsert Level 5 unit groups into noc_units.
     INSERT OR IGNORE keyed on noc_code — idempotent (PIPE-01, PIPE-04).
     Column mapping from structure CSV:
-      Code -> noc_code, Class title -> title, Definition -> definition, Level -> teer_level
+      Code - NOC 2021 V1.0 -> noc_code, Class title -> title,
+      Class definition -> definition, Level -> teer_level
     """
     for row in rows:
-        noc_code = row.get("Code", "").strip()
+        noc_code = row.get("Code - NOC 2021 V1.0", "").strip()
         title = row.get("Class title", "").strip()
-        definition = row.get("Definition", "").strip()
+        definition = row.get("Class definition", "").strip()
         teer_level = row.get("Level", "").strip()
 
         if not noc_code:
@@ -210,12 +211,14 @@ def upsert_noc_elements(
     Upsert all element rows into noc_elements.
     UNIQUE constraint on (noc_code, element_type, element_text) — INSERT OR IGNORE (PIPE-01, PIPE-04).
     Column mapping from elements CSV:
-      NOC -> noc_code, Element Type -> element_type, Element -> element_text
+      Code - NOC 2021 V1.0 -> noc_code,
+      Element Type Label English -> element_type,
+      Element Description English -> element_text
     """
     for row in rows:
-        noc_code = row.get("NOC", "").strip()
-        element_type = row.get("Element Type", "").strip()
-        element_text = row.get("Element", "").strip()
+        noc_code = row.get("Code - NOC 2021 V1.0", "").strip()
+        element_type = row.get("Element Type Label English", "").strip()
+        element_text = row.get("Element Description English", "").strip()
 
         if not noc_code or not element_text:
             continue  # skip malformed rows
