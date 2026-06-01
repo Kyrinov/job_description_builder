@@ -19,7 +19,7 @@ progress:
 **Current phase:** Phase 4 — NL→NOC Mapping
 **Last updated:** 2026-06-01
 
-**Pre-phase-4 prerequisite:** Re-run `scripts/ingest_noc.py` — app.db was rebuilt during Phase 3 and NOC tables (noc_elements, noc_units, noc_fts) are empty.
+**Pre-phase-4 prerequisite:** RESOLVED — `scripts/ingest_noc.py` re-run 2026-06-01 (516 units, 43,999 elements, 44,515 FTS rows, 1024-dim embeddings; `index_metadata.embedding_model = text-embedding-v3`).
 
 ---
 
@@ -109,7 +109,7 @@ See: `.planning/PROJECT.md`
 **Context for next session:**
 
 - Phase 3 complete: 578 ca_clauses (33 OGs), 105 jes_factors (16 OGs), 190 policy_chunks, 75 tests green
-- app.db NOC tables empty — re-run `python scripts/ingest_noc.py` before Phase 4 real-data run
+- app.db NOC data confirmed: 516 units, 43,999 elements, 44,515 FTS rows, 1024-dim embeddings (`text-embedding-v3`)
 - Phase 4 goal: `POST /map-to-noc` with plain-language work description → ranked NOC candidates via FTS5 → embedding rerank → LLM justification (3-stage pipeline)
 - Phase 4 depends on Phase 2 (NOC data) and Phase 3 (policy chunks for AS-vs-EC context)
 - Requirements: MAP-01 (NOC shortlist), MAP-02 (embedding rerank + LLM justification)
