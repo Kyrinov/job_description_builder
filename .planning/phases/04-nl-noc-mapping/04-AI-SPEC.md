@@ -273,13 +273,13 @@ job_description_builder/
 
 | Parameter | Value | Rationale |
 |-----------|-------|-----------|
-| Generation model | `gemma4:31b` (default, configurable via settings) | Sufficient instruction-following and citation accuracy for ranking; swap to `gemma4:12b` if latency is unacceptable on the AGX Orin |
+| Generation model | `gemma4:31b` (default, configurable via settings) | Primary model; sub-5-minute response time is acceptable for this workflow |
 | Embedding model | `nomic-embed-text` (768-dim) | Already used in Phase 3; noc_embeddings table is already populated with these vectors |
 | `temperature` | `0.0` | Deterministic ranking; the task is selection and verbatim citation, not creative generation |
 | `max_tokens` | `2048` | Sufficient for 5 candidates with code + title + 3 cited duties + justification; never leave unbounded |
 | `num_ctx` (Ollama option) | `32768` | Fits 10 NOC candidate profiles (~1 k tokens each) plus the work description and system prompt with headroom |
 | `max_retries` (instructor) | `3` | Instructor appends the `ValidationError` to the conversation on each retry; 3 is the production ceiling before raising |
-| Request timeout | `300.0` s | gemma4:31b on AGX Orin takes 60–180 s for a ~2 k token response; 300 s provides buffer for cold-start |
+| Request timeout | `300.0` s | gemma4:31b on AGX Orin takes 60–180 s warm; 300 s accommodates cold-start within the acceptable <5 min budget |
 
 **Core Pattern — Three-Stage Pipeline:**
 
@@ -672,14 +672,11 @@ Do not stream partial JSON to manage context. The entire prompt is assembled bef
 | FTS5 keyword query | < 5 ms | SQLite BM25 on ~900 rows, in-process |
 | nomic-embed-text (1 text) | 50–150 ms | AGX Orin, model warm |
 | sqlite-vec cosine search (900 rows) | < 10 ms | In-process, no network |
-| gemma4:31b LLM call (model warm, ~10 k context) | 30–90 s | AGX Orin INT4 quant |
-| gemma4:31b LLM call (cold start) | 60–180 s | Model loading from disk |
-| **Total pipeline (model warm)** | **~30–90 s** | Dominated entirely by Stage 3 |
+| gemma4:31b LLM call (model warm, ~10 k context) | 30–90 s | AGX Orin INT4 quant — within acceptable <5 min budget |
+| gemma4:31b LLM call (cold start) | 60–180 s | Model loading from disk — still within budget |
+| **Total pipeline (model warm)** | **~30–90 s** | Well within the <5 min acceptable threshold |
 
-**Latency reduction options (if 30 s is too slow for interactive use):**
-- Switch generation model to `gemma4:12b` — approximately 2x faster; benchmark accuracy loss on the NOC test set before deploying
-- Reduce `rerank_limit` from 10 to 5 — halves Stage 3 context, reducing time-to-first-token
-- Pre-warm the model at FastAPI startup with a probe request (send a minimal dummy prompt when the server starts so the model is loaded in Ollama's memory before the first real request)
+**If latency becomes unacceptable (> 5 min):** Route Stage 3 to the MiniMax M3 API (`OLLAMA_GENERATION_MODEL` is already an env var, so swapping providers requires only a base URL + model name change in config). No code changes needed — `instructor` works with any OpenAI-compatible endpoint. Pre-warm the model at FastAPI startup with a probe request to eliminate cold-start for the first real request.
 
 **Caching strategy:** Cache at the result level, keyed on a hash of the work description, the generation model name, and the NOC database version. The pipeline is deterministic at `temperature=0.0`, so identical inputs always produce identical outputs.
 
@@ -880,7 +877,7 @@ Phoenix UI: `http://localhost:6006` — launch with `python -c "import phoenix a
 | **Shortlist recall@3** | Weekly batch eval against labeled dataset (18 examples); fraction where correct NOC is in top-3 | ≥ 0.85 at launch |
 | **Verbatim fidelity rate** | Fraction of production requests (sampled 20%) where all `matched_duties` entries pass the substring check | ≥ 0.95 |
 | **TEER accuracy** | Fraction of candidates in the sampled batch where returned `teer` matches stored value | 1.00 — any TEER mismatch is a structural failure, not acceptable degradation |
-| **p95 pipeline latency** | Recorded per-request in the `noc_mapping_log` table; read from Phoenix span data | ≤ 120 s on AGX Orin with model warm; ≤ 300 s cold-start (acceptable for a single-user tool) |
+| **p95 pipeline latency** | Recorded per-request in the `noc_mapping_log` table; read from Phoenix span data | < 300 s (< 5 min) — requests exceeding this threshold trigger investigation; MiniMax M3 API is the designated fallback |
 | **Instructor retry rate (7-day rolling mean)** | Logged per request; computed from `noc_mapping_log` | ≤ 0.2 retries per request (occasional schema correction is expected; frequent retries signal a prompt problem) |
 
 **Alert Thresholds:**
