@@ -19,6 +19,7 @@ from fastapi import FastAPI
 from fastapi.templating import Jinja2Templates
 
 from app.api import health
+from app.api import noc_mapping
 from app.config import settings
 from app.db import assert_noc_index_model, create_schema, get_connection
 
@@ -96,4 +97,5 @@ app = FastAPI(
 )
 
 app.include_router(health.router)
+app.include_router(noc_mapping.router)
 templates = Jinja2Templates(directory="app/templates")
