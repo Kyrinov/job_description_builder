@@ -434,8 +434,8 @@ def parse_args() -> argparse.Namespace:
         help="DashScope API key (default: $DASHSCOPE_API_KEY)",
     )
     parser.add_argument(
-        "--base-url", default="https://dashscope-us.aliyuncs.com/compatible-mode/v1",
-        help="DashScope base URL (default: US endpoint)",
+        "--base-url", default="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+        help="DashScope base URL (default: international endpoint)",
     )
     parser.add_argument(
         "--data-dir", required=True,
