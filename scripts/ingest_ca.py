@@ -212,7 +212,10 @@ def extract_clauses_via_llm(
     endpoint = f"{base_url.rstrip('/')}/api/chat"
     payload = {
         "model": model,
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": [
+            {"role": "system", "content": "You are a structured data extractor. You MUST respond with valid JSON only. No prose, no explanation, no markdown — only the raw JSON object."},
+            {"role": "user", "content": prompt},
+        ],
         "stream": False,
         "think": False,
         "format": CAExtractionResult.model_json_schema(),
