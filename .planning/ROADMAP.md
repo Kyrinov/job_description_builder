@@ -82,7 +82,12 @@ Plans:
 2. Each candidate includes NOC code, unit group title, TEER level, and the verbatim NOC duty statements from the database that supported the match.
 3. The pipeline runs all three stages in sequence (FTS5 shortlist → embedding rerank → configured local generation model justification); the LLM only sees pre-screened candidates, not all 900 profiles.
 4. Advisor can confirm a NOC match; the confirmed match is stored on the WorkDescription record.
-**Plans:** TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 04-01-PLAN.md — Wave 0: test stubs, noc_mapping_db fixture, rebuild_noc_vectors.py
+- [ ] 04-02-PLAN.md — Pydantic models (NOCCandidate, NOCRankingResult) + instructor client singleton
+- [ ] 04-03-PLAN.md — 3-stage pipeline service, wd_store, FastAPI router, DB schema additions
+- [ ] 04-04-PLAN.md — HTMX wizard templates, CSS, full suite green + human verify
 
 ### Phase 5: OG Classification
 **Goal:** For a confirmed NOC match, the system presents the top 3 occupational group candidates side-by-side — each citing the relevant TBS OG definition excerpt, inclusions, and exclusions — and will not begin JD content generation until the advisor explicitly confirms an OG and level. For positions with policy-related duties, the system surfaces the AS vs. EC distinction test with verbatim citations from `data/directive_on_classification.txt` before the advisor confirms.
