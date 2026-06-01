@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}NOC Mapping — JD Builder{% endblock %}
+
+{% block content %}
+<section id="wizard-step">
+    <h1>NL&rarr;NOC Mapping</h1>
+    <p>Describe the work to be performed. The system will identify the best matching NOC unit groups.</p>
+
+    <form hx-post="/api/noc/map"
+          hx-target="#noc-results"
+          hx-swap="innerHTML"
+          hx-indicator="#spinner"
+          hx-disabled-elt="#find-btn">
+        <div class="field-group">
+            <label for="work_description">Work Description</label>
+            <textarea id="work_description"
+                      name="work_description"
+                      rows="6"
+                      placeholder="Describe the work to be performed &mdash; include key duties, decisions made, and scope of authority."
+                      required></textarea>
+        </div>
+        <button id="find-btn" type="submit">Find NOC Candidates</button>
+        <span id="spinner" class="htmx-indicator" aria-label="Loading">Searching NOC database...</span>
+    </form>
+
+    <div id="noc-results" aria-live="polite"></div>
+</section>
+{% endblock %}

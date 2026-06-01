@@ -1,0 +1,35 @@
+{% for candidate in candidates %}
+<div class="noc-card" id="noc-card-{{ candidate.noc_code }}">
+    <div class="noc-card-header">
+        <h2>[{{ candidate.noc_code }}] {{ candidate.title }}</h2>
+        <span class="teer-badge">TEER {{ candidate.teer }}</span>
+    </div>
+
+    <section class="noc-duties">
+        <h3>Matched duty statements</h3>
+        <ul>
+        {% for duty in candidate.matched_duties %}
+            <li>{{ duty }}</li>
+        {% endfor %}
+        </ul>
+    </section>
+
+    <details class="noc-justification">
+        <summary>LLM justification</summary>
+        <p>{{ candidate.justification }}</p>
+    </details>
+
+    <form hx-post="/api/noc/confirm"
+          hx-target="#wizard-step"
+          hx-swap="outerHTML">
+        <input type="hidden" name="wd_id" value="{{ wd_id }}">
+        <input type="hidden" name="noc_code" value="{{ candidate.noc_code }}">
+        <button type="submit">Confirm this NOC</button>
+    </form>
+</div>
+{% else %}
+<div class="empty-state" role="alert">
+    <strong>No matching NOC codes found.</strong>
+    <p>Your description may use terms not in the NOC vocabulary. Try rewording key duties using plain language (e.g., "provide advice" instead of acronyms or program names).</p>
+</div>
+{% endfor %}

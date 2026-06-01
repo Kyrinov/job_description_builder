@@ -1,0 +1,452 @@
+/*
+ * app/static/css/main.css
+ *
+ * Phase 4 — NL→NOC Mapping wizard step stylesheet.
+ * Hand-rolled CSS (no Tailwind, no shadcn) for FastAPI + Jinja2 + HTMX stack.
+ *
+ * Layers (in document order, per 04-UI-SPEC §CSS Architecture):
+ *   1. CSS reset
+ *   2. Design tokens (:root custom properties)
+ *   3. Base typography
+ *   4. Layout (header, main, footer)
+ *   5. Form elements (label, input, textarea, button)
+ *   6. Component classes (.noc-card, .teer-badge, .error-state, .empty-state, .confirmation-banner)
+ *   7. HTMX indicator class
+ *
+ * Source of token values: .planning/phases/04-nl-noc-mapping/04-UI-SPEC.md
+ *   - Color: GC blue #1A4A8A (accent), GC web standards
+ *   - Typography: system-ui stack, 4px-base spacing scale
+ *   - Accessibility: 44px min button height, AAA contrast on accent
+ */
+
+/* =====================================================================
+ * 1. CSS RESET
+ * ===================================================================== */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* =====================================================================
+ * 2. DESIGN TOKENS
+ * ===================================================================== */
+:root {
+    /* Color (UI-SPEC §Color) */
+    --color-dominant:    #FFFFFF;
+    --color-secondary:   #F5F5F5;
+    --color-accent:      #1A4A8A;
+    --color-destructive: #C0392B;
+    --color-text:        #1A1A1A;
+    --color-text-muted:  #555555;
+    --color-border:      #D0D0D0;
+
+    /* Typography (UI-SPEC §Typography) */
+    --font-sans: system-ui, -apple-system, "Segoe UI", Helvetica Neue, Arial, sans-serif;
+
+    --text-sm:   14px;
+    --text-base: 16px;
+    --text-lg:   20px;
+    --text-xl:   28px;
+
+    --weight-regular:  400;
+    --weight-semibold: 600;
+
+    --lh-tight:   1.2;
+    --lh-normal:  1.4;
+    --lh-relaxed: 1.5;
+
+    /* Spacing (UI-SPEC §Spacing Scale — 4px multiples) */
+    --space-xs:  4px;
+    --space-sm:  8px;
+    --space-md:  16px;
+    --space-lg:  24px;
+    --space-xl:  32px;
+    --space-2xl: 48px;
+    --space-3xl: 64px;
+
+    /* Border radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+}
+
+/* =====================================================================
+ * 3. BASE TYPOGRAPHY
+ * ===================================================================== */
+body {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: var(--weight-regular);
+    line-height: var(--lh-relaxed);
+    color: var(--color-text);
+    background-color: var(--color-dominant);
+}
+
+h1 {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-semibold);
+    line-height: var(--lh-tight);
+    margin-bottom: var(--space-md);
+}
+
+h2 {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    line-height: var(--lh-tight);
+    margin-bottom: var(--space-sm);
+}
+
+h3 {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    line-height: var(--lh-normal);
+    margin-bottom: var(--space-sm);
+}
+
+p {
+    margin-bottom: var(--space-md);
+    line-height: var(--lh-relaxed);
+}
+
+ul {
+    list-style: disc;
+    padding-left: var(--space-lg);
+    margin-bottom: var(--space-md);
+}
+
+li {
+    line-height: var(--lh-relaxed);
+    margin-bottom: var(--space-xs);
+}
+
+strong {
+    font-weight: var(--weight-semibold);
+}
+
+/* =====================================================================
+ * 4. LAYOUT
+ * ===================================================================== */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    background-color: var(--color-accent);
+    color: var(--color-dominant);
+    padding: var(--space-lg);
+}
+
+header h1 {
+    color: var(--color-dominant);
+    margin-bottom: var(--space-xs);
+}
+
+header p {
+    color: var(--color-dominant);
+    opacity: 0.9;
+    margin-bottom: 0;
+    font-size: var(--text-sm);
+}
+
+main {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: var(--space-2xl) var(--space-lg);
+}
+
+footer {
+    background-color: var(--color-secondary);
+    color: var(--color-text-muted);
+    padding: var(--space-md) var(--space-lg);
+    text-align: center;
+    font-size: var(--text-sm);
+    border-top: 1px solid var(--color-border);
+}
+
+footer p {
+    margin-bottom: 0;
+}
+
+#wizard-step {
+    background-color: var(--color-dominant);
+}
+
+/* =====================================================================
+ * 5. FORM ELEMENTS
+ * ===================================================================== */
+.field-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: var(--space-lg);
+}
+
+label {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    line-height: var(--lh-normal);
+    color: var(--color-text);
+    margin-bottom: var(--space-sm);
+}
+
+textarea,
+input[type="text"] {
+    width: 100%;
+    min-height: 120px;
+    padding: var(--space-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-dominant);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--lh-normal);
+    resize: vertical;
+}
+
+textarea:focus,
+input[type="text"]:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-color: var(--color-accent);
+}
+
+button,
+.button {
+    /* Accessibility: 44px min touch target */
+    min-height: 44px;
+    min-width: 44px;
+    padding: var(--space-sm) var(--space-lg);
+    background-color: var(--color-accent);
+    color: var(--color-dominant);
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    line-height: var(--lh-normal);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+button:hover,
+.button:hover {
+    background-color: #13396B; /* darken accent by ~15% */
+    border-color: #13396B;
+}
+
+button:focus,
+.button:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+button:disabled,
+.button:disabled,
+button[aria-disabled="true"] {
+    background-color: var(--color-text-muted);
+    border-color: var(--color-text-muted);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* =====================================================================
+ * 6. COMPONENT CLASSES
+ * ===================================================================== */
+
+/* .noc-card — NOC candidate card */
+.noc-card {
+    background-color: var(--color-dominant);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-xl);
+    transition: border-color 0.15s ease;
+}
+
+.noc-card.confirmed {
+    border: 2px solid var(--color-accent);
+    background-color: var(--color-secondary);
+}
+
+.noc-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.noc-card-header h2 {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    line-height: var(--lh-tight);
+    margin-bottom: 0;
+    flex: 1 1 auto;
+    color: var(--color-text);
+}
+
+.noc-duties {
+    margin-bottom: var(--space-md);
+}
+
+.noc-duties h3 {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-sm);
+}
+
+.noc-duties ul {
+    margin-bottom: 0;
+    padding-left: var(--space-md);
+}
+
+.noc-duties li {
+    font-size: var(--text-sm);
+    line-height: var(--lh-normal);
+    color: var(--color-text);
+    margin-bottom: var(--space-xs);
+}
+
+.noc-justification {
+    margin-bottom: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--color-secondary);
+    border-radius: var(--radius-sm);
+}
+
+.noc-justification summary {
+    cursor: pointer;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-muted);
+    padding: var(--space-xs) 0;
+}
+
+.noc-justification p {
+    margin-top: var(--space-sm);
+    margin-bottom: 0;
+    font-size: var(--text-sm);
+    line-height: var(--lh-normal);
+    color: var(--color-text-muted);
+}
+
+/* .teer-badge — TEER level pill */
+.teer-badge {
+    display: inline-block;
+    background-color: var(--color-accent);
+    color: var(--color-dominant);
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* .error-state — destructive error message */
+.error-state {
+    border-left: 4px solid var(--color-destructive);
+    padding: var(--space-md);
+    padding-left: var(--space-md);
+    margin-bottom: var(--space-lg);
+    background-color: #FDEDEC; /* light destructive tint */
+    color: var(--color-destructive);
+    font-size: var(--text-base);
+    line-height: var(--lh-normal);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.error-state strong {
+    display: block;
+    margin-bottom: var(--space-xs);
+    font-weight: var(--weight-semibold);
+}
+
+/* .empty-state — no-results message */
+.empty-state {
+    border-left: 4px solid var(--color-text-muted);
+    padding: var(--space-md);
+    margin-bottom: var(--space-lg);
+    background-color: var(--color-secondary);
+    color: var(--color-text-muted);
+    font-size: var(--text-base);
+    line-height: var(--lh-normal);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.empty-state strong {
+    display: block;
+    margin-bottom: var(--space-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+}
+
+.empty-state p {
+    margin-bottom: 0;
+    color: var(--color-text-muted);
+}
+
+/* .confirmation-banner — post-confirm success state */
+.confirmation-banner {
+    background-color: var(--color-secondary);
+    border: 1px solid var(--color-accent);
+    border-left-width: 4px;
+    padding: var(--space-lg);
+    margin-bottom: var(--space-xl);
+    border-radius: var(--radius-md);
+}
+
+.confirmation-banner h2 {
+    color: var(--color-accent);
+    margin-bottom: var(--space-sm);
+}
+
+.confirmation-banner p {
+    margin-bottom: var(--space-md);
+    color: var(--color-text);
+}
+
+.confirmation-banner a,
+.confirmation-banner .button {
+    display: inline-block;
+    text-decoration: none;
+    color: var(--color-dominant);
+}
+
+/* =====================================================================
+ * 7. HTMX INDICATOR CLASS
+ * ===================================================================== */
+.htmx-indicator {
+    display: none;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    font-style: italic;
+    margin-left: var(--space-md);
+    padding: var(--space-xs) var(--space-sm);
+    background-color: var(--color-secondary);
+    border-radius: var(--radius-sm);
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+    display: inline-block;
+}
