@@ -4,19 +4,21 @@ scripts/ingest_noc.py — NOC 2021 data pipeline.
 Parses two CSV files from data/ and populates SQLite with:
   - noc_units: Level 5 unit group profiles (516 rows)
   - noc_elements: All element rows (~44,038 rows)
-  - noc_fts: FTS5 contentless full-text index
-  - noc_chunks_vec: vec0 768-dim cosine embedding index (Main duties only)
+  - noc_fts: FTS5 full-text index
+  - noc_chunks_vec: vec0 1024-dim cosine embedding index (Main duties only)
   - source_documents: Content hash + version label per source file (PIPE-04)
   - index_metadata: Embedding model name for startup assertion (PIPE-05)
 
 Usage:
     python scripts/ingest_noc.py \\
         --db-path /home/charles/job_description_builder/app.db \\
-        --embed-model nomic-embed-text:latest \\
         --data-dir /home/charles/job_description_builder/data \\
+        --api-key sk-... \\
+        --embed-model text-embedding-v3 \\
         --version-label "NOC 2021 v1.0"
 
-Requires Ollama to be running with the specified embedding model available.
+Embeddings via DashScope OpenAI-compatible API (text-embedding-v3, 1024-dim).
+API key can also be set via DASHSCOPE_API_KEY env var.
 Re-running on unchanged files is fully idempotent (skips embedding stage).
 """
 from __future__ import annotations
@@ -304,31 +306,53 @@ def is_duty_header(text: str) -> bool:
     return text.strip().rstrip(":") == DUTY_HEADER.rstrip(":")
 
 
-def embed_batch(texts: list, model: str) -> list:
+def embed_batch(texts: list, model: str, api_key: str, base_url: str) -> list:
     """
-    Embed a batch of texts using Ollama synchronous API.
+    Embed a batch of texts using DashScope OpenAI-compatible embeddings API.
 
-    Uses ollama.embed (not ollama.AsyncClient.embed) — this script is synchronous.
-    The deprecated ollama.embeddings() was removed in ollama-python 0.4+; use embed().
+    Returns list of float vectors (one per input text).
+    text-embedding-v3 produces 1024-dim vectors by default.
     """
-    import ollama  # late import — not needed for schema-only runs
+    from openai import OpenAI
+    client = OpenAI(api_key=api_key, base_url=base_url)
+    response = client.embeddings.create(model=model, input=texts)
+    return [item.embedding for item in sorted(response.data, key=lambda x: x.index)]
 
-    response = ollama.embed(model=model, input=texts)
-    return list(response.embeddings)
+
+def recreate_vec_table_if_needed(con: sqlite3.Connection) -> None:
+    """Drop and recreate noc_chunks_vec if it exists with wrong dimensions (e.g. old 768-dim table)."""
+    existing = con.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='noc_chunks_vec'"
+    ).fetchone()
+    if existing and "FLOAT[768]" in (existing["sql"] or ""):
+        print("  Detected old 768-dim vec table — dropping and recreating for 1024-dim", flush=True)
+        con.execute("DROP TABLE IF EXISTS noc_chunks_vec")
+        con.executescript("""
+            CREATE VIRTUAL TABLE noc_chunks_vec USING vec0(
+                rowid INTEGER PRIMARY KEY,
+                embedding FLOAT[1024] distance_metric=cosine
+            )
+        """)
+        con.commit()
 
 
-def embed_and_upsert_vec0(con: sqlite3.Connection, embed_model: str) -> None:
+def embed_and_upsert_vec0(
+    con: sqlite3.Connection,
+    embed_model: str,
+    api_key: str,
+    base_url: str,
+) -> None:
     """
     Embed Main duties from noc_elements and upsert into noc_chunks_vec.
 
     Embeds individual duty statements (not full profiles) for Phase 4 citation.
     Batch size: all duties for one unit group at a time (4-44 texts per call).
     Skips duty header rows (Pitfall 5).
-    Uses INSERT OR REPLACE INTO vec0 (verified working with sqlite-vec 0.1.9).
     """
-    import sqlite_vec  # late import — not needed for schema-only runs
+    import sqlite_vec
 
-    # Get all Main duties grouped by noc_code
+    recreate_vec_table_if_needed(con)
+
     rows = con.execute("""
         SELECT id, noc_code, element_text
         FROM noc_elements
@@ -336,13 +360,12 @@ def embed_and_upsert_vec0(con: sqlite3.Connection, embed_model: str) -> None:
         ORDER BY noc_code, id
     """).fetchall()
 
-    # Group by noc_code for batched embedding
     from collections import defaultdict
     groups: dict[str, list] = defaultdict(list)
     for row in rows:
         text = row["element_text"].strip()
         if is_duty_header(text):
-            continue  # filter noise (Pitfall 5)
+            continue
         groups[row["noc_code"]].append((row["id"], text))
 
     total_embedded = 0
@@ -353,22 +376,20 @@ def embed_and_upsert_vec0(con: sqlite3.Connection, embed_model: str) -> None:
         ids = [d[0] for d in duties]
         texts = [d[1] for d in duties]
 
-        embeddings = embed_batch(texts, embed_model)
+        embeddings = embed_batch(texts, embed_model, api_key, base_url)
 
         for rowid, embedding in zip(ids, embeddings):
             vec = sqlite_vec.serialize_float32(embedding)
-            con.execute(
-                "DELETE FROM noc_chunks_vec WHERE rowid = ?",
-                [rowid],
-            )
+            con.execute("DELETE FROM noc_chunks_vec WHERE rowid = ?", [rowid])
             con.execute(
                 "INSERT INTO noc_chunks_vec(rowid, embedding) VALUES (?, ?)",
                 [rowid, vec],
             )
         total_embedded += len(duties)
+        print(f"  [{noc_code}] embedded {len(duties)} duties ({total_embedded} total)", flush=True)
 
     con.commit()
-    print(f"  Embedded {total_embedded} duty statements into noc_chunks_vec", flush=True)
+    print(f"  Done — {total_embedded} duty statements in noc_chunks_vec", flush=True)
 
 
 # ---------------------------------------------------------------------------
@@ -389,6 +410,7 @@ def write_index_metadata(con: sqlite3.Connection, embed_model: str) -> None:
 # ---------------------------------------------------------------------------
 
 def parse_args() -> argparse.Namespace:
+    import os
     parser = argparse.ArgumentParser(
         description="Ingest NOC 2021 data into SQLite FTS5 + sqlite-vec indices."
     )
@@ -397,8 +419,16 @@ def parse_args() -> argparse.Namespace:
         help="Absolute path to the SQLite database file (must be under project root)",
     )
     parser.add_argument(
-        "--embed-model", default="nomic-embed-text:latest",
-        help="Ollama embedding model name (default: nomic-embed-text:latest)",
+        "--embed-model", default="text-embedding-v3",
+        help="DashScope embedding model name (default: text-embedding-v3)",
+    )
+    parser.add_argument(
+        "--api-key", default=os.environ.get("DASHSCOPE_API_KEY", ""),
+        help="DashScope API key (default: $DASHSCOPE_API_KEY)",
+    )
+    parser.add_argument(
+        "--base-url", default="https://dashscope-us.aliyuncs.com/compatible-mode/v1",
+        help="DashScope base URL (default: US endpoint)",
     )
     parser.add_argument(
         "--data-dir", required=True,
@@ -413,6 +443,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+
+    if not args.api_key:
+        print("Error: --api-key or $DASHSCOPE_API_KEY required", file=sys.stderr)
+        return 1
 
     # Security: validate --db-path before any I/O (T-2-01)
     db_path = validate_db_path(args.db_path)
@@ -451,8 +485,8 @@ def main() -> int:
     print("[4/5] Rebuilding FTS5 index ...")
     rebuild_fts5(con)
 
-    print(f"[5/5] Embedding duty statements with {args.embed_model!r} (this takes 5-11 min) ...")
-    embed_and_upsert_vec0(con, args.embed_model)
+    print(f"[5/5] Embedding duty statements with {args.embed_model!r} via DashScope ...")
+    embed_and_upsert_vec0(con, args.embed_model, args.api_key, args.base_url)
 
     print("[6/6] Writing index_metadata ...")
     write_index_metadata(con, args.embed_model)

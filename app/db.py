@@ -57,10 +57,11 @@ NOC_SCHEMA_DDL = """
         tokenize='porter ascii'
     );
 
-    -- vec0 embedding index (768-dim cosine, rowid matches noc_elements.id)
+    -- vec0 embedding index (1024-dim cosine, rowid matches noc_elements.id)
+    -- text-embedding-v3 (DashScope) produces 1024-dim vectors
     CREATE VIRTUAL TABLE IF NOT EXISTS noc_chunks_vec USING vec0(
         rowid INTEGER PRIMARY KEY,
-        embedding FLOAT[768] distance_metric=cosine
+        embedding FLOAT[1024] distance_metric=cosine
     );
 """
 

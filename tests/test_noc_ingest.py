@@ -7,6 +7,7 @@ Mock embeddings: [0.1] * 768 (pre-computed float list, not real vectors).
 from __future__ import annotations
 
 import csv
+import hashlib
 import io
 import sqlite3
 from unittest.mock import patch, MagicMock
@@ -54,10 +55,12 @@ MOCK_EMBEDDINGS = [[0.1] * 768] * len(
 
 def _run_ingest(con, structure_rows=None, elements_rows=None,
                 embed_model="nomic-embed-text:latest",
-                structure_hash="abc123", elements_hash="def456"):
+                structure_hash=None, elements_hash=None):
     """
     Helper: run ingest_noc stages directly against a fixture connection,
     bypassing file I/O and Ollama (both mocked).
+
+    Generates valid 64-char hex hashes from source names when none are provided.
     """
     from scripts.ingest_noc import (
         upsert_source_document,
@@ -70,15 +73,21 @@ def _run_ingest(con, structure_rows=None, elements_rows=None,
     structure_rows = structure_rows or SYNTHETIC_STRUCTURE_ROWS
     elements_rows = elements_rows or SYNTHETIC_ELEMENTS_ROWS
 
+    # Generate valid 64-char hex hashes from source names when not explicitly provided
+    if structure_hash is None:
+        structure_hash = hashlib.sha256(b"noc_2021_structure.csv").hexdigest()
+    if elements_hash is None:
+        elements_hash = hashlib.sha256(b"noc_2021_elements.csv").hexdigest()
+
     upsert_source_document(con, "noc_2021_structure.csv", "NOC 2021 v1.0", structure_hash)
     upsert_source_document(con, "noc_2021_elements.csv", "NOC 2021 v1.0", elements_hash)
     upsert_noc_units(con, structure_rows, structure_hash)
     upsert_noc_elements(con, elements_rows, elements_hash)
     rebuild_fts5(con)
 
-    mock_embeddings = [[0.1] * 768] * 10  # generous upper bound
+    mock_embeddings = [[0.1] * 1024] * 10  # generous upper bound
     with patch("scripts.ingest_noc.embed_batch", return_value=mock_embeddings):
-        embed_and_upsert_vec0(con, embed_model)
+        embed_and_upsert_vec0(con, embed_model, api_key="test-key", base_url="http://test")
 
     write_index_metadata(con, embed_model)
 
@@ -123,7 +132,7 @@ def test_vec0_knn_returns_results(noc_db):
 
     _run_ingest(noc_db)
 
-    query_embedding = [0.1] * 768
+    query_embedding = [0.1] * 1024
     query_vec = sqlite_vec.serialize_float32(query_embedding)
 
     rows = noc_db.execute("""
