@@ -313,17 +313,21 @@ def is_duty_header(text: str) -> bool:
     return text.strip().rstrip(":") == DUTY_HEADER.rstrip(":")
 
 
-def embed_batch(texts: list, model: str, api_key: str, base_url: str) -> list:
+def embed_batch(texts: list, model: str, api_key: str, base_url: str, batch_size: int = 10) -> list:
     """
-    Embed a batch of texts using DashScope OpenAI-compatible embeddings API.
+    Embed texts using DashScope OpenAI-compatible embeddings API.
 
-    Returns list of float vectors (one per input text).
-    text-embedding-v3 produces 1024-dim vectors by default.
+    DashScope text-embedding-v3 max batch size is 10; splits automatically.
+    Returns list of float vectors in input order.
     """
     from openai import OpenAI
     client = OpenAI(api_key=api_key, base_url=base_url)
-    response = client.embeddings.create(model=model, input=texts)
-    return [item.embedding for item in sorted(response.data, key=lambda x: x.index)]
+    results = []
+    for i in range(0, len(texts), batch_size):
+        chunk = texts[i:i + batch_size]
+        response = client.embeddings.create(model=model, input=chunk)
+        results.extend(item.embedding for item in sorted(response.data, key=lambda x: x.index))
+    return results
 
 
 def recreate_vec_table_if_needed(con: sqlite3.Connection) -> None:
