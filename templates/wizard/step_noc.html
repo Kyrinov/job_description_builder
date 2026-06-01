@@ -8,6 +8,7 @@
     <p>Describe the work to be performed. The system will identify the best matching NOC unit groups.</p>
 
     <form hx-post="/api/noc/map"
+          hx-ext="json-enc"
           hx-target="#noc-results"
           hx-swap="innerHTML"
           hx-indicator="#spinner"
@@ -26,4 +27,8 @@
 
     <div id="noc-results" aria-live="polite"></div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>
 {% endblock %}
