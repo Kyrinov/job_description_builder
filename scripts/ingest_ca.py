@@ -218,7 +218,24 @@ def extract_clauses_via_llm(
         ],
         "stream": False,
         "think": False,
-        "format": CAExtractionResult.model_json_schema(),
+        "format": {
+            "type": "object",
+            "properties": {
+                "clauses": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "clause_type": {"type": "string"},
+                            "article_ref": {"type": "string"},
+                            "clause_text": {"type": "string"},
+                        },
+                        "required": ["clause_type", "article_ref", "clause_text"],
+                    },
+                }
+            },
+            "required": ["clauses"],
+        },
         "options": {"num_ctx": num_ctx, "num_predict": num_predict, "temperature": 0},
     }
 
