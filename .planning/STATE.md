@@ -1,6 +1,21 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+current_phase: Phase 4 — NL→NOC Mapping
+status: ready_to_execute
+last_updated: "2026-06-01T00:00:00.000Z"
+progress:
+  total_phases: 9
+  completed_phases: 3
+  total_plans: 15
+  completed_plans: 11
+  percent: 73
+---
+
 # Project State
 
-**Status:** Phase 3 complete — Phase 4 ready to plan
+**Status:** Phase 4 planned — ready to execute (4 plans, 4 waves)
 **Current phase:** Phase 4 — NL→NOC Mapping
 **Last updated:** 2026-06-01
 
@@ -15,7 +30,7 @@
 | 1 | Project Foundation | Complete (3/3 plans verified) |
 | 2 | NOC Data Pipeline | Complete (4/4 plans verified) |
 | 3 | CA + JES Data Pipeline | Complete (4/4 plans verified) |
-| 4 | NL→NOC Mapping | Not started |
+| 4 | NL→NOC Mapping | Ready to execute (4 plans) |
 | 5 | OG Classification | Not started |
 | 6 | JD Generation | Not started |
 | 7 | JES Scoring | Not started |
@@ -31,6 +46,7 @@ See: `.planning/PROJECT.md`
 **Core value:** An HR advisor can describe work in plain language and receive a legally defensible, fully traceable job description — grounded in NOC, collective agreement, and TBS classification policy — in minutes instead of hours.
 
 **Architecture non-negotiables (do not change without a phase transition):**
+
 - ProvenanceTag on every domain object — set at write time, rendered at export
 - WorkDescription Pydantic model finalized in Phase 1 before any service code
 - One configured local generation model call per JES factor (no array-collapse), instructor retry, Pydantic validation
@@ -39,6 +55,7 @@ See: `.planning/PROJECT.md`
 - Startup assertion: embedding model name in index metadata must match configured model
 
 **Critical data prerequisite (must resolve before Phase 2):**
+
 - NOC 2021 unit group profiles (parquet or JSON) — hard blocker for Phases 2–6
 - TBS OCHRO OG Definitions with inclusions/exclusions — hard blocker for Phase 5
 
@@ -47,6 +64,7 @@ See: `.planning/PROJECT.md`
 ## Accumulated Context
 
 ### Decisions Locked
+
 | Decision | Rationale |
 |----------|-----------|
 | FastAPI over Flask | LLM streaming via `StreamingResponse`; Flask WSGI blocks during Ollama calls |
@@ -58,10 +76,12 @@ See: `.planning/PROJECT.md`
 | SQLite + sqlite-vec (not DuckDB) for app state | App state and vector search co-located; DuckDB for parquet pipeline transforms only |
 
 ### Active Blockers
+
 - ~~NOC 2021 unit group profiles not yet acquired~~ — RESOLVED: CSVs present in `data/nationa_occupational_competencies/` (516 unit groups, 44k element rows)
 - TBS OCHRO OG definitions not yet collected — resolve before planning Phase 5
 
 ### Todos
+
 - Acquire NOC 2021 data before Phase 2 kickoff
 - Collect TBS OCHRO OG definitions with inclusions/exclusions
 - Collect TBS Qualification Standards per OG (v2 blocker, QUAL-01)
@@ -87,6 +107,7 @@ See: `.planning/PROJECT.md`
 **Next action:** `/gsd-plan-phase 4`
 
 **Context for next session:**
+
 - Phase 3 complete: 578 ca_clauses (33 OGs), 105 jes_factors (16 OGs), 190 policy_chunks, 75 tests green
 - app.db NOC tables empty — re-run `python scripts/ingest_noc.py` before Phase 4 real-data run
 - Phase 4 goal: `POST /map-to-noc` with plain-language work description → ranked NOC candidates via FTS5 → embedding rerank → LLM justification (3-stage pipeline)
