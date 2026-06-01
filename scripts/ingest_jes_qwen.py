@@ -121,6 +121,7 @@ def extract_factors_via_api(
                 tools=[_FACTOR_TOOL],
                 tool_choice={"type": "function", "function": {"name": "store_jes_factors"}},
                 messages=[{"role": "user", "content": prompt}],
+                extra_body={"enable_thinking": False},
             )
             args_str = response.choices[0].message.tool_calls[0].function.arguments
             result = JESExtractionResult.model_validate(json.loads(args_str))
@@ -163,6 +164,7 @@ def extract_group_metadata_via_api(
                 tools=[_METADATA_TOOL],
                 tool_choice={"type": "function", "function": {"name": "store_og_metadata"}},
                 messages=[{"role": "user", "content": prompt}],
+                extra_body={"enable_thinking": False},
             )
             args_str = response.choices[0].message.tool_calls[0].function.arguments
             result = GroupMetadataResult.model_validate(json.loads(args_str))
