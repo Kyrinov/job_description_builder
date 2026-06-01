@@ -34,3 +34,7 @@ class NocMapResponse(BaseModel):
         max_length=5,
         description="Ranked NOC candidates, best match first",
     )
+    wd_id: str = Field(
+        ...,
+        description="WorkDescription ID. Use this in the subsequent POST /api/noc/confirm call.",
+    )

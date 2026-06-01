@@ -290,7 +290,7 @@ async def test_empty_fts_result_raises_422(test_db_routing, noc_mapping_db):
 
 
 async def test_api_route_200(test_db_routing, noc_mapping_db):
-    """POST /api/noc/map with mocked pipeline returns HTTP 200 with candidates."""
+    """POST /api/noc/map with mocked pipeline returns HTTP 200 with candidates and wd_id."""
     ranking = _make_ranking_mock()
 
     with patch("app.main.ollama_client_factory", return_value=_make_mock_ollama_client()), \
@@ -309,6 +309,9 @@ async def test_api_route_200(test_db_routing, noc_mapping_db):
             assert "candidates" in body
             assert len(body["candidates"]) >= 1
             assert body["candidates"][0]["noc_code"] == "21232"
+            # New: response must include wd_id for the follow-up confirm call
+            assert "wd_id" in body
+            assert len(body["wd_id"]) > 0
 
 
 async def test_api_route_htmx_returns_html(test_db_routing, noc_mapping_db):
@@ -331,6 +334,42 @@ async def test_api_route_htmx_returns_html(test_db_routing, noc_mapping_db):
             assert response.headers["content-type"].startswith("text/html")
             assert "Software engineers and designers" in response.text
             assert "Confirm this NOC" in response.text
+
+
+async def test_end_to_end_map_then_confirm(test_db_routing, noc_mapping_db):
+    """Full end-to-end: /api/noc/map returns wd_id, /api/noc/confirm with that wd_id succeeds.
+
+    Regression test for the critical bug where map_noc never persisted candidates
+    to WorkDescription.noc_candidates — making confirm_noc always 422.
+    """
+    ranking = _make_ranking_mock()
+
+    with patch("app.main.ollama_client_factory", return_value=_make_mock_ollama_client()), \
+         patch("app.api.noc_mapping.map_work_description",
+               new=AsyncMock(return_value=ranking)):
+        from app.main import app
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            # Step 1: map the work description
+            map_resp = await client.post(
+                "/api/noc/map",
+                json={"work_description": "develop and maintain application software"},
+            )
+            assert map_resp.status_code == 200
+            map_body = map_resp.json()
+            wd_id = map_body["wd_id"]
+
+            # Step 2: confirm one of the candidates — must succeed because map populated noc_candidates
+            confirm_resp = await client.post(
+                "/api/noc/confirm",
+                data={"wd_id": wd_id, "noc_code": "21232"},
+            )
+            assert confirm_resp.status_code == 200, (
+                f"Confirm failed (regression of critical bug): {confirm_resp.json()}"
+            )
+            assert confirm_resp.json()["status"] == "confirmed"
+            assert confirm_resp.json()["noc_code"] == "21232"
 
 
 async def test_confirm_noc_updates_wd(test_db_routing, noc_mapping_db):
