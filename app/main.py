@@ -11,11 +11,14 @@ Run with: uvicorn app.main:app --reload
 """
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 import ollama
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.api import health
@@ -98,4 +101,28 @@ app = FastAPI(
 
 app.include_router(health.router)
 app.include_router(noc_mapping.router)
-templates = Jinja2Templates(directory="app/templates")
+
+# Phase 4 — static CSS file serving (UI-SPEC §CSS Architecture)
+_static_dir = os.path.join(os.path.dirname(__file__), "static")
+os.makedirs(_static_dir, exist_ok=True)
+app.mount("/static", StaticFiles(directory=_static_dir), name="static")
+
+# Phase 4 — Jinja2 templates for the wizard. Search BOTH the project-root
+# `templates/` dir (where step_noc.html and partials/noc_results.html live,
+# matching the _templates_dir resolution in app/api/noc_mapping.py) AND
+# `app/templates/` (where base.html lives). Jinja2Templates accepts a list
+# of directories; the loader searches them in order so the wizard
+# template's `{% extends "base.html" %}` resolves correctly.
+_templates_dirs = [
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates"),
+    os.path.join(os.path.dirname(__file__), "templates"),
+]
+wizard_templates = Jinja2Templates(directory=_templates_dirs)
+
+
+@app.get("/wizard/noc", response_class=HTMLResponse)
+async def wizard_noc(request: Request) -> HTMLResponse:
+    """Render the NL→NOC mapping wizard step (Phase 4)."""
+    return wizard_templates.TemplateResponse(
+        "wizard/step_noc.html", {"request": request}
+    )
