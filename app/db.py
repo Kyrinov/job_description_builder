@@ -127,6 +127,34 @@ CA_JES_SCHEMA_DDL = """
     );
 """
 
+NOC_MAPPING_SCHEMA_DDL = """
+    -- Result cache for the NL→NOC mapping pipeline (Phase 4, MAP-01/MAP-02).
+    -- Keyed on a SHA-256 of (work_description, generation_model, NOC DB version).
+    -- The pipeline is deterministic at temperature=0.0, so identical inputs
+    -- always produce identical outputs and the cache is safe to use as a fast path.
+    CREATE TABLE IF NOT EXISTS noc_mapping_cache (
+        cache_key    TEXT PRIMARY KEY,
+        result_json  TEXT NOT NULL,
+        created_at   TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+    );
+
+    -- Per-request flywheel metrics for the NL→NOC mapping pipeline (Phase 4).
+    -- Captures shortlist sizes, instructor retry counts, guardrail firings, and
+    -- sampled-for-review flags so future phases can mine production behavior.
+    CREATE TABLE IF NOT EXISTS noc_mapping_log (
+        id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+        wd_hash             TEXT NOT NULL,
+        noc_code_rank1      TEXT,
+        fts_result_count    INTEGER,
+        rerank_result_count INTEGER,
+        instructor_retries  INTEGER DEFAULT 0,
+        pipeline_latency_ms INTEGER,
+        guardrail_fired     INTEGER DEFAULT 0,
+        sample_for_review   INTEGER DEFAULT 0,
+        created_at          TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+    );
+"""
+
 
 def get_connection(db_path: str) -> sqlite3.Connection:
     """
@@ -147,7 +175,7 @@ def get_connection(db_path: str) -> sqlite3.Connection:
 
 def create_schema(con: sqlite3.Connection) -> None:
     """
-    Create all Phase 1, Phase 2, and Phase 3 tables. Idempotent — safe to call on every startup.
+    Create all Phase 1, Phase 2, Phase 3, and Phase 4 tables. Idempotent — safe to call on every startup.
 
     Tables created here:
     - work_descriptions: one row per WorkDescription entity (data stored as JSON)
@@ -157,6 +185,8 @@ def create_schema(con: sqlite3.Connection) -> None:
     - noc_units, noc_elements, noc_fts, noc_chunks_vec: NOC data (Phase 2)
     - ca_clauses, jes_factors, jes_og_metadata: CA + JES structured records (Phase 3, PIPE-02/PIPE-03/CA-01)
     - policy_chunks, policy_fts: TBS policy doc FTS5 index (Phase 3, Phase 5 prereq)
+    - noc_mapping_cache: SHA-256-keyed result cache for the NL→NOC pipeline (Phase 4)
+    - noc_mapping_log: per-request flywheel metrics (Phase 4)
     """
     con.executescript("""
         CREATE TABLE IF NOT EXISTS work_descriptions (
@@ -186,6 +216,8 @@ def create_schema(con: sqlite3.Connection) -> None:
     con.executescript(NOC_SCHEMA_DDL)
     con.commit()
     con.executescript(CA_JES_SCHEMA_DDL)
+    con.commit()
+    con.executescript(NOC_MAPPING_SCHEMA_DDL)
     con.commit()
 
 
