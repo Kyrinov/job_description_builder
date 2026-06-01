@@ -245,7 +245,10 @@ def extract_clauses_via_llm(
             response = httpx.post(endpoint, json=payload, timeout=request_timeout)
             response.raise_for_status()
             content = response.json()["message"]["content"]
-            result = CAExtractionResult.model_validate_json(content)
+            parsed = json.loads(content)
+            if isinstance(parsed, list):
+                parsed = {"clauses": parsed}
+            result = CAExtractionResult.model_validate(parsed)
             return [c.model_dump() for c in result.clauses if c.clause_type in VALID_CLAUSE_TYPES]
         except Exception as exc:
             last_error = exc
