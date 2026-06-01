@@ -46,14 +46,13 @@ NOC_SCHEMA_DDL = """
         UNIQUE(noc_code, element_type, element_text)
     );
 
-    -- FTS5 full-text index (contentless — populated by ingest script)
+    -- FTS5 full-text index (populated by ingest script)
     CREATE VIRTUAL TABLE IF NOT EXISTS noc_fts USING fts5(
-        noc_code    UNINDEXED,
+        noc_code,
         title,
         definition,
-        element_type UNINDEXED,
+        element_type,
         element_text,
-        content='',
         tokenize='porter ascii'
     );
 

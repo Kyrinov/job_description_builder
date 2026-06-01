@@ -431,6 +431,82 @@ async def test_confirm_noc_updates_wd(test_db_routing, noc_mapping_db):
     assert loaded.stage == "noc_mapped"
 
 
+# ---------------------------------------------------------------------------
+# _fts_query_from_text unit tests (§4 in gsd-phase-4-issues.md)
+# ---------------------------------------------------------------------------
+
+
+def test_fts5_query_rewriting_strips_stop_words():
+    """_fts_query_from_text OR-joins non-stop keywords from a natural-language description."""
+    from app.services.noc_mapper import _fts_query_from_text
+
+    result = _fts_query_from_text(
+        "Reviews and analyzes federal government procurement policies"
+    )
+    terms = set(result.split(" OR "))
+    assert "federal" in terms
+    assert "government" in terms
+    assert "procurement" in terms
+    assert "policies" in terms
+    assert "and" not in terms
+    assert "reviews" not in terms
+    assert "analyzes" not in terms
+
+
+def test_fts5_query_empty_string_when_only_stop_words():
+    """_fts_query_from_text returns '' when all tokens are stop words or too short."""
+    from app.services.noc_mapper import _fts_query_from_text
+
+    assert _fts_query_from_text("the") == ""
+    assert _fts_query_from_text("a b c") == ""
+
+
+async def test_stage1_returns_candidates_for_realistic_description(
+    noc_mapping_db, monkeypatch, tmp_path
+):
+    """Stage 1 + full pipeline returns candidates for a realistic multi-sentence work description.
+
+    Regression test: before the FTS5 OR-rewrite, this input produced an empty shortlist
+    and raised ValueError → HTTP 422.
+    """
+    _set_env(monkeypatch, str(noc_mapping_db), tmp_path)
+
+    embed_mock = _make_embed_mock()
+    ranking = _make_ranking_mock()
+
+    with patch("app.services.noc_mapper.OllamaAsyncClient", return_value=embed_mock), \
+         patch("app.services.noc_mapper.instructor_client") as mock_instructor:
+        mock_instructor.chat.completions.create = AsyncMock(return_value=ranking)
+
+        from app.services.noc_mapper import map_work_description
+
+        result = await map_work_description(
+            work_description=(
+                "Reviews and analyzes federal government software systems. "
+                "Develops and maintains application software for internal clients."
+            ),
+            db_path=str(noc_mapping_db),
+        )
+
+        assert isinstance(result.candidates, list)
+        assert len(result.candidates) >= 1
+
+
+async def test_fts5_query_empty_after_filtering_raises_value_error(
+    noc_mapping_db, monkeypatch, tmp_path
+):
+    """map_work_description raises ValueError (→ 422) when work description is all stop words."""
+    _set_env(monkeypatch, str(noc_mapping_db), tmp_path)
+
+    from app.services.noc_mapper import map_work_description
+
+    with pytest.raises(ValueError, match="no usable search terms"):
+        await map_work_description(
+            work_description="the a an",
+            db_path=str(noc_mapping_db),
+        )
+
+
 async def test_confirm_noc_404_when_wd_missing(test_db_routing, noc_mapping_db):
     """POST /api/noc/confirm with unknown wd_id returns HTTP 404."""
     with patch("app.main.ollama_client_factory", return_value=_make_mock_ollama_client()):

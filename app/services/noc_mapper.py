@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 import sqlite3
 from datetime import date
 
@@ -32,6 +33,36 @@ from app.db import get_connection
 from app.models.work_description import NOCMatch, ProvenanceTag
 
 logger = logging.getLogger(__name__)
+
+_FTS_STOP_WORDS = frozenset({
+    "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "have",
+    "in", "is", "it", "its", "of", "on", "or", "that", "the", "this", "to", "was",
+    "were", "will", "with", "you", "your",
+    # Generic work-description verbs that don't discriminate between NOC codes:
+    "reviews", "analyzes", "review", "analyze", "provides", "develops", "develop",
+    "performs", "perform", "responsible", "responsibilities", "duties", "tasks",
+    "including", "include", "may", "also", "well", "such", "etc",
+})
+
+
+def _fts_query_from_text(text: str) -> str:
+    """Convert a natural-language work description into an OR-joined FTS5 query string.
+
+    Splits on whitespace + punctuation, lowercases, filters stop words and short
+    tokens (< 3 chars). OR-joins remaining terms so FTS5 returns rows matching
+    ANY term (broad recall). Stages 2 & 3 provide precision.
+
+    Returns empty string if no usable terms remain.
+    """
+    tokens = re.findall(r"[a-z0-9]+", text.lower())
+    keywords = [t for t in tokens if t not in _FTS_STOP_WORDS and len(t) >= 3]
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for kw in keywords:
+        if kw not in seen:
+            seen.add(kw)
+            deduped.append(kw)
+    return " OR ".join(deduped)
 
 
 async def map_work_description(
@@ -51,6 +82,12 @@ async def map_work_description(
     conn = await asyncio.to_thread(lambda: get_connection(db_path))
     try:
         # --- Stage 1: FTS5 keyword shortlist ---
+        fts_query = _fts_query_from_text(work_description)
+        if not fts_query:
+            raise ValueError(
+                "Work description produced no usable search terms after stop-word filtering. "
+                "Please describe the work using more specific terms."
+            )
         fts_rows = await asyncio.to_thread(
             lambda: conn.execute(
                 """
@@ -63,7 +100,7 @@ async def map_work_description(
                 ORDER BY rank
                 LIMIT ?
                 """,
-                (work_description, fts_limit),
+                (fts_query, fts_limit),
             ).fetchall()
         )
         if not fts_rows:
