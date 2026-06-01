@@ -1,8 +1,10 @@
 # Project State
 
-**Status:** Phase 2 complete — Phase 3 ready to execute
-**Current phase:** Phase 3 — CA + JES Data Pipeline
-**Last updated:** 2026-05-29
+**Status:** Phase 3 complete — Phase 4 ready to plan
+**Current phase:** Phase 4 — NL→NOC Mapping
+**Last updated:** 2026-06-01
+
+**Pre-phase-4 prerequisite:** Re-run `scripts/ingest_noc.py` — app.db was rebuilt during Phase 3 and NOC tables (noc_elements, noc_units, noc_fts) are empty.
 
 ---
 
@@ -12,7 +14,7 @@
 |---|-------|--------|
 | 1 | Project Foundation | Complete (3/3 plans verified) |
 | 2 | NOC Data Pipeline | Complete (4/4 plans verified) |
-| 3 | CA + JES Data Pipeline | Ready to execute (4 plans) |
+| 3 | CA + JES Data Pipeline | Complete (4/4 plans verified) |
 | 4 | NL→NOC Mapping | Not started |
 | 5 | OG Classification | Not started |
 | 6 | JD Generation | Not started |
@@ -73,22 +75,21 @@ See: `.planning/PROJECT.md`
 | Metric | Value |
 |--------|-------|
 | Phases total | 9 |
-| Phases complete | 2 |
+| Phases complete | 3 |
 | Requirements mapped | 21/21 |
 | Plans created | 11 (Phase 1: 3 complete, Phase 2: 4 complete, Phase 3: 4 ready) |
-| **Plans executed** | **12 (Phase 3: 1/4 complete via 03-01)** |
+| **Plans executed** | **15 (Phase 3: 4/4 complete)** |
 
 ---
 
 ## Session Continuity
 
-**Next action:** `/gsd-execute-phase 3`
+**Next action:** `/gsd-plan-phase 4`
 
 **Context for next session:**
-- Phase 2 complete: 28 CA JSONs + 18 JES TXTs + 2 TBS policy docs confirmed present
-- Phase 3 planned: 4 plans (Wave 0→3), LLM extraction via gemma4:31b + instructor retry
-- Phase 3 plan structure: Wave 0 test stubs → Wave 1 schema DDL → Wave 2 ingest scripts → Wave 3 real-data run + human spot-check
-- CA data: data/agreements/{OG}/{OG}_full.json (consistent JSON schema across all 28 OGs); multi-OG CAs: IT_CS, CT_FI, LP_LA, SP_AP
-- JES data: data/Job_evaluation/*.txt (18 files; skip FB Application Guidelines file; extract first word of filename for og_code)
-- New tables: ca_clauses, jes_factors, policy_chunks, policy_fts — added to app/db.py via CA_JES_SCHEMA_DDL
+- Phase 3 complete: 578 ca_clauses (33 OGs), 105 jes_factors (16 OGs), 190 policy_chunks, 75 tests green
+- app.db NOC tables empty — re-run `python scripts/ingest_noc.py` before Phase 4 real-data run
+- Phase 4 goal: `POST /map-to-noc` with plain-language work description → ranked NOC candidates via FTS5 → embedding rerank → LLM justification (3-stage pipeline)
+- Phase 4 depends on Phase 2 (NOC data) and Phase 3 (policy chunks for AS-vs-EC context)
+- Requirements: MAP-01 (NOC shortlist), MAP-02 (embedding rerank + LLM justification)
 - All architecture decisions in "Decisions Locked" above are non-negotiable
