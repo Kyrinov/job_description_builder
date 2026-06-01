@@ -214,8 +214,9 @@ def extract_clauses_via_llm(
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "stream": False,
+        "think": False,
         "format": CAExtractionResult.model_json_schema(),
-        "options": {"num_ctx": num_ctx, "num_predict": num_predict, "temperature": 0, "think": False},
+        "options": {"num_ctx": num_ctx, "num_predict": num_predict, "temperature": 0},
     }
 
     last_error: Exception | None = None
