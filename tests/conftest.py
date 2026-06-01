@@ -116,8 +116,15 @@ def noc_mapping_db(tmp_path):
         "VALUES (?, ?, ?, ?)",
         ("21232", "Main duties", "Develop and maintain application software.", "fakehash_v1"),
     )
-    # Rebuild FTS5 from inserted data (clear first to avoid duplicates)
-    con.execute("DELETE FROM noc_fts")
+    # Drop and recreate FTS5 to match the live DB schema (create_schema uses
+    # UNINDEXED+contentless which makes noc_code unretrievable for JOIN; the
+    # live ingest script uses an indexed non-contentless FTS5 instead).
+    con.execute("DROP TABLE IF EXISTS noc_fts")
+    con.executescript(
+        "CREATE VIRTUAL TABLE noc_fts USING fts5("
+        "noc_code, title, definition, element_type, element_text, "
+        "tokenize='porter ascii')"
+    )
     con.execute(
         "INSERT INTO noc_fts(noc_code, title, definition, element_type, element_text) "
         "SELECT noc_code, title, definition, '', '' FROM noc_units"
