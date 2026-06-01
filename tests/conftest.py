@@ -84,3 +84,71 @@ def ca_jes_db(tmp_path):
     create_schema(con)  # creates all tables — NOC + CA_JES once Plan 03-02 lands
     yield con
     con.close()
+
+
+@pytest.fixture
+def noc_mapping_db(tmp_path):
+    """
+    Temp SQLite DB with NOC schema, synthetic FTS5 data, and 768-dim fake vec rows.
+    Used by test_noc_mapping.py integration tests — does NOT require Ollama to be running.
+
+    Synthetic data: NOC 21232 "Software engineers and designers", TEER 2,
+    one Main duties element. FTS5 and vec populated. index_metadata set to
+    nomic-embed-text:latest so assert_noc_index_model() passes.
+    """
+    import sqlite_vec as sv
+    from app.db import create_schema, get_connection
+
+    db_path = str(tmp_path / "test_noc_mapping.db")
+    con = get_connection(db_path)
+    create_schema(con)
+
+    # Insert synthetic noc_units row
+    con.execute(
+        "INSERT OR IGNORE INTO noc_units(noc_code, teer_level, title, definition, source_hash) "
+        "VALUES (?, ?, ?, ?, ?)",
+        ("21232", "2", "Software engineers and designers",
+         "Design, develop, and test software systems.", "fakehash_v1"),
+    )
+    # Insert synthetic noc_elements (Main duties)
+    con.execute(
+        "INSERT OR IGNORE INTO noc_elements(noc_code, element_type, element_text, source_hash) "
+        "VALUES (?, ?, ?, ?)",
+        ("21232", "Main duties", "Develop and maintain application software.", "fakehash_v1"),
+    )
+    # Rebuild FTS5 from inserted data (clear first to avoid duplicates)
+    con.execute("DELETE FROM noc_fts")
+    con.execute(
+        "INSERT INTO noc_fts(noc_code, title, definition, element_type, element_text) "
+        "SELECT noc_code, title, definition, '', '' FROM noc_units"
+    )
+    con.execute(
+        "INSERT INTO noc_fts(noc_code, title, definition, element_type, element_text) "
+        "SELECT e.noc_code, u.title, u.definition, e.element_type, e.element_text "
+        "FROM noc_elements e JOIN noc_units u ON u.noc_code = e.noc_code"
+    )
+    # Drop old vec table (may be FLOAT[1024] from Phase 2 ingest), recreate as FLOAT[768]
+    con.execute("DROP TABLE IF EXISTS noc_chunks_vec")
+    con.executescript(
+        "CREATE VIRTUAL TABLE noc_chunks_vec USING vec0("
+        "rowid INTEGER PRIMARY KEY, embedding FLOAT[768] distance_metric=cosine)"
+    )
+    # Insert fake 768-dim vector for the element row
+    elem_row = con.execute(
+        "SELECT id FROM noc_elements WHERE noc_code = '21232' LIMIT 1"
+    ).fetchone()
+    fake_vec = sv.serialize_float32([0.1] * 768)
+    con.execute(
+        "INSERT INTO noc_chunks_vec(rowid, embedding) VALUES (?, ?)",
+        (elem_row["id"], fake_vec),
+    )
+    # Update index_metadata so assert_noc_index_model() passes during tests
+    con.execute(
+        "INSERT OR REPLACE INTO index_metadata(key, value, updated_at) "
+        "VALUES (?, ?, datetime('now'))",
+        ("embedding_model", "nomic-embed-text:latest"),
+    )
+    con.commit()
+
+    yield db_path
+    con.close()
