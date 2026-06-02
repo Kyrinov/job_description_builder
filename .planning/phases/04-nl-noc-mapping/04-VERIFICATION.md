@@ -1,7 +1,7 @@
 ---
 phase: 04-nl-noc-mapping
 verified: 2026-06-01T22:00:00Z
-status: human_needed
+status: complete
 score: 7/7 must-haves verified
 overrides_applied: 0
 overrides: []
@@ -28,8 +28,8 @@ human_verification:
 **Phase Goal:** Advisor can submit a plain-language description of work to the `/api/noc/map` endpoint and receive a ranked list of NOC unit group candidates — each showing the NOC code, unit group title, TEER level, and the specific NOC duty statements that best matched — produced by the three-stage FTS5 → embedding rerank → configured local generation model justification pipeline.
 
 **Verified:** 2026-06-01T22:00:00Z
-**Status:** human_needed
-**Score:** 7/7 must-haves verified (all automated evidence in place; live Ollama integration requires human action)
+**Status:** complete
+**Score:** 7/7 must-haves verified + 5/5 UAT items passed (human verified 2026-06-02)
 
 ## Goal Achievement
 
@@ -207,9 +207,15 @@ Per the Phase 4 plan 04-04 (`04-04-PLAN.md:438-480`), the `human-verify checkpoi
 
 **All 7 must-haves verified with automated evidence.** The full test suite (91 tests) is green. Both ROADMAP Success Criteria and both v1 requirements (MAP-01, MAP-02) are satisfied at the code level. The critical end-to-end bug identified in code review (map_noc not persisting candidates) has been fixed and a regression test added.
 
-**Status: human_needed** because the live Ollama integration (vector rebuild, server boot, end-to-end pipeline run, UI render) requires human action and cannot be verified programmatically. The plan itself (04-04-PLAN.md:437-480) marked this as a `checkpoint:human-verify` blocking gate.
+**Status: complete.** All 5 UAT items passed (human verified 2026-06-02). Three additional issues were discovered and resolved during UAT:
 
-The phase is **code-complete and shippable** (per 04-REVIEW.md: "advisory status, 0 blockers, 0 critical, 1 major deferred, 1 minor deferred"). All deferred items are non-blocking maintenance debt.
+| Issue | Fix | Commit |
+|-------|-----|--------|
+| DashScope 401: domestic endpoint used instead of international | `cloud_base_url` → `dashscope-intl.aliyuncs.com` | 7bb151d |
+| DashScope 404: model name `qwen-3.7-max` not recognised | `cloud_model` → `qwen3.7-max` | 7bb151d |
+| Confirm route returned raw JSON to HTMX caller | Added `HX-Request` branch + `noc_confirmed.html` partial | 9631a38 |
+
+**Final test count: 95 passed, 0 failed.** All deferred items are non-blocking maintenance debt.
 
 ---
 
