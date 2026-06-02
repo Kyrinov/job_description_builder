@@ -129,10 +129,10 @@
 | CLASS-01 | Phase 5 | Complete |
 | CLASS-02 | Phase 5 | Complete |
 | CLASS-03 | Phase 5 | Complete |
-| JD-01 | Phase 6 | Pending |
-| JD-02 | Phase 6 | Pending |
-| JD-03 | Phase 6 | Pending |
-| JD-04 | Phase 6 | Pending |
+| JD-01 | Phase 6 | Complete | |
+| JD-02 | Phase 6 | Complete | |
+| JD-03 | Phase 6 | Complete | |
+| JD-04 | Phase 6 | Complete | |
 | JES-01 | Phase 7 | Pending |
 | CA-01 | Phase 3 | Pending |
 | EXP-01 | Phase 8 | Pending |

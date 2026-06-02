@@ -12,7 +12,8 @@ An HR advisor can describe work in plain language and receive a legally defensib
 
 ### Validated
 
-(None yet — ship to validate)
+- **JD-01** (Validated in Phase 6: JD Generation): System drafts key duties/activities grounded in matched NOC profile statements, with each statement linked to its source (NOC code, section, version)
+- **JD-02** (Validated in Phase 6: JD Generation): System generates a position overview paragraph from NOC profile and described context; advisor can edit and system validates edits against source data
 
 ### Active
 
@@ -20,8 +21,6 @@ An HR advisor can describe work in plain language and receive a legally defensib
 - [ ] **INPUT-02**: System maps described work to NOC nomenclature — duties, activities, skills — reflecting the underlying data relationships rather than user's raw words
 - [ ] **CLASS-01**: System suggests an occupational group (OG) and level based on described work and NOC mapping; advisor reviews and confirms before JD is generated
 - [ ] **CLASS-02**: OG suggestion cites the relevant TBS OG definition, inclusions, and exclusions as evidence
-- [ ] **JD-01**: System drafts key duties/activities grounded in matched NOC profile statements, with each statement linked to its source (NOC code, section, version)
-- [ ] **JD-02**: System generates a position overview paragraph from NOC profile and described context; advisor can edit and system validates edits against source data
 - [ ] **JES-01**: System produces a Job Evaluation Standard scoring sheet for the confirmed OG, with AI-drafted factor ratings and rationale traceable to the duties and NOC source data
 - [ ] **JES-02**: Advisor can adjust JES factor ratings; system flags where adjustment diverges from AI-suggested rating with a brief explanation
 - [ ] **QUAL-01**: System surfaces the applicable Qualification Standard for the confirmed OG, pre-populating education and experience fields; advisor fills position-specific requirements
@@ -123,4 +122,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-28 after initialization*
+*Last updated: 2026-06-02 after Phase 6 (JD Generation) completion*
