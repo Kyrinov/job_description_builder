@@ -18,7 +18,7 @@ progress:
 **Status:** Executing Phase 8
 **Current phase:** 8
 **Last updated:** 2026-06-02
-**Next action:** `/gsd-execute-phase 08-03`
+**Next action:** `/gsd-execute-phase 08-04`
 
 ---
 
@@ -33,7 +33,7 @@ progress:
 | 5 | OG Classification | Complete (4/4 plans executed; 114 tests pass; 1 skipped — Phase 6 gate) |
 | 6 | JD Generation | Not started |
 | 7 | JES Scoring | Ready to execute (4/4 plans verified) |
-| 8 | Export | Plans 08-01 + 08-02 complete (export_service.py + 6 contract tests passing; 4/4 plans remaining) |
+| 8 | Export | Plans 08-01 + 08-02 + 08-03 complete (router + main.py mount + 10/10 tests passing); 08-04 (wizard templates) next |
 | 9 | DND DRF Integration | Not started |
 
 ---
@@ -101,7 +101,7 @@ See: `.planning/PROJECT.md`
 
 ## Session Continuity
 
-**Next action:** `/gsd-execute-phase 8` continues with Plan 08-02 (export_service.py)
+**Next action:** `/gsd-execute-phase 8` continues with Plan 08-04 (wizard step_export.html + partial + CSS layer 11 + human verify)
 
 **Context for next session:**
 
@@ -119,7 +119,7 @@ See: `.planning/PROJECT.md`
   - docxtpl table-row loops use for/data/endfor in separate rows (patch_xml regex is greedy)
 - 149 tests pass; 7 skip (including 6 new export contract tests)
 
-**Planned Phase:** 08 (Export) — Plan 08-02 next (export_service.py implements the contract)
+**Planned Phase:** 08 (Export) — Plan 08-04 next (wizard templates + partials + CSS + human verify; 08-01/02/03 are complete)
 
 ---
 
@@ -133,3 +133,15 @@ See: `.planning/PROJECT.md`
 - Auto-fix (Rule 1): pre-existing missing `from tests.conftest import make_exported_wd` in `tests/test_export.py` — masked in 08-01 by the `ImportError -> pytest.skip` boilerplate, surfaced in 08-02
 - Plan 08-03 (export.py router + main.py mount + /wizard/export route) is next
 - 155 tests pass; 1 skip
+
+---
+
+## Update 2026-06-02T21:39:54Z — Plan 08-03 complete
+
+- `app/api/export.py` shipped (77 lines): `GET /export/{wd_id}/docx` (HTMX dual-path: binary Response for non-HTMX, TemplateResponse for `HX-Request`) and `GET /export/{wd_id}/pdf` (D-08 501 short-circuit, exact message "PDF export is not yet available — download DOCX and convert locally."). ValueError → 404 (not found) / 422 (blocked) mapping mirrors `app/api/jes_scoring.py` line-for-line.
+- `app/main.py` modified: `from app.api import export`, `app.include_router(export.router)` after the `jes_scoring` mount, and `wizard_export` route with `jinja2.TemplateNotFound` fallback (D-09 placeholder until 08-04 ships `templates/wizard/step_export.html`).
+- `tests/test_export.py` extended: 4 router-level tests appended (`test_pdf_route_returns_501`, `test_docx_route_404_for_unknown_wd`, `test_docx_route_422_when_blocked`, `test_docx_route_streams_file`) using the per-test rebootstrap pattern from `test_jes_scoring.py` (`_set_env` + `_clear_app_modules` + `from app.main import app` + `TestClient(app)`). The rebootstrap is required because the autouse `_bootstrap_app_modules` fixture is a one-shot and would otherwise bind `settings.db_path` to the FIRST service test's export_db.
+- All 10 tests in `tests/test_export.py` pass (6 service + 4 router); full suite 159 passed + 1 pre-existing skip, 0 regressions.
+- T-08-12 mitigated by design: Content-Disposition filename is the server-set constant `work_description.docx` from the service result, never derived from user input.
+- T-08-14 mitigated by the D-08 501 short-circuit: no WeasyPrint render path reachable from the route, eliminating ARM64 risk.
+- Plan 08-04 (wizard step_export.html + partials/export_result.html + CSS layer 11 + human verify) is next.

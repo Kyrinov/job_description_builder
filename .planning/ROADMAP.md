@@ -155,7 +155,7 @@ Plans:
 Plans:
 - [x] 08-01-PLAN.md — Wave 0: export_db fixture, contract tests, docxtpl TBS WD template artifact (committed 2026-06-02)
 - [x] 08-02-PLAN.md — export_service.py: pre-export gate, version manifest, docxtpl render, stage advance (EXP-01)
-- [ ] 08-03-PLAN.md — export.py router (docx + pdf 501) + main.py mount + /wizard/export route
+- [x] 08-03-PLAN.md — export.py router (docx + pdf 501) + main.py mount + /wizard/export route (EXP-01)
 - [ ] 08-04-PLAN.md — step_export.html, export_result partial, activate JES CTA, CSS layer 11 + human verify
 
 ### Phase 9: DND DRF Integration
