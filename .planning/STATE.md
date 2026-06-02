@@ -2,21 +2,21 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 7
-status: ready_to_plan
-last_updated: "2026-06-02T20:31:02.934Z"
+current_phase: 8
+status: executing
+last_updated: "2026-06-02T21:20:00.000Z"
 progress:
   total_phases: 9
-  completed_phases: 7
+  completed_phases: 6
   total_plans: 31
-  completed_plans: 26
-  percent: 78
+  completed_plans: 27
+  percent: 84
 ---
 
 # Project State
 
-**Status:** Ready to plan
-**Current phase:** 08
+**Status:** Executing Phase 8
+**Current phase:** 8
 **Last updated:** 2026-06-02
 **Next action:** `/gsd-execute-phase 07`
 
@@ -33,7 +33,7 @@ progress:
 | 5 | OG Classification | Complete (4/4 plans executed; 114 tests pass; 1 skipped — Phase 6 gate) |
 | 6 | JD Generation | Not started |
 | 7 | JES Scoring | Ready to execute (4/4 plans verified) |
-| 8 | Export | Not started |
+| 8 | Export | Plan 08-01 complete (3/4 plans executed; scaffold + template + contract tests committed) |
 | 9 | DND DRF Integration | Not started |
 
 ---
@@ -69,6 +69,8 @@ See: `.planning/PROJECT.md`
 | Fresh codebase (not fork) | 25 phases of prototype debt; clean slate |
 | SQLite + sqlite-vec (not DuckDB) for app state | App state and vector search co-located; DuckDB for parquet pipeline transforms only |
 | DashScope qwen3.7-max for Stage 3 LLM | Cloud inference via dashscope-intl.aliyuncs.com; local gemma4:31b too slow (6 min/request) |
+| docxtpl table-row loops use for/data/endfor in separate rows | docxtpl patch_xml regex is greedy — matches the LAST {%tr %} tag in a row, so co-locating for+endfor with data eats the for tag. Separate marker rows above/below the data row is the standard convention. |
+| Phase 8 template is a committed binary artifact + reproducible build script | .docx loads deterministically at runtime; build script self-verifies via DocxTemplate.get_undeclared_template_variables() on every run |
 
 ### Active Blockers
 
@@ -99,7 +101,7 @@ See: `.planning/PROJECT.md`
 
 ## Session Continuity
 
-**Next action:** `/gsd-discuss-phase 6` (or `/gsd-plan-phase 6` to skip discussion)
+**Next action:** `/gsd-execute-phase 8` continues with Plan 08-02 (export_service.py)
 
 **Context for next session:**
 
@@ -109,6 +111,12 @@ See: `.planning/PROJECT.md`
 - CLASS-03 disambiguation: `_fetch_directive_citation` runs FTS on policy_fts for `directive_on_classification`; returns verbatim chunk as authority citation
 - CLASS-02 gate: both /api/og/classify and /api/og/confirm return 422 if `stage != "noc_mapped"`; Phase 6 JD generation can rely on `stage="og_classified"` as its prerequisite
 - All architecture decisions in "Decisions Locked" above are non-negotiable
-- Human verify for Phase 5 UI (Plan 05-04) is pending — start uvicorn and run the wizard to confirm AS/EC alert renders, OG cards display verbatim TBS citations, level select + confirm flow reaches og_confirmed.html
+- **Phase 8 Plan 08-01 complete (2026-06-02):** Export scaffold + template artifact + 6 contract tests
+  - `tests/conftest.py`: `export_db` fixture + `make_exported_wd(db_path, *, complete=True)` helper (incomplete=True produces the D-01 sentinel factor)
+  - `tests/test_export.py`: 6 skipping tests for `generate_export`, `validate_export_readiness`, `build_version_manifest`
+  - `scripts/build_docx_template.py`: reproducible generator; loads generated template via docxtpl and self-verifies
+  - `templates/docx/work_description_template.docx`: 37KB committed artifact; 12 Jinja2 variables (position_title, position_number, og_level, supervisor_title, supervisor_position_number, review_date, organizational_context_text, organizational_context_source, duties, jes_scores, jes_total_points, manifest); TBS WD format (D-04)
+  - docxtpl table-row loops use for/data/endfor in separate rows (patch_xml regex is greedy)
+- 149 tests pass; 7 skip (including 6 new export contract tests)
 
-**Planned Phase:** 08 (Export) — 4 plans — 2026-06-02T20:31:02.924Z
+**Planned Phase:** 08 (Export) — Plan 08-02 next (export_service.py implements the contract)

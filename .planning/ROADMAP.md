@@ -153,7 +153,7 @@ Plans:
 4. Any advisor-added content renders with a visible "advisor-added / not from authoritative source" marker in both DOCX and PDF outputs.
 **Plans:** 4 plans
 Plans:
-- [ ] 08-01-PLAN.md — Wave 0: export_db fixture, contract tests, docxtpl TBS WD template artifact
+- [x] 08-01-PLAN.md — Wave 0: export_db fixture, contract tests, docxtpl TBS WD template artifact (committed 2026-06-02)
 - [ ] 08-02-PLAN.md — export_service.py: pre-export gate, version manifest, docxtpl render, stage advance (EXP-01)
 - [ ] 08-03-PLAN.md — export.py router (docx + pdf 501) + main.py mount + /wizard/export route
 - [ ] 08-04-PLAN.md — step_export.html, export_result partial, activate JES CTA, CSS layer 11 + human verify
@@ -182,5 +182,5 @@ Plans:
 | 5. OG Classification | 4/4 | Complete | 2026-06-02 |
 | 6. JD Generation | 4/4 | Complete | 2026-06-02 |
 | 7. JES Scoring | 0/4 | Not started | - |
-| 8. Export | 0/4 | Not started | - |
+| 8. Export | 1/4 | In progress (08-01 complete: scaffold + template + 6 contract tests) | - |
 | 9. DND DRF Integration | 0/? | Not started | - |
