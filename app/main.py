@@ -23,6 +23,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.api import health
 from app.api import noc_mapping
+from app.api import og_classification
 from app.config import settings
 from app.db import assert_noc_index_model, create_schema, get_connection
 
@@ -101,6 +102,7 @@ app = FastAPI(
 
 app.include_router(health.router)
 app.include_router(noc_mapping.router)
+app.include_router(og_classification.router)
 
 # Phase 4 — static CSS file serving (UI-SPEC §CSS Architecture)
 _static_dir = os.path.join(os.path.dirname(__file__), "static")
