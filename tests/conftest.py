@@ -107,7 +107,7 @@ def noc_mapping_db(tmp_path):
     con.execute(
         "INSERT OR IGNORE INTO noc_units(noc_code, teer_level, title, definition, source_hash) "
         "VALUES (?, ?, ?, ?, ?)",
-        ("21232", "2", "Software engineers and designers",
+        ("21232", "1", "Software engineers and designers",
          "Design, develop, and test software systems.", "fakehash_v1"),
     )
     # Insert synthetic noc_elements (Main duties)

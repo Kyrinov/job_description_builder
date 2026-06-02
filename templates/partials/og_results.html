@@ -68,14 +68,15 @@
             <input type="hidden" name="og_code" value="{{ candidate.og_code }}">
             <div class="form-group">
                 <label for="og_level_{{ candidate.og_code }}">Level</label>
-                <select id="og_level_{{ candidate.og_code }}" name="og_level" required class="og-level-select">
+                <select id="og_level_{{ candidate.og_code }}" name="og_level" required class="og-level-select"
+                        onchange="this.form.querySelector('button[type=submit]').disabled = !this.value">
                     <option value="">Select level...</option>
                     {% for level in candidate.available_levels %}
                     <option value="{{ level }}">{{ candidate.og_code }}-{{ "%02d"|format(level) }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <button type="submit" class="button button--primary">Confirm {{ candidate.og_code }}</button>
+            <button type="submit" class="button button--primary" disabled>Confirm {{ candidate.og_code }}</button>
         </form>
     </div>
 </div>

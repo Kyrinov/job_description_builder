@@ -173,6 +173,27 @@ def upsert_source_document(
     con.commit()
 
 
+def derive_teer_from_code(noc_code: str) -> str:
+    """
+    Derive TEER (Training, Education, Experience and Responsibility) from the NOC code.
+
+    NOC 2021 v1.0 encodes TEER as the second digit of the 5-digit code:
+      NOC 0X*** → TEER 0 (management)
+      NOC 1X*** → TEER 1 (professional — typically university degree)
+      NOC 2X*** → TEER 2 (post-secondary 2-3 years, apprenticeship, or supervisory)
+      NOC 3X*** → TEER 3 (post-secondary < 2 years, apprenticeship < 2 years, or OJT)
+      NOC 4X*** → TEER 4 (secondary school plus OJT)
+      NOC 5X*** → TEER 5 (on-the-job training only — "no formal education required")
+
+    Source: NOC 2021 v1.0 classification structure, Major Group 10–14 definitions.
+    The CSV "Level" column is the NOC hierarchy depth (1=Broad Category .. 5=Unit Group),
+    NOT the TEER classification — using it here would mark every unit group as TEER 5.
+    """
+    if len(noc_code) >= 2 and noc_code[1].isdigit():
+        return noc_code[1]
+    return ""
+
+
 def upsert_noc_units(
     con: sqlite3.Connection,
     rows: list,
@@ -183,13 +204,13 @@ def upsert_noc_units(
     INSERT OR IGNORE keyed on noc_code — idempotent (PIPE-01, PIPE-04).
     Column mapping from structure CSV:
       Code - NOC 2021 V1.0 -> noc_code, Class title -> title,
-      Class definition -> definition, Level -> teer_level
+      Class definition -> definition, [second digit of NOC code] -> teer_level
     """
     for row in rows:
         noc_code = row.get("Code - NOC 2021 V1.0", "").strip()
         title = row.get("Class title", "").strip()
         definition = row.get("Class definition", "").strip()
-        teer_level = row.get("Level", "").strip()
+        teer_level = derive_teer_from_code(noc_code)
 
         if not noc_code:
             continue  # skip malformed rows
