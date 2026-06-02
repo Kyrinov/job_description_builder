@@ -101,10 +101,10 @@ Plans:
 4. When the work description contains policy-related duties, the response includes an AS vs. EC disambiguation block showing the TBS internal-vs-public-facing test with verbatim citations from `data/directive_on_classification.txt`.
 **Plans:** 4 plans
 Plans:
-- [ ] 05-01-PLAN.md — Wave 0: og_definitions DDL, ingest script, test stubs, og_db fixture, noc_confirmed.html form
-- [ ] 05-02-PLAN.md — app/ai/og_ranking.py: Pydantic models, OG_LEVELS, instructor singleton, prompt constants
-- [ ] 05-03-PLAN.md — og_classifier.py pipeline, og_classification.py router, app/main.py registration
-- [ ] 05-04-PLAN.md — HTMX templates, Phase 5 CSS, full suite green + human verify
+- [x] 05-01-PLAN.md — Wave 0: og_definitions DDL, ingest script, test stubs, og_db fixture, noc_confirmed.html form
+- [x] 05-02-PLAN.md — app/ai/og_ranking.py: Pydantic models, OG_LEVELS, instructor singleton, prompt constants
+- [x] 05-03-PLAN.md — og_classifier.py pipeline, og_classification.py router, app/main.py registration
+- [x] 05-04-PLAN.md — HTMX templates, Phase 5 CSS, full suite green + human verify
 
 ### Phase 6: JD Generation
 **Goal:** With a confirmed NOC match and OG classification, the system drafts key duties by selecting verbatim text from NOC profile records in the database; every duty carries a structured ProvenanceTag; advisor-added content that has no source record is tagged distinctly; after drafting, an orphan statement check flags any duty that contradicts the established functional authority for the confirmed OG; the WD is persisted to SQLite after each state transition.
@@ -163,8 +163,8 @@ Plans:
 | 1. Project Foundation | 3/3 | Complete | 2026-05-28 |
 | 2. NOC Data Pipeline | 4/4 | Complete | 2026-05-28 |
 | 3. CA + JES Data Pipeline | 4/4 | Complete | 2026-06-01 |
-| 4. NL→NOC Mapping | 0/? | Not started | - |
-| 5. OG Classification | 0/4 | In progress | - |
+| 4. NL→NOC Mapping | 4/4 | Complete | 2026-06-02 |
+| 5. OG Classification | 4/4 | Complete | 2026-06-02 |
 | 6. JD Generation | 0/? | Not started | - |
 | 7. JES Scoring | 0/? | Not started | - |
 | 8. Export | 0/? | Not started | - |

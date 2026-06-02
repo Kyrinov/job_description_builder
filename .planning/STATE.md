@@ -2,21 +2,21 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 05
-status: planning
+current_phase: 06
+status: executing
 last_updated: "2026-06-02T00:00:00.000Z"
 progress:
   total_phases: 9
-  completed_phases: 4
-  total_plans: 19
-  completed_plans: 14
-  percent: 74
+  completed_phases: 5
+  total_plans: 23
+  completed_plans: 18
+  percent: 78
 ---
 
 # Project State
 
-**Status:** Ready to execute Phase 05
-**Current phase:** 05
+**Status:** Phase 05 complete — ready to plan Phase 06 (JD Generation)
+**Current phase:** 06
 **Last updated:** 2026-06-02
 
 ---
@@ -29,7 +29,7 @@ progress:
 | 2 | NOC Data Pipeline | Complete (4/4 plans verified) |
 | 3 | CA + JES Data Pipeline | Complete (4/4 plans verified) |
 | 4 | NL→NOC Mapping | Complete (4/4 plans verified, UAT passed 2026-06-02) |
-| 5 | OG Classification | Ready to execute (4/4 plans verified) |
+| 5 | OG Classification | Complete (4/4 plans executed; 114 tests pass; 1 skipped — Phase 6 gate) |
 | 6 | JD Generation | Not started |
 | 7 | JES Scoring | Not started |
 | 8 | Export | Not started |
@@ -90,21 +90,22 @@ See: `.planning/PROJECT.md`
 | Metric | Value |
 |--------|-------|
 | Phases total | 9 |
-| Phases complete | 4 |
+| Phases complete | 5 |
 | Requirements mapped | 21/21 |
-| Tests passing | 95 |
+| Tests passing | 114 |
 
 ---
 
 ## Session Continuity
 
-**Next action:** `/gsd-execute-phase 5`
+**Next action:** `/gsd-discuss-phase 6` (or `/gsd-plan-phase 6` to skip discussion)
 
 **Context for next session:**
 
-- Phase 4 complete (UAT 2026-06-02): FTS5→embedding→LLM pipeline live; DashScope qwen3.7-max via dashscope-intl; 95 tests green
-- WorkDescription now carries `confirmed_noc: NOCMatch` and `stage="noc_mapped"` after Phase 4 confirm flow
-- Phase 5 planned (2026-06-02): 4 plans across 4 waves — DDL+ingest, AI layer, service+API, templates
-- Wave 0 data prerequisite: `scripts/ingest_og_definitions.py` must run against `data/TBS-OCHRO-OG.txt` before any Phase 5 service code serves real OG data
-- CLASS-03 uses both `og_definitions` (AS/EC verbatim text) and `policy_chunks` FTS (`directive_on_classification.txt` authority citation)
+- Phase 5 complete (2026-06-02): OG classification pipeline live; 81 OG rows in og_definitions; /api/og/classify and /api/og/confirm with stage gates and verbatim guardrail; AS/EC alert + directive citation working; full Phase 5 UI in templates/partials/og_*.html and templates/wizard/step_og.html; CSS layer 8 with .asec-alert warning tokens; 114 tests pass; 1 skip (deferred Phase 6 gate test)
+- WorkDescription now carries `confirmed_og`, `confirmed_level` (e.g. "EC-04"), and `og_recommendation: OGRecommendation`; `stage="og_classified"` after Phase 5 confirm flow
+- og_definitions table is the source of truth for CLASS-01 verbatim citations — all 33 OG groups + 48 subgroups loaded from TBS-OCHRO-OG.txt (81 unique og_codes)
+- CLASS-03 disambiguation: `_fetch_directive_citation` runs FTS on policy_fts for `directive_on_classification`; returns verbatim chunk as authority citation
+- CLASS-02 gate: both /api/og/classify and /api/og/confirm return 422 if `stage != "noc_mapped"`; Phase 6 JD generation can rely on `stage="og_classified"` as its prerequisite
 - All architecture decisions in "Decisions Locked" above are non-negotiable
+- Human verify for Phase 5 UI (Plan 05-04) is pending — start uvicorn and run the wizard to confirm AS/EC alert renders, OG cards display verbatim TBS citations, level select + confirm flow reaches og_confirmed.html

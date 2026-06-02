@@ -28,9 +28,9 @@
 
 ### OG Classification
 
-- [ ] **CLASS-01**: For the advisor-confirmed NOC match, the system presents the top 3 occupational group candidates side-by-side — each showing OG code, name, definition excerpt, relevant inclusions, and relevant exclusions, cited from TBS source documents
-- [ ] **CLASS-02**: Advisor confirms an occupational group and level before JD content generation proceeds — this is a hard workflow gate; no generation starts without explicit OG confirmation
-- [ ] **CLASS-03**: For positions where the work description contains policy-related duties, the system surfaces the AS vs. EC distinction explicitly — showing the TBS definition test (internal departmental guidance → AS; shaping policy for the Canadian public → EC), with the relevant inclusion/exclusion statements from the applicable OG definitions cited verbatim; this logic runs before OG confirmation and must be grounded in `data/directive_on_classification.txt`
+- [x] **CLASS-01**: For the advisor-confirmed NOC match, the system presents the top 3 occupational group candidates side-by-side — each showing OG code, name, definition excerpt, relevant inclusions, and relevant exclusions, cited from TBS source documents
+- [x] **CLASS-02**: Advisor confirms an occupational group and level before JD content generation proceeds — this is a hard workflow gate; no generation starts without explicit OG confirmation
+- [x] **CLASS-03**: For positions where the work description contains policy-related duties, the system surfaces the AS vs. EC distinction explicitly — showing the TBS definition test (internal departmental guidance → AS; shaping policy for the Canadian public → EC), with the relevant inclusion/exclusion statements from the applicable OG definitions cited verbatim; this logic runs before OG confirmation and must be grounded in `data/directive_on_classification.txt`
 
 ### JD Content Generation
 
@@ -126,9 +126,9 @@
 | DATA-03 | Phase 1 | Pending |
 | MAP-01 | Phase 4 | Pending |
 | MAP-02 | Phase 4 | Pending |
-| CLASS-01 | Phase 5 | Pending |
-| CLASS-02 | Phase 5 | Pending |
-| CLASS-03 | Phase 5 | Pending |
+| CLASS-01 | Phase 5 | Complete |
+| CLASS-02 | Phase 5 | Complete |
+| CLASS-03 | Phase 5 | Complete |
 | JD-01 | Phase 6 | Pending |
 | JD-02 | Phase 6 | Pending |
 | JD-03 | Phase 6 | Pending |
