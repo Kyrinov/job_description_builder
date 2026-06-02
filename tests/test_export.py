@@ -25,6 +25,8 @@ from __future__ import annotations
 
 import pytest
 
+from tests.conftest import make_exported_wd
+
 _app_bootstrapped = False
 
 
