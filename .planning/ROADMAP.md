@@ -136,10 +136,10 @@ Plans:
 4. The scoring sheet is stored on the WorkDescription record with ProvenanceTags linking each factor rating to its JES source record.
 **Plans:** 4 plans
 Plans:
-- [ ] 07-01-PLAN.md — Wave 0: test stubs + jes_db fixture (JES-01)
-- [ ] 07-02-PLAN.md — app/ai/jes_scoring.py: JESFactorRating model, jes_instructor_client singleton, prompt constants
-- [ ] 07-03-PLAN.md — jes_service.py pipeline + jes_scoring.py router + app/main.py registration
-- [ ] 07-04-PLAN.md — HTMX wizard templates, CSS layer 10, jd_confirmed.html CTA activation + human verify
+- [x] 07-01-PLAN.md — Wave 0: test stubs + jes_db fixture (JES-01)
+- [x] 07-02-PLAN.md — app/ai/jes_scoring.py: JESFactorRating model, jes_instructor_client singleton, prompt constants
+- [x] 07-03-PLAN.md — jes_service.py pipeline + jes_scoring.py router + app/main.py registration
+- [x] 07-04-PLAN.md — HTMX wizard templates, CSS layer 10, jd_confirmed.html CTA activation + human verify
 
 ### Phase 8: Export
 **Goal:** Advisor can export the completed WorkDescription to DOCX and PDF; every content element's citation is rendered directly from its ProvenanceTag object (not from prose written into a template); the export includes a version manifest listing all source documents and their content hashes.
