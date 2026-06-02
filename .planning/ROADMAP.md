@@ -134,7 +134,12 @@ Plans:
 2. Each factor call injects the full factor descriptor and all degree definitions from the database record for that `(og_code, factor_name)` — never from a summary or cached prompt.
 3. If a model call returns malformed output, `instructor` retries up to 3 times; a failure after 3 attempts returns a descriptive error for that factor, not a silent null.
 4. The scoring sheet is stored on the WorkDescription record with ProvenanceTags linking each factor rating to its JES source record.
-**Plans:** TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 07-01-PLAN.md — Wave 0: test stubs + jes_db fixture (JES-01)
+- [ ] 07-02-PLAN.md — app/ai/jes_scoring.py: JESFactorRating model, jes_instructor_client singleton, prompt constants
+- [ ] 07-03-PLAN.md — jes_service.py pipeline + jes_scoring.py router + app/main.py registration
+- [ ] 07-04-PLAN.md — HTMX wizard templates, CSS layer 10, jd_confirmed.html CTA activation + human verify
 
 ### Phase 8: Export
 **Goal:** Advisor can export the completed WorkDescription to DOCX and PDF; every content element's citation is rendered directly from its ProvenanceTag object (not from prose written into a template); the export includes a version manifest listing all source documents and their content hashes.
@@ -170,7 +175,7 @@ Plans:
 | 3. CA + JES Data Pipeline | 4/4 | Complete | 2026-06-01 |
 | 4. NL→NOC Mapping | 4/4 | Complete | 2026-06-02 |
 | 5. OG Classification | 4/4 | Complete | 2026-06-02 |
-| 6. JD Generation | 0/? | Not started | - |
-| 7. JES Scoring | 0/? | Not started | - |
+| 6. JD Generation | 4/4 | Complete | 2026-06-02 |
+| 7. JES Scoring | 0/4 | Not started | - |
 | 8. Export | 0/? | Not started | - |
 | 9. DND DRF Integration | 0/? | Not started | - |
