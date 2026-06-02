@@ -260,9 +260,99 @@ def test_version_manifest_includes_all_sources(export_db):
 
 
 # ---------------------------------------------------------------------------
-# Deferrals
+# Router contract (Plan 08-03): /export/{wd_id}/docx and /export/{wd_id}/pdf
 # ---------------------------------------------------------------------------
 #
-# test_pdf_route_returns_501 — covered in tests/test_export_router.py (Plan 08-03).
-# The router for /export/{wd_id}/pdf is mounted in Plan 08-03; this plan
-# (08-01) only establishes the service contract and template artifact.
+# These tests use the per-test rebootstrap pattern (mirroring tests/test_jes_scoring.py):
+# _set_env + _clear_app_modules + from app.main import app + TestClient(app).
+# Required because the autouse _bootstrap_app_modules fixture only runs once
+# (on the first test in the file) and binds settings.db_path to that first
+# test's export_db. Each router test needs settings.db_path to point at its
+# own export_db (which is fresh per-test), so we re-set DB_PATH and re-import
+# app.main inside the test body.
+
+
+def test_pdf_route_returns_501(export_db, monkeypatch, tmp_path):
+    """GET /export/{wd_id}/pdf returns HTTP 501 with the deferred-PDF message (D-08).
+
+    The route short-circuits to 501 immediately (no WeasyPrint render path
+    reachable), so the test only needs a seeded wd_id to confirm the route
+    is mounted and the message is exact.
+    """
+    _set_env(monkeypatch, str(export_db), tmp_path)
+    _clear_app_modules()
+    try:
+        from fastapi.testclient import TestClient
+        from app.main import app
+    except ImportError:
+        pytest.skip("app.main or TestClient not importable")
+
+    client = TestClient(app)
+    wd_id = make_exported_wd(export_db, complete=True)
+    response = client.get(f"/export/{wd_id}/pdf")
+    assert response.status_code == 501
+    # D-08 message: must mention "PDF export is not yet available"
+    assert "PDF export is not yet available" in response.text
+
+
+def test_docx_route_404_for_unknown_wd(export_db, monkeypatch, tmp_path):
+    """GET /export/{wd_id}/docx returns 404 when the WD does not exist.
+
+    generate_export raises ValueError("not found") which the route maps to 404.
+    No seeded WD is required — the rebootstrap ensures a valid app instance
+    with settings.db_path pointing at a (fresh, empty) export_db.
+    """
+    _set_env(monkeypatch, str(export_db), tmp_path)
+    _clear_app_modules()
+    try:
+        from fastapi.testclient import TestClient
+        from app.main import app
+    except ImportError:
+        pytest.skip("app.main or TestClient not importable")
+
+    client = TestClient(app)
+    response = client.get("/export/nonexistent-id/docx")
+    assert response.status_code == 404
+
+
+def test_docx_route_422_when_blocked(export_db, monkeypatch, tmp_path):
+    """GET /export/{wd_id}/docx returns 422 with the failed factor name when
+    the JES sheet is incomplete (D-01: Communication sentinel level=-1)."""
+    _set_env(monkeypatch, str(export_db), tmp_path)
+    _clear_app_modules()
+    try:
+        from fastapi.testclient import TestClient
+        from app.main import app
+    except ImportError:
+        pytest.skip("app.main or TestClient not importable")
+
+    client = TestClient(app)
+    wd_id = make_exported_wd(export_db, complete=False)
+    response = client.get(f"/export/{wd_id}/docx")
+    assert response.status_code == 422
+    # D-01: error must name the failed factor (Communication is the sentinel)
+    assert "Communication" in response.text
+
+
+def test_docx_route_streams_file(export_db, monkeypatch, tmp_path):
+    """GET /export/{wd_id}/docx (non-HTMX) returns 200 with DOCX content-type
+    and a Content-Disposition: attachment header (T-08-12: filename is a
+    server-set constant, not user-derived)."""
+    _set_env(monkeypatch, str(export_db), tmp_path)
+    _clear_app_modules()
+    try:
+        from fastapi.testclient import TestClient
+        from app.main import app
+    except ImportError:
+        pytest.skip("app.main or TestClient not importable")
+
+    client = TestClient(app)
+    wd_id = make_exported_wd(export_db, complete=True)
+    # No HX-Request header → non-HTMX path → binary file download
+    response = client.get(f"/export/{wd_id}/docx")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith(
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+    assert len(response.content) > 0
+    assert "attachment" in response.headers.get("content-disposition", "")
