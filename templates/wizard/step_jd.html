@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}JD Generation — JD Builder{% endblock %}
+
+{% block content %}
+<section id="wizard-step">
+    <h1>Job Duties</h1>
+    <p>Review and confirm the key duties for this position. All duties are selected verbatim from the NOC profile.</p>
+
+    <form hx-post="/api/jd/generate-duties"
+          hx-target="#jd-duties"
+          hx-swap="innerHTML"
+          hx-indicator="#jd-spinner"
+          hx-disabled-elt="#generate-btn">
+        <input type="hidden" name="wd_id" value="{{ wd_id }}">
+        <button id="generate-btn" type="submit" class="button button--primary">Generate Duties</button>
+        <span id="jd-spinner" class="htmx-indicator" aria-label="Drafting duties...">Drafting duties...</span>
+    </form>
+
+    <div id="jd-duties" aria-live="polite"></div>
+</section>
+{% endblock %}

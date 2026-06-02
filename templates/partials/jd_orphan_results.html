@@ -1,0 +1,32 @@
+{# HTMX partial: orphan statement check results #}
+{# Injected into #orphan-results by POST /api/jd/check-orphan-statements #}
+<div id="orphan-results-inner">
+
+{% if flags %}
+<div class="orphan-results">
+    <h3>Potential Classification Issues</h3>
+    <p class="muted">The following duties may fall outside the functional authority of the confirmed occupational group.</p>
+    {% for flag in flags %}
+    <div class="orphan-flag orphan-flag--{{ flag.severity }}">
+        <p class="orphan-duty-text"><strong>Duty:</strong> {{ flag.duty_text }}</p>
+        <div class="orphan-rule-violated">
+            <p class="body-sm muted">Rule violated:</p>
+            <blockquote>{{ flag.rule_violated }}</blockquote>
+            <cite>{{ flag.source_document }} &mdash; {{ flag.source_section }}</cite>
+        </div>
+        <span class="orphan-severity-badge orphan-severity-badge--{{ flag.severity }}">
+            {% if flag.severity == 'hard' %}Hard conflict{% else %}Soft conflict{% endif %}
+        </span>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="orphan-clean" role="status">
+    <p class="orphan-clean-message">All duties are consistent with the confirmed occupational group.</p>
+    {% if summary %}
+    <p class="body-sm muted">{{ summary }}</p>
+    {% endif %}
+</div>
+{% endif %}
+
+</div>

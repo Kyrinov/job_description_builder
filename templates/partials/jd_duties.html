@@ -1,0 +1,84 @@
+{# HTMX partial: duty card list + add-duty form + orphan check + confirm #}
+{# Injected into #jd-duties by POST /api/jd/generate-duties or POST /api/jd/add-advisor-duty #}
+<div id="jd-duties-inner">
+
+{% if duties %}
+<div class="duty-list">
+{% for duty in duties %}
+<div class="duty-card {% if duty.source_type == 'ADVISOR' %}duty-card--advisor{% endif %}">
+    <p class="duty-text">{{ duty.text }}</p>
+    <div class="duty-provenance">
+        {% if duty.source_type == 'ADVISOR' %}
+        <span class="duty-advisor-tag" title="Content added by advisor — not from an authoritative source">
+            Advisor-added &mdash; not from authoritative source
+        </span>
+        {% else %}
+        <span class="duty-source-tag" title="Source: {{ duty.source_version }}">
+            Source: NOC {{ duty.source_id }} &mdash; {{ duty.source_version }}
+        </span>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+</div>
+
+{% if selection_rationale %}
+<p class="muted body-sm">Selection rationale: {{ selection_rationale }}</p>
+{% endif %}
+
+<div class="duty-actions">
+
+    <div class="add-duty-form" x-data="{ open: false }">
+        <button type="button"
+                class="button button--secondary"
+                @click="open = !open"
+                :aria-expanded="open">
+            Add Custom Duty
+        </button>
+        <form x-show="open"
+              x-transition
+              hx-post="/api/jd/add-advisor-duty"
+              hx-target="#jd-duties"
+              hx-swap="innerHTML"
+              @htmx:after-request="open = false">
+            <input type="hidden" name="wd_id" value="{{ wd_id }}">
+            <div class="form-group">
+                <label for="duty_text">Duty Statement</label>
+                <textarea id="duty_text"
+                          name="duty_text"
+                          class="duty-textarea"
+                          rows="3"
+                          maxlength="500"
+                          placeholder="Describe the duty in plain language (max 500 characters)..."
+                          required></textarea>
+            </div>
+            <button type="submit" class="button button--secondary">Add Duty</button>
+        </form>
+    </div>
+
+    <form hx-post="/api/jd/check-orphan-statements"
+          hx-target="#orphan-results"
+          hx-swap="innerHTML"
+          hx-indicator="#orphan-spinner">
+        <input type="hidden" name="wd_id" value="{{ wd_id }}">
+        <button type="submit" class="button button--secondary">Check for Orphan Statements</button>
+        <span id="orphan-spinner" class="htmx-indicator">Checking classification boundaries...</span>
+    </form>
+
+    <div id="orphan-results" aria-live="polite"></div>
+
+    <form hx-post="/api/jd/confirm-duties"
+          hx-target="#wizard-step"
+          hx-swap="outerHTML">
+        <input type="hidden" name="wd_id" value="{{ wd_id }}">
+        <button type="submit" class="button button--primary">Confirm Duties</button>
+    </form>
+</div>
+
+{% else %}
+<div class="empty-state" role="status">
+    <p>No duties have been drafted yet. Click "Generate Duties" to begin.</p>
+</div>
+{% endif %}
+
+</div>
