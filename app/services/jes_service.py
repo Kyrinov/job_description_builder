@@ -75,6 +75,12 @@ def _build_jes_factor_score(
     """
     point_values: dict = json.loads(factor_row["point_values"])
     points = point_values.get(rating.degree)
+    if points is None:
+        logger.warning(
+            "JES factor %r/%r returned degree %r but point_values dict has no entry — "
+            "factor will contribute 0 to total (data integrity issue)",
+            og_code, factor_row["factor_name"], rating.degree,
+        )
     try:
         level = int(rating.degree.lstrip("D")) if rating.degree.startswith("D") else -1
     except (ValueError, AttributeError):
