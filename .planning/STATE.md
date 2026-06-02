@@ -72,7 +72,7 @@ See: `.planning/PROJECT.md`
 ### Active Blockers
 
 - ~~NOC 2021 unit group profiles not yet acquired~~ — RESOLVED
-- TBS OCHRO OG definitions not yet collected — resolve before planning Phase 5
+- ~~TBS OCHRO OG definitions not yet collected~~ — RESOLVED: `data/TBS-OCHRO-OG.txt` (33 OG definitions, 3259 lines, scraped from Canada.ca 2026-06-02)
 
 ### Todos
 
