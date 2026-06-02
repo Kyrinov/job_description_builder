@@ -1,7 +1,5 @@
 {% extends "base.html" %}
-
 {% block title %}Export Work Description — JD Builder{% endblock %}
-
 {% block content %}
 <section id="wizard-step">
     <h1>Export Work Description</h1>
@@ -9,10 +7,26 @@
 
     <input type="hidden" name="wd_id" value="{{ wd_id }}">
 
+    {% if block_errors %}
+    <div class="export-errors" role="alert">
+        <h2>Cannot export yet</h2>
+        <p>The Work Description is not ready for export. Resolve the following:</p>
+        <ul>
+            {% for err in block_errors %}
+            <li>{{ err }}</li>
+            {% endfor %}
+        </ul>
+        <p>
+            <a href="/wizard/jes?wd_id={{ wd_id }}" class="button button--secondary">
+                Return to JES scoring
+            </a>
+        </p>
+    </div>
+    {% else %}
     <p class="muted">
         The exported document includes a version manifest of every source
-        document (NOC, CA, JES, TBS OG definitions, directive) used to build
-        this Work Description.
+        document (NOC, CA, JES, TBS OG definitions, directive) used to build this
+        Work Description.
     </p>
 
     <a href="/export/{{ wd_id }}/docx"
@@ -29,5 +43,6 @@
     <p class="muted">
         PDF export is not yet available — download DOCX and convert locally.
     </p>
+    {% endif %}
 </section>
 {% endblock %}

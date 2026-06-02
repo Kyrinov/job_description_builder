@@ -41,6 +41,14 @@ async def export_docx(request: Request, wd_id: str):
         result = await generate_export(wd_id=wd_id, db_path=settings.db_path)
     except ValueError as exc:
         msg = str(exc)
+        # HTMX path: render a friendlier error partial instead of letting FastAPI
+        # serialize the HTTPException as raw JSON into the swap target.
+        if request.headers.get("HX-Request"):
+            return templates.TemplateResponse(
+                "partials/export_error.html",
+                {"request": request, "wd_id": wd_id, "error_message": msg},
+                status_code=422,
+            )
         if "not found" in msg:
             raise HTTPException(status_code=404, detail=msg)
         raise HTTPException(status_code=422, detail=msg)

@@ -1,0 +1,15 @@
+{# HTMX partial: export blocked error (Phase 8 — D-01/D-02 surfaced in UI) #}
+<div id="export-result" role="alert" class="export-errors">
+    <h2>Cannot export</h2>
+    <p>The export was blocked because the Work Description is not ready:</p>
+    <ul>
+        {% for line in error_message.split(';') %}
+        <li>{{ line.strip() }}</li>
+        {% endfor %}
+    </ul>
+    <p>
+        <a href="/wizard/jes?wd_id={{ wd_id }}" class="button button--secondary">
+            Return to JES scoring
+        </a>
+    </p>
+</div>

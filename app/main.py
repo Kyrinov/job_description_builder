@@ -187,14 +187,49 @@ async def wizard_jes(request: Request, wd_id: str = "") -> HTMLResponse:
 async def wizard_export(request: Request, wd_id: str = "") -> HTMLResponse:
     """Render the export wizard step (Phase 8).
 
-    Falls back to a minimal placeholder if templates/wizard/step_export.html is not
-    yet present (Plan 08-04 owns the real template).
+    Pre-validates the WorkDescription (D-01/D-02) so blocked exports surface a
+    clear error block before the user clicks Download. The template renders the
+    list of incomplete JES factors and hides the Download CTA when blocked.
+
+    Falls back to a minimal placeholder if templates/wizard/step_export.html is
+    not yet present.
     """
+    import asyncio
     import jinja2
+
+    from app.db import get_connection
+    from app.services.export_service import validate_export_readiness
+    from app.services.wd_store import load_work_description
+
+    block_errors: list[str] = []
+    wd_stage: str | None = None
+    if wd_id:
+        conn = await asyncio.to_thread(lambda: get_connection(settings.db_path))
+        try:
+            wd = await asyncio.to_thread(lambda: load_work_description(conn, wd_id))
+            if wd is None:
+                block_errors.append(f"WorkDescription {wd_id!r} not found.")
+            else:
+                wd_stage = wd.stage
+                if wd.stage != "jes_scored":
+                    block_errors.append(
+                        f"WorkDescription is in stage {wd.stage!r}; "
+                        "complete the JES scoring step before exporting."
+                    )
+                else:
+                    block_errors.extend(validate_export_readiness(wd))
+        finally:
+            await asyncio.to_thread(conn.close)
 
     try:
         return wizard_templates.TemplateResponse(
-            "wizard/step_export.html", {"request": request, "wd_id": wd_id}
+            "wizard/step_export.html",
+            {
+                "request": request,
+                "wd_id": wd_id,
+                "wd_stage": wd_stage,
+                "block_errors": block_errors,
+            },
         )
     except jinja2.TemplateNotFound:
         return HTMLResponse(

@@ -356,3 +356,81 @@ def test_docx_route_streams_file(export_db, monkeypatch, tmp_path):
     )
     assert len(response.content) > 0
     assert "attachment" in response.headers.get("content-disposition", "")
+
+
+def test_wizard_export_shows_block_errors_for_incomplete_wd(
+    export_db, monkeypatch, tmp_path
+):
+    """Pre-UAT UX fix: /wizard/export pre-validates and shows a clear
+    'Cannot export yet' block listing incomplete JES factors when the WD is
+    not export-ready. The Download CTA is hidden so the user does not see a
+    silent HTMX spinner followed by raw JSON.
+    """
+    _set_env(monkeypatch, str(export_db), tmp_path)
+    _clear_app_modules()
+    try:
+        from fastapi.testclient import TestClient
+        from app.main import app
+    except ImportError:
+        pytest.skip("app.main or TestClient not importable")
+
+    client = TestClient(app)
+    wd_id = make_exported_wd(export_db, complete=False)  # incomplete JES
+    response = client.get(f"/wizard/export?wd_id={wd_id}")
+    assert response.status_code == 200
+    body = response.text
+    assert "Cannot export yet" in body
+    assert "Communication" in body  # the failed factor name
+    # Download CTA should be hidden when blocked
+    assert "id=\"download-btn\"" not in body
+
+
+def test_wizard_export_hides_block_errors_for_complete_wd(
+    export_db, monkeypatch, tmp_path
+):
+    """When the WD passes validation, /wizard/export shows the Download CTA
+    and the manifest preview text, and does NOT show the 'Cannot export yet'
+    error block."""
+    _set_env(monkeypatch, str(export_db), tmp_path)
+    _clear_app_modules()
+    try:
+        from fastapi.testclient import TestClient
+        from app.main import app
+    except ImportError:
+        pytest.skip("app.main or TestClient not importable")
+
+    client = TestClient(app)
+    wd_id = make_exported_wd(export_db, complete=True)
+    response = client.get(f"/wizard/export?wd_id={wd_id}")
+    assert response.status_code == 200
+    body = response.text
+    assert "Cannot export yet" not in body
+    assert "id=\"download-btn\"" in body
+    assert "version manifest" in body.lower()
+
+
+def test_docx_route_htmx_returns_error_partial_when_blocked(
+    export_db, monkeypatch, tmp_path
+):
+    """Defense in depth: if a user somehow clicks Download DOCX on a blocked
+    WD (e.g. by directly calling the route), the HTMX path must render the
+    friendly export_error.html partial with 422, NOT raw JSON.
+    """
+    _set_env(monkeypatch, str(export_db), tmp_path)
+    _clear_app_modules()
+    try:
+        from fastapi.testclient import TestClient
+        from app.main import app
+    except ImportError:
+        pytest.skip("app.main or TestClient not importable")
+
+    client = TestClient(app)
+    wd_id = make_exported_wd(export_db, complete=False)
+    response = client.get(
+        f"/export/{wd_id}/docx", headers={"HX-Request": "true"}
+    )
+    assert response.status_code == 422
+    body = response.text
+    assert "Cannot export" in body
+    assert "export-error" in body or "export-errors" in body
+    assert "Communication" in body
