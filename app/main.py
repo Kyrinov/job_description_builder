@@ -23,6 +23,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.api import health
 from app.api import jd_generation
+from app.api import jes_scoring
 from app.api import noc_mapping
 from app.api import og_classification
 from app.config import settings
@@ -105,6 +106,7 @@ app.include_router(health.router)
 app.include_router(noc_mapping.router)
 app.include_router(og_classification.router)
 app.include_router(jd_generation.router)
+app.include_router(jes_scoring.router)
 
 # Phase 4 — static CSS file serving (UI-SPEC §CSS Architecture)
 _static_dir = os.path.join(os.path.dirname(__file__), "static")
@@ -152,5 +154,28 @@ async def wizard_jd(request: Request, wd_id: str = "") -> HTMLResponse:
             f"<h1>JD Generation Wizard</h1>"
             f"<p>WorkDescription ID: {wd_id or '(none)'}</p>"
             "<p>The full template will be added in Plan 06-04.</p>"
+            "</body></html>"
+        )
+
+
+@app.get("/wizard/jes", response_class=HTMLResponse)
+async def wizard_jes(request: Request, wd_id: str = "") -> HTMLResponse:
+    """Render the JES scoring wizard step (Phase 7).
+
+    Falls back to a minimal placeholder if templates/wizard/step_jes.html is not yet
+    present (Plan 07-04 owns the real template).
+    """
+    import jinja2
+
+    try:
+        return wizard_templates.TemplateResponse(
+            "wizard/step_jes.html", {"request": request, "wd_id": wd_id}
+        )
+    except jinja2.TemplateNotFound:
+        return HTMLResponse(
+            "<!DOCTYPE html><html><body>"
+            f"<h1>JES Scoring Wizard</h1>"
+            f"<p>WorkDescription ID: {wd_id or '(none)'}</p>"
+            "<p>The full template will be added in Plan 07-04.</p>"
             "</body></html>"
         )
