@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Export Work Description — JD Builder{% endblock %}
+
+{% block content %}
+<section id="wizard-step">
+    <h1>Export Work Description</h1>
+    <p>Download the completed Work Description as a DOCX file.</p>
+
+    <input type="hidden" name="wd_id" value="{{ wd_id }}">
+
+    <p class="muted">
+        The exported document includes a version manifest of every source
+        document (NOC, CA, JES, TBS OG definitions, directive) used to build
+        this Work Description.
+    </p>
+
+    <a href="/export/{{ wd_id }}/docx"
+       hx-get="/export/{{ wd_id }}/docx"
+       hx-target="#export-result"
+       hx-swap="innerHTML"
+       hx-indicator="#export-spinner"
+       class="button button--primary" id="download-btn">
+        Download DOCX
+    </a>
+    <span id="export-spinner" class="htmx-indicator" aria-label="Generating DOCX">Generating…</span>
+    <div id="export-result" aria-live="polite"></div>
+
+    <p class="muted">
+        PDF export is not yet available — download DOCX and convert locally.
+    </p>
+</section>
+{% endblock %}

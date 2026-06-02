@@ -1,0 +1,7 @@
+{# HTMX partial: export confirmation after successful DOCX generation (Phase 8) #}
+<div id="export-result" role="status" class="export-result">
+    <h2>Export Complete</h2>
+    <p>Your Work Description was generated successfully.</p>
+    <p class="export-hash muted">SHA-256: <code>{{ export_hash }}</code></p>
+    <a href="/export/{{ wd_id }}/docx" class="button button--primary">Download {{ filename }}</a>
+</div>
