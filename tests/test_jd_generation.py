@@ -21,7 +21,7 @@ _app_bootstrapped = False
 
 def _set_env(monkeypatch, db_path: str, tmp_path) -> None:
     """Set minimum required env vars for app startup in tests."""
-    monkeypatch.setenv("DATABASE_PATH", db_path)
+    monkeypatch.setenv("DB_PATH", db_path)
     monkeypatch.setenv("OLLAMA_BASE_URL", "http://localhost:11434")
     monkeypatch.setenv("GENERATION_MODEL", "gemma4:31b")
     monkeypatch.setenv("EMBEDDING_MODEL", "nomic-embed-text")

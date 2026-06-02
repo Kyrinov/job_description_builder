@@ -15,7 +15,7 @@ _app_bootstrapped = False
 
 def _set_env(monkeypatch, db_path: str, tmp_path) -> None:
     """Set minimum required env vars for app startup in tests."""
-    monkeypatch.setenv("DATABASE_PATH", db_path)
+    monkeypatch.setenv("DB_PATH", db_path)
     monkeypatch.setenv("OLLAMA_BASE_URL", "http://localhost:11434")
     monkeypatch.setenv("GENERATION_MODEL", "gemma4:31b")
     monkeypatch.setenv("EMBEDDING_MODEL", "nomic-embed-text")
@@ -120,7 +120,7 @@ class TestOGGate:
         import sys
 
         # Set env vars pointing to og_db fixture path
-        monkeypatch.setenv("DATABASE_PATH", str(og_db))
+        monkeypatch.setenv("DB_PATH", str(og_db))
         monkeypatch.setenv("OLLAMA_BASE_URL", "http://localhost:11434")
         monkeypatch.setenv("GENERATION_MODEL", "gemma4:31b")
         monkeypatch.setenv("EMBEDDING_MODEL", "nomic-embed-text")
