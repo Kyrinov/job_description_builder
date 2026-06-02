@@ -86,6 +86,10 @@ See: `.planning/PROJECT.md`
 - Fix `noc_fts` DDL in `app/db.py` (UNINDEXED + content='' bug — deferred from Phase 4)
 - Address Starlette `TemplateResponse` deprecation warning (deferred from Phase 4)
 
+### Roadmap Evolution
+
+- Phase 08.1 inserted after Phase 8: "Advisor override and per-factor retry for incomplete JES scoring" (URGENT) — closed the gap that left a blocked export with no recovery path; 3 plans (service / API / UI) added 2026-06-02
+
 ---
 
 ## Performance Metrics

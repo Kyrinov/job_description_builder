@@ -158,6 +158,23 @@ Plans:
 - [x] 08-03-PLAN.md — export.py router (docx + pdf 501) + main.py mount + /wizard/export route (EXP-01)
 - [x] 08-04-PLAN.md — step_export.html, export_result partial, activate JES CTA, CSS layer 11 (Tasks 1+2 complete; Task 3 human-verify pending)
 
+### Phase 08.1: Advisor override and per-factor retry for incomplete JES scoring (INSERTED)
+
+**Goal:** When JES scoring leaves factors incomplete (`level=-1` or `points=None`), the advisor can either re-run a single factor through the model or override it manually with their own level/points/rationale — and the export gate accepts advisor-overridden factors. Closes the gap where the export validator blocks a WorkDescription with no recovery path other than re-running the full 10-factor pipeline.
+**Requirements**: JES-01 (extension)
+**UI hint:** yes
+**Success criteria:**
+1. For any JES factor with `level=-1` or `points=None`, the JES factor card in the UI shows a **Retry** button that re-runs the model call for that single factor and updates the score inline.
+2. For the same failed factors, the card shows an **Override** button that opens a form: the advisor enters `level` (1–4 or whatever the factor supports), `points` (or auto-derived from the factor's `point_values` JSON), and a free-text `rationale`; on submit, the factor's `advisor_adjusted=True`, `advisor_adjusted_level=<level>`, and `advisor_adjustment_rationale=<text>` are populated and the `provenance.source_type` flips to `ADVISOR`.
+3. `validate_export_readiness` accepts factors where `advisor_adjusted=True` AND the advisor's level/points are valid; only `level=-1` (LLM failure) or `points is None` on a non-overridden factor still blocks.
+4. The blocked-export error block (added in Phase 8 fix `38eec77`) now shows a **"Why is this blocked?"** link to the JES scoring page where the failed factors are listed; the user can resolve them inline.
+5. Tests cover: retry endpoint, override endpoint, validator accepts advisor-overridden factors, validator still rejects unoverridden failures, the override form is rendered on the card, the retry updates the factor in place.
+**Plans:** 3 plans
+Plans:
+- [ ] 08.1-01-PLAN.md — Service layer: per-factor retry, per-factor override, validator update
+- [ ] 08.1-02-PLAN.md — API: POST /api/jes/retry/{wd_id}/{factor_name}, POST /api/jes/override/{wd_id}/{factor_name}, router mount + tests
+- [ ] 08.1-03-PLAN.md — UI: per-card Retry/Override buttons, override form partial, jes_scores.html activation wiring, CSS layer 12
+
 ### Phase 9: DND DRF Integration
 **Goal:** For a WorkDescription identified as a DND position, the system surfaces Departmental Results Framework program linkages — connecting the position's duties to DRF programs and expected results — sourced from the DRF CSV dataset already in `data/`.
 **Depends on:** Phase 6
