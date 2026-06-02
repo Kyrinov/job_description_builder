@@ -115,7 +115,61 @@ class TestASECDisambiguation:
 
 
 class TestOGGate:
-    def test_og_gate_enforced(self, og_db):
+    def test_og_gate_enforced(self, og_db, monkeypatch, tmp_path):
         """JD generation endpoint returns 422 without confirmed OG (CLASS-02 gate)."""
-        # Gate is enforced in Phase 6; this stub confirms the test is registered
-        pytest.skip("Phase 6 gate test — deferred to Phase 6 plans")
+        import sys
+
+        # Set env vars pointing to og_db fixture path
+        monkeypatch.setenv("DATABASE_PATH", str(og_db))
+        monkeypatch.setenv("OLLAMA_BASE_URL", "http://localhost:11434")
+        monkeypatch.setenv("GENERATION_MODEL", "gemma4:31b")
+        monkeypatch.setenv("EMBEDDING_MODEL", "nomic-embed-text")
+        monkeypatch.setenv("LOG_LEVEL", "WARNING")
+
+        for mod in list(sys.modules.keys()):
+            if mod.startswith("app."):
+                del sys.modules[mod]
+
+        try:
+            from app.api import jd_generation  # noqa: F401 — must exist for gate to be wired
+        except ImportError:
+            pytest.skip("app.api.jd_generation not yet implemented — Phase 6 plan 03 required")
+
+        from fastapi.testclient import TestClient
+        from app.main import app
+        from app.db import get_connection
+        from app.models.work_description import WorkDescription, NOCMatch, ProvenanceTag
+        from app.services.wd_store import save_work_description
+        from datetime import date
+
+        # Create a WD in stage='noc_mapped' — not yet og_classified
+        conn = get_connection(str(og_db))
+        noc_prov = ProvenanceTag(
+            source_type="NOC",
+            source_id="21232",
+            source_version="NOC 2021 v1.0",
+            retrieved_date=date.today(),
+        )
+        noc_match = NOCMatch(
+            noc_code="21232",
+            noc_title="Software engineers and designers",
+            teer_level="1",
+            confidence=0.9,
+            rationale="Test match",
+            provenance=noc_prov,
+        )
+        wd = WorkDescription(
+            session_id="test-gate-session",
+            raw_input="Administers HR programs for the department.",
+            confirmed_noc=noc_match,
+            stage="noc_mapped",  # NOT og_classified — gate must reject this
+        )
+        save_work_description(conn, wd)
+        conn.close()
+
+        client = TestClient(app)
+        resp = client.post("/api/jd/generate-duties", data={"wd_id": str(wd.id)})
+        assert resp.status_code == 422, (
+            f"Expected HTTP 422 for noc_mapped stage (CLASS-02 gate). "
+            f"Got {resp.status_code}: {resp.text}"
+        )

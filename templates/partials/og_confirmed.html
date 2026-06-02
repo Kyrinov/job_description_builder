@@ -5,7 +5,10 @@
     <p>{{ og_code }} — {{ og_name }}</p>
     <p>Level: {{ og_level }}</p>
     <p class="muted">This selection has been saved. Proceed to JD generation.</p>
-    <form>
-        <button type="button" class="button button--primary" disabled>Continue to JD Generation</button>
-    </form>
+    <a href="/wizard/jd?wd_id={{ wd_id }}"
+       class="button button--primary"
+       hx-get="/wizard/jd?wd_id={{ wd_id }}"
+       hx-target="body"
+       hx-swap="innerHTML"
+       hx-push-url="true">Continue to JD Generation</a>
 </div>
