@@ -99,12 +99,14 @@ async def map_noc(request: Request, body: WorkDescriptionRequest):
 
 @router.post("/api/noc/confirm")
 async def confirm_noc(
+    request: Request,
     wd_id: str = Form(...),
     noc_code: str = Form(...),
 ) -> dict:
     """
     Confirm a NOC candidate for a WorkDescription.
     Loads the WorkDescription by wd_id, sets confirmed_noc, sets stage="noc_mapped", persists.
+    Returns HTML partial for HTMX requests; JSON for direct API calls.
     """
     conn = await asyncio.to_thread(lambda: get_connection(settings.db_path))
     try:
@@ -112,7 +114,6 @@ async def confirm_noc(
         if wd is None:
             raise HTTPException(status_code=404, detail=f"WorkDescription {wd_id!r} not found")
 
-        # Find the matching candidate from noc_candidates
         matched_candidate = next(
             (c for c in wd.noc_candidates if c.noc_code == noc_code), None
         )
@@ -128,4 +129,14 @@ async def confirm_noc(
     finally:
         await asyncio.to_thread(conn.close)
 
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse(
+            "partials/noc_confirmed.html",
+            {
+                "request": request,
+                "noc_code": matched_candidate.noc_code,
+                "noc_title": matched_candidate.noc_title,
+                "teer": matched_candidate.teer_level,
+            },
+        )
     return {"status": "confirmed", "noc_code": noc_code, "wd_id": wd_id}
