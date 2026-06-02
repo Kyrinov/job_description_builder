@@ -168,7 +168,7 @@ async def map_work_description(
             max_retries=3,
             max_tokens=2048,
             temperature=0.0,
-            extra_body={"options": {"num_ctx": 32768}},
+            extra_body={"options": {"num_ctx": 8192}},
         )
 
         # --- Online guardrails ---
