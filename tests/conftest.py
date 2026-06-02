@@ -202,3 +202,63 @@ def og_db(tmp_path):
 
     yield db_path
     con.close()
+
+
+@pytest.fixture
+def jd_db(tmp_path):
+    """
+    Temp SQLite DB with full schema + synthetic noc_elements (5 Main duties rows for NOC
+    21232) and og_definitions row for EC. Used by test_jd_generation.py integration tests.
+    Does NOT require Ollama to be running.
+    """
+    from app.db import create_schema, get_connection
+
+    db_path = str(tmp_path / "test_jd.db")
+    con = get_connection(db_path)
+    create_schema(con)
+
+    # Synthetic NOC unit row
+    con.execute(
+        "INSERT OR IGNORE INTO noc_units(noc_code, teer_level, title, definition, source_hash) "
+        "VALUES (?, ?, ?, ?, ?)",
+        ("21232", "1", "Software engineers and designers",
+         "Design, develop, and test software systems.", "fakehash_noc_v1"),
+    )
+    # Synthetic source_documents row (for ProvenanceTag version lookup)
+    con.execute(
+        "INSERT OR IGNORE INTO source_documents(source_name, version_label, content_hash) "
+        "VALUES (?, ?, ?)",
+        ("noc_2021_version_1.0_-_elements.csv", "NOC 2021 v1.0",
+         "50c3e31a90b0150cc5b8efd29ec020c2fd9ea5fc5b0a171ed65d3cd9a0abf32f"),
+    )
+    # 5 synthetic Main duties rows
+    duties = [
+        "Design and develop software systems and applications.",
+        "Analyze user requirements and translate to technical specifications.",
+        "Conduct code reviews and ensure software quality standards.",
+        "Collaborate with stakeholders to define system architecture.",
+        "Write and maintain technical documentation for software systems.",
+    ]
+    for duty_text in duties:
+        con.execute(
+            "INSERT OR IGNORE INTO noc_elements(noc_code, element_type, element_text, source_hash) "
+            "VALUES (?, ?, ?, ?)",
+            ("21232", "Main duties", duty_text,
+             "50c3e31a90b0150cc5b8efd29ec020c2fd9ea5fc5b0a171ed65d3cd9a0abf32f"),
+        )
+    # EC og_definitions row (for orphan check)
+    con.execute(
+        "INSERT OR IGNORE INTO og_definitions "
+        "(og_code, og_name, parent_group, definition, inclusions, exclusions, source_file, source_hash) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            "EC", "Economics and Social Science Services", "PA",
+            "Positions primarily involved in economic and social research.",
+            "planning, development, delivery or management of policies directed toward Canadians",
+            "administrative support work directed internally to the Public Service",
+            "TBS-OCHRO-OG.txt", "testhash_v1",
+        ),
+    )
+    con.commit()
+    yield db_path
+    con.close()
