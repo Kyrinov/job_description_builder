@@ -13,6 +13,7 @@
  *   6. Component classes (.noc-card, .teer-badge, .error-state, .empty-state, .confirmation-banner)
  *   7. HTMX indicator class
  *   8. Phase 5 OG classification components (.og-card, .og-level-select, .asec-alert, .asec-comparison, .og-confirmed-banner)
+ *  11. Phase 8 Export components (.export-result, .export-hash, .export-errors)
  *
  * Source of token values: .planning/phases/04-nl-noc-mapping/04-UI-SPEC.md
  *   - Color: GC blue #1A4A8A (accent), GC web standards
@@ -894,4 +895,43 @@ button[aria-disabled="true"] {
     font-size: 1.05rem;
     margin-block: 0.5rem 1rem;
     color: var(--color-text-primary, #111827);
+}
+
+/* =========================================================================
+   Layer 11: Export (Phase 8)
+   .export-result, .export-hash, .export-errors, .export-error-card
+   ========================================================================= */
+.export-result {
+    margin-block-start: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: 0.5rem;
+}
+
+.export-hash {
+    font-size: 0.8rem;
+    color: var(--color-text-muted, #6b7280);
+    word-break: break-all;
+}
+
+.export-errors {
+    border: 1px solid var(--color-error-text, #dc2626);
+    background: var(--color-error-bg, #fef2f2);
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    margin-block: 1rem;
+}
+
+.export-errors li {
+    color: var(--color-error-text, #dc2626);
+}
+
+.export-error-card {
+    padding: 0.5rem 0.75rem;
+    border-inline-start: 3px solid var(--color-error-text, #dc2626);
+    margin-block-end: 0.5rem;
+}
+
+.export-error-card--blocking {
+    background: var(--color-error-bg, #fef2f2);
 }
