@@ -776,22 +776,25 @@ async def confirm_og(
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Does `templates/partials/noc_confirmed.html` already have the "Continue to Classification" form with `hx-post="/api/og/classify"`?**
    - What we know: Phase 4 created this partial; the UI-SPEC says "Confirmation success CTA: Continue to Classification"
    - What's unclear: Whether the Phase 4 executor added the form pointing to the Phase 5 endpoint (which didn't exist yet)
    - Recommendation: Wave 0 — read `templates/partials/noc_confirmed.html`; if it has a placeholder button or no action, add the HTMX form in Plan 05-01.
+   - **RESOLVED:** Form was absent per Wave 0 inspection; Plan 05-01 Task 2 adds the HTMX form pointing to `/api/og/classify`.
 
 2. **Should `og_definitions` include ALL ~80 OG codes from TBS-OCHRO-OG.txt or only the ~30 DND-relevant ones?**
    - What we know: The file covers the full core public administration; DND primarily uses AS, EC, PE, IT, CS, PM, CR, IS, EX
    - What's unclear: Whether ingest should be selective or comprehensive
    - Recommendation: Ingest all OGs — the table is small (~80 rows, <100KB), and future phases (or DND-specific logic) may need non-standard groups. Filter at query time using `WHERE og_code IN (?)` for the classification prompt.
+   - **RESOLVED:** Ingest all ~80 OGs from TBS-OCHRO-OG.txt; filter at query time. Plan 05-01 Task 1 implements this.
 
 3. **What is the correct LLM context window to request for OG classification?**
    - What we know: ARCHITECTURE.md estimates ~2.8K tokens for 28 OGs; confirmed NOC profile is ~500-800 tokens; work description is ~200-500 tokens
    - What's unclear: Total varies by how many OG definitions are included
    - Recommendation: Use `num_ctx=16384` (same as Phase 4 Stage 3); measure actual token count during Wave 0 integration test with a representative work description.
+   - **RESOLVED:** Use `num_ctx=16384` for Step 3 OG ranking (Plan 05-03). Plan 05-02 and 05-03 implement this in `extra_body`.
 
 ---
 
