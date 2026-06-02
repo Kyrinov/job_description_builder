@@ -39,7 +39,7 @@ class Settings(BaseSettings):
         default=None,
         description="Cloud provider API key — Stage 3 switches to cloud when this is set",
     )
-    cloud_model: str = "qwen3-7b"
+    cloud_model: str = "qwen-3.7-max"
     cloud_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
     @property
