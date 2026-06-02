@@ -325,3 +325,168 @@ def jes_db(tmp_path):
     con.commit()
     yield db_path
     con.close()
+
+
+@pytest.fixture
+def export_db(tmp_path):
+    """
+    Temp SQLite DB with full schema for Phase 8 export tests.
+    Empty schema (no seeded data) — tests build a WorkDescription with
+    make_exported_wd() to control stage and content precisely.
+    Used by tests/test_export.py. Does NOT require Ollama to be running.
+    """
+    from app.db import create_schema, get_connection
+
+    db_path = str(tmp_path / "test_export.db")
+    con = get_connection(db_path)
+    create_schema(con)
+    con.commit()
+    yield db_path
+    con.close()
+
+
+def make_exported_wd(db_path: str, *, complete: bool = True) -> str:
+    """
+    Insert a WorkDescription in stage='jes_scored' ready for export.
+
+    When complete=True, JES factors are fully scored (no sentinel level=-1
+    and no points=None). When complete=False, the second factor is the
+    failed-factor sentinel (level=-1, points=None) per D-01/D-02.
+
+    Returns the wd_id (UUID string).
+    """
+    from app.db import get_connection
+    from app.models.work_description import (
+        DraftDuty,
+        DraftText,
+        JESFactorScore,
+        NOCMatch,
+        OGRecommendation,
+        ProvenanceTag,
+        WorkDescription,
+    )
+    from app.services.wd_store import save_work_description
+    from datetime import date
+
+    conn = get_connection(db_path)
+
+    noc_prov = ProvenanceTag(
+        source_type="NOC", source_id="41401",
+        source_version="NOC 2021 v1.0", retrieved_date=date.today(),
+    )
+    confirmed_noc = NOCMatch(
+        noc_code="41401",
+        noc_title="Economists and economic policy researchers and analysts",
+        teer_level="1", confidence=0.9, rationale="Strong match",
+        matched_duty_statements=["Conduct economic analysis."],
+        provenance=noc_prov,
+    )
+
+    og_prov = ProvenanceTag(
+        source_type="TBS_OG_DEF", source_id="EC",
+        source_version="TBS-OCHRO-OG.txt", retrieved_date=date.today(),
+    )
+    directive_prov = ProvenanceTag(
+        source_type="TBS_DIRECTIVE", source_id="Directive 4.2.1",
+        source_version="TBS Directive on Classification 2021",
+        retrieved_date=date.today(),
+    )
+    og_recommendation = OGRecommendation(
+        og_code="EC", og_name="Economics and Social Science Services",
+        level="EC-05", confidence=0.85,
+        rationale="Policy work directed to Canadians",
+        provenance=og_prov,
+        cited_articles=[directive_prov],
+        confirmed_by_advisor=True,
+    )
+
+    org_ctx = DraftText(
+        text="Operates within the Policy Branch.",
+        provenance=og_prov,
+    )
+
+    duty_prov = ProvenanceTag(
+        source_type="NOC", source_id="41401",
+        source_version="NOC 2021 v1.0", retrieved_date=date.today(),
+    )
+    draft_duties = [
+        DraftDuty(
+            text="Conduct economic analysis of policy options.",
+            provenance=duty_prov,
+        ),
+    ]
+
+    advisor_prov = ProvenanceTag(
+        source_type="ADVISOR", source_id="advisor",
+        source_version="manual entry", retrieved_date=date.today(),
+        modified_by_advisor=True,
+    )
+    advisor_additions = [
+        DraftDuty(
+            text="Liaise with provincial counterparts.",
+            advisor_modified=True,
+            provenance=advisor_prov,
+        ),
+    ]
+
+    jes_prov_1 = ProvenanceTag(
+        source_type="JES", source_id="EC/Decision making",
+        source_version="JES v1.0", retrieved_date=date.today(),
+    )
+    jes_prov_2 = ProvenanceTag(
+        source_type="JES", source_id="EC/Communication",
+        source_version="JES v1.0", retrieved_date=date.today(),
+    )
+    if complete:
+        jes_scores = [
+            JESFactorScore(
+                factor_name="Decision making", level=3, points=35,
+                rationale="High latitude",
+                provenance=jes_prov_1,
+            ),
+            JESFactorScore(
+                factor_name="Communication", level=2, points=30,
+                rationale="Explains findings",
+                provenance=jes_prov_2,
+            ),
+        ]
+        jes_total_points = 65
+    else:
+        # incomplete=True: second factor is the failed-factor sentinel per D-01
+        jes_scores = [
+            JESFactorScore(
+                factor_name="Decision making", level=3, points=35,
+                rationale="High latitude",
+                provenance=jes_prov_1,
+            ),
+            JESFactorScore(
+                factor_name="Communication", level=-1, points=None,
+                rationale="Scoring failed after 3 retries",
+                provenance=jes_prov_2,
+            ),
+        ]
+        jes_total_points = 35
+
+    wd = WorkDescription(
+        session_id="test-session",
+        raw_input="Develops policy options for senior management.",
+        position_title="Senior Policy Analyst",
+        position_number="12345",
+        og_level="EC-05",
+        supervisor_title="Manager, Policy",
+        supervisor_position_number="00001",
+        review_date=date(2026, 6, 2),
+        organizational_context=org_ctx,
+        confirmed_noc=confirmed_noc,
+        og_recommendation=og_recommendation,
+        confirmed_og="EC",
+        confirmed_level="EC-05",
+        draft_duties=draft_duties,
+        advisor_additions=advisor_additions,
+        jes_scores=jes_scores,
+        jes_total_points=jes_total_points,
+        stage="jes_scored",
+    )
+    save_work_description(conn, wd)
+    conn.close()
+    return str(wd.id)
