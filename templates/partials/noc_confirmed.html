@@ -3,4 +3,12 @@
     <p><strong>{{ noc_code }}</strong> — {{ noc_title }}</p>
     <p>TEER {{ teer }}</p>
     <p class="confirmation-note">This selection has been saved. Proceed to the next step.</p>
+    <form hx-post="/api/og/classify"
+          hx-target="#wizard-step"
+          hx-swap="outerHTML"
+          hx-indicator="#og-spinner">
+        <input type="hidden" name="wd_id" value="{{ wd_id }}">
+        <span id="og-spinner" class="htmx-indicator">Classifying occupational group...</span>
+        <button type="submit" class="button button--primary">Continue to OG Classification</button>
+    </form>
 </div>

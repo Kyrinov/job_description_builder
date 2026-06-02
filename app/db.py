@@ -124,6 +124,23 @@ CA_JES_SCHEMA_DDL = """
         content='',
         tokenize='porter ascii'
     );
+
+    -- Full TBS OCHRO OG definitions (Phase 5, CLASS-01 verbatim citation)
+    CREATE TABLE IF NOT EXISTS og_definitions (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        og_code      TEXT NOT NULL UNIQUE,
+        og_name      TEXT NOT NULL,
+        parent_group TEXT,
+        definition   TEXT NOT NULL,
+        inclusions   TEXT,
+        exclusions   TEXT,
+        source_file  TEXT NOT NULL,
+        source_hash  TEXT NOT NULL,
+        ingested_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_og_definitions_code ON og_definitions(og_code);
+    CREATE INDEX IF NOT EXISTS idx_og_definitions_parent ON og_definitions(parent_group);
 """
 
 NOC_MAPPING_SCHEMA_DDL = """
@@ -184,6 +201,7 @@ def create_schema(con: sqlite3.Connection) -> None:
     - noc_units, noc_elements, noc_fts, noc_chunks_vec: NOC data (Phase 2)
     - ca_clauses, jes_factors, jes_og_metadata: CA + JES structured records (Phase 3, PIPE-02/PIPE-03/CA-01)
     - policy_chunks, policy_fts: TBS policy doc FTS5 index (Phase 3, Phase 5 prereq)
+    - og_definitions, idx_og_definitions_code, idx_og_definitions_parent: TBS OCHRO OG definitions (Phase 5, CLASS-01)
     - noc_mapping_cache: SHA-256-keyed result cache for the NL→NOC pipeline (Phase 4)
     - noc_mapping_log: per-request flywheel metrics (Phase 4)
     """

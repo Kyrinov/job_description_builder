@@ -151,3 +151,54 @@ def noc_mapping_db(tmp_path):
 
     yield db_path
     con.close()
+
+
+@pytest.fixture
+def og_db(tmp_path):
+    """
+    Temp SQLite DB with full schema + synthetic og_definitions rows for AS, EC, IT, PE.
+    Used by test_og_classification.py and test_og_ranking.py.
+    Does NOT require Ollama to be running.
+    """
+    from app.db import create_schema, get_connection
+
+    db_path = str(tmp_path / "test_og.db")
+    con = get_connection(db_path)
+    create_schema(con)  # creates og_definitions table
+
+    for row in [
+        (
+            "EC", "Economics and Social Science Services", "PA",
+            "Positions primarily involved in economic and social research and related activities.",
+            "the planning, development, delivery or management of policies, programs, services or other activities in the social sciences directed toward Canadians",
+            "the planning, development, delivery or management of policies, programs, services or other activities directed to the public or to the Public Service",
+        ),
+        (
+            "AS", "Administrative Services", "PA",
+            "Positions primarily involved in administrative services work.",
+            "the planning, development, delivery or management of government policies, programs, services or other activities directed to the Public Service",
+            None,
+        ),
+        (
+            "IT", "Information Technology", None,
+            "Positions primarily involved in IT systems development and operation.",
+            None,
+            None,
+        ),
+        (
+            "PE", "Personnel Administration", "PA",
+            "Positions primarily involved in HR policy and classification work.",
+            None,
+            None,
+        ),
+    ]:
+        con.execute(
+            "INSERT OR IGNORE INTO og_definitions "
+            "(og_code, og_name, parent_group, definition, inclusions, exclusions, source_file, source_hash) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (*row, "TBS-OCHRO-OG.txt", "testhash_v1"),
+        )
+    con.commit()
+
+    yield db_path
+    con.close()
