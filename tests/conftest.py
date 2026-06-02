@@ -262,3 +262,66 @@ def jd_db(tmp_path):
     con.commit()
     yield db_path
     con.close()
+
+
+@pytest.fixture
+def jes_db(tmp_path):
+    """
+    Temp SQLite DB with full schema + synthetic jes_factors rows for EC (2 factors)
+    and a source_documents row for JES version lookup.
+    Used by test_jes_scoring.py. Does NOT require Ollama to be running.
+
+    Factors seeded:
+      - EC / Decision making: D1=5pts, D2=15pts, D3=35pts; max_points=35
+      - EC / Communication:   D1=10pts, D2=30pts; max_points=30
+    """
+    import json
+    from app.db import create_schema, get_connection
+
+    db_path = str(tmp_path / "test_jes.db")
+    con = get_connection(db_path)
+    create_schema(con)
+
+    factors = [
+        (
+            "EC", "Decision making",
+            "Measures latitude applied and impact of decision making.",
+            json.dumps([
+                {"degree": "D1", "text": "Issue-specific, impact on own work unit.", "points": 5},
+                {"degree": "D2", "text": "Issue-specific, impact on components of project.", "points": 15},
+                {"degree": "D3", "text": "Multiple issues, impact on branch or division.", "points": 35},
+            ]),
+            json.dumps({"D1": 5, "D2": 15, "D3": 35}),
+            35, "fakehash_jes_v1",
+        ),
+        (
+            "EC", "Communication",
+            "Measures the nature of communication activities.",
+            json.dumps([
+                {"degree": "D1", "text": "Provides factual information.", "points": 10},
+                {"degree": "D2", "text": "Explains findings and recommendations.", "points": 30},
+            ]),
+            json.dumps({"D1": 10, "D2": 30}),
+            30, "fakehash_jes_v1",
+        ),
+    ]
+    for f in factors:
+        con.execute(
+            "INSERT OR IGNORE INTO jes_factors "
+            "(og_code, factor_name, factor_definition, degree_descriptors, "
+            "point_values, max_points, source_hash) VALUES (?,?,?,?,?,?,?)",
+            f,
+        )
+    con.execute(
+        "INSERT OR IGNORE INTO source_documents"
+        "(source_name, version_label, content_hash, ingested_at) "
+        "VALUES (?, ?, ?, datetime('now'))",
+        (
+            "EC Economics and Social Science Services - Job Evaluation Standard 2017.txt",
+            "JES v1.0",
+            "fakehash_jes_v1",
+        ),
+    )
+    con.commit()
+    yield db_path
+    con.close()
