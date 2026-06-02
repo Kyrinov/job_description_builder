@@ -431,6 +431,67 @@ async def test_confirm_noc_updates_wd(test_db_routing, noc_mapping_db):
     assert loaded.stage == "noc_mapped"
 
 
+async def test_confirm_noc_htmx_renders_wd_id_in_continue_form(test_db_routing, noc_mapping_db):
+    """
+    HTMX path of /api/noc/confirm must render the Continue-to-OG form with a non-empty
+    wd_id hidden input. Regression: the template needs {{ wd_id }} to be passed in
+    context — without it, the form posts with an empty wd_id and /api/og/classify 404s.
+    """
+    from app.db import get_connection
+    from app.models.work_description import NOCMatch, ProvenanceTag, WorkDescription
+    from app.services.wd_store import save_work_description
+
+    wd = WorkDescription(
+        session_id="test-session-htmx",
+        raw_input="develop and maintain application software",
+        stage="input",
+    )
+    wd.noc_candidates = [
+        NOCMatch(
+            noc_code="21232",
+            noc_title="Software engineers and designers",
+            teer_level="2",
+            confidence=0.9,
+            rationale="Matches",
+            matched_duty_statements=["Develop and maintain application software."],
+            provenance=ProvenanceTag(
+                source_type="NOC",
+                source_id="21232",
+                source_version="NOC 2021 v1.0",
+                retrieved_date=date.today(),
+            ),
+        )
+    ]
+    conn = get_connection(str(noc_mapping_db))
+    save_work_description(conn, wd)
+    conn.close()
+
+    with patch("app.main.ollama_client_factory", return_value=_make_mock_ollama_client()):
+        from app.main import app
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/api/noc/confirm",
+                data={"wd_id": str(wd.id), "noc_code": "21232"},
+                headers={"HX-Request": "true"},
+            )
+            assert response.status_code == 200
+            assert "text/html" in response.headers.get("content-type", "")
+            body = response.text
+            # The hidden input must carry the actual wd_id, not an empty string
+            import re
+            m = re.search(r'<input type="hidden" name="wd_id" value="([^"]*)">', body)
+            assert m is not None, "Continue-to-OG form missing wd_id hidden input"
+            rendered_wd_id = m.group(1)
+            assert rendered_wd_id == str(wd.id), (
+                f"wd_id hidden input rendered empty — would cause /api/og/classify "
+                f"to 404. Got: {rendered_wd_id!r}, expected: {str(wd.id)!r}"
+            )
+            # Sanity: the form targets /api/og/classify
+            assert 'hx-post="/api/og/classify"' in body
+
+
 # ---------------------------------------------------------------------------
 # _fts_query_from_text unit tests (§4 in gsd-phase-4-issues.md)
 # ---------------------------------------------------------------------------

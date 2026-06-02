@@ -134,6 +134,7 @@ async def confirm_noc(
             "partials/noc_confirmed.html",
             {
                 "request": request,
+                "wd_id": wd_id,
                 "noc_code": matched_candidate.noc_code,
                 "noc_title": matched_candidate.noc_title,
                 "teer": matched_candidate.teer_level,
