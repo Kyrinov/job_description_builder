@@ -81,10 +81,10 @@ class NOCRankingResult(BaseModel):
 # Module-level singleton — built once at import time, reused for the application lifetime.
 # Mode.JSON is required for Ollama; MiniMax also supports JSON mode.
 # Do NOT construct per-request (creates and tears down httpx connection pool on every call).
-if settings.minimax_api_key:
+if settings.cloud_api_key:
     _openai_client = AsyncOpenAI(
-        base_url=settings.minimax_base_url,
-        api_key=settings.minimax_api_key,
+        base_url=settings.cloud_base_url,
+        api_key=settings.cloud_api_key,
     )
 else:
     _openai_client = AsyncOpenAI(

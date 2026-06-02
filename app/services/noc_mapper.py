@@ -141,7 +141,7 @@ async def map_work_description(
         # --- Stage 3: instructor LLM justification ---
         candidate_block = _format_candidates(vec_rows)
         extra_kwargs: dict = {}
-        if not settings.minimax_api_key:
+        if not settings.cloud_api_key:
             extra_kwargs["extra_body"] = {"options": {"num_ctx": 8192}}
 
         result: NOCRankingResult = await instructor_client.chat.completions.create(
