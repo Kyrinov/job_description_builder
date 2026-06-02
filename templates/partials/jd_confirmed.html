@@ -4,5 +4,5 @@
     <h2>Duties Confirmed</h2>
     <p>{{ duty_count }} dut{% if duty_count == 1 %}y has{% else %}ies have{% endif %} been confirmed for this position.</p>
     <p class="muted">The work description has been saved with full ProvenanceTags. Proceed to JES scoring.</p>
-    <button type="button" class="button button--primary" disabled>Continue to JES Scoring</button>
+    <a href="/wizard/jes?wd_id={{ wd_id }}" class="button button--primary">Continue to JES Scoring</a>
 </div>

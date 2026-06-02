@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}JES Scoring — JD Builder{% endblock %}
+
+{% block content %}
+<section id="wizard-step">
+    <h1>JES Factor Scoring</h1>
+    <p>Score each JES factor for the confirmed occupational group. One model call per factor.</p>
+
+    <form hx-post="/api/jes/score"
+          hx-target="#jes-scores"
+          hx-swap="innerHTML"
+          hx-indicator="#jes-spinner"
+          hx-disabled-elt="#score-btn">
+        <input type="hidden" name="wd_id" value="{{ wd_id }}">
+        <button id="score-btn" type="submit" class="button button--primary">Generate JES Scores</button>
+        <span id="jes-spinner" class="htmx-indicator" aria-label="Scoring factors...">Scoring factors...</span>
+    </form>
+
+    <div id="jes-scores" aria-live="polite"></div>
+</section>
+{% endblock %}
