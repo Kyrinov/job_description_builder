@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}OG Classification — JD Builder{% endblock %}
+
+{% block content %}
+<section id="wizard-step">
+    <h1>OG Classification</h1>
+    <p>Review the top occupational group candidates for this position. Select a group and level to proceed.</p>
+
+    <form hx-post="/api/og/classify"
+          hx-target="#og-results"
+          hx-swap="innerHTML"
+          hx-indicator="#og-spinner"
+          hx-disabled-elt="#classify-btn">
+        <input type="hidden" name="wd_id" value="{{ wd_id }}">
+        <button id="classify-btn" type="submit" class="button button--primary">Find OG Candidates</button>
+        <span id="og-spinner" class="htmx-indicator" aria-label="Classifying occupational group...">Classifying occupational group...</span>
+    </form>
+
+    <div id="og-results" aria-live="polite"></div>
+</section>
+{% endblock %}

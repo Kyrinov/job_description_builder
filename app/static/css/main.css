@@ -1,7 +1,7 @@
 /*
  * app/static/css/main.css
  *
- * Phase 4 — NL→NOC Mapping wizard step stylesheet.
+ * JD Builder wizard stylesheet — Phase 4 (NOC mapping) and Phase 5 (OG classification) components.
  * Hand-rolled CSS (no Tailwind, no shadcn) for FastAPI + Jinja2 + HTMX stack.
  *
  * Layers (in document order, per 04-UI-SPEC §CSS Architecture):
@@ -12,6 +12,7 @@
  *   5. Form elements (label, input, textarea, button)
  *   6. Component classes (.noc-card, .teer-badge, .error-state, .empty-state, .confirmation-banner)
  *   7. HTMX indicator class
+ *   8. Phase 5 OG classification components (.og-card, .og-level-select, .asec-alert, .asec-comparison, .og-confirmed-banner)
  *
  * Source of token values: .planning/phases/04-nl-noc-mapping/04-UI-SPEC.md
  *   - Color: GC blue #1A4A8A (accent), GC web standards
@@ -76,6 +77,11 @@ html {
     /* Border radius */
     --radius-sm: 4px;
     --radius-md: 8px;
+
+    /* Warning (AS/EC alert — Phase 5) */
+    --color-warning-bg:     #FFF8E1;
+    --color-warning-text:   #7D5C00;
+    --color-warning-border: #F9A825;
 }
 
 /* =====================================================================
@@ -449,4 +455,175 @@ button[aria-disabled="true"] {
 .htmx-request .htmx-indicator,
 .htmx-request.htmx-indicator {
     display: inline-block;
+}
+
+/* =====================================================================
+ * 8. PHASE 5 — OG CLASSIFICATION COMPONENTS
+ * ===================================================================== */
+
+/* .og-candidates — CSS Grid wrapper for 3 OG candidate cards */
+.og-candidates {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-xl);
+    margin-top: var(--space-lg);
+}
+
+/* .og-card — individual OG candidate card, mirrors .noc-card */
+.og-card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    background-color: var(--color-dominant);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.og-card.confirmed {
+    border: 2px solid var(--color-accent);
+}
+
+.og-card-header h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    margin: 0;
+    color: var(--color-text);
+}
+
+.og-card-section h4 {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    margin: 0 0 var(--space-xs) 0;
+    color: var(--color-text);
+}
+
+.og-card blockquote,
+.asec-card blockquote {
+    border-left: 3px solid var(--color-border);
+    padding-left: var(--space-md);
+    margin: var(--space-sm) 0;
+    color: var(--color-text-muted);
+    font-style: normal;
+}
+
+.og-card cite,
+.asec-card cite {
+    display: block;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-top: var(--space-xs);
+    font-style: italic;
+}
+
+/* .og-level-select — level dropdown in each OG card confirm form */
+.og-level-select {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-secondary);
+    font-size: var(--text-base);
+    color: var(--color-text);
+    margin-bottom: var(--space-sm);
+}
+
+.og-level-select:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+/* .asec-alert — AS vs EC disambiguation warning banner */
+.asec-alert {
+    background-color: var(--color-warning-bg);
+    border: 1px solid var(--color-warning-border);
+    border-left: 4px solid var(--color-warning-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-xl);
+    color: var(--color-warning-text);
+}
+
+.asec-alert strong {
+    display: block;
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-sm);
+}
+
+.asec-alert p {
+    margin: 0 0 var(--space-md) 0;
+    color: var(--color-warning-text);
+}
+
+/* .asec-comparison — 2-column AS vs EC side-by-side layout */
+.asec-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+}
+
+@media (max-width: 600px) {
+    .asec-comparison {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* .asec-card — one side of the AS/EC comparison */
+.asec-card {
+    background-color: var(--color-dominant);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-md);
+}
+
+.asec-card h4 {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    margin: 0 0 var(--space-xs) 0;
+    color: var(--color-text);
+}
+
+.asec-card .body-sm {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-sm);
+}
+
+.asec-directive-authority {
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--color-warning-border);
+}
+
+.asec-directive-authority blockquote {
+    border-left: 3px solid var(--color-warning-border);
+    padding-left: var(--space-md);
+    margin: var(--space-sm) 0;
+    color: var(--color-warning-text);
+    font-style: normal;
+}
+
+/* .og-confirmed-banner — success state after OG is confirmed */
+.og-confirmed-banner {
+    background-color: var(--color-dominant);
+    border: 2px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    padding: var(--space-xl);
+    margin-top: var(--space-lg);
+}
+
+.og-confirmed-banner h2 {
+    color: var(--color-accent);
+    margin-bottom: var(--space-md);
+}
+
+.og-confirmed-banner p {
+    margin: 0 0 var(--space-sm) 0;
+    font-size: var(--text-base);
+}
+
+.og-confirmed-banner .muted {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
 }

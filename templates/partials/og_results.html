@@ -1,2 +1,90 @@
-{# Wave 3 stub — replaced with full implementation in Plan 05-04 #}
-<div id="wizard-step"><!-- og_results stub --></div>
+{# HTMX partial: OG classification results — top 3 candidate cards + optional AS/EC alert #}
+{# Injected into #wizard-step by POST /api/og/classify #}
+<div id="wizard-step">
+
+{% if asec_alert %}
+<div class="asec-alert" role="alert">
+    <strong>AS vs. EC Distinction Required</strong>
+    <p>This position has policy-related duties. Review the distinction below before confirming an occupational group. Incorrect classification between AS and EC is a common grievance risk.</p>
+    <div class="asec-comparison">
+        <div class="asec-card asec-card--as">
+            <h4>{{ asec_alert.as_name }}</h4>
+            <p class="body-sm muted">Inclusions — applies when work is directed to the Public Service</p>
+            <blockquote>{{ asec_alert.as_inclusions_excerpt }}</blockquote>
+            <cite>{{ asec_alert.citation_source }} — AS</cite>
+        </div>
+        <div class="asec-card asec-card--ec">
+            <h4>{{ asec_alert.ec_name }}</h4>
+            <p class="body-sm muted">Exclusions — EC explicitly excludes work directed to the Public Service</p>
+            <blockquote>{{ asec_alert.ec_exclusions_excerpt }}</blockquote>
+            <cite>{{ asec_alert.citation_source }} — EC</cite>
+        </div>
+    </div>
+    {% if asec_alert.directive_citation %}
+    <div class="asec-directive-authority">
+        <p class="body-sm muted">Classification Authority (Directive on Classification)</p>
+        <blockquote>{{ asec_alert.directive_citation }}</blockquote>
+        <cite>Directive on Classification — Treasury Board of Canada Secretariat</cite>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<h2>Top 3 Occupational Group Candidates</h2>
+
+{% if candidates %}
+<div class="og-candidates">
+{% for candidate in candidates %}
+<div class="og-card">
+    <div class="og-card-header">
+        <h3>[{{ candidate.og_code }}] {{ candidate.og_name }}</h3>
+    </div>
+
+    <div class="og-card-section">
+        <h4>Definition</h4>
+        <blockquote>{{ candidate.definition_excerpt }}</blockquote>
+        <cite>TBS OCHRO OG Definitions</cite>
+    </div>
+
+    {% if candidate.relevant_inclusions %}
+    <div class="og-card-section">
+        <h4>Relevant Inclusions</h4>
+        <blockquote>{{ candidate.relevant_inclusions }}</blockquote>
+    </div>
+    {% endif %}
+
+    {% if candidate.relevant_exclusions %}
+    <div class="og-card-section">
+        <h4>Relevant Exclusions</h4>
+        <blockquote>{{ candidate.relevant_exclusions }}</blockquote>
+    </div>
+    {% endif %}
+
+    <div class="og-card-section">
+        <form hx-post="/api/og/confirm"
+              hx-target="#wizard-step"
+              hx-swap="outerHTML">
+            <input type="hidden" name="wd_id" value="{{ wd_id }}">
+            <input type="hidden" name="og_code" value="{{ candidate.og_code }}">
+            <div class="form-group">
+                <label for="og_level_{{ candidate.og_code }}">Level</label>
+                <select id="og_level_{{ candidate.og_code }}" name="og_level" required class="og-level-select">
+                    <option value="">Select level...</option>
+                    {% for level in candidate.available_levels %}
+                    <option value="{{ level }}">{{ candidate.og_code }}-{{ "%02d"|format(level) }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="button button--primary">Confirm {{ candidate.og_code }}</button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+</div>
+{% else %}
+<div class="empty-state" role="status">
+    <p>No occupational group candidates could be determined. Ensure the NOC has been confirmed and the work description is complete.</p>
+</div>
+{% endif %}
+
+</div>

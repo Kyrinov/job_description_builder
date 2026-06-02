@@ -1,2 +1,11 @@
-{# Wave 3 stub — replaced with full implementation in Plan 05-04 #}
-<div id="wizard-step" class="og-confirmed-banner"><!-- og_confirmed stub --></div>
+{# HTMX partial: OG confirmation success state #}
+{# Replaces #wizard-step after POST /api/og/confirm succeeds #}
+<div id="wizard-step" class="og-confirmed-banner" role="status">
+    <h2>OG Confirmed</h2>
+    <p>{{ og_code }} — {{ og_name }}</p>
+    <p>Level: {{ og_level }}</p>
+    <p class="muted">This selection has been saved. Proceed to JD generation.</p>
+    <form>
+        <button type="button" class="button button--primary" disabled>Continue to JD Generation</button>
+    </form>
+</div>
