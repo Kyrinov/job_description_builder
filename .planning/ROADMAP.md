@@ -119,7 +119,7 @@ Plans:
 5. `POST /check-orphan-statements` runs against the confirmed duty list and returns a list of flagged duties, each citing the functional authority rule violated (document name and article/section) — a clean result returns an empty flag list, not an error.
 **Plans:** 4 plans
 Plans:
-- [ ] 06-01-PLAN.md — Wave 0: test stubs, jd_db fixture, og_confirmed.html CTA activation, CLASS-02 gate test
+- [x] 06-01-PLAN.md — Wave 0: test stubs, jd_db fixture, og_confirmed.html CTA activation, CLASS-02 gate test
 - [ ] 06-02-PLAN.md — app/ai/jd_ranking.py: Pydantic models, instructor singleton, prompt constants
 - [ ] 06-03-PLAN.md — jd_service.py pipeline + jd_generation.py router + app/main.py registration
 - [ ] 06-04-PLAN.md — HTMX wizard templates, Phase 6 CSS layer 9, full suite green + human verify
