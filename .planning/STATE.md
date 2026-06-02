@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 8
 status: executing
-last_updated: "2026-06-02T21:20:00.000Z"
+last_updated: "2026-06-02T21:26:39.000Z"
 progress:
   total_phases: 9
   completed_phases: 6
   total_plans: 31
-  completed_plans: 27
-  percent: 84
+  completed_plans: 28
+  percent: 87
 ---
 
 # Project State
@@ -18,7 +18,7 @@ progress:
 **Status:** Executing Phase 8
 **Current phase:** 8
 **Last updated:** 2026-06-02
-**Next action:** `/gsd-execute-phase 07`
+**Next action:** `/gsd-execute-phase 08-03`
 
 ---
 
@@ -33,7 +33,7 @@ progress:
 | 5 | OG Classification | Complete (4/4 plans executed; 114 tests pass; 1 skipped — Phase 6 gate) |
 | 6 | JD Generation | Not started |
 | 7 | JES Scoring | Ready to execute (4/4 plans verified) |
-| 8 | Export | Plan 08-01 complete (3/4 plans executed; scaffold + template + contract tests committed) |
+| 8 | Export | Plans 08-01 + 08-02 complete (export_service.py + 6 contract tests passing; 4/4 plans remaining) |
 | 9 | DND DRF Integration | Not started |
 
 ---
@@ -120,3 +120,16 @@ See: `.planning/PROJECT.md`
 - 149 tests pass; 7 skip (including 6 new export contract tests)
 
 **Planned Phase:** 08 (Export) — Plan 08-02 next (export_service.py implements the contract)
+
+---
+
+## Update 2026-06-02T21:26:39Z — Plan 08-02 complete
+
+- `app/services/export_service.py` shipped: `validate_export_readiness` (D-01/D-02), `build_version_manifest` (D-07), `async generate_export` (D-03/D-05/D-06)
+- Pre-export gate treats `s.points is None` as blocking — fixes the Phase 7 silent-zero bug at `jes_service.py:76-77` (LLM returned a degree that did not map to a value in the point_values dict)
+- DOCX render in `asyncio.to_thread` + `BytesIO` (no temp files); stage advance to `exported` only after confirmed non-empty file bytes; SHA-256 export_hash
+- D-06 advisor marker derived from `d.advisor_modified or d.provenance.source_type == "ADVISOR"` — captures both ways advisor content can land on a DraftDuty
+- 6/6 contract tests in `tests/test_export.py` pass; full suite 155 passed + 1 pre-existing skip, no regressions
+- Auto-fix (Rule 1): pre-existing missing `from tests.conftest import make_exported_wd` in `tests/test_export.py` — masked in 08-01 by the `ImportError -> pytest.skip` boilerplate, surfaced in 08-02
+- Plan 08-03 (export.py router + main.py mount + /wizard/export route) is next
+- 155 tests pass; 1 skip
