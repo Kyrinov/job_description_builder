@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 7
 status: executing
-last_updated: "2026-06-02T17:33:59.347Z"
+last_updated: "2026-06-02T20:31:02.934Z"
 progress:
   total_phases: 9
-  completed_phases: 5
-  total_plans: 27
-  completed_plans: 23
-  percent: 85
+  completed_phases: 6
+  total_plans: 31
+  completed_plans: 26
+  percent: 84
 ---
 
 # Project State
@@ -110,3 +110,5 @@ See: `.planning/PROJECT.md`
 - CLASS-02 gate: both /api/og/classify and /api/og/confirm return 422 if `stage != "noc_mapped"`; Phase 6 JD generation can rely on `stage="og_classified"` as its prerequisite
 - All architecture decisions in "Decisions Locked" above are non-negotiable
 - Human verify for Phase 5 UI (Plan 05-04) is pending — start uvicorn and run the wizard to confirm AS/EC alert renders, OG cards display verbatim TBS citations, level select + confirm flow reaches og_confirmed.html
+
+**Planned Phase:** 08 (Export) — 4 plans — 2026-06-02T20:31:02.924Z
