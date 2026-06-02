@@ -140,8 +140,12 @@ async def map_work_description(
 
         # --- Stage 3: instructor LLM justification ---
         candidate_block = _format_candidates(vec_rows)
+        extra_kwargs: dict = {}
+        if not settings.minimax_api_key:
+            extra_kwargs["extra_body"] = {"options": {"num_ctx": 8192}}
+
         result: NOCRankingResult = await instructor_client.chat.completions.create(
-            model=settings.ollama_generation_model,
+            model=settings.generation_model,
             messages=[
                 {
                     "role": "system",
@@ -168,7 +172,7 @@ async def map_work_description(
             max_retries=3,
             max_tokens=2048,
             temperature=0.0,
-            extra_body={"options": {"num_ctx": 8192}},
+            **extra_kwargs,
         )
 
         # --- Online guardrails ---
@@ -273,6 +277,6 @@ def to_noc_match(candidate: NOCCandidate) -> NOCMatch:
             source_id=candidate.noc_code,
             source_version="NOC 2021 v1.0",
             retrieved_date=date.today(),
-            model_name=settings.ollama_generation_model,
+            model_name=settings.generation_model,
         ),
     )

@@ -79,12 +79,17 @@ class NOCRankingResult(BaseModel):
 
 
 # Module-level singleton — built once at import time, reused for the application lifetime.
-# Mode.JSON is required for Ollama; Mode.TOOLS silently fails on most Ollama models.
+# Mode.JSON is required for Ollama; MiniMax also supports JSON mode.
 # Do NOT construct per-request (creates and tears down httpx connection pool on every call).
-instructor_client = instructor.from_openai(
-    AsyncOpenAI(
+if settings.minimax_api_key:
+    _openai_client = AsyncOpenAI(
+        base_url=settings.minimax_base_url,
+        api_key=settings.minimax_api_key,
+    )
+else:
+    _openai_client = AsyncOpenAI(
         base_url=settings.ollama_base_url.rstrip("/") + "/v1",
         api_key="ollama",  # placeholder; Ollama does not validate this
-    ),
-    mode=instructor.Mode.JSON,
-)
+    )
+
+instructor_client = instructor.from_openai(_openai_client, mode=instructor.Mode.JSON)

@@ -33,6 +33,19 @@ class Settings(BaseSettings):
         ..., description="Ollama embedding model name with tag, e.g. nomic-embed-text:latest"
     )
 
+    # MiniMax — optional; when set, Stage 3 (LLM justification) uses MiniMax instead of Ollama
+    minimax_api_key: str | None = Field(
+        default=None,
+        description="MiniMax API key — Stage 3 switches to MiniMax when this is set",
+    )
+    minimax_model: str = "minimax-m3"
+    minimax_base_url: str = "https://api.minimax.chat/v1"
+
+    @property
+    def generation_model(self) -> str:
+        """Active generation model name — MiniMax model if configured, else Ollama."""
+        return self.minimax_model if self.minimax_api_key else self.ollama_generation_model
+
     # Database — required; validated against project root (T-1-01)
     db_path: str = Field(
         ..., description="Absolute path to SQLite database file — must be under project root"
