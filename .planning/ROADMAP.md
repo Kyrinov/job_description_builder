@@ -156,7 +156,7 @@ Plans:
 - [x] 08-01-PLAN.md — Wave 0: export_db fixture, contract tests, docxtpl TBS WD template artifact (committed 2026-06-02)
 - [x] 08-02-PLAN.md — export_service.py: pre-export gate, version manifest, docxtpl render, stage advance (EXP-01)
 - [x] 08-03-PLAN.md — export.py router (docx + pdf 501) + main.py mount + /wizard/export route (EXP-01)
-- [ ] 08-04-PLAN.md — step_export.html, export_result partial, activate JES CTA, CSS layer 11 + human verify
+- [x] 08-04-PLAN.md — step_export.html, export_result partial, activate JES CTA, CSS layer 11 (Tasks 1+2 complete; Task 3 human-verify pending)
 
 ### Phase 9: DND DRF Integration
 **Goal:** For a WorkDescription identified as a DND position, the system surfaces Departmental Results Framework program linkages — connecting the position's duties to DRF programs and expected results — sourced from the DRF CSV dataset already in `data/`.
@@ -182,5 +182,5 @@ Plans:
 | 5. OG Classification | 4/4 | Complete | 2026-06-02 |
 | 6. JD Generation | 4/4 | Complete | 2026-06-02 |
 | 7. JES Scoring | 0/4 | Not started | - |
-| 8. Export | 2/4 | In progress (08-01 + 08-02 complete: export_service.py + 6 contract tests passing) | - |
+| 8. Export | 3/4 | In progress (08-01 + 08-02 + 08-03 complete; 08-04 Tasks 1+2 complete: wizard templates + CSS Layer 11 shipped; Task 3 human-verify pending) | - |
 | 9. DND DRF Integration | 0/? | Not started | - |

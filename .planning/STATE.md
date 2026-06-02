@@ -4,21 +4,21 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 8
 status: executing
-last_updated: "2026-06-02T21:26:39.000Z"
+last_updated: "2026-06-02T21:50:00.000Z"
 progress:
   total_phases: 9
   completed_phases: 6
   total_plans: 31
-  completed_plans: 28
-  percent: 87
+  completed_plans: 29
+  percent: 90
 ---
 
 # Project State
 
-**Status:** Executing Phase 8
+**Status:** Phase 8 Plan 04 awaiting human verify (Task 3)
 **Current phase:** 8
 **Last updated:** 2026-06-02
-**Next action:** `/gsd-execute-phase 08-04`
+**Next action:** Orchestrator runs Task 3 human-verify checkpoint for plan 08-04
 
 ---
 
@@ -33,7 +33,7 @@ progress:
 | 5 | OG Classification | Complete (4/4 plans executed; 114 tests pass; 1 skipped — Phase 6 gate) |
 | 6 | JD Generation | Not started |
 | 7 | JES Scoring | Ready to execute (4/4 plans verified) |
-| 8 | Export | Plans 08-01 + 08-02 + 08-03 complete (router + main.py mount + 10/10 tests passing); 08-04 (wizard templates) next |
+| 8 | Export | Plans 08-01 + 08-02 + 08-03 + 08-04 Tasks 1+2 complete (router + templates + CTA + CSS Layer 11); 08-04 Task 3 (human-verify) next |
 | 9 | DND DRF Integration | Not started |
 
 ---
@@ -119,7 +119,18 @@ See: `.planning/PROJECT.md`
   - docxtpl table-row loops use for/data/endfor in separate rows (patch_xml regex is greedy)
 - 149 tests pass; 7 skip (including 6 new export contract tests)
 
-**Planned Phase:** 08 (Export) — Plan 08-04 next (wizard templates + partials + CSS + human verify; 08-01/02/03 are complete)
+**Planned Phase:** 08 (Export) — Plan 08-04 Tasks 1+2 complete; Task 3 (human-verify) pending orchestrator
+
+---
+
+## Update 2026-06-02T21:50:00Z — Plan 08-04 Tasks 1+2 complete
+
+- `templates/wizard/step_export.html` shipped (D-09): hybrid `href` + `hx-get` anchor so non-HTMX clicks still download the DOCX directly while HTMX clients get the success partial swapped into `#export-result`. Hidden `wd_id` input, static version-manifest preview note, `hx-target`/`hx-swap`/`hx-indicator` matched to `export-spinner`, and the D-08 PDF-501 copy as a secondary note.
+- `templates/partials/export_result.html` shipped: HTMX success partial with `id="export-result"`, `role="status"`, `.export-result` class. Renders the SHA-256 `{{ export_hash }}` from `app/services/export_service.py` inside `<code>` plus a re-download anchor (T-08-15 XSS mitigated by Jinja2 autoescape — `export_hash` is hex, `filename` is server-set constant).
+- `templates/partials/jes_scores.html` edited: activated "Continue to Export" CTA at lines 27-28 — removed `aria-disabled="true"`, removed `title="Available in Phase 8"`, promoted `button--secondary` to `button--primary`. Closes the Phase 7→8 wizard handoff that 07-04 left disabled.
+- `app/static/css/main.css` extended: CSS Layer 11 (Export) appended at the end of the file with `.export-result`, `.export-hash`, `.export-errors`, `.export-errors li`, `.export-error-card`, `.export-error-card--blocking`. All rules use existing CSS custom properties with literal hex fallbacks (matches Layer 10's style). Header layer-index comment extended to register Layer 11.
+- Task 1 commit `0d04df9` (feat); Task 2 commit `3be5c1e` (feat). 159 tests pass + 1 pre-existing skip, 0 regressions.
+- Task 3 (human-verify checkpoint) pending — orchestrator spawns the verify step next.
 
 ---
 
