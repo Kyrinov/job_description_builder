@@ -108,6 +108,49 @@ This plan is `autonomous: false` (checkpoint:human-verify). The CLI cannot perfo
 5. Select a level, click Confirm → og_confirmed.html renders
 6. Repeat with non-policy description to verify AS/EC alert does NOT appear
 
+## Post-Execution Bug Fixes (advisor UAT, 2026-06-02)
+
+Three issues surfaced during interactive testing of the Phase 5 wizard and were fixed immediately. **Phase 6 planner should be aware of these patterns to avoid repeating them.**
+
+### Fix 1: TEER display bug — `9f341a6`
+**Symptom:** All 516 NOC units showed "TEER 5" in the browser.
+**Root cause:** `scripts/ingest_noc.py` (Phase 2) was storing the structure CSV `Level` column (NOC hierarchy depth, always 5 for unit groups) as `teer_level`. The correct TEER is the **second digit of the NOC code** per NOC 2021 v1.0 spec (Major Group 10–14 definitions).
+**Lesson for Phase 6:** Ingest scripts that map a "natural" CSV column to a domain field can silently store the wrong data when the column meanings collide (NOC hierarchy `Level` vs TEER classification). Always spot-check rendered values against a known reference (e.g., NOC 21232 Software developers should be TEER 1, not TEER 5).
+**Files:** `scripts/ingest_noc.py` (added `derive_teer_from_code()`), new `scripts/fix_teer_levels.py` (one-shot migration for existing DBs), `tests/conftest.py` (`noc_mapping_db` fixture TEER for 21232 corrected from "2" to "1"). `app.db` rows updated in place (471 of 516 fixed; new distribution TEER 0/1/2/3/4/5 = 48/97/162/69/95/45).
+
+### Fix 2: OG select "nothing happens" — `9f341a6`
+**Symptom:** Clicking the level `<select>` dropdown did nothing visible.
+**Root cause:** The dropdown correctly sets a value, but the form only submits when the user clicks **Confirm [OG]**. No visual cue tied the dropdown state to the button state.
+**Lesson for Phase 6:** When using a `<select required>` + submit button pattern, the submit button should be disabled until a non-empty value is chosen. Confirms intent and prevents HTML5 validation tooltip confusion.
+**Files:** `templates/partials/og_results.html` — added `onchange="this.form.querySelector('button[type=submit]').disabled = !this.value"` and initial `disabled` attribute on the Confirm button. The confirm form is functional via direct API call (test `test_classify_og_returns_3_candidates` etc.); the change is purely UX.
+
+### Fix 3: "Continue to OG Classification" silently 404'd — `31a2f69`
+**Symptom:** Clicking the button caused the page to "glitch to centre" with no response.
+**Root cause:** `/api/noc/confirm` (Phase 4 route) was rendering `partials/noc_confirmed.html` for HTMX requests but the template context was missing `wd_id`. The hidden input `<input type="hidden" name="wd_id" value="">` rendered empty. When the user clicked Continue, the form posted with `wd_id=""` to `/api/og/classify`, which looked up the WD, found nothing, and returned 404. HTMX swallows 4xx responses by default (no swap), so the page appeared to do nothing.
+**Lesson for Phase 6:** HTMX dual-path routes must pass ALL form-required variables to the template context, not just the visible data. JSON and HTML response paths can drift apart silently — write a regression test that asserts the hidden inputs are non-empty in the HTML response. The added test `test_confirm_noc_htmx_renders_wd_id_in_continue_form` catches this exact bug.
+**Files:** `app/api/noc_mapping.py:138` (added `"wd_id": wd_id` to template context), `tests/test_noc_mapping.py` (new regression test).
+
+## Phase 6 (JD Generation) Handoff Notes
+
+What's ready on `WorkDescription` for Phase 6:
+
+| Field | Set by | Value (example) |
+|-------|--------|-----------------|
+| `wd.confirmed_noc` | Phase 4 | `NOCMatch(noc_code="21232", teer_level="1", ...)` |
+| `wd.confirmed_og` | Phase 5 | `"EC"` |
+| `wd.confirmed_level` | Phase 5 | `"EC-04"` |
+| `wd.og_level` | Phase 5 | `"EC-04"` (same value; TBS header field) |
+| `wd.og_recommendation` | Phase 5 | `OGRecommendation(og_code="EC", evidence_quotes=[...], cited_articles=[ProvenanceTag, ...], confirmed_by_advisor=True, level="EC-04")` |
+| `wd.stage` | Phase 5 → Phase 6 | `"og_classified"` — Phase 6 must gate on this |
+
+Patterns Phase 6 should reuse from Phase 5:
+
+1. **Stage gate at API layer** — Both `/api/og/classify` and `/api/og/confirm` return 422 with descriptive detail when `wd.stage != expected`. Phase 6's `/api/jd/generate` must do the same: 422 if `wd.stage != "og_classified"`.
+2. **Verbatim guardrail** — `_strip_fabricated_quotes(quotes, og_full_text)` returns only entries that are substrings of the source text. Phase 6's duty selection must apply the same pattern: any duty text that isn't verbatim from `noc_elements` must be flagged with `source_type="ADVISOR"`.
+3. **Pure-function helpers** — `_build_asec_alert(og_rows)` is a pure function (no DB access) — it takes data and returns data. Phase 6's `orphan_statement_check()` and `cite_provenance_for_duty()` should follow the same pattern for testability.
+4. **ProvenanceTag fields actually used** — `source_type`, `source_id`, `source_version`, `retrieved_date=date.today()`, `model_name=settings.generation_model`. NOT `source_text` or `ingested_at` (they don't exist in the model — this was a deviation noted in 05-03-SUMMARY.md).
+5. **Instructor singleton pattern** — `og_instructor_client` is module-level, never constructed per-request. Phase 6 should add its own instructor client (e.g., `duty_selection_client`) in `app/ai/duty_selection.py` following the same pattern.
+
 ## Next Phase Readiness
 
 - Phase 5 is functionally complete: backend pipeline, routes, templates, and CSS all in place

@@ -114,6 +114,22 @@ None beyond the auto-fixed regex bug above.
 - Plan 05-03 can proceed — `og_ranking.py` stub tests already skip cleanly and will activate once `app.ai.og_ranking` is implemented
 - Wave 0 stubs are intentional: they document the contract that 05-02 and 05-03 must satisfy
 
+## Data Shape Note (for Phase 6 planner)
+
+`og_definitions` table at end of Phase 5: **81 unique og_codes** parsed from **161 raw sections** in TBS-OCHRO-OG.txt. Subgroups (e.g., `CT-IAU`, `AI-NOP`) share the same `og_code` as their parent group, so the `UNIQUE(og_code)` constraint deduplicates — the parseable text in TBS-OCHRO-OG.txt does not mark subgroup vs group context. For Phase 6's orphan-statement check (JD-04), the planner should treat the 33 broad OG groups (AS, EC, IT, PE, etc.) as the authoritative set; subgroup rows are stored for verbatim citation but the OG gate logic should validate against `OG_LEVELS` keys (10 codes in `app/ai/og_ranking.py`).
+
+Sample of `og_definitions` rows (live DB):
+```
+AC: Actuarial Science
+AG: Agriculture
+AI: Air Traffic Control (subgroups: AI-NOP)
+AS: Administrative Services
+EC: Economics and Social Science Services
+IT: Information Technology
+PE: Personnel Administration
+... (81 total)
+```
+
 ---
 *Phase: 05-og-classification*
 *Completed: 2026-06-02*

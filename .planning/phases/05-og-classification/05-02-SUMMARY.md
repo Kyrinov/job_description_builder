@@ -94,6 +94,21 @@ None.
 - Plan 05-03 (`og_classifier.py` service pipeline) can proceed — all AI contract types and the singleton are in place
 - All 9 of 11 test_og_ranking stubs now pass; the 2 remaining skips (verbatim_guardrail, asec_alert) depend on app.services.og_classifier (Plan 05-03)
 
+## Pattern Reference for Phase 6 (JD Generation) AI Layer
+
+This module's structure is the template for any future AI contract module (e.g., `app/ai/duty_selection.py` for Phase 6). Phase 6 should create a parallel file with:
+
+| Pattern | Phase 5 implementation | Phase 6 should mirror |
+|---------|------------------------|----------------------|
+| Pydantic output models | `OGCandidate`, `OGRankingResult`, `PolicyAdjacencyResult` | `DraftDuty`, `DutySelectionResult`, `OrphanStatementResult` |
+| Static lookup table | `OG_LEVELS` (10 codes, 63 levels) | N/A for duty selection — but if Phase 6 adds any static lookups (e.g., `JES_FACTOR_KEYS`), follow same pattern |
+| Module-level instructor singleton | `og_instructor_client = instructor.from_openai(_openai_client, mode=instructor.Mode.JSON)` | `duty_selection_client = instructor.from_openai(_openai_client, mode=instructor.Mode.JSON)` |
+| Cloud vs Ollama client | `if settings.cloud_api_key: ... else: ...` | Same pattern — cloud (DashScope qwen3.7-max) takes precedence when `CLOUD_API_KEY` is set |
+| Prompt constants | `SYSTEM_PROMPT`, `POLICY_DETECTION_PROMPT` | `DUTY_SELECTION_SYSTEM_PROMPT`, `ORPHAN_CHECK_SYSTEM_PROMPT` |
+| Context builder | `build_og_context(og_rows, confirmed_noc_code, work_description)` | `build_duty_context(noc_elements, og_definition, confirmed_og_level)` |
+
+**Anti-pattern reminder:** Do NOT construct the instructor client inside a route handler or service function — that creates and tears down an httpx connection pool on every call. Always import the module-level singleton.
+
 ---
 *Phase: 05-og-classification*
 *Completed: 2026-06-02*

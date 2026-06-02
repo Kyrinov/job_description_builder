@@ -127,6 +127,16 @@ None beyond the auto-fixed schema mismatch above.
 - All 9 of 10 test_og_classification stubs now pass; the 1 remaining skip is the deferred Phase 6 gate test (CLASS-02 enforcement test belongs to JD generation phase)
 - Full suite: 99 passed, 1 skipped
 
+## Handoff Notes for Phase 6 (JD Generation)
+
+The routes implemented in this plan (05-03) are the template for Phase 6 routes. Patterns Phase 6 must replicate:
+
+1. **HTMX dual-path response** — Branch on `request.headers.get("HX-Request")`. JSON path for API calls, `TemplateResponse` for HTMX. Both must return the same canonical state.
+2. **Stage gate at API layer** — Both routes 422 when `wd.stage != "noc_mapped"`. Phase 6's `/api/jd/generate` must 422 when `wd.stage != "og_classified"`.
+3. **og_level validation in-memory** — `OG_LEVELS.get(og_code, [])` is the allowlist. Phase 6 doesn't need similar level validation (duties are ranked, not leveled), but should use the same pattern: validate form inputs against an in-memory allowlist before DB writes.
+4. **Hidden inputs in template context** — Every form-rendering route must pass ALL `name="..."` fields (including hidden inputs) to the template context. A regression test that greps for `<input type="hidden" name="wd_id" value="..."` and asserts the value is non-empty catches the entire class of bug. See 05-04-SUMMARY.md "Fix 3" for the post-execution bug this pattern would have caught.
+5. **model_copy(update={...})** for all immutable Pydantic WD updates (v2 semantics).
+
 ---
 *Phase: 05-og-classification*
 *Completed: 2026-06-02*
