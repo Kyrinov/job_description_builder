@@ -151,7 +151,12 @@ Plans:
 2. Every duty, JES rating, and content element in the exported document displays its source citation rendered from the ProvenanceTag object on that element — no citation prose is hardcoded in the template.
 3. The exported document includes a version manifest section listing every source document used (NOC, CA, JES) with its content hash and version label.
 4. Any advisor-added content renders with a visible "advisor-added / not from authoritative source" marker in both DOCX and PDF outputs.
-**Plans:** TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 08-01-PLAN.md — Wave 0: export_db fixture, contract tests, docxtpl TBS WD template artifact
+- [ ] 08-02-PLAN.md — export_service.py: pre-export gate, version manifest, docxtpl render, stage advance (EXP-01)
+- [ ] 08-03-PLAN.md — export.py router (docx + pdf 501) + main.py mount + /wizard/export route
+- [ ] 08-04-PLAN.md — step_export.html, export_result partial, activate JES CTA, CSS layer 11 + human verify
 
 ### Phase 9: DND DRF Integration
 **Goal:** For a WorkDescription identified as a DND position, the system surfaces Departmental Results Framework program linkages — connecting the position's duties to DRF programs and expected results — sourced from the DRF CSV dataset already in `data/`.
@@ -177,5 +182,5 @@ Plans:
 | 5. OG Classification | 4/4 | Complete | 2026-06-02 |
 | 6. JD Generation | 4/4 | Complete | 2026-06-02 |
 | 7. JES Scoring | 0/4 | Not started | - |
-| 8. Export | 0/? | Not started | - |
+| 8. Export | 0/4 | Not started | - |
 | 9. DND DRF Integration | 0/? | Not started | - |
