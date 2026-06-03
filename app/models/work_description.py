@@ -139,3 +139,10 @@ class WorkDescription(BaseModel):
     last_modified: datetime = Field(default_factory=datetime.utcnow)
     export_hash: Optional[str] = None
     exported_at: Optional[datetime] = None
+
+    # Stage: DND DRF integration (Phase 9, DRF-01)
+    # Only relevant when is_dnd_position is True.
+    # drf_linkages: list of confirmed DRF program linkage dicts. Each dict:
+    #   {core_responsibility, departmental_result, fiscal_year, row_index, confirmed, provenance_source_id}
+    is_dnd_position: bool = False
+    drf_linkages: list[dict] = Field(default_factory=list)
