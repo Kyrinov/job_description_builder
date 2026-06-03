@@ -7,6 +7,22 @@
     <h1>JES Factor Scoring</h1>
     <p>Score each JES factor for the confirmed occupational group. One model call per factor.</p>
 
+    {% if failed_factors %}
+    <div class="export-errors" role="alert" id="failed-factors-list">
+        <h2>Some factors are incomplete</h2>
+        <p>The following JES factors need attention before you can export. Click Retry to re-run the LLM scoring for that factor, or Override to set it manually.</p>
+        <ul>
+            {% for f in failed_factors %}
+            {% set factor_slug = f.factor_name|lower|replace(' ', '-')|replace('/', '-')|replace('(', '')|replace(')', '') %}
+            <li>
+                <a href="#factor-{{ factor_slug }}" class="jes-failed-link">{{ f.factor_name }}</a>
+                <span class="muted">— {{ f.reason }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
     <form hx-post="/api/jes/score"
           hx-target="#jes-scores"
           hx-swap="innerHTML"
