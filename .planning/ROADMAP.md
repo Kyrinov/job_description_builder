@@ -16,7 +16,7 @@
 | 6 | JD Generation | System drafts verbatim NOC-sourced duties with full ProvenanceTag; advisor additions are flagged; orphan statement check runs post-draft; WD persisted | JD-01, JD-02, JD-03, JD-04 |
 | 7 | JES Scoring | System produces a per-factor JES scoring sheet via the configured local generation model (`gemma4:31b` by default) with Pydantic-validated structured output | JES-01 |
 | 8 | Export | Advisor exports completed WD to DOCX and PDF with rendered source citations and a version manifest | EXP-01 |
-| 9 | DND DRF Integration | For DND positions, system surfaces DRF program linkages connecting position duties to departmental expected results | DRF-01 |
+| 9 | 4/4 | Complete    | 2026-06-03 |
 
 ---
 
@@ -184,7 +184,7 @@ Plans:
 1. When the WD is flagged as a DND position, `GET /drf-links/{wd_id}` returns candidate DRF program linkages for the position's duties.
 2. Each linkage cites the DRF program name, expected result, and the source row from the DRF CSV dataset.
 3. Advisor-confirmed DRF linkages are stored on the WorkDescription record and rendered in the exported document.
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 Plans:
 - [x] 09-01-PLAN.md — Wave 1: WorkDescription model fields, DRF_SCHEMA_DDL, test stubs + drf_db fixture
 - [x] 09-02-PLAN.md — Wave 2: scripts/ingest_drf.py + app/services/drf_service.py (keyword matching + confirmation)
