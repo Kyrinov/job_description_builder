@@ -166,11 +166,14 @@ def build() -> None:
 
     # ------------------------------------------------------------------
     # Section 6: Departmental Results Framework Linkages (Phase 9, DRF-01)
-    # Only rendered when is_dnd_position is True. The {%p if %} gate
-    # suppresses the entire section for non-DND positions; the inner {%tr for %}
-    # loop iterates the drf_linkages list supplied by export_service.
+    # Gated on drf_linkages|length > 0 — the prototype is DND-only so every
+    # WD has is_dnd_position=True, but a WD may still be exported before the
+    # advisor confirms any linkages. The {%p if %} gate suppresses the entire
+    # section in that case so the DOCX never renders an empty table shell.
+    # The inner {%tr for %} loop iterates the drf_linkages list supplied by
+    # export_service.
     # ------------------------------------------------------------------
-    doc.add_paragraph("{%p if is_dnd_position %}")
+    doc.add_paragraph("{%p if drf_linkages|length > 0 %}")
     doc.add_heading("6. Departmental Results Framework Linkages", level=1)
     doc.add_paragraph(
         "The following DRF programs and expected results are linked to the duties "
@@ -201,10 +204,13 @@ def build() -> None:
     undeclared = sorted(tpl.get_undeclared_template_variables())
     print(f"Template variables ({len(undeclared)}): {undeclared}")
 
-    # Contract assertion: drf_linkages + is_dnd_position MUST be present in the
-    # template's declared variables. Catches a missing section at build time,
-    # not at first export.
-    required_new_vars = {"drf_linkages", "is_dnd_position"}
+    # Contract assertion: drf_linkages MUST be present in the template's
+    # declared variables. Catches a missing section at build time, not at
+    # first export. is_dnd_position is no longer required by the DOCX
+    # template (Plan 09-04 revised design — the gate moved to
+    # drf_linkages|length > 0) but it is still passed in the context dict
+    # by export_service._build_context for any future template work.
+    required_new_vars = {"drf_linkages"}
     missing = required_new_vars - set(undeclared)
     if missing:
         raise AssertionError(
