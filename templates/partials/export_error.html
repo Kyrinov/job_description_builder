@@ -1,4 +1,5 @@
-{# HTMX partial: export blocked error (Phase 8 — D-01/D-02 surfaced in UI) #}
+{# HTMX partial: export blocked error (Phase 8 — D-01/D-02 surfaced in UI,
+   Phase 08.1 — deep-link to JES page failed-factors anchor) #}
 <div id="export-result" role="alert" class="export-errors">
     <h2>Cannot export</h2>
     <p>The export was blocked because the Work Description is not ready:</p>
@@ -11,5 +12,13 @@
         <a href="/wizard/jes?wd_id={{ wd_id }}" class="button button--secondary">
             Return to JES scoring
         </a>
+        <a href="/wizard/jes?wd_id={{ wd_id }}#failed-factors" class="jes-why-blocked-link">
+            Why is this blocked?
+        </a>
+    </p>
+    <p class="muted">
+        On the JES page, you can click <strong>Retry</strong> to re-run the LLM scoring
+        for an incomplete factor, or <strong>Override</strong> to set it manually
+        (an audit trail of your override is recorded).
     </p>
 </div>
