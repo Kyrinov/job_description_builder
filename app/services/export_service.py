@@ -45,20 +45,25 @@ def validate_export_readiness(wd: WorkDescription) -> list[str]:
     """Return a list of human-readable error messages blocking export.
 
     Blocking conditions (D-01 / D-02):
-        - Any JESFactorScore with level == -1 (failed-factor sentinel)
+        - Any JESFactorScore with level == -1 (failed-factor sentinel) AND
+          advisor_adjusted=False (D-08.1-03: advisor override resolves the block)
         - Any JESFactorScore with points is None (silent-zero bug at
           jes_service.py:76-77 — the LLM returned a degree that did not
-          map to a value in the point_values dict)
+          map to a value in the point_values dict) AND advisor_adjusted=False
         - No JES scores recorded at all
 
     Returns [] when the WD is ready to export.
     """
     errors: list[str] = []
     for s in wd.jes_scores:
+        # D-08.1-03: advisor override resolves the block — skip the failure check
+        if s.advisor_adjusted:
+            continue
         if s.level == -1 or s.points is None:
             errors.append(
                 f"JES factor {s.factor_name!r} is incomplete "
-                f"(level={s.level}, points={s.points}) — return to JES scoring."
+                f"(level={s.level}, points={s.points}) — return to JES scoring "
+                f"or apply advisor override."
             )
     if not wd.jes_scores:
         errors.append("No JES factors scored — complete JES scoring before export.")

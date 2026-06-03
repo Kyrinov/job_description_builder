@@ -434,3 +434,203 @@ def test_docx_route_htmx_returns_error_partial_when_blocked(
     assert "Cannot export" in body
     assert "export-error" in body or "export-errors" in body
     assert "Communication" in body
+
+
+# ---------------------------------------------------------------------------
+# Phase 08.1: validator accepts advisor_adjusted factors (D-08.1-03)
+# ---------------------------------------------------------------------------
+
+
+def _make_advisor_adjusted_wd(db_path: str, *, with_override: bool) -> str:
+    """Build a WD with one failed factor; optionally mark it advisor_adjusted."""
+    from datetime import date
+
+    from app.db import get_connection
+    from app.models.work_description import (
+        DraftDuty,
+        DraftText,
+        JESFactorScore,
+        NOCMatch,
+        OGRecommendation,
+        ProvenanceTag,
+        WorkDescription,
+    )
+    from app.services.wd_store import save_work_description
+
+    conn = get_connection(db_path)
+    noc_prov = ProvenanceTag(
+        source_type="NOC", source_id="41401",
+        source_version="NOC 2021 v1.0", retrieved_date=date.today(),
+    )
+    confirmed_noc = NOCMatch(
+        noc_code="41401",
+        noc_title="Economists and economic policy researchers and analysts",
+        teer_level="1", confidence=0.9, rationale="Strong match",
+        matched_duty_statements=["Conduct economic analysis."],
+        provenance=noc_prov,
+    )
+    og_prov = ProvenanceTag(
+        source_type="TBS_OG_DEF", source_id="EC",
+        source_version="TBS-OCHRO-OG.txt", retrieved_date=date.today(),
+    )
+    og_recommendation = OGRecommendation(
+        og_code="EC", og_name="Economics and Social Science Services",
+        level="EC-05", confidence=0.85,
+        rationale="Policy work directed to Canadians",
+        provenance=og_prov, confirmed_by_advisor=True,
+    )
+    org_ctx = DraftText(
+        text="Operates within the Policy Branch.",
+        provenance=og_prov,
+    )
+    duty_prov = ProvenanceTag(
+        source_type="NOC", source_id="41401",
+        source_version="NOC 2021 v1.0", retrieved_date=date.today(),
+    )
+    draft_duties = [
+        DraftDuty(
+            text="Conduct economic analysis of policy options.",
+            provenance=duty_prov,
+        ),
+    ]
+    jes_prov_1 = ProvenanceTag(
+        source_type="JES", source_id="EC/Decision making",
+        source_version="JES v1.0", retrieved_date=date.today(),
+    )
+    jes_prov_2 = ProvenanceTag(
+        source_type="JES", source_id="EC/Communication",
+        source_version="JES v1.0", retrieved_date=date.today(),
+    )
+    if with_override:
+        # Communication is the sentinel BUT marked advisor_adjusted (override applied)
+        jes_scores = [
+            JESFactorScore(
+                factor_name="Decision making", level=3, points=35,
+                rationale="High latitude",
+                provenance=jes_prov_1,
+            ),
+            JESFactorScore(
+                factor_name="Communication", level=2, points=30,
+                rationale="Explains findings",
+                provenance=ProvenanceTag(
+                    source_type="ADVISOR", source_id="EC/Communication",
+                    source_version="advisor manual override",
+                    retrieved_date=date.today(),
+                    modified_by_advisor=True,
+                ),
+                advisor_adjusted=True,
+                advisor_adjusted_level=2,
+                advisor_adjustment_rationale=(
+                    "Communications align with the role's writing duties."
+                ),
+            ),
+        ]
+        jes_total_points = 65
+    else:
+        # Communication is the sentinel and NOT advisor_adjusted (blocks)
+        jes_scores = [
+            JESFactorScore(
+                factor_name="Decision making", level=3, points=35,
+                rationale="High latitude",
+                provenance=jes_prov_1,
+            ),
+            JESFactorScore(
+                factor_name="Communication", level=-1, points=None,
+                rationale="Scoring failed after 3 retries",
+                provenance=jes_prov_2,
+            ),
+        ]
+        jes_total_points = 35
+    wd = WorkDescription(
+        session_id="test-session-advisor",
+        raw_input="Develops policy options for senior management.",
+        position_title="Senior Policy Analyst",
+        position_number="12345",
+        og_level="EC-05",
+        supervisor_title="Manager, Policy",
+        supervisor_position_number="00001",
+        review_date=date(2026, 6, 2),
+        organizational_context=org_ctx,
+        confirmed_noc=confirmed_noc,
+        og_recommendation=og_recommendation,
+        confirmed_og="EC",
+        confirmed_level="EC-05",
+        draft_duties=draft_duties,
+        jes_scores=jes_scores,
+        jes_total_points=jes_total_points,
+        stage="jes_scored",
+    )
+    save_work_description(conn, wd)
+    conn.close()
+    return str(wd.id)
+
+
+def test_validator_accepts_advisor_adjusted_factor(export_db):
+    """D-08.1-03: validate_export_readiness returns [] when a failed factor
+    is marked advisor_adjusted=True (the override IS the resolution)."""
+    try:
+        from app.services.export_service import validate_export_readiness
+    except ImportError:
+        pytest.skip("export_service not yet implemented")
+
+    from app.db import get_connection
+    from app.services.wd_store import load_work_description
+
+    wd_id = _make_advisor_adjusted_wd(export_db, with_override=True)
+    conn = get_connection(export_db)
+    try:
+        wd = load_work_description(conn, wd_id)
+    finally:
+        conn.close()
+    assert wd is not None
+
+    errors = validate_export_readiness(wd)
+    assert errors == []
+
+
+def test_validator_still_rejects_unoverridden_failure(export_db):
+    """D-08.1-03: validate_export_readiness still returns errors for an
+    unoverridden factor (advisor_adjusted=False) with level=-1 / points=None."""
+    try:
+        from app.services.export_service import validate_export_readiness
+    except ImportError:
+        pytest.skip("export_service not yet implemented")
+
+    from app.db import get_connection
+    from app.services.wd_store import load_work_description
+
+    wd_id = _make_advisor_adjusted_wd(export_db, with_override=False)
+    conn = get_connection(export_db)
+    try:
+        wd = load_work_description(conn, wd_id)
+    finally:
+        conn.close()
+    assert wd is not None
+
+    errors = validate_export_readiness(wd)
+    assert isinstance(errors, list)
+    assert len(errors) > 0
+    assert any("Communication" in e for e in errors)
+
+
+def test_validator_message_mentions_override_option(export_db):
+    """D-08.1-03: the validator's error message for an unoverridden failure
+    mentions the override option so the user knows about the recovery path."""
+    try:
+        from app.services.export_service import validate_export_readiness
+    except ImportError:
+        pytest.skip("export_service not yet implemented")
+
+    from app.db import get_connection
+    from app.services.wd_store import load_work_description
+
+    wd_id = _make_advisor_adjusted_wd(export_db, with_override=False)
+    conn = get_connection(export_db)
+    try:
+        wd = load_work_description(conn, wd_id)
+    finally:
+        conn.close()
+    assert wd is not None
+
+    errors = validate_export_readiness(wd)
+    assert any("override" in e.lower() or "advisor" in e.lower() for e in errors)
