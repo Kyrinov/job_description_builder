@@ -352,3 +352,388 @@ class TestJESInstructorClient:
             pytest.skip("app.ai.jes_scoring not yet implemented")
 
         assert jes_instructor_client is not None
+
+
+# ---------------------------------------------------------------------------
+# Phase 08.1: per-factor retry + override (service-layer recovery paths)
+# ---------------------------------------------------------------------------
+
+
+def _make_jes_scored_wd(db_path: str, *, with_sentinel: bool = False) -> tuple:
+    """Insert a WorkDescription in stage='jes_scored' with the two EC factors.
+
+    When with_sentinel=False: both factors are fully scored (Decision making D3=35pts,
+    Communication D2=30pts; total=65).
+    When with_sentinel=True: Decision making is fully scored; Communication is the
+    failed-factor sentinel (level=-1, points=None; total=35).
+
+    Returns (wd_id, decision_factor_name, communication_factor_name).
+    """
+    try:
+        from app.db import get_connection
+        from app.models.work_description import (
+            DraftDuty, JESFactorScore, NOCMatch, OGRecommendation,
+            ProvenanceTag, WorkDescription,
+        )
+        from app.services.wd_store import save_work_description
+        from datetime import date
+    except ImportError:
+        pytest.skip("app modules not yet implemented")
+
+    conn = get_connection(db_path)
+    noc_prov = ProvenanceTag(
+        source_type="NOC", source_id="21232",
+        source_version="NOC 2021 v1.0", retrieved_date=date.today(),
+    )
+    noc_match = NOCMatch(
+        noc_code="21232", noc_title="Software engineers and designers",
+        teer_level="1", confidence=0.9, rationale="Test match",
+        matched_duty_statements=[], provenance=noc_prov,
+    )
+    og_prov = ProvenanceTag(
+        source_type="TBS_OG_DEF", source_id="EC",
+        source_version="TBS-OCHRO-OG.txt", retrieved_date=date.today(),
+    )
+    og_rec = OGRecommendation(
+        og_code="EC", og_name="Economics and Social Science Services",
+        level="EC-04", confidence=0.85, rationale="Test OG",
+        provenance=og_prov, confirmed_by_advisor=True,
+    )
+    duty_prov = ProvenanceTag(
+        source_type="NOC", source_id="21232",
+        source_version="NOC 2021 v1.0", retrieved_date=date.today(),
+    )
+    duties = [
+        DraftDuty(text="Provides economic policy analysis.", provenance=duty_prov),
+        DraftDuty(text="Conducts program evaluation research.", provenance=duty_prov),
+    ]
+    jes_prov_dm = ProvenanceTag(
+        source_type="JES", source_id="EC/Decision making",
+        source_version="JES v1.0", retrieved_date=date.today(),
+    )
+    jes_prov_cm = ProvenanceTag(
+        source_type="JES", source_id="EC/Communication",
+        source_version="JES v1.0", retrieved_date=date.today(),
+    )
+    if with_sentinel:
+        jes_scores = [
+            JESFactorScore(
+                factor_name="Decision making", level=3, points=35,
+                rationale="High latitude",
+                provenance=jes_prov_dm,
+            ),
+            JESFactorScore(
+                factor_name="Communication", level=-1, points=None,
+                rationale="Scoring failed after 3 retries: model timeout",
+                provenance=jes_prov_cm,
+            ),
+        ]
+        jes_total_points = 35
+    else:
+        jes_scores = [
+            JESFactorScore(
+                factor_name="Decision making", level=3, points=35,
+                rationale="High latitude",
+                provenance=jes_prov_dm,
+            ),
+            JESFactorScore(
+                factor_name="Communication", level=2, points=30,
+                rationale="Explains findings",
+                provenance=jes_prov_cm,
+            ),
+        ]
+        jes_total_points = 65
+    wd = WorkDescription(
+        session_id="test-session-jes-scored",
+        raw_input="Provides economic policy analysis and program evaluation.",
+        confirmed_noc=noc_match,
+        confirmed_og="EC",
+        confirmed_level="EC-04",
+        og_recommendation=og_rec,
+        draft_duties=duties,
+        jes_scores=jes_scores,
+        jes_total_points=jes_total_points,
+        stage="jes_scored",
+    )
+    save_work_description(conn, wd)
+    conn.close()
+    return str(wd.id), "Decision making", "Communication"
+
+
+def _make_jd_drafted_wd_for_retry(db_path: str) -> str:
+    """Insert a WD in stage='jd_drafted' (wrong stage for retry)."""
+    return _make_jd_drafted_wd(db_path)
+
+
+class TestRetryJESFactor:
+    def test_retry_jes_factor_replaces_failed_score(self, jes_db, monkeypatch, tmp_path):
+        """retry_jes_factor replaces the failed factor's score and recomputes total."""
+        _set_env(monkeypatch, str(jes_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from app.services.jes_service import retry_jes_factor
+            from app.services.wd_store import load_work_description
+            from app.db import get_connection
+            from app.ai.jes_scoring import JESFactorRating
+            from unittest.mock import AsyncMock, MagicMock, patch
+        except ImportError:
+            pytest.skip("retry_jes_factor dependencies not yet implemented")
+
+        wd_id, _, comm_name = _make_jes_scored_wd(str(jes_db), with_sentinel=True)
+
+        # Mock the LLM call to return a successful D2/30pts Communication rating
+        mock_rating = JESFactorRating(degree="D2", rationale="Explains findings")
+        mock_response = MagicMock()
+        mock_response.degree = "D2"
+        mock_response.rationale = "Explains findings"
+
+        async def _fake_create(*args, **kwargs):
+            return mock_response
+
+        with patch(
+            "app.services.jes_service.jes_instructor_client"
+        ) as mock_client:
+            mock_client.chat.completions.create = AsyncMock(side_effect=_fake_create)
+            import asyncio
+            result = asyncio.run(
+                retry_jes_factor(wd_id=wd_id, factor_name=comm_name, db_path=str(jes_db))
+            )
+
+        assert result["wd_id"] == wd_id
+        assert result["factor_name"] == comm_name
+        assert result["level"] == 2
+        assert result["points"] == 30
+        assert result["jes_total_points"] == 65  # 35 (Decision making) + 30 (new Communication)
+
+        # Verify the WD was saved with the replaced factor
+        conn = get_connection(str(jes_db))
+        try:
+            wd = load_work_description(conn, wd_id)
+        finally:
+            conn.close()
+        assert wd is not None
+        comm_score = next(s for s in wd.jes_scores if s.factor_name == comm_name)
+        assert comm_score.level == 2
+        assert comm_score.points == 30
+        # Order preserved: Decision making is still at index 0
+        assert wd.jes_scores[0].factor_name == "Decision making"
+        assert wd.jes_scores[1].factor_name == "Communication"
+
+    def test_retry_jes_factor_raises_on_unknown_factor(self, jes_db, monkeypatch, tmp_path):
+        """retry_jes_factor raises ValueError when factor_name not in wd.jes_scores."""
+        _set_env(monkeypatch, str(jes_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from app.services.jes_service import retry_jes_factor
+        except ImportError:
+            pytest.skip("retry_jes_factor not yet implemented")
+
+        wd_id, _, _ = _make_jes_scored_wd(str(jes_db))
+
+        import asyncio
+        with pytest.raises(ValueError, match="Nonexistent factor"):
+            asyncio.run(
+                retry_jes_factor(
+                    wd_id=wd_id, factor_name="Nonexistent factor", db_path=str(jes_db)
+                )
+            )
+
+    def test_retry_jes_factor_raises_on_wrong_stage(self, jes_db, monkeypatch, tmp_path):
+        """retry_jes_factor raises ValueError when wd.stage != 'jes_scored'."""
+        _set_env(monkeypatch, str(jes_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from app.services.jes_service import retry_jes_factor
+        except ImportError:
+            pytest.skip("retry_jes_factor not yet implemented")
+
+        wd_id = _make_jd_drafted_wd_for_retry(str(jes_db))  # stage='jd_drafted'
+
+        import asyncio
+        with pytest.raises(ValueError, match="expected 'jes_scored'"):
+            asyncio.run(
+                retry_jes_factor(
+                    wd_id=wd_id, factor_name="Decision making", db_path=str(jes_db)
+                )
+            )
+
+    def test_retry_jes_factor_preserves_old_score_on_llm_failure(
+        self, jes_db, monkeypatch, tmp_path
+    ):
+        """retry_jes_factor preserves the old score when the LLM call raises."""
+        _set_env(monkeypatch, str(jes_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from app.services.jes_service import retry_jes_factor
+            from app.services.wd_store import load_work_description
+            from app.db import get_connection
+            from unittest.mock import AsyncMock, patch
+        except ImportError:
+            pytest.skip("retry_jes_factor dependencies not yet implemented")
+
+        wd_id, _, comm_name = _make_jes_scored_wd(str(jes_db), with_sentinel=True)
+
+        async def _raise(*args, **kwargs):
+            raise RuntimeError("simulated LLM timeout")
+
+        with patch("app.services.jes_service.jes_instructor_client") as mock_client:
+            mock_client.chat.completions.create = AsyncMock(side_effect=_raise)
+            import asyncio
+            with pytest.raises(ValueError, match="Retry failed"):
+                asyncio.run(
+                    retry_jes_factor(
+                        wd_id=wd_id, factor_name=comm_name, db_path=str(jes_db)
+                    )
+                )
+
+        # Verify the old sentinel score is preserved (NOT replaced)
+        conn = get_connection(str(jes_db))
+        try:
+            wd = load_work_description(conn, wd_id)
+        finally:
+            conn.close()
+        assert wd is not None
+        comm_score = next(s for s in wd.jes_scores if s.factor_name == comm_name)
+        assert comm_score.level == -1
+        assert comm_score.points is None
+        assert "failed" in comm_score.rationale.lower()
+
+
+class TestOverrideJESFactor:
+    def test_override_jes_factor_sets_adjusted_fields(
+        self, jes_db, monkeypatch, tmp_path
+    ):
+        """override_jes_factor sets advisor_adjusted fields and flips provenance to ADVISOR."""
+        _set_env(monkeypatch, str(jes_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from app.services.jes_service import override_jes_factor
+            from app.services.wd_store import load_work_description
+            from app.db import get_connection
+        except ImportError:
+            pytest.skip("override_jes_factor dependencies not yet implemented")
+
+        wd_id, _, comm_name = _make_jes_scored_wd(str(jes_db), with_sentinel=True)
+
+        result = override_jes_factor(
+            wd_id=wd_id,
+            factor_name=comm_name,
+            level=2,
+            points=30,
+            rationale="Communications align with the role's writing duties.",
+            db_path=str(jes_db),
+        )
+
+        assert result["wd_id"] == wd_id
+        assert result["factor_name"] == comm_name
+        score = result["score"]
+        assert score.advisor_adjusted is True
+        assert score.advisor_adjusted_level == 2
+        assert score.advisor_adjustment_rationale.startswith("Communications")
+        assert score.provenance.source_type == "ADVISOR"
+        assert score.provenance.modified_by_advisor is True
+        assert score.level == 2
+        assert score.points == 30
+
+        # Verify the WD was saved
+        conn = get_connection(str(jes_db))
+        try:
+            wd = load_work_description(conn, wd_id)
+        finally:
+            conn.close()
+        assert wd is not None
+        comm_score = next(s for s in wd.jes_scores if s.factor_name == comm_name)
+        assert comm_score.advisor_adjusted is True
+
+    def test_override_jes_factor_recomputes_total(self, jes_db, monkeypatch, tmp_path):
+        """override_jes_factor recomputes jes_total_points using the new points."""
+        _set_env(monkeypatch, str(jes_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from app.services.jes_service import override_jes_factor
+        except ImportError:
+            pytest.skip("override_jes_factor not yet implemented")
+
+        wd_id, _, comm_name = _make_jes_scored_wd(str(jes_db), with_sentinel=True)
+        # Sentinel WD has Decision making=35 + Communication=-1/None; total=35
+
+        result = override_jes_factor(
+            wd_id=wd_id,
+            factor_name=comm_name,
+            level=2,
+            points=20,
+            rationale="Test rationale text here for the override.",
+            db_path=str(jes_db),
+        )
+
+        # Total should now be 35 (Decision making) + 20 (new Communication override) = 55
+        assert result["jes_total_points"] == 55
+
+    def test_override_jes_factor_raises_on_short_rationale(
+        self, jes_db, monkeypatch, tmp_path
+    ):
+        """override_jes_factor raises ValueError when rationale is < 10 chars."""
+        _set_env(monkeypatch, str(jes_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from app.services.jes_service import override_jes_factor
+        except ImportError:
+            pytest.skip("override_jes_factor not yet implemented")
+
+        wd_id, _, comm_name = _make_jes_scored_wd(str(jes_db))
+
+        with pytest.raises(ValueError, match="10 characters"):
+            override_jes_factor(
+                wd_id=wd_id,
+                factor_name=comm_name,
+                level=2,
+                points=20,
+                rationale="too short",
+                db_path=str(jes_db),
+            )
+
+    def test_override_jes_factor_raises_on_invalid_level(
+        self, jes_db, monkeypatch, tmp_path
+    ):
+        """override_jes_factor raises ValueError when level < 1."""
+        _set_env(monkeypatch, str(jes_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from app.services.jes_service import override_jes_factor
+        except ImportError:
+            pytest.skip("override_jes_factor not yet implemented")
+
+        wd_id, _, comm_name = _make_jes_scored_wd(str(jes_db))
+
+        with pytest.raises(ValueError, match="level must be an int"):
+            override_jes_factor(
+                wd_id=wd_id,
+                factor_name=comm_name,
+                level=0,
+                points=20,
+                rationale="Test rationale text here for the override.",
+                db_path=str(jes_db),
+            )
+
+    def test_override_jes_factor_raises_on_unknown_factor(
+        self, jes_db, monkeypatch, tmp_path
+    ):
+        """override_jes_factor raises ValueError when factor_name not in wd.jes_scores."""
+        _set_env(monkeypatch, str(jes_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from app.services.jes_service import override_jes_factor
+        except ImportError:
+            pytest.skip("override_jes_factor not yet implemented")
+
+        wd_id, _, _ = _make_jes_scored_wd(str(jes_db))
+
+        with pytest.raises(ValueError, match="Nonexistent factor"):
+            override_jes_factor(
+                wd_id=wd_id,
+                factor_name="Nonexistent factor",
+                level=2,
+                points=20,
+                rationale="Test rationale text here for the override.",
+                db_path=str(jes_db),
+            )
