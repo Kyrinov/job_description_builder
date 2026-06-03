@@ -1125,3 +1125,14 @@ button[aria-disabled="true"] {
     color: #666;
     margin-left: calc(var(--spacing-base, 4px));
 }
+
+/* =====================================================================
+ * Utilities (cross-cutting)
+ * Global helper classes used across multiple layers. Keep minimal —
+ * prefer layer-specific components when a class is used in only one place.
+ * ===================================================================== */
+
+.muted {
+    color: var(--color-text-muted, #555555);
+    font-size: 0.875rem;
+}

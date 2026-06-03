@@ -201,6 +201,18 @@ async def confirm_drf_linkages(
         if wd is None:
             raise ValueError(f"WorkDescription {wd_id!r} not found")
 
+        # 1a. Defensive: empty row_ids is a no-op, not a wipe (WR-03).
+        # Prevents silent data loss if the client posts an empty list due to
+        # a JS bug or unintended click. Use a separate "Clear Linkages" UX
+        # path (not yet implemented) to explicitly clear drf_linkages.
+        if not row_ids:
+            existing = wd.drf_linkages or []
+            return {
+                "wd_id": wd_id,
+                "confirmed_count": sum(1 for l in existing if l.get("confirmed")),
+                "drf_linkages": existing,
+            }
+
         # 2. Build linkages from drf_rows (one SELECT per row_id)
         linkages: list[dict] = []
         for row_id in row_ids:

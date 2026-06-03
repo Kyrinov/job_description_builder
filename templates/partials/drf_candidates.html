@@ -17,7 +17,7 @@
         {% for c in candidates %}
         <li class="drf-candidate-item">
             <label>
-                <input type="checkbox" name="candidate_ids[]" value="{{ c.id }}"
+                <input type="checkbox" class="drf-candidate-checkbox" name="candidate_ids[]" value="{{ c.id }}"
                        {% if loop.first %}checked{% endif %}>
                 <span>
                     <strong>{{ c.core_responsibility }}</strong>:
@@ -29,13 +29,14 @@
         </li>
         {% endfor %}
     </ul>
-    {# row_ids is a comma-joined string of selected checkbox values, built by inline JS on submit. #}
+    {# row_ids is a comma-joined string of selected checkbox values, built by inline JS on submit.
+       Class-based selector (avoids CSS-quoting pitfalls with name="candidate_ids[]"). #}
     <input type="hidden" name="row_ids" id="drf-row-ids-input" value="">
     <button
         type="submit"
         class="button button--primary"
         onclick="
-            const checked = document.querySelectorAll('input[name=' + 'candidate_ids' + '[]' + ']:checked');
+            const checked = document.querySelectorAll('.drf-candidate-checkbox:checked');
             document.getElementById('drf-row-ids-input').value =
                 Array.from(checked).map(el => el.value).join(',');
         ">
