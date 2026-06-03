@@ -1,0 +1,40 @@
+{# Override form partial (Phase 08.1).
+   Rendered by GET /api/jes/override/{wd_id}/{factor_name}/form.
+   Submits to POST /api/jes/override/{wd_id}/{factor_name}.
+   Variables: wd_id (str), factor_name (str), default_level (int|None),
+              default_points (int|None), error (str|None) #}
+{% set factor_slug = factor_name|lower|replace(' ', '-')|replace('/', '-')|replace('(', '')|replace(')', '') %}
+<div id="factor-{{ factor_slug }}" class="jes-factor-card jes-factor-card--override">
+    <h3 class="jes-factor-name">Override: {{ factor_name }}</h3>
+    <p class="muted">Your override is recorded with provenance <code>ADVISOR</code> and a justification you provide. The audit trail is preserved.</p>
+    <form hx-post="/api/jes/override/{{ wd_id }}/{{ factor_name|urlencode }}"
+          hx-target="#factor-{{ factor_slug }}"
+          hx-swap="outerHTML">
+        <label>
+            Level (1–4)
+            <input type="number" name="level" min="1" max="4" required value="{{ default_level or 3 }}">
+        </label>
+        <label>
+            Points (optional — leave blank for effort factors with no numeric scale)
+            <input type="number" name="points" min="0" value="{{ default_points or '' }}">
+        </label>
+        <label>
+            Rationale (required, min 10 chars — this is your audit trail)
+            <textarea name="rationale" rows="3" minlength="10" required
+                      placeholder="Justify the override based on the position duties and your HR advisor judgment."></textarea>
+        </label>
+        {% if error %}
+        <p class="export-errors" role="alert">{{ error }}</p>
+        {% endif %}
+        <div class="jes-factor-actions">
+            <button type="submit" class="button button--primary">Apply Override</button>
+            <button hx-get="/wizard/jes?wd_id={{ wd_id }}"
+                    hx-target="#factor-{{ factor_slug }}"
+                    hx-swap="outerHTML"
+                    type="button"
+                    class="button button--secondary">
+                Cancel
+            </button>
+        </div>
+    </form>
+</div>

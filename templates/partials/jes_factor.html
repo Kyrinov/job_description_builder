@@ -1,0 +1,48 @@
+{# Single JES factor card partial (Phase 08.1).
+   Top-level template (not a macro) so routes can render it directly
+   via `templates.TemplateResponse("partials/jes_factor.html", {...})`.
+   Used by:
+     - POST /api/jes/retry/{wd_id}/{factor_name} (returns this partial after retry)
+     - POST /api/jes/override/{wd_id}/{factor_name} (returns this partial after override)
+     - jes_scores.html loop in Plan 08.1-03 (uses {% include %})
+   Variables: score (JESFactorScore), wd_id (str) #}
+{% set factor_slug = score.factor_name|lower|replace(' ', '-')|replace('/', '-')|replace('(', '')|replace(')', '') %}
+<div id="factor-{{ factor_slug }}" class="jes-factor-card{% if score.advisor_adjusted %} jes-factor-card--advisor{% endif %}{% if score.level == -1 and not score.advisor_adjusted %} jes-factor-card--error{% endif %}">
+    <h3 class="jes-factor-name">{{ score.factor_name }}</h3>
+    {% if score.advisor_adjusted %}
+    <p class="jes-advisor-badge">Advisor-adjusted (D{{ score.advisor_adjusted_level }})</p>
+    {% endif %}
+    {% if score.level == -1 and not score.advisor_adjusted %}
+    <p class="jes-factor-error">Scoring failed: {{ score.rationale }}</p>
+    <div class="jes-factor-actions">
+        <button hx-post="/api/jes/retry/{{ wd_id }}/{{ score.factor_name|urlencode }}"
+                hx-target="#factor-{{ factor_slug }}"
+                hx-swap="outerHTML"
+                hx-indicator="#factor-{{ factor_slug }}-spinner"
+                class="button button--secondary">
+            Retry
+        </button>
+        <button hx-get="/api/jes/override/{{ wd_id }}/{{ score.factor_name|urlencode }}/form"
+                hx-target="#factor-{{ factor_slug }}"
+                hx-swap="outerHTML"
+                class="button button--secondary">
+            Override
+        </button>
+        <span id="factor-{{ factor_slug }}-spinner" class="htmx-indicator" aria-label="Working">…</span>
+    </div>
+    {% else %}
+    <div class="jes-factor-result">
+        <span class="jes-degree-badge">D{{ score.level }}</span>
+        {% if score.points is not none %}
+        <span class="jes-points">{{ score.points }} pts</span>
+        {% endif %}
+    </div>
+    <p class="jes-rationale">{{ score.rationale }}</p>
+    {% if score.advisor_adjusted %}
+    <p class="jes-advisor-rationale muted">Advisor rationale: {{ score.advisor_adjustment_rationale }}</p>
+    {% endif %}
+    <p class="jes-source muted">
+        Source: {{ score.provenance.source_id }} ({{ score.provenance.source_version }})
+    </p>
+    {% endif %}
+</div>
