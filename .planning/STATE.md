@@ -4,19 +4,19 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 09
 current_plan: 4
-status: executing
-last_updated: "2026-06-03T12:48:12.754Z"
+status: verifying
+last_updated: "2026-06-03T13:09:53.950Z"
 progress:
   total_phases: 10
   completed_phases: 8
   total_plans: 38
-  completed_plans: 35
-  percent: 92
+  completed_plans: 36
+  percent: 95
 ---
 
 # Project State
 
-**Status:** Ready to execute
+**Status:** Phase complete — ready for verification
 **Current phase:** 09
 **Current Plan:** 4
 **Total Plans in Phase:** 4
@@ -37,7 +37,7 @@ progress:
 | 6 | JD Generation | Not started |
 | 7 | JES Scoring | Ready to execute (4/4 plans verified) |
 | 8 | Export | Plans 08-01 + 08-02 + 08-03 + 08-04 Tasks 1+2 complete (router + templates + CTA + CSS Layer 11); 08-04 Task 3 (human-verify) next |
-| 9 | DND DRF Integration | In progress (Plans 09-01 + 09-02 complete: model + DDL + ingest script + keyword matching service; 09-03 next) |
+| 9 | DND DRF Integration | In progress (Plans 09-01 + 09-02 + 09-03 complete: model + DDL + ingest + service + API router + export integration + DOCX template; 09-04 next) |
 
 ---
 
@@ -81,6 +81,9 @@ See: `.planning/PROJECT.md`
 - --phase
 - --phase
 - --phase
+- Phase 9 router convention: drf_integration reuses jes_scoring's _map_value_error (404 for not found, 422 for other ValueErrors) for uniform IDOR handling across phase routers
+- Phase 9 export pattern: DRF ProvenanceTag is synthesized at build_version_manifest emission time (not stored on WD) — drf_linkages list already carries provenance_source_id and core/departmental_result fields
+- Phase 9 docxtpl pattern: paragraph-level {%p if is_dnd_position %} gate suppresses the entire DRF section (heading + intro + table) for non-DND positions — no empty table shell
 
 ### Active Blockers
 
@@ -115,10 +118,11 @@ See: `.planning/PROJECT.md`
 | Phase 9 P1 | 15min | 3 tasks | 4 files |
 | Phase 9 P2 | 15min | 1 task (TDD) | 2 files |
 | Phase 09 P02 | 00:12:00 | 2 tasks | 3 files |
+| Phase 09-dnd-drf-integration P03 | 7min | 3 tasks | 5 files |
 
 ## Session Continuity
 
-**Next action:** `/gsd-execute-phase 9` continues with Plan 09-03 (DRF API router + export_service extension + DOCX template rebuild)
+**Next action:** `/gsd-execute-phase 9` continues with Plan 09-04 (HTMX wizard templates + CSS Layer 13 + step_export DRF CTA + human verify)
 
 **Context for next session:**
 
@@ -184,3 +188,17 @@ See: `.planning/PROJECT.md`
 - T-08-12 mitigated by design: Content-Disposition filename is the server-set constant `work_description.docx` from the service result, never derived from user input.
 - T-08-14 mitigated by the D-08 501 short-circuit: no WeasyPrint render path reachable from the route, eliminating ARM64 risk.
 - Plan 08-04 (wizard step_export.html + partials/export_result.html + CSS layer 11 + human verify) is next.
+
+---
+
+## Update 2026-06-03T13:02:00Z — Plan 09-03 complete
+
+- `app/api/drf_integration.py` shipped (151 lines): 3 routes — `GET /api/drf-links/{wd_id}` (candidates), `POST /api/drf-links/{wd_id}/confirm` (store linkages), `POST /api/drf-links/{wd_id}/flag-dnd` (toggle is_dnd_position). HTMX dual-path on get + confirm + flag-dnd returns partials; non-HTMX returns JSON. `_map_value_error` (404/422) mirrors `app/api/jes_scoring.py` for uniform IDOR handling. `row_ids` form field parsed via `isdigit()` filter — non-integers never reach the service.
+- `app/main.py` extended: `from app.api import drf_integration` (alphabetical after export), `app.include_router(drf_integration.router)` after the export mount, and a new `wizard_drf` route at `/wizard/drf` that loads `is_dnd_position` + `drf_linkages` from the WD. `jinja2.TemplateNotFound` catch renders a placeholder until `templates/wizard/step_drf.html` ships in plan 09-04.
+- `app/services/export_service.py` extended: `_build_context()` returns `drf_linkages` (filtered to confirmed linkages on DND positions) and `is_dnd_position`. `build_version_manifest()` emits a `ProvenanceTag` per confirmed DRF linkage with `source_type='DRF'`, `source_version='DND DRF Dataset 2021-2022'`. New imports: `date` (datetime), `ProvenanceTag` (model).
+- `scripts/build_docx_template.py` extended: Section 6 ("Departmental Results Framework Linkages") with a 3-column table and the for/data/endfor in separate rows pattern. Gated by a paragraph-level `{%p if is_dnd_position %}` so the whole section disappears for non-DND positions. Build script self-asserts `drf_linkages` + `is_dnd_position` are declared template variables.
+- `templates/docx/work_description_template.docx` regenerated (37,636 bytes): 14 declared template variables (was 12). Render smoke test against `_build_context` output produces 37,426 bytes — non-empty, valid DOCX.
+- 3 task commits: `7114951` (router), `98291d7` (main.py mount + wizard route), `8433edb` (export_service + DOCX template).
+- Auto-fix (Rule 2): added `from datetime import date` and `from app.models.work_description import ProvenanceTag` imports in `export_service.py` — the plan's action block referenced both symbols but the existing imports only covered `datetime` and `WorkDescription`.
+- Full suite: 186 passed + 9 skipped (was 186 + 9, unchanged), 0 regressions. The 9 skips are the DRF surface that 09-02/09-03/09-04 collectively owns.
+- Plan 09-04 (HTMX wizard templates + CSS Layer 13 + step_export DRF CTA + human verify) is next.
