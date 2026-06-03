@@ -171,6 +171,24 @@ NOC_MAPPING_SCHEMA_DDL = """
     );
 """
 
+DRF_SCHEMA_DDL = """
+    -- DRF row cache: canonical unique DRF program rows parsed from dnd_drf_dataset.csv.
+    -- Populated by scripts/ingest_drf.py. One row per unique
+    -- (fiscal_year, core_responsibility, departmental_result) triple.
+    CREATE TABLE IF NOT EXISTS drf_rows (
+        id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+        fiscal_year           TEXT NOT NULL,
+        core_responsibility   TEXT NOT NULL,
+        departmental_result   TEXT NOT NULL,
+        search_text           TEXT NOT NULL,  -- lowercased concat of core_responsibility + ' ' + departmental_result
+        source_file           TEXT NOT NULL,
+        ingested_at           TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+        UNIQUE(fiscal_year, core_responsibility, departmental_result)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_drf_rows_cr ON drf_rows(core_responsibility);
+"""
+
 
 def get_connection(db_path: str) -> sqlite3.Connection:
     """
@@ -191,7 +209,7 @@ def get_connection(db_path: str) -> sqlite3.Connection:
 
 def create_schema(con: sqlite3.Connection) -> None:
     """
-    Create all Phase 1, Phase 2, Phase 3, and Phase 4 tables. Idempotent — safe to call on every startup.
+    Create all Phase 1, Phase 2, Phase 3, Phase 4, and Phase 9 tables. Idempotent — safe to call on every startup.
 
     Tables created here:
     - work_descriptions: one row per WorkDescription entity (data stored as JSON)
@@ -204,6 +222,7 @@ def create_schema(con: sqlite3.Connection) -> None:
     - og_definitions, idx_og_definitions_code, idx_og_definitions_parent: TBS OCHRO OG definitions (Phase 5, CLASS-01)
     - noc_mapping_cache: SHA-256-keyed result cache for the NL→NOC pipeline (Phase 4)
     - noc_mapping_log: per-request flywheel metrics (Phase 4)
+    - drf_rows, idx_drf_rows_cr: DRF program rows from the DND DRF dataset (Phase 9, DRF-01)
     """
     con.executescript("""
         CREATE TABLE IF NOT EXISTS work_descriptions (
@@ -235,6 +254,8 @@ def create_schema(con: sqlite3.Connection) -> None:
     con.executescript(CA_JES_SCHEMA_DDL)
     con.commit()
     con.executescript(NOC_MAPPING_SCHEMA_DDL)
+    con.commit()
+    con.executescript(DRF_SCHEMA_DDL)
     con.commit()
 
 
