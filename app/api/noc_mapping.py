@@ -66,11 +66,17 @@ async def map_noc(request: Request, body: WorkDescriptionRequest):
                     detail=f"WorkDescription {body.wd_id!r} not found",
                 )
         else:
+            # Prototype is DND-only: every new WorkDescription is created with
+            # is_dnd_position=True so the DRF linkages panel on /wizard/export
+            # surfaces candidates immediately. The field remains settable in
+            # the model (and the test suite still exercises is_dnd_position=False)
+            # so a future non-DND build can be wired in without a migration.
             wd = WorkDescription(
                 id=uuid4(),
                 session_id=request.headers.get("X-Session-Id", "anonymous"),
                 raw_input=body.work_description,
                 stage="input",
+                is_dnd_position=True,
             )
 
         # Convert NOCCandidate (pipeline output) → NOCMatch (WorkDescription storage type)
