@@ -184,3 +184,32 @@ None — no external service configuration required. The inline panel is purely 
 ---
 *Phase: 09-dnd-drf-integration*
 *Completed: 2026-06-03*
+
+---
+
+## Self-Check: PASSED
+
+- `.planning/phases/09-dnd-drf-integration/09-04-SUMMARY.md` exists (15,842 bytes)
+- `bd404a3` (revert 8ffa967) commit exists
+- `e5075f2` (revert c130b6a) commit exists
+- `ccd38f8` (feat: is_dnd_position=True) commit exists
+- `641f9b9` (feat: inline panel + CSS Layer 14) commit exists
+- `ec7a7d5` (feat: remove /flag-dnd) commit exists
+- `3c89c02` (feat: DOCX Section 6 gate) commit exists
+- `437f160` (test: 2 new active tests) commit exists
+- `e03978f` (docs: this SUMMARY) commit exists
+- `templates/wizard/step_drf.html` deleted (confirmed via `ls`)
+- `templates/partials/drf_flag.html` deleted (confirmed via `ls`)
+- `templates/partials/drf_candidates.html` exists (new version, 41 lines)
+- `templates/partials/drf_confirmed.html` exists (new version, 32 lines)
+- `templates/wizard/step_export.html` has 5 references to `drf-inline-panel`/`drf-linkages-panel`
+- `app/main.py` has 0 references to `/wizard/drf` (route removed)
+- `app/api/drf_integration.py` has 0 active `/flag-dnd` route registrations (only a docstring note)
+- `app/api/noc_mapping.py` sets `is_dnd_position=True` on WD creation
+- `app/static/css/main.css` has "Layer 14" header comment + section header
+- `scripts/build_docx_template.py` uses `{%p if drf_linkages|length > 0 %}` gate
+- `tests/test_drf.py` has 2 new active tests in `TestDRFInlinePanel`
+- Full suite: 188 passed, 9 skipped, 0 regressions
+- ROADMAP.md Phase 9 row: 4/4 Complete with 2026-06-03 date
+- STATE.md: phase 9 marked Complete, plan 09-04 in performance metrics
+- REQUIREMENTS.md DRF-01: Complete with all 4 plans called out
