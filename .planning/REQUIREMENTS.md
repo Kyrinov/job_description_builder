@@ -240,18 +240,66 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 
 ## Traceability
 
-*To be filled in by gsd-roadmapper after roadmap creation.*
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | API-01 | Phase 10 | Complete |
 | API-05 | Phase 10 | Complete |
 | FE-02 | Phase 10 | Complete |
+| DATA-01 | Phase 11 | Pending |
+| DATA-02 | Phase 11 | Pending |
+| QUES-01 | Phase 12 | Pending |
+| QUES-02 | Phase 12 | Pending |
+| QUES-03 | Phase 12 | Pending |
+| FE-01 | Phase 13 | Pending |
+| FE-03 | Phase 13 | Pending |
+| FE-04 | Phase 13 | Pending |
+| FE-05 | Phase 13 | Pending |
+| NOC-01 | Phase 14 | Pending |
+| NOC-02 | Phase 14 | Pending |
+| API-04 | Phase 14 | Pending |
+| CONVO-01 | Phase 15 | Pending |
+| CONVO-02 | Phase 15 | Pending |
+| CONVO-03 | Phase 15 | Pending |
+| CONVO-04 | Phase 15 | Pending |
+| CONVO-05 | Phase 15 | Pending |
+| API-02 | Phase 15 | Pending |
+| CLASS-01 | Phase 16 | Pending |
+| CLASS-02 | Phase 16 | Pending |
+| CLASS-03 | Phase 16 | Pending |
+| CLASS-04 | Phase 16 | Pending |
+| CLASS-05 | Phase 16 | Pending |
+| API-06 | Phase 16 | Pending |
+| API-03 | Phase 16 | Pending |
+| JES-01 | Phase 17 | Pending |
+| JES-02 | Phase 17 | Pending |
+| JES-03 | Phase 17 | Pending |
+| JES-04 | Phase 17 | Pending |
+| API-07 | Phase 17 | Pending |
+| JD-01 | Phase 18 | Pending |
+| JD-02 | Phase 18 | Pending |
+| JD-03 | Phase 18 | Pending |
+| JD-04 | Phase 18 | Pending |
+| DOC-01 | Phase 18 | Pending |
+| DOC-02 | Phase 18 | Pending |
+| DOC-03 | Phase 18 | Pending |
+| DOC-04 | Phase 18 | Pending |
+| DOC-05 | Phase 18 | Pending |
+| QUAL-01 | Phase 19 | Pending |
+| QUAL-02 | Phase 19 | Pending |
+| QUAL-03 | Phase 19 | Pending |
+| AMEND-01 | Phase 19 | Pending |
+| AMEND-02 | Phase 19 | Pending |
+| EXP-01 | Phase 20 | Pending |
+| EXP-02 | Phase 20 | Pending |
+| EXP-03 | Phase 20 | Pending |
+| API-08 | Phase 20 | Pending |
+| API-09 | Phase 20 | Pending |
 
 **Coverage:**
-- v2 requirements: 44 total (3 validated in Phase 10, 41 active)
-- Mapped to phases: TBD (roadmapper)
-- Unmapped: TBD
+- v2 requirements: 52 total (3 validated in Phase 10, 49 active)
+- Mapped to phases: 52/52
+- Unmapped: 0
+- Orphans: 0
 
 ---
-*Requirements revised: 2026-06-03 — v2.0 replanned from Phases 11–19 scrapped plan*
+*Requirements revised: 2026-06-03 — v2.0 replanned from Phases 11–19 scrapped plan; traceability updated by gsd-roadmapper 2026-06-03*

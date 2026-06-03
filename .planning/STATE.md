@@ -2,23 +2,23 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Real Guided Conversation
-current_phase: 10
-status: defining_requirements
+current_phase: 11
+status: planning
 last_updated: "2026-06-03"
 progress:
-  total_phases: TBD
+  total_phases: 11
   completed_phases: 1
   total_plans: 4
-  completed_plans: 0
-  percent: TBD
+  completed_plans: 4
+  percent: 9
 ---
 
 # Project State
 
-**Status:** Defining requirements
-**Current phase:** Phase 10 complete — requirements and roadmap being replanned
+**Status:** Roadmap defined — ready to plan Phase 11
+**Current phase:** Phase 10 complete; Phase 11 (Data Foundation) is next
 **Last updated:** 2026-06-03
-**Next action:** Complete requirements → roadmap → `/gsd-discuss-phase 11` (or `/gsd-plan-phase 11`)
+**Next action:** `/gsd-plan-phase 11` (Data Foundation — OG levels fix + CAF rank equivalence table)
 
 ---
 
@@ -26,10 +26,17 @@ progress:
 
 | # | Phase | Status |
 |---|-------|--------|
-| 10 | Project Scaffold | ✅ Complete |
-| 11+ | TBD — replanning v2.0 | Pending roadmap |
-
-**Note:** v2.0 Phases 11–19 (original plan) are scrapped. New roadmap will be created by gsd-roadmapper after requirements are defined. v1.0 phases 1–9 (incl. 8.1) are archived. See `.planning/milestones/v1.0-ROADMAP.md`.
+| 10 | Project Scaffold | ✅ Complete (2026-06-03) |
+| 11 | Data Foundation | Not started |
+| 12 | Socratic Question Bank | Not started |
+| 13 | Frontend SPA Shell | Not started |
+| 14 | NOC Pipeline | Not started |
+| 15 | Conversational UX | Not started |
+| 16 | OG Classification | Not started |
+| 17 | JES Scoring | Not started |
+| 18 | JD Composition & Live Preview | Not started |
+| 19 | Qualifications & Amendments | Not started |
+| 20 | Export | Not started |
 
 ---
 
@@ -44,7 +51,9 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 - ProvenanceTag on every exported content element — set at write time, rendered at export
 - Every content element in the exported DOCX/PDF must trace to an authoritative source citation
 - The conversational design is the UX source of truth — see `Job Description Builder/jd-builder/`
-- Deterministic classification in the main flow — no LLM dependency required to run the app
+- Evidence-based classification (NOC pipeline + OG ranker + JES scoring) replaces the hardcoded work-type picker from the prototype
+- Deterministic classification in the main flow — LLM used only for NOC justification (local via Ollama)
+- Socratic constraint: manager never selects OG directly; OG is derived from accumulated answer signals
 
 ---
 
@@ -55,13 +64,14 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 | Decision | Rationale |
 |----------|-----------|
 | v2.0 React 18 SPA over HTMX | Conversational UX needs client-side state (live preview, edit-and-revisit, clickable sections); HTMX's request-response model doesn't fit a persistent document that updates as the user types |
-| v2.0 deterministic classification over LLM | The work-type + 3-scope-question model is interpretable, instant, offline, and reproducible. The LLM-driven NOC/OG pipeline was a research bet that the conversational UX replaces |
+| v2.0 evidence-based classification (v1.0 NOC + OG + JES engine) over prototype's hardcoded work-type picker | The prototype's 3-question classifier was the wrong simplification. v1.0's pipeline is production-proven and legally traceable |
+| v2.0 Socratic question bank (design artifact first) | Questions must be designed before conversation UX is built; entries drive which input controls render in which steps |
 | v2.0 hardcoded EC JES table over LLM scoring | EC JES 2017 is a published standard with fixed degree/point scales. Hardcoding is correct, auditable, and faster than LLM. FI/IT/AS/EN use approximate totals |
 | v2.0 verb-mapping duty refinement over LLM | The refineDuty function covers common cases. Edge cases fall back to "Performs duties related to X" rather than LLM generation |
-| v2.0 PDF in scope (no 501) | The conversational UX is complete at review time; exporting to PDF is a direct template render |
+| v2.0 PDF in scope (no 501 unless ARM64 libs missing) | The conversational UX is complete at review time; exporting to PDF is a direct template render |
 | v2.0 curated hardcoded data over v1.0 ingest pipelines | NOC/OG/JES data is small enough to live in code as constants. Eliminates ingest script complexity and embedding-model-version drift |
 | v2.0 phase numbering continues from Phase 10 | Keeps a single linear history. v1.0 phases 1–9 (incl. 8.1) are archived but not renumbered |
-| v2.0 drops 10 v1.0-drafted v2 candidates (QUAL-01, CA-02/03, JES-02/03/04, EXP-02/03, MAP-03, JD-05) | These were drafted for the v1.0 wizard. The conversational design has different priorities |
+| v2.0 drops original Phases 11–19 (scrapped 2026-06-03) | Those phases were built around the prototype's hardcoded work-type picker and simplified 3-question classifier — the wrong architecture |
 
 ### Active Blockers
 
@@ -69,17 +79,14 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 ### Todos
 
-- Define REVISED v2.0 requirements with REQ-IDs (new-milestone workflow step 9 — in progress)
-- Create REVISED v2.0 roadmap via gsd-roadmapper (new-milestone workflow step 10)
-- Verify WeasyPrint Pango/Cairo system libs present on Jane (v2.0 PDF export)
-- Fix `noc_fts` DDL in `app/db.py` (v1.0 deferred debt — not carried into v2.0, archive as-is)
-- Address Starlette `TemplateResponse` deprecation warning (v1.0 deferred debt — not carried into v2.0)
-- Write v1.0 phase 02-02-SUMMARY.md (v1.0 archive gap — not blocking v2.0)
+- WeasyPrint ARM64 Pango/Cairo feasibility check on Jane before Phase 20 begins (EXP-03)
+- Confirm sqlite-vec ARM64 wheel available for v2.0 NOC pipeline (Phase 14 dependency)
 
 ### Roadmap Evolution
 
 - v1.0 closed 2026-06-03 with Phase 9 (DND DRF Integration) complete; 10 phases (1–9 incl. 8.1), 38 plans, 188 tests passing, 0 regressions
-- v2.0 begins Phase 10 (TBD) — see `.planning/ROADMAP.md` after roadmap creation
+- v2.0 Phase 10 (Project Scaffold) complete 2026-06-03; original Phases 11–19 scrapped same day
+- v2.0 replanned 2026-06-03: 10 new phases (11–20) defined; 52 requirements (49 active + 3 validated in Phase 10); 100% coverage
 
 ---
 
@@ -101,39 +108,41 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 | Metric | Value |
 |--------|-------|
-| Phases total | TBD (defined in roadmap) |
-| Phases complete | 0 |
-| Requirements | TBD (defined in step 9) |
-| Tests passing | TBD |
+| Phases total | 11 (10–20) |
+| Phases complete | 1 (Phase 10) |
+| Requirements total | 52 |
+| Requirements validated | 3 (API-01, API-05, FE-02 — Phase 10) |
+| Requirements active | 49 |
+| Tests passing | 10 (Phase 10 suite) |
 
 ---
 
 ## Session Continuity
 
-**v2.0 "Guided Conversation" milestone initialized 2026-06-03:**
+**v2.0 "Real Guided Conversation" milestone replanned 2026-06-03:**
 
-- 38 requirements across 9 categories (CONVO, CLASS, JES, DUTY, QUAL, DOC, EXP, API, FE)
-- 10 phases (10–19) defined
+- Original Phases 11–19 scrapped — hardcoded work-type picker / simplified classifier architecture was wrong
+- New Phases 11–20 defined around v1.0's production NOC + OG + JES engine
+- 52 requirements across 13 categories (DATA, QUES, NOC, CONVO, CLASS, JES, JD, DOC, QUAL, AMEND, EXP, API, FE)
+- 11 phases (10–20); Phase 10 complete; Phase 11 next
 - 100% requirement coverage; 0 unmapped; 0 orphans
-- DRF, PDF export, clipboard, and review-state checklist deferred to v2.1+
+- DRF integration deferred to v2.1 (DOC-01 notes Defence Results Linkage deferred)
 
-**Next action:** `/gsd-discuss-phase 10` (or `/gsd-plan-phase 10` to skip discussion)
+**Next action:** `/gsd-plan-phase 11`
 
-**v2.0 design source of truth:** `Job Description Builder/jd-builder/` — React 18 prototype (5 .jsx files + styles.css + JD Builder.html). All data hardcoded (DRF, WORK_TYPES, EC_ELEMENTS, DUTY_SUGGESTIONS, QUAL_DEFAULT). Classification engine: `computeClassification()` in data.jsx. Duty refinement: `refineDuty()` verb map. Live preview: document.jsx.
+**v2.0 design source of truth:** `Job Description Builder/jd-builder/` — React 18 prototype (5 .jsx files + styles.css + JD Builder.html). Visual design and conversation flow preserved; classification backing replaced by v1.0 engine.
 
-**v2.0 phase numbering:** Continues from v1.0 (Phase 9 / 8.1) → v2.0 starts at Phase 10.
+**v2.0 build order (new phases):**
 
-**v1.0 reference:** `.planning/milestones/v1.0-ROADMAP.md`, `.planning/milestones/v1.0-REQUIREMENTS.md`. v1.0 code is preserved in `app/` and may be referenced but not extended.
+- Phase 11: Data Foundation — fix OG_LEVELS, encode CAF rank table — DATA-01, DATA-02
+- Phase 12: Socratic Question Bank — question bank artifact (design-first) — QUES-01, QUES-02, QUES-03
+- Phase 13: Frontend SPA Shell — port 5 JSX files, brand styles, state, localStorage — FE-01, FE-03, FE-04, FE-05
+- Phase 14: NOC Pipeline — FTS5 → embedding rerank → LLM justification + POST /api/noc/map — NOC-01, NOC-02, API-04
+- Phase 15: Conversational UX — 6-phase interview, question bank steps, revisit, phase chips, WD CRUD — CONVO-01..05, API-02
+- Phase 16: OG Classification — OG ranker, AS/EC disambiguation, level selection, hard gate, CAF advisory — CLASS-01..05, API-06, API-03
+- Phase 17: JES Scoring — EC 9-factor scoring, non-EC totals, override, scorecard render — JES-01..04, API-07
+- Phase 18: JD Composition & Live Preview — verbatim duties, provenance, orphan check, live preview, ghost placeholders — JD-01..04, DOC-01..05
+- Phase 19: Qualifications & Amendments — OG-matched defaults, editable EQ, amendment notes, DOCX appendix — QUAL-01..03, AMEND-01, AMEND-02
+- Phase 20: Export — DOCX WD + poster + PDF, version manifest, export endpoints — EXP-01, EXP-02, EXP-03, API-08, API-09
 
-**v2.0 build order (from ROADMAP.md):**
-
-- Phase 10: Project Scaffold (FastAPI + Vite + Pydantic + SQLite + Vite proxy) — API-01, API-05, FE-02
-- Phase 11: Frontend Port (port 5 JSX files + styles.css into Vite, brand styles, state, localStorage) — FE-01, FE-03, FE-04, FE-05
-- Phase 12: Conversation UX (6-phase interview, inputs, revisit, phase header, keyboard) — CONVO-01..05
-- Phase 13: Document Composition (live preview, position overview, ghosts, section edit, provenance) — DOC-01..05
-- Phase 14: Classification Engine (work-type, 3 scope, group+level, badge, rationale) — CLASS-01..05
-- Phase 15: JES Scoring (EC JES table, degree vectors, non-EC totals, scorecard) — JES-01..04
-- Phase 16: Duty Management (suggested duties, advisor capture, live refinement, verb map, visual mark) — DUTY-01..05
-- Phase 17: Qualifications (pre-filled defaults, editable, EQ section) — QUAL-01..03
-- Phase 18: Backend API Service (WD CRUD, canonical data, classification service, SQLite) — API-02, API-03, API-04
-- Phase 19: DOCX Export (docxtpl template, version manifest, export endpoint) — EXP-01
+**v1.0 reference:** `.planning/milestones/v1.0-ROADMAP.md`, `.planning/milestones/v1.0-REQUIREMENTS.md`. v1.0 code is preserved in `app/` and may be referenced for porting but not extended.
