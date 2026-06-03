@@ -2,17 +2,30 @@
 
 ## What This Is
 
-A DND-first Government of Canada job description builder for HR advisors and classification specialists. An advisor describes the work to be performed in plain language; the system maps that description to authoritative NOC profiles, suggests an occupational group and level, and generates a fully traced job description grounded in NOC, collective agreements, job evaluation standards, and TBS policy — all in a local, offline-capable HTMX wizard running on ARM64 hardware.
+A DND-first Government of Canada job description builder for HR advisors and classification specialists. An advisor describes the work in a guided conversation; the system captures the role, scope, duties, classification and qualifications, and generates a fully traced job description grounded in NOC, collective agreements, job evaluation standards, and TBS policy.
 
-v1.0 (MVP) shipped 2026-06-03. The full NL→NOC → OG → JD → JES → Export wizard is working end-to-end. V2 north star is a manager-facing experience and CA active validation once the authoritative data layer is proven.
+v1.0 (MVP, HTMX wizard) shipped 2026-06-03 and is archived. v2.0 ("Guided Conversation") is a full rewrite around a conversational React single-page application with a live document preview, deterministic rule-based classification, and DOCX + PDF export with full provenance.
 
-## Current State (v1.0)
+## Current State
 
-- **Stack:** FastAPI + HTMX 2.x + SQLite + sqlite-vec + Ollama (local) + DashScope qwen3-max (cloud Stage 3)
-- **LOC:** ~15,539 Python, 773 HTML, 1,138 CSS
-- **Tests:** 188 passing, 9 skipped
-- **Hardware:** Jetson AGX Orin "Jane" (ARM64)
-- **Data indexed:** NOC 2021 profiles (FTS5 + sqlite-vec), CA clauses per OG, JES factors per og_code, TBS Directive on Classification + Policy on People Management, DRF dataset (42 rows)
+- **v1.0 (archived):** FastAPI + HTMX 2.x + SQLite + sqlite-vec + Ollama. ~15,539 LOC Python, 188 tests passing. Reference: `.planning/milestones/v1.0-ROADMAP.md` and `.planning/milestones/v1.0-REQUIREMENTS.md`.
+- **v2.0 (active):** React 18 conversational SPA + JSON API backend. UX design source of truth: `Job Description Builder/jd-builder/`. Deterministic classification (no LLM in main flow).
+
+## Current Milestone: v2.0 Guided Conversation
+
+**Goal:** Replace the v1.0 multi-step HTMX wizard with a conversational React SPA that produces a live document preview, using deterministic rule-based classification (no LLM in the main flow), and ship DOCX + PDF export with full provenance.
+
+**Target features:**
+- Conversational left pane — 6-phase interview (Role → Focus → Level → Duties → Mission → Review)
+- Live document preview — right pane fills as user answers; sections are clickable to edit
+- Deterministic classification — work-type (EC/FI/IT/AS/EN) + 3 scope questions → group + level
+- Built-in EC JES — hardcoded 9-element scale with degree vectors for EC-04/05/06
+- Duty refinement — verb-mapping rules; advisor-added duties distinguished in provenance
+- DND DRF picker — 6 hardcoded core responsibilities with indicators
+- Qualification standard editor — default text pre-filled, editable
+- Export — DOCX, PDF, clipboard
+- JSON API backend (FastAPI) — replaces HTML routes; React SPA consumes it
+- Brand refresh — "JD Builder — National Defence" with Hanken Grotesk + Spectral typography
 
 ## Core Value
 
@@ -44,87 +57,109 @@ An HR advisor can describe work in plain language and receive a legally defensib
 - ✓ **EXP-01** — DOCX export with ProvenanceTags as citations, version manifest; PDF deferred (501) — v1.0
 - ✓ **DRF-01** — DRF linkages surfaced on /wizard/export for DND positions; confirmed linkages in DOCX Section 6 — v1.0
 
-### Active (v2 targets)
+### Active (v2.0)
 
-- [ ] **QUAL-01**: System surfaces applicable Qualification Standard for confirmed OG; pre-populates education + experience fields — requires TBS Qualification Standards dataset
-- [ ] **CA-02**: Each draft duty checked against applicable CA restriction clause; flagged items cite CA article number
-- [ ] **CA-03**: CA validation summary in exported WD (pass/flag per duty)
-- [ ] **JES-02**: Each JES factor rating cites specific duties by verbatim quote as evidence (factor-to-duty traceability)
-- [ ] **JES-03**: Deterministic point-range validator checks AI-generated totals fall within valid range per degree
-- [ ] **JES-04**: Advisor can adjust JES factor ratings; system flags divergence from AI suggestion with explanation
-- [ ] **EXP-02**: Pre-export completeness validator blocks export if mandatory TBS WD elements absent
-- [ ] **EXP-03**: Advisor review checklist with per-element sign-off timestamps in wd_audit_log
-- [ ] **MAP-03**: Advisor can override/correct NOC suggestion with manual search before confirming
-- [ ] **JD-05**: AI drafts organizational context / position overview paragraph with edit tracking
+See `.planning/REQUIREMENTS.md` for scoped requirements with REQ-IDs. v2.0 is being defined in the current milestone cycle; the 8–10 target features above will be translated into REQ-IDs in step 9 of the new-milestone workflow.
 
 ### Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Manager-facing UI | V2 goal; managers require significantly more UX work and guardrails |
-| Multi-user / multi-tenant deployment | Single-user local app for V1; auth, isolation deferred |
-| OpenAI or external LLM as primary | Ollama-first; no external API dependency for core functionality |
-| Live OASIS scraping as primary data source | Fragile in prototype; local authoritative files only |
-| Real-time CA update sync | Static dataset updated manually |
-| Staffing / competition workflow | JD builder only; downstream use in competitions is separate tooling |
+| Manager-facing UI | Deferred — single-user advisor app for v2.0; multi-role UX is a later milestone |
+| Multi-user / multi-tenant deployment | Single-user local app; auth, isolation deferred |
+| OpenAI or external LLM as primary | v2.0 classification is deterministic; LLM may return as an optional enhancement later but is not in the main flow |
+| Live OASIS scraping as primary data source | v1.0 data pipelines are archived; v2.0 uses curated, hardcoded authoritative content |
+| Real-time CA update sync | Static curated dataset; manual update only |
+| Staffing / competition workflow | JD builder only; downstream competition tooling is separate |
 | Pay band calculation | Rates of pay are reference data only |
-| Bilingualism enforcement | Flag only in v2; blocking on French translation is out of scope |
+| Bilingualism enforcement | Flag only; blocking on French translation is out of scope |
 | Grievance management workflow | This tool creates defensible WDs; it does not manage disputes |
-| WeasyPrint PDF export | PDF endpoint returns 501; ARM64 Pango/Cairo untested on Jane; DOCX is primary v1 output |
+| WeasyPrint PDF export on Jane | TBD — PDF export is a v2.0 target; ARM64 Pango/Cairo feasibility must be verified before committing to WeasyPrint vs docx2pdf vs server-side rendering |
+| **QUAL-01** (v1.0 candidate: pre-populate Qual Standard) | Dropped — drafted for v1.0 wizard; v2.0 uses pre-filled editable defaults instead of dataset-driven population |
+| **CA-02/03** (v1.0 candidate: CA active validation per duty) | Dropped — drafted for v1.0 wizard; v2.0 does not have a CA restriction-clause check in the main flow |
+| **JES-02/03/04** (v1.0 candidate: factor traceability + validator + advisor divergence) | Dropped — drafted for v1.0 LLM-driven JES; v2.0 uses hardcoded EC JES degree vectors, not LLM scoring |
+| **EXP-02/03** (v1.0 candidate: pre-export completeness + sign-off audit) | Dropped — drafted for v1.0 wizard with multi-step export gate; v2.0 has a single review step + checklist, not a pre-export gate |
+| **MAP-03** (v1.0 candidate: NOC manual override) | Dropped — drafted for v1.0 NOC mapping; v2.0 has no NOC mapping step (work-type + scope is the entry point) |
+| **JD-05** (v1.0 candidate: AI organizational context drafting) | Dropped — drafted for v1.0 LLM-driven JD; v2.0 builds the overview paragraph from advisor answers directly (no LLM) |
 
 ## Context
 
-**v1.0 delivered (2026-06-03):**
-15,539 lines Python. Full HTMX wizard from NL input to DOCX export. All 21 v1 requirements delivered. 188 tests passing.
+**v1.0 delivered (2026-06-03, archived):**
+15,539 lines Python. Full HTMX wizard from NL input to DOCX export. All 21 v1 requirements delivered. 188 tests passing. NOC 2021 FTS5 + sqlite-vec pipeline; CA / JES / policy data pipelines; LLM-driven classification via Ollama (local) + DashScope (cloud Stage 3). Full archive at `.planning/milestones/v1.0-`.
+
+**v2.0 design source of truth:**
+`Job Description Builder/jd-builder/` — a static HTML + React 18 prototype. 6 .jsx files (~900 LOC) + ~1,100 LOC CSS. Demonstrates the full conversational UX, classification engine, and live document preview. All data is hardcoded; no backend. The v2.0 build ports this design into a real React SPA + FastAPI JSON API.
+
+**v1.0 → v2.0 architectural pivot:**
+- Frontend: server-rendered HTMX wizard → React 18 single-page app
+- Classification: LLM-driven (Ollama + DashScope) → deterministic rule-based (work-type + 3 scope questions)
+- JES scoring: per-factor LLM call with instructor retry → hardcoded EC JES 9-element table with degree vectors
+- NOC mapping: FTS5 + embedding rerank + LLM justification → not in v2.0 (work-type is the entry point)
+- Data: SQLite + sqlite-vec + ingest pipelines → curated hardcoded authoritative content
+- Export: DOCX only (PDF 501) → DOCX + PDF + clipboard
 
 **Prior work (JD-Builder-Lite prototype):**
-25+ phases of iteration, full Flask + vanilla JS SPA. Lessons: OASIS scraping fragile; hardcoded paths; semantic matcher (500MB) caused 30-60s cold starts; no tests; SSL verification disabled. What worked: provenance-first design, Pydantic model contracts, medallion data architecture.
+25+ phases of iteration, full Flask + vanilla JS SPA. Lessons: OASIS scraping fragile; hardcoded paths; semantic matcher (500MB) caused 30-60s cold starts; no tests; SSL verification disabled. What worked: provenance-first design, Pydantic model contracts, medallion data architecture. v1.0 applied these lessons.
 
 **Hardware and runtime:**
 - Jetson AGX Orin "Jane" — ARM64, Linux
-- Ollama running locally (nomic-embed-text for vectors; gemma4:31b or similar for local inference)
-- DashScope qwen3-max used for Stage 3 NL→NOC justification (cloud inference)
-- $30/month API budget; Claude API available as optional enhancement
+- Local inference is optional in v2.0 (deterministic flow runs offline; LLM enhancements may be added later)
+- Claude API available as optional enhancement for any future LLM-driven features
 
-**Known technical debt entering v2:**
-- noc_fts DDL bug (UNINDEXED + content='' mismatch — deferred from Phase 4)
-- Starlette TemplateResponse deprecation warning (deferred from Phase 4)
-- 02-02-SUMMARY.md never written
+**v1.0 technical debt — not carried into v2.0:**
+- noc_fts DDL bug (UNINDEXED + content='' — deferred from Phase 4) — irrelevant; v1.0 DB archived
+- Starlette TemplateResponse deprecation warning (deferred from Phase 4) — irrelevant; v2.0 is a React SPA
+- 02-02-SUMMARY.md not written — v1.0 archive gap; v2.0 will write all phase summaries
 
 ## Constraints
 
-- **Hardware**: ARM64 (Jetson AGX Orin) — all dependencies must have ARM64 wheels; no x86-only packages
-- **AI runtime**: Ollama-first — no external API required to run the app; DashScope/Claude API are optional enhancements
-- **Data sources**: Local files only as primary source — no live scraping in production data paths
+- **Hardware**: ARM64 (Jetson AGX Orin) — all Python and Node dependencies must have ARM64 wheels; no x86-only packages
+- **AI runtime**: Deterministic in v2.0 — no external API required to run the app; LLM may return as an optional enhancement but the main flow runs fully offline
+- **Data sources**: Curated, hardcoded authoritative content for v2.0 (NOC summaries, DRF rows, JES tables, Qualification Standard defaults); v1.0 ingest pipelines are archived
 - **Policy compliance**: Output must satisfy TBS Directive on Classification requirements for a legally defensible work description
-- **Traceability**: Every content element exported must have a machine-readable source citation — non-negotiable for legal defensibility
-- **DND context**: DRF integration and DND-specific data are first-class features, not afterthoughts
+- **Traceability**: Every content element exported must have a machine-readable source citation — non-negotiable for legal defensibility; the v2.0 design encodes this in the `prov__tag` footer of the document preview
+- **DND context**: DRF integration and DND-specific data are first-class features
+- **Frontend framework**: React 18 SPA, no SSR; consumes a JSON API
+- **Backend stack**: FastAPI (Pydantic v2 models) with JSON endpoints; no HTML rendering
+- **Design fidelity**: The v2.0 React app must match the prototype in `Job Description Builder/jd-builder/` (conversation pane, live preview, classification badge, brand typography)
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| FastAPI over Flask | LLM streaming via StreamingResponse; Flask WSGI blocks during Ollama calls | ✓ Good — no blocking issues in production |
-| HTMX 2.x + Alpine.js 3.x | No build step; ~29KB combined; server-rendered wizard pattern | ✓ Good — wizard delivered in 9 phases with no JS framework overhead |
-| SQLite + sqlite-vec for app state | App state and vector search co-located; eliminates DuckDB runtime dependency | ✓ Good — single file, zero infra |
-| DashScope qwen3-max for Stage 3 | Local gemma4:31b too slow (6 min/request); cloud inference at $30/month budget | ✓ Good — acceptable latency; stays within budget |
-| instructor over raw Ollama format | Mandatory retry wrapper for local model structured output edge cases | ✓ Good — Phase 8.1 proved this essential |
-| Fresh codebase (not fork) | 25 phases of prototype debt; clean slate allows better architecture | ✓ Good — zero legacy surprises |
-| ProvenanceTag on every domain object | Set at write time, rendered at export — legal defensibility core invariant | ✓ Good — held throughout all 9 phases |
-| docxtpl for DOCX export | Python-native, ARM64 compatible, Jinja2 template model | ✓ Good — template committed as binary artifact + reproducible build script |
-| Phase 8.1 insertion | Export blocked with no recovery path when LLM produced malformed JES output | ✓ Good — retry + override closed the gap without redesigning the scoring architecture |
-| Phase 9 inline-panel design | DND-only prototype; separate /wizard/drf step was over-engineered for the use case | ✓ Good — simpler, less navigation, DRF visible at export decision point |
-| DRF DOCX gate on linkage count (not is_dnd_position) | Empty Section 6 is noise; advisor may export before confirming linkages | ✓ Good — gate is meaningful, not bureaucratic |
+| FastAPI over Flask | LLM streaming via StreamingResponse; Flask WSGI blocks during Ollama calls | ✓ Good — no blocking issues in v1.0 production |
+| HTMX 2.x + Alpine.js 3.x (v1.0) | No build step; ~29KB combined; server-rendered wizard pattern | ✓ Good for v1.0 — wizard delivered in 9 phases. Superseded by React 18 SPA in v2.0 |
+| SQLite + sqlite-vec for app state (v1.0) | App state and vector search co-located; eliminates DuckDB runtime dependency | ✓ Good for v1.0 — single file, zero infra. Archived in v2.0 |
+| DashScope qwen3-max for Stage 3 (v1.0) | Local gemma4:31b too slow (6 min/request); cloud inference at $30/month budget | ✓ Good for v1.0 — acceptable latency. v2.0 doesn't need it |
+| instructor over raw Ollama format (v1.0) | Mandatory retry wrapper for local model structured output edge cases | ✓ Good for v1.0 — Phase 8.1 proved this essential. Archived |
+| Fresh codebase (not fork) for v1.0 | 25 phases of prototype debt; clean slate allows better architecture | ✓ Good for v1.0 — zero legacy surprises. v2.0 also starts fresh |
+| ProvenanceTag on every domain object (v1.0) | Set at write time, rendered at export — legal defensibility core invariant | ✓ Good for v1.0 — held throughout all 9 phases. v2.0 carries this forward in the `prov__tag` footer pattern |
+| docxtpl for DOCX export (v1.0) | Python-native, ARM64 compatible, Jinja2 template model | ✓ Good for v1.0 — template committed as binary artifact + reproducible build script. v2.0 will use the same approach |
+| **v2.0 React 18 SPA over HTMX** | Conversational UX needs client-side state (live preview, edit-and-revisit, clickable sections); HTMX's request-response model doesn't fit a persistent document that updates as the user types | — Pending v2.0 |
+| **v2.0 deterministic classification over LLM** | The work-type + 3-scope-question model is interpretable, instant, offline, and reproducible. The LLM-driven NOC/OG pipeline was a research bet that the conversational UX replaces | — Pending v2.0 |
+| **v2.0 hardcoded EC JES table over LLM scoring** | EC JES 2017 is a published standard with fixed degree/point scales. Hardcoding is correct, auditable, and faster than LLM. FI/IT/AS/EN use approximate totals for v2.0 | — Pending v2.0 |
+| **v2.0 verb-mapping duty refinement over LLM** | The refineDuty function covers the common cases (clean up → Remediates, advise → Advises). Edge cases fall back to "Performs duties related to X" rather than LLM generation | — Pending v2.0 |
+| **v2.0 PDF in scope (no 501)** | The conversational UX is complete at review time; exporting to PDF is a direct template render, not blocked on classification ambiguity | — Pending v2.0 |
+| **v2.0 curated hardcoded data over v1.0 ingest pipelines** | NOC/OG/JES data is small enough to live in code as constants. Eliminates ingest script complexity, FTS5 indexing, and embedding-model-version drift | — Pending v2.0 |
+| **v2.0 phase numbering continues from Phase 10** | Keeps a single linear history. v1.0 phases 1–9 (incl. 8.1) are archived but not renumbered | — Pending v2.0 |
+| **v2.0 drops 10 v1.0-drafted v2 candidates (QUAL-01, CA-02/03, JES-02/03/04, EXP-02/03, MAP-03, JD-05)** | These were drafted for the v1.0 wizard. The conversational design has different priorities; carrying them forward would be a cargo-cult | — Pending v2.0 |
 
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
 
-**After each milestone:**
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd-complete-milestone`):
 1. Full review of all sections
 2. Core Value check — still the right priority?
 3. Audit Out of Scope — reasons still valid?
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-03 after v1.0 milestone*
+*Last updated: 2026-06-03 after v2.0 "Guided Conversation" milestone kickoff*
