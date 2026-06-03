@@ -9,7 +9,8 @@ v1.0 (MVP, HTMX wizard) shipped 2026-06-03 and is archived. v2.0 ("Guided Conver
 ## Current State
 
 - **v1.0 (archived):** FastAPI + HTMX 2.x + SQLite + sqlite-vec + Ollama. ~15,539 LOC Python, 188 tests passing. Reference: `.planning/milestones/v1.0-ROADMAP.md` and `.planning/milestones/v1.0-REQUIREMENTS.md`.
-- **v2.0 (active):** React 18 conversational SPA + JSON API backend. UX design source of truth: `Job Description Builder/jd-builder/`. Deterministic classification (no LLM in main flow).
+- **v2.0 (active):** React 18 conversational SPA + JSON API backend. The React prototype at `Job Description Builder/jd-builder/` is **NOT a throwaway** — it is the starting point. ~900 LOC JSX + ~1,100 LOC CSS, all working in the browser. v2.0 completes it: Vite build pipeline, FastAPI backend, DOCX export, SQLite persistence, API integration. Deterministic classification (no LLM in main flow).
+- **Phase 10 (Project Scaffold) complete** — `v2/backend/` (FastAPI + Pydantic v2 + SQLite) and `v2/frontend/` (Vite + React 18 + proxy) wired together. 10/10 tests pass; `v2/scripts/verify.sh` exits 0 with 7/7 checks. The placeholder SPA loads at `localhost:5173` and proxies `/api/*` to FastAPI on `:8000`. Conversational UX port lands in Phase 11.
 
 ## Current Milestone: v2.0 Guided Conversation
 
@@ -56,6 +57,12 @@ An HR advisor can describe work in plain language and receive a legally defensib
 - ✓ **CA-01** — CA restriction/scope/exclusion clauses pre-extracted at ingest, indexed per OG — v1.0
 - ✓ **EXP-01** — DOCX export with ProvenanceTags as citations, version manifest; PDF deferred (501) — v1.0
 - ✓ **DRF-01** — DRF linkages surfaced on /wizard/export for DND positions; confirmed linkages in DOCX Section 6 — v1.0
+
+### Validated (v2.0)
+
+- ✓ **API-01** — FastAPI app with 5 Pydantic v2 models (WorkDescription, DraftDuty, Classification, JESFactor, QualificationStandard) — validated in Phase 10 (Project Scaffold, completed 2026-06-03)
+- ✓ **API-05** — Single-file SQLite at `DB_PATH` with `work_descriptions` and `audit_log` tables (idempotent `create_schema` on lifespan startup) — validated in Phase 10 (Project Scaffold, completed 2026-06-03)
+- ✓ **FE-02** — Vite dev server proxies `/api/*` to FastAPI on a separate port (8000) with `changeOrigin: true` — validated in Phase 10 (Project Scaffold, completed 2026-06-03)
 
 ### Active (v2.0)
 
@@ -162,4 +169,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-03 after v2.0 "Guided Conversation" milestone kickoff*
+*Last updated: 2026-06-03 after Phase 10 (Project Scaffold) completion*
