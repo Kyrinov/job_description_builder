@@ -1,0 +1,36 @@
+{# HTMX partial: DRF confirmed-linkage summary table.
+   Returned by POST /api/drf-links/{wd_id}/confirm (HTMX path).
+   Renders inside #drf-linkages-panel — outer wrapper must NOT use that id.
+   Variables: wd_id, confirmed_count (int), drf_linkages (list of dicts). #}
+<div class="drf-confirmed-banner" role="status">
+    <p><strong>{{ confirmed_count }}</strong> DRF linkage(s) confirmed and stored.</p>
+    <table class="drf-linkages-table">
+        <thead>
+            <tr>
+                <th>Core Responsibility</th>
+                <th>Departmental Result</th>
+                <th>Fiscal Year</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for link in drf_linkages %}
+            <tr>
+                <td>{{ link.core_responsibility }}</td>
+                <td>{{ link.departmental_result }}</td>
+                <td>{{ link.fiscal_year }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button
+        type="button"
+        class="button button--secondary"
+        hx-get="/api/drf-links/{{ wd_id }}"
+        hx-target="#drf-linkages-panel"
+        hx-swap="innerHTML"
+        hx-indicator="#drf-refine-spinner">
+        Refine Linkages
+    </button>
+    <span id="drf-refine-spinner" class="htmx-indicator" aria-label="Loading candidates">Loading…</span>
+    <p class="muted">These linkages will appear in Section 6 of the exported Work Description.</p>
+</div>

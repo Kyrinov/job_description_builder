@@ -1,0 +1,58 @@
+{# HTMX partial: DRF candidate list with checkboxes.
+   Returned by GET /api/drf-links/{wd_id} (HTMX path).
+   Renders inside #drf-linkages-panel — outer wrapper must NOT use that id
+   (the swap target is the panel itself, and the partial's outermost content
+   becomes the new inner content of the panel).
+   Variables: wd_id, candidates (list of {id, core_responsibility,
+   departmental_result, fiscal_year, score}). #}
+<form
+    hx-post="/api/drf-links/{{ wd_id }}/confirm"
+    hx-target="#drf-linkages-panel"
+    hx-swap="innerHTML"
+    hx-indicator="#drf-confirm-spinner">
+    <input type="hidden" name="wd_id" value="{{ wd_id }}">
+    {% if candidates %}
+    <p>{{ candidates|length }} candidate(s) found. Select the linkages that apply:</p>
+    <ul class="drf-candidate-list">
+        {% for c in candidates %}
+        <li class="drf-candidate-item">
+            <label>
+                <input type="checkbox" name="candidate_ids[]" value="{{ c.id }}"
+                       {% if loop.first %}checked{% endif %}>
+                <span>
+                    <strong>{{ c.core_responsibility }}</strong>:
+                    {{ c.departmental_result }}
+                    <span class="drf-fiscal-year">({{ c.fiscal_year }})</span>
+                    <span class="drf-score-badge">{{ c.score }} match{{ "es" if c.score != 1 else "" }}</span>
+                </span>
+            </label>
+        </li>
+        {% endfor %}
+    </ul>
+    {# row_ids is a comma-joined string of selected checkbox values, built by inline JS on submit. #}
+    <input type="hidden" name="row_ids" id="drf-row-ids-input" value="">
+    <button
+        type="submit"
+        class="button button--primary"
+        onclick="
+            const checked = document.querySelectorAll('input[name=' + 'candidate_ids' + '[]' + ']:checked');
+            document.getElementById('drf-row-ids-input').value =
+                Array.from(checked).map(el => el.value).join(',');
+        ">
+        Confirm Selected Linkages
+    </button>
+    <span id="drf-confirm-spinner" class="htmx-indicator" aria-label="Confirming">Confirming…</span>
+    {% else %}
+    <p class="muted">No DRF linkages found that match the position's duties. Try reviewing the duty text and retry.</p>
+    <button
+        type="button"
+        class="button button--secondary"
+        hx-get="/api/drf-links/{{ wd_id }}"
+        hx-target="#drf-linkages-panel"
+        hx-swap="innerHTML"
+        hx-indicator="#drf-search-spinner">
+        Retry
+    </button>
+    <span id="drf-search-spinner" class="htmx-indicator" aria-label="Searching">Searching…</span>
+    {% endif %}
+</form>

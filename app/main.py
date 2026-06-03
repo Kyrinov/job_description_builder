@@ -246,11 +246,22 @@ async def wizard_jes(request: Request, wd_id: str = "") -> HTMLResponse:
 
 @app.get("/wizard/export", response_class=HTMLResponse)
 async def wizard_export(request: Request, wd_id: str = "") -> HTMLResponse:
-    """Render the export wizard step (Phase 8).
+    """Render the export wizard step (Phase 8 + Phase 9 inline DRF panel).
 
     Pre-validates the WorkDescription (D-01/D-02) so blocked exports surface a
     clear error block before the user clicks Download. The template renders the
     list of incomplete JES factors and hides the Download CTA when blocked.
+
+    When the WD is ready to export, the template also renders the inline DRF
+    linkages panel (Phase 9, DRF-01). The panel uses HTMX to fetch candidates
+    and confirm linkages against /api/drf-links/{wd_id}; the partial templates
+    (partials/drf_candidates.html + drf_confirmed.html) are returned by that
+    router and swapped into #drf-linkages-panel.
+
+    Passes drf_linkages (the persisted list — possibly empty) and
+    is_dnd_position (always True in this DND-only prototype, but kept explicit
+    for clarity) to the template. The count of confirmed linkages is computed
+    in-template via `drf_linkages|length`.
 
     Falls back to a minimal placeholder if templates/wizard/step_export.html is
     not yet present.
@@ -264,6 +275,8 @@ async def wizard_export(request: Request, wd_id: str = "") -> HTMLResponse:
 
     block_errors: list[str] = []
     wd_stage: str | None = None
+    drf_linkages: list[dict] = []
+    is_dnd_position = True  # DND-only prototype — see app/api/noc_mapping.py
     if wd_id:
         conn = await asyncio.to_thread(lambda: get_connection(settings.db_path))
         try:
@@ -272,6 +285,8 @@ async def wizard_export(request: Request, wd_id: str = "") -> HTMLResponse:
                 block_errors.append(f"WorkDescription {wd_id!r} not found.")
             else:
                 wd_stage = wd.stage
+                is_dnd_position = wd.is_dnd_position
+                drf_linkages = wd.drf_linkages or []
                 if wd.stage != "jes_scored":
                     block_errors.append(
                         f"WorkDescription is in stage {wd.stage!r}; "
@@ -290,6 +305,8 @@ async def wizard_export(request: Request, wd_id: str = "") -> HTMLResponse:
                 "wd_id": wd_id,
                 "wd_stage": wd_stage,
                 "block_errors": block_errors,
+                "drf_linkages": drf_linkages,
+                "is_dnd_position": is_dnd_position,
             },
         )
     except jinja2.TemplateNotFound:
@@ -297,53 +314,8 @@ async def wizard_export(request: Request, wd_id: str = "") -> HTMLResponse:
             "<!DOCTYPE html><html><body>"
             "<h1>Export Wizard</h1>"
             f"<p>WorkDescription ID: {wd_id or '(none)'}</p>"
-            "<p>The full template will be added in Plan 08-04.</p>"
-            "</body></html>"
-        )
-
-
-@app.get("/wizard/drf", response_class=HTMLResponse)
-async def wizard_drf(request: Request, wd_id: str = "") -> HTMLResponse:
-    """Render the DND DRF linkage wizard step (Phase 9).
-
-    Loads the WorkDescription to surface is_dnd_position and any already-confirmed
-    drf_linkages. Falls back to a placeholder if the template has not yet shipped.
-    """
-    import asyncio
-    import jinja2
-
-    from app.db import get_connection
-    from app.services.wd_store import load_work_description
-
-    is_dnd_position = False
-    confirmed_linkages: list[dict] = []
-
-    if wd_id:
-        conn = await asyncio.to_thread(lambda: get_connection(settings.db_path))
-        try:
-            wd = await asyncio.to_thread(lambda: load_work_description(conn, wd_id))
-            if wd is not None:
-                is_dnd_position = wd.is_dnd_position
-                confirmed_linkages = wd.drf_linkages or []
-        finally:
-            await asyncio.to_thread(conn.close)
-
-    try:
-        return wizard_templates.TemplateResponse(
-            "wizard/step_drf.html",
-            {
-                "request": request,
-                "wd_id": wd_id,
-                "is_dnd_position": is_dnd_position,
-                "confirmed_linkages": confirmed_linkages,
-            },
-        )
-    except jinja2.TemplateNotFound:
-        return HTMLResponse(
-            "<!DOCTYPE html><html><body>"
-            "<h1>DND DRF Integration Wizard</h1>"
-            f"<p>WorkDescription ID: {wd_id or '(none)'}</p>"
             f"<p>DND Position: {is_dnd_position}</p>"
-            "<p>The full template will be added in Plan 09-04.</p>"
+            f"<p>DRF linkages: {len(drf_linkages)}</p>"
+            "<p>The full template will be added in Plan 08-04.</p>"
             "</body></html>"
         )

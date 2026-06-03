@@ -43,6 +43,71 @@
     <p class="muted">
         PDF export is not yet available — download DOCX and convert locally.
     </p>
+
+    {# ----------------------------------------------------------------
+       Inline DRF linkages panel (Phase 9, DRF-01).
+       Always shown — the prototype is DND-only, so is_dnd_position is
+       True on every WD and there is no UI affordance to toggle it.
+       - Empty state: "Find DRF Linkages" button → GET /api/drf-links/{wd_id}
+         (HTMX response: partials/drf_candidates.html with checkbox list)
+       - Confirmed state: read-only summary table + "Refine Linkages" button
+         to reset and re-pick
+       The #drf-linkages-panel is the HTMX swap target.
+       ---------------------------------------------------------------- #}
+    <div class="drf-inline-panel" role="region" aria-label="DRF linkages">
+        <h2>DRF Linkages</h2>
+        <p>Connect this position's duties to DND's Departmental Results Framework programs and expected results.</p>
+
+        <div id="drf-linkages-panel" aria-live="polite">
+            {% if drf_linkages %}
+            {# Confirmed state — read-only summary + Refine button #}
+            <div class="drf-confirmed-banner" role="status">
+                <p><strong>{{ drf_linkages|length }}</strong> DRF linkage(s) confirmed. These will appear in Section 6 of the exported Work Description.</p>
+                <table class="drf-linkages-table">
+                    <thead>
+                        <tr>
+                            <th>Core Responsibility</th>
+                            <th>Departmental Result</th>
+                            <th>Fiscal Year</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for link in drf_linkages %}
+                        <tr>
+                            <td>{{ link.core_responsibility }}</td>
+                            <td>{{ link.departmental_result }}</td>
+                            <td>{{ link.fiscal_year }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button
+                    type="button"
+                    class="button button--secondary"
+                    hx-get="/api/drf-links/{{ wd_id }}"
+                    hx-target="#drf-linkages-panel"
+                    hx-swap="innerHTML"
+                    hx-indicator="#drf-refine-spinner">
+                    Refine Linkages
+                </button>
+                <span id="drf-refine-spinner" class="htmx-indicator" aria-label="Loading candidates">Loading…</span>
+            </div>
+            {% else %}
+            {# Empty state — Find DRF Linkages button #}
+            <p class="muted">No DRF linkages confirmed for this position yet.</p>
+            <button
+                type="button"
+                class="button button--secondary"
+                hx-get="/api/drf-links/{{ wd_id }}"
+                hx-target="#drf-linkages-panel"
+                hx-swap="innerHTML"
+                hx-indicator="#drf-search-spinner">
+                Find DRF Linkages
+            </button>
+            <span id="drf-search-spinner" class="htmx-indicator" aria-label="Searching DRF candidates">Searching…</span>
+            {% endif %}
+        </div>
+    </div>
     {% endif %}
 </section>
 {% endblock %}

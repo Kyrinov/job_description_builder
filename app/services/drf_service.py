@@ -79,7 +79,9 @@ def _score_drf_rows(drf_rows: list, duty_tokens: set[str]) -> list[dict]:
         score: int (overlap token count; >= 1)
 
     Returns candidates sorted descending by score (ties broken by id ascending
-    for deterministic ordering in tests).
+    for deterministic ordering in tests). Capped to the top 5 candidates
+    (Plan 09-04, revised inline design) so the wizard panel shows the
+    most-relevant matches rather than the entire scored list.
     """
     candidates: list[dict] = []
     for row in drf_rows:
@@ -96,7 +98,7 @@ def _score_drf_rows(drf_rows: list, duty_tokens: set[str]) -> list[dict]:
                 }
             )
     candidates.sort(key=lambda c: (-c["score"], c["id"]))
-    return candidates
+    return candidates[:5]
 
 
 # ---------------------------------------------------------------------------
