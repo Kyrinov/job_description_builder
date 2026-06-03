@@ -14,6 +14,7 @@
  *   7. HTMX indicator class
  *   8. Phase 5 OG classification components (.og-card, .og-level-select, .asec-alert, .asec-comparison, .og-confirmed-banner)
  *  11. Phase 8 Export components (.export-result, .export-hash, .export-errors)
+ *  12. Phase 08.1 JES Recovery components (.jes-factor-card--advisor, .jes-advisor-badge, .jes-factor-card--override, .jes-why-blocked-link)
  *
  * Source of token values: .planning/phases/04-nl-noc-mapping/04-UI-SPEC.md
  *   - Color: GC blue #1A4A8A (accent), GC web standards
@@ -934,4 +935,86 @@ button[aria-disabled="true"] {
 
 .export-error-card--blocking {
     background: var(--color-error-bg, #fef2f2);
+}
+
+/* =========================================================================
+   Layer 12: JES Recovery (Phase 08.1)
+   .jes-factor-card--advisor, .jes-advisor-badge, .jes-factor-card--override,
+   .jes-factor-actions, .jes-why-blocked-link, .jes-failed-link
+   ========================================================================= */
+.jes-factor-card--advisor {
+    border-inline-start: 3px solid var(--color-success-text, #059669);
+    background: var(--color-success-bg, #ecfdf5);
+}
+
+.jes-advisor-badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    background: var(--color-success-text, #059669);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.jes-advisor-rationale {
+    font-style: italic;
+    margin-block-start: 0.5rem;
+}
+
+.jes-factor-card--override {
+    border: 2px dashed var(--color-border, #e5e7eb);
+}
+
+.jes-factor-card--override form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-block-start: 0.5rem;
+}
+
+.jes-factor-card--override label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.jes-factor-card--override input,
+.jes-factor-card--override textarea {
+    padding: 0.5rem;
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: 0.25rem;
+    font: inherit;
+}
+
+.jes-factor-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-block-start: 0.5rem;
+}
+
+.jes-why-blocked-link {
+    margin-inline-start: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-text-muted, #6b7280);
+    text-decoration: underline;
+}
+
+.jes-why-blocked-link:hover {
+    color: var(--color-link, #2563eb);
+}
+
+.jes-failed-link {
+    color: var(--color-error-text, #dc2626);
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.jes-failed-link:hover {
+    color: var(--color-link, #2563eb);
 }
