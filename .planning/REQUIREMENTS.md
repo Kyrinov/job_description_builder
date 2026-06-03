@@ -74,16 +74,16 @@ v2.0 ("Guided Conversation") is a full rewrite around a conversational React SPA
 
 ### API — Backend JSON service
 
-- [ ] **API-01**: FastAPI app with Pydantic v2 models for WorkDescription, DraftDuty, Classification, JESFactor, QualificationStandard. JSON endpoints serve canonical data and accept WD submissions from the React SPA
+- [x] **API-01**: FastAPI app with Pydantic v2 models for WorkDescription, DraftDuty, Classification, JESFactor, QualificationStandard. JSON endpoints serve canonical data and accept WD submissions from the React SPA
 - [ ] **API-02**: WD CRUD endpoints: POST /api/wd (create WD from answers), GET /api/wd/{id} (load WD), PATCH /api/wd/{id} (update draft), POST /api/wd/{id}/export (render DOCX)
 - [ ] **API-03**: Canonical data endpoints: GET /api/work-types (EC/FI/IT/AS/EN list), GET /api/duties (7 suggested duties), GET /api/quals/default (EC-05 default quals text). Static curated data exposed as JSON
 - [ ] **API-04**: POST /api/classify (work-type + 3 scope answers → {code, group, level, points, factors, rationale, confidence}) — server-side mirror of the React computeClassification function; used to validate the client-side result and to drive the export
-- [ ] **API-05**: SQLite (single-file) storage for WD records and audit log. No sqlite-vec, no FTS5; v2.0 is single-user local app
+- [x] **API-05**: SQLite (single-file) storage for WD records and audit log. No sqlite-vec, no FTS5; v2.0 is single-user local app
 
 ### FE — Frontend SPA
 
 - [ ] **FE-01**: React 18 SPA (no SSR) built with Vite for fast dev + build. Multi-file structure mirrors the prototype: app.jsx, data.jsx, conversation.jsx, document.jsx, components.jsx, styles.css
-- [ ] **FE-02**: Vite dev server proxies /api to FastAPI on a separate port (e.g. 8000). Production build emits static files in dist/ that FastAPI serves
+- [x] **FE-02**: Vite dev server proxies /api to FastAPI on a separate port (e.g. 8000). Production build emits static files in dist/ that FastAPI serves
 - [ ] **FE-03**: Brand styling: Hanken Grotesk (UI), Spectral (body prose), Spline Sans Mono (eyebrow / labels). Layered CSS in styles.css, scoped to .app, .convo, .preview, .doc, .ask, .scale, .choices, .duties, .quals, .drf, .jes, .prov. Visual fidelity to the prototype is required
 - [ ] **FE-04**: Client-side state: record (committed answers), answers (per-step), stepIndex, draft (in-progress answer), reviewing, editingReturn, flashes (for fresh-section animations). useState + useMemo is sufficient; no Redux/Zustand
 - [ ] **FE-05**: Persist draft WD to localStorage on every step commit. On reload, restore the most recent in-progress WD. Provides crash-recovery for the single-user local app
@@ -122,9 +122,9 @@ v2.0 ("Guided Conversation") is a full rewrite around a conversational React SPA
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| API-01 | Phase 10 | Pending |
-| API-05 | Phase 10 | Pending |
-| FE-02 | Phase 10 | Pending |
+| API-01 | Phase 10 | Complete |
+| API-05 | Phase 10 | Complete |
+| FE-02 | Phase 10 | Complete |
 | FE-01 | Phase 11 | Pending |
 | FE-03 | Phase 11 | Pending |
 | FE-04 | Phase 11 | Pending |

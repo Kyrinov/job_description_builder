@@ -29,7 +29,7 @@ Full phase details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 
 v2.0 is a full rewrite of v1.0 around a conversational React SPA + FastAPI JSON API. The React prototype at `Job Description Builder/jd-builder/` is the UX design source of truth and the starting point for the build. v2.0 ports that prototype into a real Vite-built SPA with persistence and DOCX export.
 
-- [ ] **Phase 10: Project Scaffold** — FastAPI skeleton + Pydantic v2 models + SQLite schema + Vite + React 18 project + Vite proxy. (API-01, API-05, FE-02)
+- [x] **Phase 10: Project Scaffold** — FastAPI skeleton + Pydantic v2 models + SQLite schema + Vite + React 18 project + Vite proxy. (API-01, API-05, FE-02) (completed 2026-06-03)
 - [ ] **Phase 11: Frontend Port** — Port the 5 JSX files + styles.css into Vite; brand typography (Hanken Grotesk, Spectral, Spline Sans Mono); preserve useState/useMemo architecture; add localStorage crash-recovery. (FE-01, FE-03, FE-04, FE-05)
 - [ ] **Phase 12: Conversation UX** — 6-phase interview with 12 steps, input controls per step, click-to-revisit, phase chips header, keyboard shortcuts + auto-scroll. (CONVO-01, CONVO-02, CONVO-03, CONVO-04, CONVO-05)
 - [ ] **Phase 13: Document Composition** — Live document preview fills as answers come in; composed position overview; ghost shimmer placeholders; section click-to-edit in review; provenance footer with tags. (DOC-01, DOC-02, DOC-03, DOC-04, DOC-05)
@@ -61,13 +61,13 @@ v2.0 is a full rewrite of v1.0 around a conversational React SPA + FastAPI JSON 
 4. SQLite single-file database is created on app startup with the `work_descriptions` and `audit_log` tables present
 5. Pydantic v2 models are defined: `WorkDescription`, `DraftDuty`, `Classification`, `JESFactor`, `QualificationStandard`
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 10-01-PLAN.md — Backend Wave 0: project scaffold + test stubs (Wave 1)
-- [ ] 10-02-PLAN.md — Backend impl: Settings + SQLite + 5 Pydantic models (Wave 2)
-- [ ] 10-03-PLAN.md — Frontend scaffold: Vite + React 18 placeholder + /api proxy (Wave 1)
-- [ ] 10-04-PLAN.md — Integration: main.py + /api/health + verify.sh (Wave 3)
+- [x] 10-01-PLAN.md — Backend Wave 0: project scaffold + test stubs (Wave 1)
+- [x] 10-02-PLAN.md — Backend impl: Settings + SQLite + 5 Pydantic models (Wave 2)
+- [x] 10-03-PLAN.md — Frontend scaffold: Vite + React 18 placeholder + /api proxy (Wave 1)
+- [x] 10-04-PLAN.md — Integration: main.py + /api/health + verify.sh (Wave 3)
 
 ---
 
