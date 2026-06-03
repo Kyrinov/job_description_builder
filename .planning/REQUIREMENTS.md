@@ -41,7 +41,7 @@
 
 ### JES Scoring
 
-- [ ] **JES-01**: System generates a JES scoring sheet for the confirmed OG by making one configured local generation model call per JES factor — with the full factor descriptor and degree definitions injected fresh per call — returning a structured scoring object validated by Pydantic via `instructor` (max 3-attempt retry)
+- [x] **JES-01**: System generates a JES scoring sheet for the confirmed OG by making one configured local generation model call per JES factor — with the full factor descriptor and degree definitions injected fresh per call — returning a structured scoring object validated by Pydantic via `instructor` (max 3-attempt retry)
 
 ### CA Validation Infrastructure
 
@@ -133,7 +133,7 @@
 | JD-02 | Phase 6 | Complete | |
 | JD-03 | Phase 6 | Complete | |
 | JD-04 | Phase 6 | Complete | |
-| JES-01 | Phase 7 | Pending |
+| JES-01 | Phase 7 | Complete |
 | CA-01 | Phase 3 | Pending |
 | EXP-01 | Phase 8 | Pending |
 | DRF-01 | Phase 9 | Pending |

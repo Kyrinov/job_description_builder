@@ -169,11 +169,11 @@ Plans:
 3. `validate_export_readiness` accepts factors where `advisor_adjusted=True` AND the advisor's level/points are valid; only `level=-1` (LLM failure) or `points is None` on a non-overridden factor still blocks.
 4. The blocked-export error block (added in Phase 8 fix `38eec77`) now shows a **"Why is this blocked?"** link to the JES scoring page where the failed factors are listed; the user can resolve them inline.
 5. Tests cover: retry endpoint, override endpoint, validator accepts advisor-overridden factors, validator still rejects unoverridden failures, the override form is rendered on the card, the retry updates the factor in place.
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 Plans:
-- [ ] 08.1-01-PLAN.md — Service layer: per-factor retry, per-factor override, validator update
-- [ ] 08.1-02-PLAN.md — API: POST /api/jes/retry/{wd_id}/{factor_name}, POST /api/jes/override/{wd_id}/{factor_name}, router mount + tests
-- [ ] 08.1-03-PLAN.md — UI: per-card Retry/Override buttons, override form partial, jes_scores.html activation wiring, CSS layer 12
+- [x] 08.1-01-PLAN.md — Service layer: per-factor retry, per-factor override, validator update
+- [x] 08.1-02-PLAN.md — API: POST /api/jes/retry/{wd_id}/{factor_name}, POST /api/jes/override/{wd_id}/{factor_name}, router mount + tests
+- [x] 08.1-03-PLAN.md — UI: per-card Retry/Override buttons, override form partial, jes_scores.html activation wiring, CSS layer 12
 
 ### Phase 9: DND DRF Integration
 **Goal:** For a WorkDescription identified as a DND position, the system surfaces Departmental Results Framework program linkages — connecting the position's duties to DRF programs and expected results — sourced from the DRF CSV dataset already in `data/`.
@@ -198,6 +198,7 @@ Plans:
 | 4. NL→NOC Mapping | 4/4 | Complete | 2026-06-02 |
 | 5. OG Classification | 4/4 | Complete | 2026-06-02 |
 | 6. JD Generation | 4/4 | Complete | 2026-06-02 |
-| 7. JES Scoring | 0/4 | Not started | - |
+| 7. JES Scoring | 4/4 | Complete | 2026-06-02 |
 | 8. Export | 3/4 | In progress (08-01 + 08-02 + 08-03 complete; 08-04 Tasks 1+2 complete: wizard templates + CSS Layer 11 shipped; Task 3 human-verify pending) | - |
+| 8.1. JES Advisor Override & Per-Factor Retry | 3/3 | Complete | 2026-06-03 |
 | 9. DND DRF Integration | 0/? | Not started | - |
