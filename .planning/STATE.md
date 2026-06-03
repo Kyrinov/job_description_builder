@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_phase: 09
-current_plan: 2
+current_plan: 4
 status: executing
-last_updated: "2026-06-03T12:23:08.419Z"
+last_updated: "2026-06-03T12:48:12.754Z"
 progress:
   total_phases: 10
   completed_phases: 8
   total_plans: 38
-  completed_plans: 34
-  percent: 89
+  completed_plans: 35
+  percent: 92
 ---
 
 # Project State
 
 **Status:** Ready to execute
 **Current phase:** 09
-**Current Plan:** 2
+**Current Plan:** 4
 **Total Plans in Phase:** 4
 **Last updated:** 2026-06-03
 **Next action:** Run `/gsd-execute-phase 9` to execute Phase 9 plans
@@ -37,7 +37,7 @@ progress:
 | 6 | JD Generation | Not started |
 | 7 | JES Scoring | Ready to execute (4/4 plans verified) |
 | 8 | Export | Plans 08-01 + 08-02 + 08-03 + 08-04 Tasks 1+2 complete (router + templates + CTA + CSS Layer 11); 08-04 Task 3 (human-verify) next |
-| 9 | DND DRF Integration | In progress (Plan 09-01 complete; 09-02 next) |
+| 9 | DND DRF Integration | In progress (Plans 09-01 + 09-02 complete: model + DDL + ingest script + keyword matching service; 09-03 next) |
 
 ---
 
@@ -77,6 +77,7 @@ See: `.planning/PROJECT.md`
 | Phase 9 WorkDescription extended with is_dnd_position + drf_linkages (additive-optional, schema_version stays at 1) | Backward compatibility with existing rows in work_descriptions.data (JSON) — no migration of legacy data needed |
 | drf_rows has UNIQUE(fiscal_year, core_responsibility, departmental_result) + search_text denormalized at ingest | Avoid FTS5 dependency for Phase 9 — keyword overlap against precomputed search_text is sufficient for ~5k rows |
 | test_drf.py uses _drf_app_bootstrapped module global | Each per-phase test module owns its own rebootstrap flag — prevents module-level global races when pytest runs them in one process |
+
 - --phase
 - --phase
 - --phase
@@ -108,14 +109,16 @@ See: `.planning/PROJECT.md`
 | Phases total | 9 |
 | Phases complete | 5 |
 | Requirements mapped | 21/21 |
-| Tests passing | 180 |
+| Tests passing | 186 |
 
 ---
 | Phase 9 P1 | 15min | 3 tasks | 4 files |
+| Phase 9 P2 | 15min | 1 task (TDD) | 2 files |
+| Phase 09 P02 | 00:12:00 | 2 tasks | 3 files |
 
 ## Session Continuity
 
-**Next action:** `/gsd-execute-phase 9` continues with Plan 09-02 (DRF ingest script + matching service)
+**Next action:** `/gsd-execute-phase 9` continues with Plan 09-03 (DRF API router + export_service extension + DOCX template rebuild)
 
 **Context for next session:**
 
@@ -131,6 +134,11 @@ See: `.planning/PROJECT.md`
   - `tests/conftest.py`: `drf_db` fixture mirrors the `export_db` pattern
   - `tests/test_drf.py`: 9 skipping test stubs across 5 test classes (TestGetDRFLinks, TestConfirmDRFLinks, TestDRFMatchingService, TestDRFExport, TestDRFWizardStep) — rebootstrap uses `_drf_app_bootstrapped` global to avoid collision
   - 180 tests pass + 10 skipped (was 1 pre-existing skip; 9 new DRF stubs), 0 regressions
+- **Phase 9 Plan 09-02 complete (2026-06-03):** DND DRF service layer + ingest script (TDD RED + GREEN)
+  - `scripts/ingest_drf.py` (Task 1, pre-committed as `d5c4fea`): reads `data/departmental_results_framework/dnd_drf_dataset.csv` (utf-8-sig with cp1252 fallback for stray 0x92 bytes); INSERT OR IGNORE into `drf_rows`; idempotent; CLI args `db_path` (positional, default `$DB_PATH` or `app.db`) and `--csv` (default relative to project root). End-to-end run: 42 unique rows from 132 CSV rows.
+  - `app/services/drf_service.py` (Task 2, GREEN commit `213735d`): 241 lines, public async API `get_drf_candidates(wd_id, db_path)` + `confirm_drf_linkages(wd_id, row_ids, db_path)`. Keyword matching via `re.findall(r'[a-z]+', text)` + 32-word `STOPWORDS` frozenset. All DB calls use `asyncio.to_thread` (10 sites); default-arg closure capture in per-row loops. `provenance_source_id` format `DRF/{row_id}`.
+  - `tests/test_drf.py` (RED commit `0d0b5c1`): replaced `TestDRFMatchingService` stub (wrong function name) with `TestGetDRFCandidates` (4 tests) + `TestConfirmDRFLinkages` (2 tests). New helpers `_make_dnd_wd` + `_seed_drf_rows`. All 6 active tests pass.
+  - 186 tests pass + 9 skipped (was 180 + 10; +6 active tests, -1 stub), 0 regressions. `requirements.mark-complete DRF-01` succeeded.
 - **Phase 8 Plan 08-01 complete (2026-06-02):** Export scaffold + template artifact + 6 contract tests
   - `tests/conftest.py`: `export_db` fixture + `make_exported_wd(db_path, *, complete=True)` helper (incomplete=True produces the D-01 sentinel factor)
   - `tests/test_export.py`: 6 skipping tests for `generate_export`, `validate_export_readiness`, `build_version_manifest`
@@ -139,7 +147,7 @@ See: `.planning/PROJECT.md`
   - docxtpl table-row loops use for/data/endfor in separate rows (patch_xml regex is greedy)
 - 149 tests pass; 7 skip (including 6 new export contract tests)
 
-**Planned Phase:** 09 (DND DRF Integration) — Plan 09-01 complete; 09-02 (DRF ingest + matching service) next
+**Planned Phase:** 09 (DND DRF Integration) — Plans 09-01 + 09-02 complete; 09-03 (DRF API router + export_service extension + DOCX template rebuild) next
 
 ---
 

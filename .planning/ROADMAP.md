@@ -187,7 +187,7 @@ Plans:
 **Plans:** 4 plans
 Plans:
 - [x] 09-01-PLAN.md — Wave 1: WorkDescription model fields, DRF_SCHEMA_DDL, test stubs + drf_db fixture
-- [ ] 09-02-PLAN.md — Wave 2: scripts/ingest_drf.py + app/services/drf_service.py (keyword matching + confirmation)
+- [x] 09-02-PLAN.md — Wave 2: scripts/ingest_drf.py + app/services/drf_service.py (keyword matching + confirmation)
 - [ ] 09-03-PLAN.md — Wave 3: API router, main.py mount, export_service extension, DOCX template rebuild
 - [ ] 09-04-PLAN.md — Wave 4: HTMX wizard templates, CSS Layer 13, step_export DRF CTA, human verify
 
@@ -206,4 +206,4 @@ Plans:
 | 7. JES Scoring | 4/4 | Complete | 2026-06-02 |
 | 8. Export | 3/4 | In progress (08-01 + 08-02 + 08-03 complete; 08-04 Tasks 1+2 complete: wizard templates + CSS Layer 11 shipped; Task 3 human-verify pending) | - |
 | 8.1. JES Advisor Override & Per-Factor Retry | 3/3 | Complete | 2026-06-03 |
-| 9. DND DRF Integration | 1/4 | In progress (09-01 complete: model + DDL + 9 test stubs; 09-02 next) | - |
+| 9. DND DRF Integration | 2/4 | In progress (09-01 + 09-02 complete: model + DDL + ingest + keyword matching service; 09-03 next) | - |
