@@ -345,6 +345,20 @@ def export_db(tmp_path):
     con.close()
 
 
+@pytest.fixture
+def drf_db(tmp_path):
+    """Fresh SQLite database for Phase 9 DRF integration tests."""
+    try:
+        from app.db import create_schema, get_connection
+    except ImportError:
+        pytest.skip("app modules not yet implemented")
+    db_path = str(tmp_path / "drf_test.db")
+    conn = get_connection(db_path)
+    create_schema(conn)
+    conn.close()
+    return db_path
+
+
 def make_exported_wd(db_path: str, *, complete: bool = True) -> str:
     """
     Insert a WorkDescription in stage='jes_scored' ready for export.
