@@ -737,3 +737,141 @@ class TestOverrideJESFactor:
                 rationale="Test rationale text here for the override.",
                 db_path=str(jes_db),
             )
+
+
+# ---------------------------------------------------------------------------
+# Phase 08.1 Plan 02: per-factor retry + override HTTP routes
+# ---------------------------------------------------------------------------
+
+
+class TestRetryJESFactorRoute:
+    def test_retry_route_returns_updated_factor_card(
+        self, jes_db, monkeypatch, tmp_path
+    ):
+        """POST /api/jes/retry/{wd_id}/{Communication} (HTMX) returns 200 with
+        the updated single-card partial (no longer in error state)."""
+        _set_env(monkeypatch, str(jes_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from app.api.jes_scoring import retry_jes_factor_route  # noqa: F401
+            from app.services.jes_service import retry_jes_factor  # noqa: F401
+            from app.ai.jes_scoring import JESFactorRating
+            from fastapi.testclient import TestClient
+            from app.main import app
+            from unittest.mock import AsyncMock, MagicMock, patch
+        except ImportError:
+            pytest.skip("retry route dependencies not yet implemented")
+
+        wd_id, _, comm_name = _make_jes_scored_wd(str(jes_db), with_sentinel=True)
+
+        mock_response = MagicMock()
+        mock_response.degree = "D3"
+        mock_response.rationale = "Communicates branch-level decisions and recommendations."
+
+        async def _fake_create(*args, **kwargs):
+            return mock_response
+
+        with patch("app.services.jes_service.jes_instructor_client") as mock_client:
+            mock_client.chat.completions.create = AsyncMock(side_effect=_fake_create)
+            client = TestClient(app)
+            response = client.post(
+                f"/api/jes/retry/{wd_id}/{comm_name}",
+                headers={"HX-Request": "true"},
+            )
+
+        assert response.status_code == 200
+        body = response.text
+        # Stable HTMX target id is in the card
+        assert 'id="factor-communication"' in body
+        # Mocked degree D3 should be present
+        assert "D3" in body
+        # The card is no longer in error state (override state is also not set)
+        assert "jes-factor-card--error" not in body
+
+    def test_retry_route_404_on_unknown_factor(
+        self, jes_db, monkeypatch, tmp_path
+    ):
+        """POST /api/jes/retry/{wd_id}/NonexistentFactor returns 404 (the
+        ValueError("JES factor 'X' not found in WorkDescription") matches
+        the "not found" branch of the route's error mapping)."""
+        _set_env(monkeypatch, str(jes_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from fastapi.testclient import TestClient
+            from app.main import app
+        except ImportError:
+            pytest.skip("app.main or TestClient not importable")
+
+        wd_id, _, _ = _make_jes_scored_wd(str(jes_db))
+
+        client = TestClient(app)
+        response = client.post(
+            f"/api/jes/retry/{wd_id}/NonexistentFactor",
+            headers={"HX-Request": "true"},
+        )
+        # 404: factor_name not in wd.jes_scores — matches "not found" in
+        # the service's ValueError message
+        assert response.status_code == 404
+        body = response.text
+        assert "NonexistentFactor" in body or "not found" in body.lower()
+
+
+class TestOverrideJESFactorRoute:
+    def test_override_route_returns_advisor_adjusted_card(
+        self, jes_db, monkeypatch, tmp_path
+    ):
+        """POST /api/jes/override/{wd_id}/{Communication} (HTMX) returns 200
+        with the advisor-adjusted card (jes-factor-card--advisor + badge)."""
+        _set_env(monkeypatch, str(jes_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from fastapi.testclient import TestClient
+            from app.main import app
+        except ImportError:
+            pytest.skip("app.main or TestClient not importable")
+
+        wd_id, _, comm_name = _make_jes_scored_wd(str(jes_db), with_sentinel=True)
+
+        client = TestClient(app)
+        response = client.post(
+            f"/api/jes/override/{wd_id}/{comm_name}",
+            data={
+                "level": "2",
+                "points": "15",
+                "rationale": "Test rationale text here for the override.",
+            },
+            headers={"HX-Request": "true"},
+        )
+        assert response.status_code == 200
+        body = response.text
+        # The card is now advisor-adjusted
+        assert "jes-factor-card--advisor" in body
+        # The badge shows the override level
+        assert "Advisor-adjusted (D2)" in body
+        # The advisor rationale is rendered
+        assert "Test rationale text here" in body
+
+    def test_override_route_422_on_short_rationale(
+        self, jes_db, monkeypatch, tmp_path
+    ):
+        """POST /api/jes/override with rationale < 10 chars returns 422 and
+        re-renders the form partial with the validation error inline."""
+        _set_env(monkeypatch, str(jes_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from fastapi.testclient import TestClient
+            from app.main import app
+        except ImportError:
+            pytest.skip("app.main or TestClient not importable")
+
+        wd_id, _, comm_name = _make_jes_scored_wd(str(jes_db), with_sentinel=True)
+
+        client = TestClient(app)
+        response = client.post(
+            f"/api/jes/override/{wd_id}/{comm_name}",
+            data={"level": "2", "points": "15", "rationale": "short"},
+            headers={"HX-Request": "true"},
+        )
+        assert response.status_code == 422
+        body = response.text
+        assert "10 characters" in body
