@@ -251,9 +251,9 @@ async def generate_export(wd_id: str, db_path: str) -> dict:
         )
         if wd is None:
             raise ValueError(f"WorkDescription {wd_id!r} not found")
-        if wd.stage != "jes_scored":
+        if wd.stage not in ("jes_scored", "exported"):
             raise ValueError(
-                f"WorkDescription is in stage {wd.stage!r}, expected 'jes_scored'"
+                f"WorkDescription is in stage {wd.stage!r}, expected 'jes_scored' or 'exported'"
             )
 
         # 2. Pre-export validation gate (D-01 / D-02).
