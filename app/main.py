@@ -21,6 +21,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from app.api import drf_integration
 from app.api import export
 from app.api import health
 from app.api import jd_generation
@@ -109,6 +110,7 @@ app.include_router(og_classification.router)
 app.include_router(jd_generation.router)
 app.include_router(jes_scoring.router)
 app.include_router(export.router)
+app.include_router(drf_integration.router)
 
 # Phase 4 — static CSS file serving (UI-SPEC §CSS Architecture)
 _static_dir = os.path.join(os.path.dirname(__file__), "static")
@@ -296,5 +298,52 @@ async def wizard_export(request: Request, wd_id: str = "") -> HTMLResponse:
             "<h1>Export Wizard</h1>"
             f"<p>WorkDescription ID: {wd_id or '(none)'}</p>"
             "<p>The full template will be added in Plan 08-04.</p>"
+            "</body></html>"
+        )
+
+
+@app.get("/wizard/drf", response_class=HTMLResponse)
+async def wizard_drf(request: Request, wd_id: str = "") -> HTMLResponse:
+    """Render the DND DRF linkage wizard step (Phase 9).
+
+    Loads the WorkDescription to surface is_dnd_position and any already-confirmed
+    drf_linkages. Falls back to a placeholder if the template has not yet shipped.
+    """
+    import asyncio
+    import jinja2
+
+    from app.db import get_connection
+    from app.services.wd_store import load_work_description
+
+    is_dnd_position = False
+    confirmed_linkages: list[dict] = []
+
+    if wd_id:
+        conn = await asyncio.to_thread(lambda: get_connection(settings.db_path))
+        try:
+            wd = await asyncio.to_thread(lambda: load_work_description(conn, wd_id))
+            if wd is not None:
+                is_dnd_position = wd.is_dnd_position
+                confirmed_linkages = wd.drf_linkages or []
+        finally:
+            await asyncio.to_thread(conn.close)
+
+    try:
+        return wizard_templates.TemplateResponse(
+            "wizard/step_drf.html",
+            {
+                "request": request,
+                "wd_id": wd_id,
+                "is_dnd_position": is_dnd_position,
+                "confirmed_linkages": confirmed_linkages,
+            },
+        )
+    except jinja2.TemplateNotFound:
+        return HTMLResponse(
+            "<!DOCTYPE html><html><body>"
+            "<h1>DND DRF Integration Wizard</h1>"
+            f"<p>WorkDescription ID: {wd_id or '(none)'}</p>"
+            f"<p>DND Position: {is_dnd_position}</p>"
+            "<p>The full template will be added in Plan 09-04.</p>"
             "</body></html>"
         )
