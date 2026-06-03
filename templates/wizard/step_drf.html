@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}DRF Linkages — JD Builder{% endblock %}
+{% block content %}
+<section id="wizard-step">
+    <h1>Departmental Results Framework Linkages</h1>
+    <p>Connect this position's duties to DND's DRF programs and expected results.</p>
+
+    <input type="hidden" id="wd_id" value="{{ wd_id }}">
+
+    <!-- DND position toggle -->
+    <div class="drf-dnd-toggle" id="drf-dnd-section">
+        <p>Is this a DND (Department of National Defence) position?</p>
+        <button
+            type="button"
+            class="button {% if is_dnd_position %}button--primary{% else %}button--secondary{% endif %} drf-toggle-btn"
+            hx-post="/api/drf-links/{{ wd_id }}/flag-dnd"
+            hx-vals='{"is_dnd": "{% if is_dnd_position %}false{% else %}true{% endif %}"}'
+            hx-target="#drf-dnd-section"
+            hx-swap="outerHTML"
+            hx-indicator="#drf-flag-spinner">
+            {% if is_dnd_position %}DND Position (click to unset){% else %}Set as DND Position{% endif %}
+        </button>
+        <span id="drf-flag-spinner" class="htmx-indicator" aria-label="Updating">Updating…</span>
+    </div>
+
+    {% if is_dnd_position %}
+    <!-- DRF candidate section — only shown for DND positions -->
+    <div class="drf-candidates-section">
+        <h2>DRF Program Linkages</h2>
+        <p>The system identifies DRF programs and expected results that match this position's duties.
+           Select the linkages that apply and confirm.</p>
+
+        <div id="drf-candidates-result" aria-live="polite">
+            {% if confirmed_linkages %}
+            <div class="drf-confirmed-banner" role="status">
+                <p>{{ confirmed_linkages|length }} DRF linkage(s) confirmed.</p>
+                <ul class="drf-confirmed-list">
+                {% for link in confirmed_linkages %}
+                    <li>
+                        <strong>{{ link.core_responsibility }}</strong>:
+                        {{ link.departmental_result }}
+                        <span class="drf-fiscal-year">({{ link.fiscal_year }})</span>
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            <button
+                type="button"
+                class="button button--secondary"
+                hx-get="/api/drf-links/{{ wd_id }}"
+                hx-target="#drf-candidates-result"
+                hx-swap="innerHTML"
+                hx-indicator="#drf-search-spinner">
+                {% if confirmed_linkages %}Refresh Candidates{% else %}Find DRF Linkages{% endif %}
+            </button>
+            <span id="drf-search-spinner" class="htmx-indicator" aria-label="Searching">Searching…</span>
+        </div>
+    </div>
+    {% else %}
+    <p class="muted drf-not-dnd-notice">Set this as a DND position above to surface DRF linkages.</p>
+    {% endif %}
+
+    <hr class="wizard-divider">
+    <p>
+        <a href="/wizard/export?wd_id={{ wd_id }}" class="button button--primary">
+            Continue to Export
+        </a>
+    </p>
+</section>
+{% endblock %}

@@ -15,6 +15,7 @@
  *   8. Phase 5 OG classification components (.og-card, .og-level-select, .asec-alert, .asec-comparison, .og-confirmed-banner)
  *  11. Phase 8 Export components (.export-result, .export-hash, .export-errors)
  *  12. Phase 08.1 JES Recovery components (.jes-factor-card--advisor, .jes-advisor-badge, .jes-factor-card--override, .jes-why-blocked-link)
+ *  13. Phase 9 DRF Integration components (.drf-dnd-toggle, .drf-candidate-list, .drf-confirmed-banner, .drf-score-badge)
  *
  * Source of token values: .planning/phases/04-nl-noc-mapping/04-UI-SPEC.md
  *   - Color: GC blue #1A4A8A (accent), GC web standards
@@ -1017,4 +1018,80 @@ button[aria-disabled="true"] {
 
 .jes-failed-link:hover {
     color: var(--color-link, #2563eb);
+}
+
+/* =====================================================================
+ * Layer 13: DRF Integration (Phase 9)
+ * .drf-dnd-toggle, .drf-candidate-list, .drf-candidate-item,
+ * .drf-confirmed-banner, .drf-confirmed-list, .drf-score-badge,
+ * .drf-fiscal-year, .drf-not-dnd-notice
+ * ===================================================================== */
+
+.drf-dnd-toggle {
+    padding: calc(var(--spacing-base, 4px) * 4);
+    background: var(--color-secondary, #F5F5F5);
+    border-radius: 4px;
+    margin-bottom: calc(var(--spacing-base, 4px) * 4);
+}
+
+.drf-candidates-section {
+    margin-top: calc(var(--spacing-base, 4px) * 6);
+}
+
+.drf-candidate-list {
+    list-style: none;
+    margin: calc(var(--spacing-base, 4px) * 3) 0;
+    padding: 0;
+}
+
+.drf-candidate-item {
+    padding: calc(var(--spacing-base, 4px) * 2) 0;
+    border-bottom: 1px solid var(--color-secondary, #F5F5F5);
+}
+
+.drf-candidate-item label {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(var(--spacing-base, 4px) * 2);
+    cursor: pointer;
+}
+
+.drf-confirmed-banner {
+    padding: calc(var(--spacing-base, 4px) * 4);
+    background: #EAF4EA;
+    border-left: 4px solid #2E7D32;
+    border-radius: 4px;
+    margin-bottom: calc(var(--spacing-base, 4px) * 4);
+}
+
+.drf-confirmed-list {
+    list-style: none;
+    padding: 0;
+    margin: calc(var(--spacing-base, 4px) * 2) 0 0;
+}
+
+.drf-confirmed-list li {
+    padding: calc(var(--spacing-base, 4px)) 0;
+}
+
+.drf-score-badge {
+    font-size: 0.75rem;
+    color: var(--color-accent, #1A4A8A);
+    background: #E8EEF5;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+    margin-left: calc(var(--spacing-base, 4px) * 2);
+}
+
+.drf-fiscal-year {
+    font-size: 0.85rem;
+    color: #666;
+    margin-left: calc(var(--spacing-base, 4px));
+}
+
+.drf-not-dnd-notice {
+    font-style: italic;
+    color: #666;
+    margin-top: calc(var(--spacing-base, 4px) * 2);
 }
