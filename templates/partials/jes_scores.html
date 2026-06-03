@@ -5,23 +5,12 @@
     <p class="jes-total-points">Total Points: <strong>{{ jes_total_points }}</strong></p>
 
     {% for score in jes_scores %}
-    <div class="jes-factor-card {% if score.level == -1 %}jes-factor-card--error{% endif %}">
-        <h3 class="jes-factor-name">{{ score.factor_name }}</h3>
-        {% if score.level == -1 %}
-        <p class="jes-factor-error">Scoring failed: {{ score.rationale }}</p>
-        {% else %}
-        <div class="jes-factor-result">
-            <span class="jes-degree-badge">D{{ score.level }}</span>
-            {% if score.points is not none %}
-            <span class="jes-points">{{ score.points }} pts</span>
-            {% endif %}
-        </div>
-        <p class="jes-rationale">{{ score.rationale }}</p>
-        <p class="jes-source muted">
-            Source: {{ score.provenance.source_id }} ({{ score.provenance.source_version }})
-        </p>
+        {% if loop.first and score.level == -1 and not score.advisor_adjusted %}
+        <div id="failed-factors"></div>
         {% endif %}
-    </div>
+        {% with score=score, wd_id=wd_id %}
+        {% include "partials/jes_factor.html" %}
+        {% endwith %}
     {% endfor %}
 
     <a href="/wizard/export?wd_id={{ wd_id }}" class="button button--primary">Continue to Export</a>
