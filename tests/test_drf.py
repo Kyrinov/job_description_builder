@@ -1,27 +1,30 @@
 """
 tests/test_drf.py — Phase 9 DND DRF Integration tests.
 
-All tests skip (not error) until Plans 09-02 (ingest script + service),
-09-03 (router + API), and 09-04 (wizard step + DOCX section) land.
+Active tests (Plan 09-02 + 09-04 inline design):
+    - TestGetDRFCandidates (4 tests) — service-level get_drf_candidates contract
+    - TestConfirmDRFLinkages (2 tests) — service-level confirm_drf_linkages contract
+    - TestDRFInlinePanel (2 tests) — /wizard/export renders the inline DRF panel
 
-The contract being asserted:
-    - GET /api/drf-links/{wd_id} returns 404 for unknown WD
-    - GET /api/drf-links/{wd_id} returns 200 with empty candidates for
-      non-DND positions
-    - GET /api/drf-links/{wd_id} returns candidate list with
-      (core_responsibility, departmental_result, fiscal_year) per item
-      for DND positions
-    - POST /api/drf-links/{wd_id}/confirm stores confirmed linkages on
-      WD.drf_linkages (list of dicts)
-    - After confirm, wd.drf_linkages[0]['provenance_source_id'] matches
-      the drf_rows.id
-    - Service-level: matching uses overlap between duty text tokens and
-      the indexed drf_rows.search_text
-    - DOCX export context dict contains drf_linkages key with at least
-      1 entry when WD is DND with confirmed linkages
-    - GET /wizard/drf?wd_id=... returns "not a DND position" indicator
-      when is_dnd_position=False
-    - GET /wizard/drf?wd_id=... renders candidate list when WD is DND
+Skipping test stubs (router-level + wizard-step). The original 09-04 plan
+shipped a separate /wizard/drf route with a DND toggle; the revised 09-04
+design consolidates the DRF UI into an inline panel on /wizard/export.
+The 9 skipping tests below remain skipping because they assert behavior
+that the revised design intentionally dropped:
+    - TestGetDRFLinks (3 tests): asserts the GET /api/drf-links/{wd_id}
+      contract (404 for unknown WD, 200 for non-DND with empty list).
+      The route still exists but its response shape is covered by the
+      service-level TestGetDRFCandidates tests; the router's HTTP-level
+      wiring is exercised indirectly through the new TestDRFInlinePanel.
+    - TestConfirmDRFLinks (2 tests): same — the route exists, behavior is
+      covered by TestConfirmDRFLinkages at the service layer.
+    - TestDRFExport (1 test): would assert export_service contains DRF keys
+      in the context dict. Already verified by the 09-03 router/export
+      integration tests; the new TestDRFInlinePanel + 09-03 smoke tests
+      together cover the export path with DRF linkages.
+    - TestDRFWizardStep (2 tests): the /wizard/drf route was removed in the
+      revised design (the inline panel replaces it). These stubs are
+      permanently skipping — the URL no longer exists.
 """
 from __future__ import annotations
 
@@ -64,6 +67,8 @@ def _bootstrap_app_modules(drf_db, monkeypatch, tmp_path):
 
 # ---------------------------------------------------------------------------
 # Router contract: GET /api/drf-links/{wd_id}
+# (Skipping — see module docstring. Behavior covered by TestGetDRFCandidates
+# at the service layer + TestDRFInlinePanel at the wizard layer.)
 # ---------------------------------------------------------------------------
 
 
@@ -105,6 +110,8 @@ class TestGetDRFLinks:
 
 # ---------------------------------------------------------------------------
 # Router contract: POST /api/drf-links/{wd_id}/confirm
+# (Skipping — see module docstring. Behavior covered by
+# TestConfirmDRFLinkages at the service layer.)
 # ---------------------------------------------------------------------------
 
 
@@ -396,6 +403,9 @@ class TestConfirmDRFLinkages:
 
 # ---------------------------------------------------------------------------
 # Export contract: DOCX render includes DRF section
+# (Skipping — see module docstring. DRF section rendering in the DOCX is
+# verified by the build_docx_template.py self-verify assertion + the
+# inline panel tests + 09-03's generate_export smoke test.)
 # ---------------------------------------------------------------------------
 
 
@@ -414,6 +424,9 @@ class TestDRFExport:
 
 # ---------------------------------------------------------------------------
 # Wizard contract: GET /wizard/drf
+# (Skipping — see module docstring. The /wizard/drf route was removed in the
+# revised Plan 09-04 design; the inline DRF panel lives on /wizard/export.
+# These tests reference a deleted URL and will never activate.)
 # ---------------------------------------------------------------------------
 
 
@@ -440,3 +453,174 @@ class TestDRFWizardStep:
         except ImportError:
             pytest.skip("app.main or TestClient not importable")
         pytest.skip("not yet implemented — Phase 9 plan 09-04")
+
+
+# ---------------------------------------------------------------------------
+# Wizard contract (revised Plan 09-04 design): the DRF linkages panel is
+# INLINE on /wizard/export (not a separate /wizard/drf step). These tests
+# assert the panel renders correctly for both empty-state and confirmed-state
+# WorkDescriptions.
+#
+# Uses a per-test rebootstrap pattern: each test calls _set_env +
+# _clear_app_modules so the next import of app.main sees the test's own
+# drf_db path (the autouse _bootstrap_app_modules fixture in this module
+# is a one-shot — it does not reset env vars between tests).
+# ---------------------------------------------------------------------------
+
+
+def _make_complete_dnd_wd(
+    db_path: str,
+    *,
+    drf_linkages: list[dict] | None = None,
+) -> str:
+    """Insert a complete (export-ready) DND WorkDescription with optional DRF linkages.
+
+    stage='jes_scored' + valid jes_scores → /wizard/export renders the export
+    block (not the block_errors branch), so the inline panel is visible.
+    """
+    from datetime import date
+
+    from app.db import get_connection
+    from app.models.work_description import (
+        JESFactorScore,
+        ProvenanceTag,
+        WorkDescription,
+    )
+    from app.services.wd_store import save_work_description
+
+    conn = get_connection(db_path)
+    jes_prov = ProvenanceTag(
+        source_type="JES",
+        source_id="EC/Decision making",
+        source_version="JES v1.0",
+        retrieved_date=date.today(),
+    )
+    jes_scores = [
+        JESFactorScore(
+            factor_name="Decision making", level=3, points=35,
+            rationale="High latitude", evidence_quotes=[],
+            provenance=jes_prov,
+        ),
+    ]
+    wd = WorkDescription(
+        session_id="drf-inline-test",
+        raw_input="Coordinate operations and procurement activities.",
+        position_title="DRF Test Position",
+        og_level="EC-04",
+        jes_scores=jes_scores,
+        jes_total_points=35,
+        is_dnd_position=True,
+        drf_linkages=drf_linkages or [],
+        stage="jes_scored",
+    )
+    save_work_description(conn, wd)
+    conn.close()
+    return str(wd.id)
+
+
+class TestDRFInlinePanel:
+    """Plan 09-04 revised design: the DRF candidate-selection UI is an inline
+    panel on /wizard/export, not a separate /wizard/drf route.
+
+    Tests assert the panel renders the correct empty-state or confirmed-state
+    HTML based on wd.drf_linkages. The HTMX partials (drf_candidates.html,
+    drf_confirmed.html) are exercised indirectly by the router tests in
+    test_export.py and the drf_integration router itself.
+    """
+
+    def test_inline_panel_renders_empty_state_for_dnd_wd_with_no_linkages(
+        self, drf_db, monkeypatch, tmp_path
+    ):
+        """GET /wizard/export for a DND WD with no confirmed linkages renders
+        the inline panel with the 'Find DRF Linkages' button (no toggle, no
+        'is not a DND position' notice — the prototype is DND-only).
+        """
+        _set_env(monkeypatch, str(drf_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from fastapi.testclient import TestClient
+            from app.main import app
+        except ImportError:
+            pytest.skip("app.main or TestClient not importable")
+
+        wd_id = _make_complete_dnd_wd(str(drf_db), drf_linkages=[])
+        client = TestClient(app)
+        response = client.get(f"/wizard/export?wd_id={wd_id}")
+        assert response.status_code == 200
+        body = response.text
+
+        # Inline panel present (not the old /wizard/drf route)
+        assert "DRF Linkages" in body
+        assert "drf-inline-panel" in body
+        assert "drf-linkages-panel" in body
+        # Empty state — Find DRF Linkages button is shown
+        assert "Find DRF Linkages" in body
+        # Refine button must NOT be shown in empty state
+        assert "Refine Linkages" not in body
+        # No DND toggle (prototype is DND-only)
+        assert "Set as DND Position" not in body
+        assert "is not a DND position" not in body.lower()
+        # HTMX target points at /api/drf-links/{wd_id}
+        assert f'hx-get="/api/drf-links/{wd_id}"' in body
+
+    def test_inline_panel_renders_confirmed_table_for_dnd_wd_with_linkages(
+        self, drf_db, monkeypatch, tmp_path
+    ):
+        """GET /wizard/export for a DND WD with confirmed linkages renders
+        the inline panel with the read-only summary table + 'Refine Linkages'
+        button (not the 'Find' button).
+        """
+        _set_env(monkeypatch, str(drf_db), tmp_path)
+        _clear_app_modules()
+        try:
+            from fastapi.testclient import TestClient
+            from app.main import app
+        except ImportError:
+            pytest.skip("app.main or TestClient not importable")
+
+        wd_id = _make_complete_dnd_wd(
+            str(drf_db),
+            drf_linkages=[
+                {
+                    "core_responsibility": "Operations",
+                    "departmental_result": "Canadians are protected against threats",
+                    "fiscal_year": "2024-2025",
+                    "row_index": 1,
+                    "confirmed": True,
+                    "provenance_source_id": "DRF/1",
+                },
+                {
+                    "core_responsibility": "Procurement of Capabilities",
+                    "departmental_result": "Capabilities delivered to operations",
+                    "fiscal_year": "2024-2025",
+                    "row_index": 2,
+                    "confirmed": True,
+                    "provenance_source_id": "DRF/2",
+                },
+            ],
+        )
+        client = TestClient(app)
+        response = client.get(f"/wizard/export?wd_id={wd_id}")
+        assert response.status_code == 200
+        body = response.text
+
+        # Inline panel present
+        assert "DRF Linkages" in body
+        assert "drf-inline-panel" in body
+        # Confirmed state — read-only summary table is shown
+        assert "drf-linkages-table" in body
+        assert "Operations" in body
+        assert "Canadians are protected" in body
+        assert "Procurement of Capabilities" in body
+        # Jinja2 collapses whitespace; assert the count + phrase appear
+        # together in the rendered HTML (the inline panel shows
+        # "<strong>2</strong> DRF linkage(s) confirmed.").
+        assert ">2</strong> DRF linkage(s) confirmed" in body
+        # Refine button shown; Find button NOT shown
+        assert "Refine Linkages" in body
+        assert "Find DRF Linkages" not in body
+        # No DND toggle
+        assert "Set as DND Position" not in body
+        # No candidate checkboxes (the confirmed state shows the table, not
+        # the form). The drf_candidates.html partial is the one with checkboxes.
+        assert "candidate_ids[]" not in body
