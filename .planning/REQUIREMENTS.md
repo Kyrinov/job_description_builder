@@ -122,13 +122,50 @@ v2.0 ("Guided Conversation") is a full rewrite around a conversational React SPA
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| *(populated by gsd-roadmapper after roadmap creation)* | | |
+| API-01 | Phase 10 | Pending |
+| API-05 | Phase 10 | Pending |
+| FE-02 | Phase 10 | Pending |
+| FE-01 | Phase 11 | Pending |
+| FE-03 | Phase 11 | Pending |
+| FE-04 | Phase 11 | Pending |
+| FE-05 | Phase 11 | Pending |
+| CONVO-01 | Phase 12 | Pending |
+| CONVO-02 | Phase 12 | Pending |
+| CONVO-03 | Phase 12 | Pending |
+| CONVO-04 | Phase 12 | Pending |
+| CONVO-05 | Phase 12 | Pending |
+| DOC-01 | Phase 13 | Pending |
+| DOC-02 | Phase 13 | Pending |
+| DOC-03 | Phase 13 | Pending |
+| DOC-04 | Phase 13 | Pending |
+| DOC-05 | Phase 13 | Pending |
+| CLASS-01 | Phase 14 | Pending |
+| CLASS-02 | Phase 14 | Pending |
+| CLASS-03 | Phase 14 | Pending |
+| CLASS-04 | Phase 14 | Pending |
+| CLASS-05 | Phase 14 | Pending |
+| JES-01 | Phase 15 | Pending |
+| JES-02 | Phase 15 | Pending |
+| JES-03 | Phase 15 | Pending |
+| JES-04 | Phase 15 | Pending |
+| DUTY-01 | Phase 16 | Pending |
+| DUTY-02 | Phase 16 | Pending |
+| DUTY-03 | Phase 16 | Pending |
+| DUTY-04 | Phase 16 | Pending |
+| DUTY-05 | Phase 16 | Pending |
+| QUAL-01 | Phase 17 | Pending |
+| QUAL-02 | Phase 17 | Pending |
+| QUAL-03 | Phase 17 | Pending |
+| API-02 | Phase 18 | Pending |
+| API-03 | Phase 18 | Pending |
+| API-04 | Phase 18 | Pending |
+| EXP-01 | Phase 19 | Pending |
 
 **Coverage:**
 - v2 requirements: 38 total
-- Mapped to phases: TBD
-- Unmapped: TBD
+- Mapped to phases: 38
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-03 for v2.0 "Guided Conversation"*
-*Last updated: 2026-06-03 after initial v2.0 definition*
+*Last updated: 2026-06-03 after roadmap creation*

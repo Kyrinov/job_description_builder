@@ -4,10 +4,10 @@ milestone: v2.0
 milestone_name: Guided Conversation
 current_phase: null
 current_plan: null
-status: initializing
+status: ready
 last_updated: "2026-06-03T00:00:00.000Z"
 progress:
-  total_phases: null
+  total_phases: 10
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -16,10 +16,10 @@ progress:
 
 # Project State
 
-**Status:** 🚀 v2.0 "Guided Conversation" milestone INITIALIZING — 2026-06-03
-**Current phase:** Not started (defining requirements)
+**Status:** 🚀 v2.0 "Guided Conversation" milestone INITIALIZED — 2026-06-03
+**Current phase:** Not started (Phase 10 next)
 **Last updated:** 2026-06-03
-**Next action:** Complete new-milestone workflow (requirements → roadmap)
+**Next action:** `/gsd-discuss-phase 10` (or `/gsd-plan-phase 10` to skip discussion)
 
 ---
 
@@ -27,7 +27,16 @@ progress:
 
 | # | Phase | Status |
 |---|-------|--------|
-| — | (v2.0 phases not yet defined) | Pending |
+| 10 | Project Scaffold | Pending |
+| 11 | Frontend Port | Pending |
+| 12 | Conversation UX | Pending |
+| 13 | Document Composition | Pending |
+| 14 | Classification Engine | Pending |
+| 15 | JES Scoring | Pending |
+| 16 | Duty Management | Pending |
+| 17 | Qualifications | Pending |
+| 18 | Backend API Service | Pending |
+| 19 | DOCX Export | Pending |
 
 v1.0 phases 1–9 (incl. 8.1) are archived. See `.planning/milestones/v1.0-ROADMAP.md`.
 
@@ -110,20 +119,28 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 ## Session Continuity
 
-**Next action:** Complete `/gsd-new-milestone` workflow:
-1. ✓ Context loaded (PROJECT.md, MILESTONES.md, STATE.md, ROADMAP.md)
-2. ✓ Milestone goals gathered (full v2.0 rewrite, conversational design, 5 OG groups)
-3. ✓ Milestone version confirmed (v2.0 "Guided Conversation")
-4. ✓ Understanding summary confirmed
-5. ✓ PROJECT.md updated with v2.0 Current Milestone section
-6. ✓ STATE.md reset for v2.0
-7. ⏳ Cleanup + commit milestone kickoff
-8. ⏳ Research decision
-9. ⏳ Define requirements with REQ-IDs
-10. ⏳ Create roadmap via gsd-roadmapper
+**v2.0 "Guided Conversation" milestone initialized 2026-06-03:**
+- 38 requirements across 9 categories (CONVO, CLASS, JES, DUTY, QUAL, DOC, EXP, API, FE)
+- 10 phases (10–19) defined
+- 100% requirement coverage; 0 unmapped; 0 orphans
+- DRF, PDF export, clipboard, and review-state checklist deferred to v2.1+
 
-**v2.0 design source of truth:** `Job Description Builder/jd-builder/` — React 18 prototype (6 .jsx files + styles.css + JD Builder.html). All data hardcoded (DRF, WORK_TYPES, EC_ELEMENTS, DUTY_SUGGESTIONS, QUAL_DEFAULT). Classification engine: `computeClassification()` in data.jsx. Duty refinement: `refineDuty()` verb map. Live preview: document.jsx.
+**Next action:** `/gsd-discuss-phase 10` (or `/gsd-plan-phase 10` to skip discussion)
+
+**v2.0 design source of truth:** `Job Description Builder/jd-builder/` — React 18 prototype (5 .jsx files + styles.css + JD Builder.html). All data hardcoded (DRF, WORK_TYPES, EC_ELEMENTS, DUTY_SUGGESTIONS, QUAL_DEFAULT). Classification engine: `computeClassification()` in data.jsx. Duty refinement: `refineDuty()` verb map. Live preview: document.jsx.
 
 **v2.0 phase numbering:** Continues from v1.0 (Phase 9 / 8.1) → v2.0 starts at Phase 10.
 
 **v1.0 reference:** `.planning/milestones/v1.0-ROADMAP.md`, `.planning/milestones/v1.0-REQUIREMENTS.md`. v1.0 code is preserved in `app/` and may be referenced but not extended.
+
+**v2.0 build order (from ROADMAP.md):**
+- Phase 10: Project Scaffold (FastAPI + Vite + Pydantic + SQLite + Vite proxy) — API-01, API-05, FE-02
+- Phase 11: Frontend Port (port 5 JSX files + styles.css into Vite, brand styles, state, localStorage) — FE-01, FE-03, FE-04, FE-05
+- Phase 12: Conversation UX (6-phase interview, inputs, revisit, phase header, keyboard) — CONVO-01..05
+- Phase 13: Document Composition (live preview, position overview, ghosts, section edit, provenance) — DOC-01..05
+- Phase 14: Classification Engine (work-type, 3 scope, group+level, badge, rationale) — CLASS-01..05
+- Phase 15: JES Scoring (EC JES table, degree vectors, non-EC totals, scorecard) — JES-01..04
+- Phase 16: Duty Management (suggested duties, advisor capture, live refinement, verb map, visual mark) — DUTY-01..05
+- Phase 17: Qualifications (pre-filled defaults, editable, EQ section) — QUAL-01..03
+- Phase 18: Backend API Service (WD CRUD, canonical data, classification service, SQLite) — API-02, API-03, API-04
+- Phase 19: DOCX Export (docxtpl template, version manifest, export endpoint) — EXP-01
