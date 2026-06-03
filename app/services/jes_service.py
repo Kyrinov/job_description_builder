@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 from datetime import date
 from typing import Optional
 
@@ -67,6 +68,23 @@ def _build_factor_user_prompt(
     )
 
 
+def _resolve_degree(degree_str: str, point_values: dict) -> tuple[str, Optional[int]]:
+    """Return (canonical_key, points) by normalizing degree_str to match point_values keys.
+
+    LLMs sometimes return "D3" when the DB key is "3", or "3" when the key is "D3".
+    Try: exact → strip-D → add-D, in order. Return (degree_str, None) if no match.
+    """
+    if degree_str in point_values:
+        return degree_str, point_values[degree_str]
+    stripped = degree_str.lstrip("D").strip()
+    if stripped in point_values:
+        return stripped, point_values[stripped]
+    with_d = "D" + stripped
+    if with_d in point_values:
+        return with_d, point_values[with_d]
+    return degree_str, None
+
+
 def _build_jes_factor_score(
     factor_row,
     rating: JESFactorRating,
@@ -75,21 +93,20 @@ def _build_jes_factor_score(
 ) -> JESFactorScore:
     """Map a successful JESFactorRating to a JESFactorScore with ProvenanceTag.
 
-    Maps degree identifier (e.g., "D3") to points via point_values JSON dict.
-    level = int parsed from degree string suffix (D3 → 3); -1 if unparseable.
+    Normalizes the returned degree string against point_values keys so that
+    "3" and "D3" are treated as equivalent (LLMs mix formats due to prompt examples).
+    level = leading integer extracted from the canonical key; -1 if unparseable.
     """
     point_values: dict = json.loads(factor_row["point_values"])
-    points = point_values.get(rating.degree)
+    canonical_key, points = _resolve_degree(rating.degree, point_values)
     if points is None:
         logger.warning(
-            "JES factor %r/%r returned degree %r but point_values dict has no entry — "
-            "factor will contribute 0 to total (data integrity issue)",
-            og_code, factor_row["factor_name"], rating.degree,
+            "JES factor %r/%r returned degree %r (canonical: %r) but point_values has no match — "
+            "factor will contribute 0 to total",
+            og_code, factor_row["factor_name"], rating.degree, canonical_key,
         )
-    try:
-        level = int(rating.degree.lstrip("D")) if rating.degree.startswith("D") else -1
-    except (ValueError, AttributeError):
-        level = -1
+    m = re.search(r"\d+", canonical_key)
+    level = int(m.group()) if m else -1
 
     return JESFactorScore(
         factor_name=factor_row["factor_name"],
