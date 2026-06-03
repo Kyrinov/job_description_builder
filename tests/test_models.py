@@ -79,3 +79,40 @@ def test_provenance_tag_source_types_exhaustive():
     args = hints["source_type"].__args__
     required_types = {"NOC", "CA", "JES", "TBS_OG_DEF", "TBS_DIRECTIVE", "QUAL_STD", "DRF", "ADVISOR", "AI_GENERATED"}
     assert required_types.issubset(set(args)), f"Missing source types: {required_types - set(args)}"
+
+
+def test_work_description_dnd_fields_defaults():
+    """WorkDescription has is_dnd_position (default False) and drf_linkages (default [])."""
+    from app.models.work_description import WorkDescription
+    wd = WorkDescription(raw_input="test", session_id="sess-drf")
+    assert wd.is_dnd_position is False
+    assert wd.drf_linkages == []
+
+
+def test_work_description_dnd_fields_settable():
+    """WorkDescription.is_dnd_position and drf_linkages can be set by the advisor."""
+    from app.models.work_description import WorkDescription
+    wd = WorkDescription(
+        raw_input="test",
+        session_id="sess-drf-set",
+        is_dnd_position=True,
+        drf_linkages=[
+            {
+                "core_responsibility": "Readiness",
+                "departmental_result": "Canada is prepared to defend itself",
+                "fiscal_year": "2024-2025",
+                "row_index": 0,
+                "confirmed": True,
+                "provenance_source_id": "42",
+            }
+        ],
+    )
+    assert wd.is_dnd_position is True
+    assert len(wd.drf_linkages) == 1
+    link = wd.drf_linkages[0]
+    assert link["core_responsibility"] == "Readiness"
+    assert link["departmental_result"] == "Canada is prepared to defend itself"
+    assert link["fiscal_year"] == "2024-2025"
+    assert link["row_index"] == 0
+    assert link["confirmed"] is True
+    assert link["provenance_source_id"] == "42"
