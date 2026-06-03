@@ -264,8 +264,6 @@ async def wizard_export(request: Request, wd_id: str = "") -> HTMLResponse:
 
     block_errors: list[str] = []
     wd_stage: str | None = None
-    is_dnd_position = False
-    confirmed_drf_count = 0
     if wd_id:
         conn = await asyncio.to_thread(lambda: get_connection(settings.db_path))
         try:
@@ -274,10 +272,6 @@ async def wizard_export(request: Request, wd_id: str = "") -> HTMLResponse:
                 block_errors.append(f"WorkDescription {wd_id!r} not found.")
             else:
                 wd_stage = wd.stage
-                is_dnd_position = wd.is_dnd_position
-                confirmed_drf_count = len(
-                    [l for l in (wd.drf_linkages or []) if l.get("confirmed")]
-                )
                 if wd.stage != "jes_scored":
                     block_errors.append(
                         f"WorkDescription is in stage {wd.stage!r}; "
@@ -296,8 +290,6 @@ async def wizard_export(request: Request, wd_id: str = "") -> HTMLResponse:
                 "wd_id": wd_id,
                 "wd_stage": wd_stage,
                 "block_errors": block_errors,
-                "is_dnd_position": is_dnd_position,
-                "confirmed_drf_count": confirmed_drf_count,
             },
         )
     except jinja2.TemplateNotFound:
@@ -305,8 +297,6 @@ async def wizard_export(request: Request, wd_id: str = "") -> HTMLResponse:
             "<!DOCTYPE html><html><body>"
             "<h1>Export Wizard</h1>"
             f"<p>WorkDescription ID: {wd_id or '(none)'}</p>"
-            f"<p>DND Position: {is_dnd_position}</p>"
-            f"<p>Confirmed DRF linkages: {confirmed_drf_count}</p>"
             "<p>The full template will be added in Plan 08-04.</p>"
             "</body></html>"
         )

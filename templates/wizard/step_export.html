@@ -43,21 +43,6 @@
     <p class="muted">
         PDF export is not yet available — download DOCX and convert locally.
     </p>
-
-    {% if is_dnd_position %}
-    <div class="drf-export-notice" role="note">
-        <p>This is a DND position.
-        {% if confirmed_drf_count and confirmed_drf_count > 0 %}
-            <strong>{{ confirmed_drf_count }} DRF linkage(s)</strong> will be included in the export.
-        {% else %}
-            No DRF linkages confirmed yet.
-            <a href="/wizard/drf?wd_id={{ wd_id }}" class="button button--secondary">
-                Add DRF Linkages
-            </a>
-        {% endif %}
-        </p>
-    </div>
-    {% endif %}
     {% endif %}
 </section>
 {% endblock %}
