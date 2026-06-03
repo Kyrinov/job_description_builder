@@ -61,7 +61,13 @@ v2.0 is a full rewrite of v1.0 around a conversational React SPA + FastAPI JSON 
 4. SQLite single-file database is created on app startup with the `work_descriptions` and `audit_log` tables present
 5. Pydantic v2 models are defined: `WorkDescription`, `DraftDuty`, `Classification`, `JESFactor`, `QualificationStandard`
 
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Backend Wave 0: project scaffold + test stubs (Wave 1)
+- [ ] 10-02-PLAN.md — Backend impl: Settings + SQLite + 5 Pydantic models (Wave 2)
+- [ ] 10-03-PLAN.md — Frontend scaffold: Vite + React 18 placeholder + /api proxy (Wave 1)
+- [ ] 10-04-PLAN.md — Integration: main.py + /api/health + verify.sh (Wave 3)
 
 ---
 
@@ -262,7 +268,7 @@ v2.0 is a full rewrite of v1.0 around a conversational React SPA + FastAPI JSON 
 | 8. Export | v1.0 | 4/4 | Complete | 2026-06-02 |
 | 8.1. JES Advisor Override | v1.0 | 3/3 | Complete | 2026-06-03 |
 | 9. DND DRF Integration | v1.0 | 4/4 | Complete | 2026-06-03 |
-| **10. Project Scaffold** | **v2.0** | **0/?** | **Pending** | — |
+| **10. Project Scaffold** | **v2.0** | **0/4** | **Planned** | — |
 | **11. Frontend Port** | **v2.0** | **0/?** | **Pending** | — |
 | **12. Conversation UX** | **v2.0** | **0/?** | **Pending** | — |
 | **13. Document Composition** | **v2.0** | **0/?** | **Pending** | — |
