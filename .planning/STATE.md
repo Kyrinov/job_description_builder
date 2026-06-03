@@ -2,21 +2,24 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 9
-status: ready_to_execute
-last_updated: "2026-06-03T08:58:00.000Z"
+current_phase: 09
+current_plan: 2
+status: executing
+last_updated: "2026-06-03T12:23:08.419Z"
 progress:
-  total_phases: 9
-  completed_phases: 7
-  total_plans: 35
-  completed_plans: 29
-  percent: 83
+  total_phases: 10
+  completed_phases: 8
+  total_plans: 38
+  completed_plans: 34
+  percent: 89
 ---
 
 # Project State
 
 **Status:** Ready to execute
-**Current phase:** 9
+**Current phase:** 09
+**Current Plan:** 2
+**Total Plans in Phase:** 4
 **Last updated:** 2026-06-03
 **Next action:** Run `/gsd-execute-phase 9` to execute Phase 9 plans
 
@@ -34,7 +37,7 @@ progress:
 | 6 | JD Generation | Not started |
 | 7 | JES Scoring | Ready to execute (4/4 plans verified) |
 | 8 | Export | Plans 08-01 + 08-02 + 08-03 + 08-04 Tasks 1+2 complete (router + templates + CTA + CSS Layer 11); 08-04 Task 3 (human-verify) next |
-| 9 | DND DRF Integration | Ready to execute (4/4 plans planned) |
+| 9 | DND DRF Integration | In progress (Plan 09-01 complete; 09-02 next) |
 
 ---
 
@@ -57,7 +60,7 @@ See: `.planning/PROJECT.md`
 
 ## Accumulated Context
 
-### Decisions Locked
+### Decisions Made
 
 | Decision | Rationale |
 |----------|-----------|
@@ -71,6 +74,12 @@ See: `.planning/PROJECT.md`
 | DashScope qwen3.7-max for Stage 3 LLM | Cloud inference via dashscope-intl.aliyuncs.com; local gemma4:31b too slow (6 min/request) |
 | docxtpl table-row loops use for/data/endfor in separate rows | docxtpl patch_xml regex is greedy — matches the LAST {%tr %} tag in a row, so co-locating for+endfor with data eats the for tag. Separate marker rows above/below the data row is the standard convention. |
 | Phase 8 template is a committed binary artifact + reproducible build script | .docx loads deterministically at runtime; build script self-verifies via DocxTemplate.get_undeclared_template_variables() on every run |
+| Phase 9 WorkDescription extended with is_dnd_position + drf_linkages (additive-optional, schema_version stays at 1) | Backward compatibility with existing rows in work_descriptions.data (JSON) — no migration of legacy data needed |
+| drf_rows has UNIQUE(fiscal_year, core_responsibility, departmental_result) + search_text denormalized at ingest | Avoid FTS5 dependency for Phase 9 — keyword overlap against precomputed search_text is sufficient for ~5k rows |
+| test_drf.py uses _drf_app_bootstrapped module global | Each per-phase test module owns its own rebootstrap flag — prevents module-level global races when pytest runs them in one process |
+- --phase
+- --phase
+- --phase
 
 ### Active Blockers
 
@@ -99,22 +108,29 @@ See: `.planning/PROJECT.md`
 | Phases total | 9 |
 | Phases complete | 5 |
 | Requirements mapped | 21/21 |
-| Tests passing | 114 |
+| Tests passing | 180 |
 
 ---
+| Phase 9 P1 | 15min | 3 tasks | 4 files |
 
 ## Session Continuity
 
-**Next action:** `/gsd-execute-phase 8` continues with Plan 08-04 (wizard step_export.html + partial + CSS layer 11 + human verify)
+**Next action:** `/gsd-execute-phase 9` continues with Plan 09-02 (DRF ingest script + matching service)
 
 **Context for next session:**
 
 - Phase 5 complete (2026-06-02): OG classification pipeline live; 81 OG rows in og_definitions; /api/og/classify and /api/og/confirm with stage gates and verbatim guardrail; AS/EC alert + directive citation working; full Phase 5 UI in templates/partials/og_*.html and templates/wizard/step_og.html; CSS layer 8 with .asec-alert warning tokens; 114 tests pass; 1 skip (deferred Phase 6 gate test)
-- WorkDescription now carries `confirmed_og`, `confirmed_level` (e.g. "EC-04"), and `og_recommendation: OGRecommendation`; `stage="og_classified"` after Phase 5 confirm flow
+- WorkDescription now carries `confirmed_og`, `confirmed_level` (e.g. "EC-04"), `og_recommendation: OGRecommendation`, **and** `is_dnd_position` + `drf_linkages` (Phase 9, additive-optional); `stage="og_classified"` after Phase 5 confirm flow
 - og_definitions table is the source of truth for CLASS-01 verbatim citations — all 33 OG groups + 48 subgroups loaded from TBS-OCHRO-OG.txt (81 unique og_codes)
 - CLASS-03 disambiguation: `_fetch_directive_citation` runs FTS on policy_fts for `directive_on_classification`; returns verbatim chunk as authority citation
 - CLASS-02 gate: both /api/og/classify and /api/og/confirm return 422 if `stage != "noc_mapped"`; Phase 6 JD generation can rely on `stage="og_classified"` as its prerequisite
 - All architecture decisions in "Decisions Locked" above are non-negotiable
+- **Phase 9 Plan 09-01 complete (2026-06-03):** DND DRF foundation
+  - `app/models/work_description.py`: `is_dnd_position: bool = False` + `drf_linkages: list[dict] = Field(default_factory=list)` appended after `exported_at` (additive-optional, no schema_version bump)
+  - `app/db.py`: `DRF_SCHEMA_DDL` constant + `drf_rows` (id, fiscal_year, core_responsibility, departmental_result, search_text, source_file, ingested_at) with UNIQUE(fiscal_year, core_responsibility, departmental_result) and `idx_drf_rows_cr` index; `create_schema()` registers it after `NOC_MAPPING_SCHEMA_DDL`
+  - `tests/conftest.py`: `drf_db` fixture mirrors the `export_db` pattern
+  - `tests/test_drf.py`: 9 skipping test stubs across 5 test classes (TestGetDRFLinks, TestConfirmDRFLinks, TestDRFMatchingService, TestDRFExport, TestDRFWizardStep) — rebootstrap uses `_drf_app_bootstrapped` global to avoid collision
+  - 180 tests pass + 10 skipped (was 1 pre-existing skip; 9 new DRF stubs), 0 regressions
 - **Phase 8 Plan 08-01 complete (2026-06-02):** Export scaffold + template artifact + 6 contract tests
   - `tests/conftest.py`: `export_db` fixture + `make_exported_wd(db_path, *, complete=True)` helper (incomplete=True produces the D-01 sentinel factor)
   - `tests/test_export.py`: 6 skipping tests for `generate_export`, `validate_export_readiness`, `build_version_manifest`
@@ -123,7 +139,7 @@ See: `.planning/PROJECT.md`
   - docxtpl table-row loops use for/data/endfor in separate rows (patch_xml regex is greedy)
 - 149 tests pass; 7 skip (including 6 new export contract tests)
 
-**Planned Phase:** 08 (Export) — Plan 08-04 Tasks 1+2 complete; Task 3 (human-verify) pending orchestrator
+**Planned Phase:** 09 (DND DRF Integration) — Plan 09-01 complete; 09-02 (DRF ingest + matching service) next
 
 ---
 

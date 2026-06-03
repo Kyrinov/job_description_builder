@@ -53,7 +53,8 @@
 
 ### DND Integration
 
-- [ ] **DRF-01**: For DND positions, the system surfaces Departmental Results Framework program linkages connecting the position's duties to DRF expected results, sourced from the DRF dataset in `data/`
+- [x] **DRF-01
+**: For DND positions, the system surfaces Departmental Results Framework program linkages connecting the position's duties to DRF expected results, sourced from the DRF dataset in `data/`
 
 ---
 
@@ -136,7 +137,7 @@
 | JES-01 | Phase 7 | Complete |
 | CA-01 | Phase 3 | Pending |
 | EXP-01 | Phase 8 | Pending |
-| DRF-01 | Phase 9 | Pending |
+| DRF-01 | Phase 9 | Complete (09-01: model + DDL + test stubs) |
 
 **Coverage:**
 - v1 requirements: 21 total
