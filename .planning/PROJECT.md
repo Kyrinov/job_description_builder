@@ -4,29 +4,29 @@
 
 A DND-first Government of Canada job description builder for HR advisors and classification specialists. An advisor describes the work in a guided conversation; the system captures the role, scope, duties, classification and qualifications, and generates a fully traced job description grounded in NOC, collective agreements, job evaluation standards, and TBS policy.
 
-v1.0 (MVP, HTMX wizard) shipped 2026-06-03 and is archived. v2.0 ("Guided Conversation") is a full rewrite around a conversational React single-page application with a live document preview, deterministic rule-based classification, and DOCX + PDF export with full provenance.
+v1.0 (MVP, HTMX wizard) shipped 2026-06-03 and is archived. v2.0 ("Real Guided Conversation") replans the original v2.0 scope: the Claude Design prototype's conversational UX form is right but its hardcoded simplified classification was wrong. v2.0 ports v1.0's production NOC + OG + JES engine into a conversational React SPA, fixes the OG levels data gap, adds a Socratic question bank, DND SJD library, CAF rank context, manager amendment space, and job poster generation.
 
 ## Current State
 
 - **v1.0 (archived):** FastAPI + HTMX 2.x + SQLite + sqlite-vec + Ollama. ~15,539 LOC Python, 188 tests passing. Reference: `.planning/milestones/v1.0-ROADMAP.md` and `.planning/milestones/v1.0-REQUIREMENTS.md`.
-- **v2.0 (active):** React 18 conversational SPA + JSON API backend. The React prototype at `Job Description Builder/jd-builder/` is **NOT a throwaway** — it is the starting point. ~900 LOC JSX + ~1,100 LOC CSS, all working in the browser. v2.0 completes it: Vite build pipeline, FastAPI backend, DOCX export, SQLite persistence, API integration. Deterministic classification (no LLM in main flow).
+- **v2.0 (active — replanned 2026-06-03):** React 18 conversational SPA + FastAPI JSON API. Phase 10 scaffold complete. Phases 11–19 (original plan) scrapped — they were built around the Claude Design prototype's hardcoded work-type picker and simplified scope-question classifier. v2.0 is being replanned around v1.0's production NOC + OG + JES engine. The React prototype at `Job Description Builder/jd-builder/` remains the UX design source of truth (visual design, conversation flow, live preview) but its classification logic is replaced.
 - **Phase 10 (Project Scaffold) complete** — `v2/backend/` (FastAPI + Pydantic v2 + SQLite) and `v2/frontend/` (Vite + React 18 + proxy) wired together. 10/10 tests pass; `v2/scripts/verify.sh` exits 0 with 7/7 checks. The placeholder SPA loads at `localhost:5173` and proxies `/api/*` to FastAPI on `:8000`. Conversational UX port lands in Phase 11.
 
-## Current Milestone: v2.0 Guided Conversation
+## Current Milestone: v2.0 Real Guided Conversation
 
-**Goal:** Replace the v1.0 multi-step HTMX wizard with a conversational React SPA that produces a live document preview, using deterministic rule-based classification (no LLM in the main flow), and ship DOCX + PDF export with full provenance.
+**Goal:** Port v1.0's production NOC + OG classification + JES engine into a conversational React SPA backed by corrected authoritative data, fix the OG levels data gap, and ship four new capabilities: Socratic question bank, DND SJD library, CAF rank context, manager amendment space, and job poster generation.
 
 **Target features:**
-- Conversational left pane — 6-phase interview (Role → Focus → Level → Duties → Mission → Review)
-- Live document preview — right pane fills as user answers; sections are clickable to edit
-- Deterministic classification — work-type (EC/FI/IT/AS/EN) + 3 scope questions → group + level
-- Built-in EC JES — hardcoded 9-element scale with degree vectors for EC-04/05/06
-- Duty refinement — verb-mapping rules; advisor-added duties distinguished in provenance
-- DND DRF picker — 6 hardcoded core responsibilities with indicators
-- Qualification standard editor — default text pre-filled, editable
-- Export — DOCX, PDF, clipboard
-- JSON API backend (FastAPI) — replaces HTML routes; React SPA consumes it
-- Brand refresh — "JD Builder — National Defence" with Hanken Grotesk + Spectral typography
+- OG levels fix — expand `OG_LEVELS` to cover all groups with correct level ranges from `data/rates_of_pay/`
+- Conversational UX — port 6-phase interview + live document preview from Claude Design prototype (visual form is right; classification backing is replaced)
+- Socratic question bank — dedicated design phase; questions derived from OG definitions, JES factors, NOC TEER; manager describes work → system determines OG
+- NOC pipeline — reuse v1.0's three-stage NL→NOC pipeline (FTS5 → embedding rerank → LLM justification)
+- OG classification engine — reuse v1.0's evidence-based OG ranker; level determination from corrected `OG_LEVELS` + JES scoring for AS/EC/IT/FI/EX
+- DND SJD library — data model from `data/SJD Examples.txt`; seed with DND examples; lookup as a starting point
+- CAF rank context — approximate rank→OG equivalence from `data/CAF pay grades`; advisory display when position reports to military supervisor
+- Manager amendment space — structured amendment proposals with justification; stored in audit trail; reviewed by advisor
+- Job poster generation — second output format derived from completed JD (title, classification, qualifications, duties)
+- DOCX + PDF export with full provenance — mirrors v1.0 pattern
 
 ## Core Value
 

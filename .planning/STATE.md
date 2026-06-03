@@ -1,24 +1,24 @@
 ---
 gsd_state_version: 1.0
 milestone: v2.0
-milestone_name: Guided Conversation
+milestone_name: Real Guided Conversation
 current_phase: 10
-status: ready_to_plan
-last_updated: "2026-06-03T18:37:08.305Z"
+status: defining_requirements
+last_updated: "2026-06-03"
 progress:
-  total_phases: 10
+  total_phases: TBD
   completed_phases: 1
   total_plans: 4
   completed_plans: 0
-  percent: 10
+  percent: TBD
 ---
 
 # Project State
 
-**Status:** Ready to plan
-**Current phase:** 11
+**Status:** Defining requirements
+**Current phase:** Phase 10 complete — requirements and roadmap being replanned
 **Last updated:** 2026-06-03
-**Next action:** `/gsd-discuss-phase 10` (or `/gsd-plan-phase 10` to skip discussion)
+**Next action:** Complete requirements → roadmap → `/gsd-discuss-phase 11` (or `/gsd-plan-phase 11`)
 
 ---
 
@@ -26,18 +26,10 @@ progress:
 
 | # | Phase | Status |
 |---|-------|--------|
-| 10 | Project Scaffold | Pending |
-| 11 | Frontend Port | Pending |
-| 12 | Conversation UX | Pending |
-| 13 | Document Composition | Pending |
-| 14 | Classification Engine | Pending |
-| 15 | JES Scoring | Pending |
-| 16 | Duty Management | Pending |
-| 17 | Qualifications | Pending |
-| 18 | Backend API Service | Pending |
-| 19 | DOCX Export | Pending |
+| 10 | Project Scaffold | ✅ Complete |
+| 11+ | TBD — replanning v2.0 | Pending roadmap |
 
-v1.0 phases 1–9 (incl. 8.1) are archived. See `.planning/milestones/v1.0-ROADMAP.md`.
+**Note:** v2.0 Phases 11–19 (original plan) are scrapped. New roadmap will be created by gsd-roadmapper after requirements are defined. v1.0 phases 1–9 (incl. 8.1) are archived. See `.planning/milestones/v1.0-ROADMAP.md`.
 
 ---
 
@@ -77,8 +69,8 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 ### Todos
 
-- Define v2.0 requirements with REQ-IDs (step 9 of new-milestone workflow)
-- Create v2.0 roadmap via gsd-roadmapper (step 10 of new-milestone workflow)
+- Define REVISED v2.0 requirements with REQ-IDs (new-milestone workflow step 9 — in progress)
+- Create REVISED v2.0 roadmap via gsd-roadmapper (new-milestone workflow step 10)
 - Verify WeasyPrint Pango/Cairo system libs present on Jane (v2.0 PDF export)
 - Fix `noc_fts` DDL in `app/db.py` (v1.0 deferred debt — not carried into v2.0, archive as-is)
 - Address Starlette `TemplateResponse` deprecation warning (v1.0 deferred debt — not carried into v2.0)
