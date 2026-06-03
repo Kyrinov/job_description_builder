@@ -13,6 +13,9 @@ Template structure (TBS Work Description format, D-04):
     Section 3:      Key Activities (Duties) — paragraph-level {%p for %} loop
     Section 4:      Classification — JES Scoring — table-row {%tr for %} loop
     Section 5:      Source Document Version Manifest — table-row {%tr for %} loop
+    Section 6:      Departmental Results Framework Linkages (DND positions only)
+                    — table-row {%tr for %} loop, with a paragraph-level
+                    {%p if is_dnd_position %} gate (Plan 09-03, DRF-01)
 
 Jinja2 variables (contract):
     position_title, position_number, og_level, supervisor_title,
@@ -21,7 +24,9 @@ Jinja2 variables (contract):
     duties (list of {text, source_id, source_version, is_advisor}),
     jes_scores (list of {factor_name, level, points, source_id, source_version}),
     jes_total_points,
-    manifest (list of {source_type, source_id, source_version, retrieved_date})
+    manifest (list of {source_type, source_id, source_version, retrieved_date}),
+    drf_linkages (list of {core_responsibility, departmental_result, fiscal_year, provenance_source_id}),
+    is_dnd_position (bool — gates the DRF section in the template)
 
 Re-run this script to update the template; then commit the regenerated .docx.
 """
@@ -159,6 +164,34 @@ def build() -> None:
     _set_cell_text(manifest_table.rows[2].cells[3], "{{ m.retrieved_date }}")
     _set_cell_text(manifest_table.rows[3].cells[0], "{%tr endfor %}")
 
+    # ------------------------------------------------------------------
+    # Section 6: Departmental Results Framework Linkages (Phase 9, DRF-01)
+    # Only rendered when is_dnd_position is True. The {%p if %} gate
+    # suppresses the entire section for non-DND positions; the inner {%tr for %}
+    # loop iterates the drf_linkages list supplied by export_service.
+    # ------------------------------------------------------------------
+    doc.add_paragraph("{%p if is_dnd_position %}")
+    doc.add_heading("6. Departmental Results Framework Linkages", level=1)
+    doc.add_paragraph(
+        "The following DRF programs and expected results are linked to the duties "
+        "of this position (DND positions only)."
+    )
+    # 4 rows: header, for-marker, data, endfor-marker (same pattern as JES/manifest tables).
+    drf_table = doc.add_table(rows=4, cols=3)
+    drf_table.style = "Light Grid Accent 1"
+    _set_cell_text(drf_table.rows[0].cells[0], "Core Responsibility", bold=True)
+    _set_cell_text(drf_table.rows[0].cells[1], "Departmental Result", bold=True)
+    _set_cell_text(drf_table.rows[0].cells[2], "Fiscal Year", bold=True)
+    # Row 1: {%tr for %} marker — for/data/endfor in separate rows
+    _set_cell_text(drf_table.rows[1].cells[0], "{%tr for link in drf_linkages %}")
+    # Row 2: data row
+    _set_cell_text(drf_table.rows[2].cells[0], "{{ link.core_responsibility }}")
+    _set_cell_text(drf_table.rows[2].cells[1], "{{ link.departmental_result }}")
+    _set_cell_text(drf_table.rows[2].cells[2], "{{ link.fiscal_year }}")
+    # Row 3: {%tr endfor %} marker
+    _set_cell_text(drf_table.rows[3].cells[0], "{%tr endfor %}")
+    doc.add_paragraph("{%p endif %}")
+
     doc.save(OUTPUT_PATH)
     print(f"Wrote {OUTPUT_PATH}")
 
@@ -167,6 +200,18 @@ def build() -> None:
     tpl = DocxTemplate(OUTPUT_PATH)
     undeclared = sorted(tpl.get_undeclared_template_variables())
     print(f"Template variables ({len(undeclared)}): {undeclared}")
+
+    # Contract assertion: drf_linkages + is_dnd_position MUST be present in the
+    # template's declared variables. Catches a missing section at build time,
+    # not at first export.
+    required_new_vars = {"drf_linkages", "is_dnd_position"}
+    missing = required_new_vars - set(undeclared)
+    if missing:
+        raise AssertionError(
+            f"build_docx_template: required variables {missing!r} not declared "
+            f"in template. Found: {undeclared}"
+        )
+    print(f"DRF contract: {sorted(required_new_vars)} declared ✓")
 
 
 if __name__ == "__main__":

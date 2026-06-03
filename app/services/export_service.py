@@ -24,13 +24,13 @@ import hashlib
 import io
 import logging
 import os
-from datetime import datetime
+from datetime import date, datetime
 
 from docxtpl import DocxTemplate
 
 from app.config import settings
 from app.db import get_connection
-from app.models.work_description import WorkDescription
+from app.models.work_description import ProvenanceTag, WorkDescription
 from app.services.wd_store import load_work_description, save_work_description
 
 logger = logging.getLogger(__name__)
@@ -133,6 +133,21 @@ def build_version_manifest(wd: WorkDescription) -> list[dict]:
     for score in wd.jes_scores or []:
         _maybe_emit(score.provenance)
 
+    # DRF linkages (Phase 9, DRF-01) — only emit a provenance entry for each
+    # advisor-confirmed linkage on a DND position. Each linkage carries
+    # provenance_source_id in the "DRF/{row_id}" format produced by
+    # drf_service.confirm_drf_linkages.
+    for link in wd.drf_linkages or []:
+        if link.get("confirmed"):
+            _maybe_emit(
+                ProvenanceTag(
+                    source_type="DRF",
+                    source_id=link.get("provenance_source_id", "DRF/unknown"),
+                    source_version="DND DRF Dataset 2021-2022",
+                    retrieved_date=date.today(),
+                )
+            )
+
     return manifest
 
 
@@ -199,6 +214,20 @@ def _build_context(wd: WorkDescription) -> dict:
             }
         )
 
+    # DRF linkages (Phase 9, DRF-01) — only populated for confirmed DND positions
+    drf_linkages: list[dict] = []
+    if wd.is_dnd_position and wd.drf_linkages:
+        for link in wd.drf_linkages:
+            if link.get("confirmed"):
+                drf_linkages.append(
+                    {
+                        "core_responsibility": link["core_responsibility"],
+                        "departmental_result": link["departmental_result"],
+                        "fiscal_year": link["fiscal_year"],
+                        "provenance_source_id": link.get("provenance_source_id", ""),
+                    }
+                )
+
     return {
         **header,
         "organizational_context_text": org_text,
@@ -207,6 +236,8 @@ def _build_context(wd: WorkDescription) -> dict:
         "jes_scores": jes_scores,
         "jes_total_points": wd.jes_total_points if wd.jes_total_points is not None else 0,
         "manifest": build_version_manifest(wd),
+        "drf_linkages": drf_linkages,
+        "is_dnd_position": wd.is_dnd_position,
     }
 
 
