@@ -58,14 +58,24 @@ def _settings_env_defaults(tmp_path, monkeypatch):
 
 @pytest_asyncio.fixture
 async def test_app(env_with_db):
-    """FastAPI app with lifespan-driven schema creation against tmp DB.
+    """FastAPI app with schema initialized against tmp DB.
 
-    Wave 0 stub: pytest.importorskip causes collection-level skip until
-    app.main is implemented in Plan 02. After Plan 02, this fixture
-    imports the real app and the rest of the suite can run.
+    Imports app.main and explicitly creates the v2 schema (work_descriptions
+    + audit_log) on the tmp DB. Required because httpx 0.27.2's ASGITransport
+    does not trigger FastAPI lifespan events, so the schema created in
+    app.main:lifespan is never applied to the per-test tmp DB. The other
+    39 tests passed without schema creation because none of them touched
+    work_descriptions or audit_log; test_wd.py is the first to require it.
     """
     pytest.importorskip("app.main")
-    from app.main import app  # noqa: F401  (post-Plan-02 import)
+    from app.config import get_settings
+    from app.db import create_schema, get_connection
+    from app.main import app  # noqa: F401
+
+    settings = get_settings()
+    con = get_connection(settings.db_path)
+    create_schema(con)
+    con.close()
     return app
 
 
