@@ -155,7 +155,13 @@ Plans:
 3. The SPA displays the NOC candidates as confirmation cards; the advisor selects one to confirm; the confirmed NOC code is stored in the `WorkDescription` model before classification proceeds
 4. The pipeline is ported from `app/services/noc_mapper.py` and its sqlite-vec + Ollama dependencies; existing unit tests from v1.0 are adapted and pass in the v2.0 test suite
 
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — Wave 0: test infrastructure stubs + noc_mapping_db fixture + requirements.txt deps
+- [ ] 14-02-PLAN.md — Wave 2: noc_ranking.py + noc_mapper.py port + Settings/db/NOCMatch extensions
+- [ ] 14-03-PLAN.md — Wave 2: POST /api/noc/map route + request/response models
+- [ ] 14-04-PLAN.md — Wave 3: NocConfirmList frontend component + UAT checkpoint
 
 ---
 
