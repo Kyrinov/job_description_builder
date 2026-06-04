@@ -2,7 +2,7 @@
    JD Builder — main application
    ============================================================ */
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { STEPS, PHASES, computeClassification } from './data.jsx';
+import { STEPS, PHASES, I, computeClassification } from './data.jsx';
 import { Icon, initialAnswer, answerValid } from './components.jsx';
 import { Header, Exchange, ActiveQuestion, ReviewState } from './conversation.jsx';
 import { DocumentPane } from './document.jsx';
@@ -230,7 +230,7 @@ function App() {
       </div>
       {/* ---------- toast ---------- */}
       <div className={`toast${toast ? ' is-show' : ''}`}>
-        <Icon path={'check'} size={17} />
+        <Icon path={I.check} size={17} />
         <span>{toast || ''}</span>
       </div>
     </div>
