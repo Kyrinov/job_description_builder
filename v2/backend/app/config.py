@@ -4,18 +4,32 @@ app/config.py — pydantic-settings configuration.
 Reads DB_PATH and PROJECT_ROOT from env (or .env file). Required fields
 have no default — instantiation raises ValidationError with the field name
 when missing.
+
+.env resolution: v2/backend/.env (co-located, CWD-independent via absolute path).
+
+Note: the project-root .env exists for other dev tools (Ollama, v1.0 ingest
+scripts) and intentionally has its own DB_PATH field that points at the v1.0
+NOC DB. We do NOT read it here — pydantic-settings merges env files in order
+and later files override earlier ones, so including the project-root .env
+would silently overwrite DB_PATH with the NOC DB path. Scope is therefore
+limited to the v2 backend's own .env.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# v2/backend/app/config.py → backend dir (1 level up)
+_BACKEND_DIR = Path(__file__).resolve().parents[1]
 
 
 class Settings(BaseSettings):
     """v2.0 backend configuration."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(_BACKEND_DIR / ".env"),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -52,8 +66,17 @@ _settings: Settings | None = None
 
 
 def get_settings() -> Settings:
-    """Get the cached Settings singleton (instantiates on first call)."""
+    """Get the cached Settings singleton (instantiates on first call).
+
+    Clears the cache if a ValidationError is raised so a transient env-misconfig
+    (e.g. a future test that monkeypatches env vars) does not leave a poisoned
+    singleton that masks subsequent retries.
+    """
     global _settings
     if _settings is None:
-        _settings = Settings()
+        try:
+            _settings = Settings()
+        except Exception:
+            _settings = None
+            raise
     return _settings
