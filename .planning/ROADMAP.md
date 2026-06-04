@@ -32,7 +32,7 @@ v2.0 ports v1.0's production NOC + OG classification + JES engine into a convers
 - [x] **Phase 10: Project Scaffold** — FastAPI skeleton + Pydantic v2 models + SQLite schema + Vite + React 18 project + Vite proxy. (API-01, API-05, FE-02) (completed 2026-06-03)
 - [x] **Phase 11: Data Foundation** — Fix OG level ranges from rates_of_pay CSVs; encode CAF rank→civilian OG equivalence table. (DATA-01, DATA-02) (completed 2026-06-04)
 - [x] **Phase 12: Socratic Question Bank** — Design and encode question bank artifact (JSON/Python constant) driving Socratic classification; each entry maps to OG candidates + JES factor hints. (QUES-01, QUES-02, QUES-03) (completed 2026-06-04)
-- [ ] **Phase 13: Frontend SPA Shell** — Port 5 JSX files + styles.css into Vite; brand typography; useState/useMemo architecture; localStorage crash-recovery. (FE-01, FE-03, FE-04, FE-05) (in progress, 2026-06-04)
+- [ ] **Phase 13: Frontend SPA Shell** — Port 5 JSX files + styles.css into Vite; brand typography; useState/useMemo architecture; localStorage crash-recovery. (FE-01 ✅ Plan 02, FE-03 ✅ Plan 02, FE-04, FE-05) (in progress, 2026-06-04)
 - [ ] **Phase 14: NOC Pipeline** — Port three-stage NL→NOC pipeline (FTS5 → embedding rerank → LLM justification) into FastAPI backend; expose POST `/api/noc/map`; display candidates + advisor confirmation. (NOC-01, NOC-02, API-04)
 - [ ] **Phase 15: Conversational UX** — 6-phase interview with question bank-driven classification and duty steps; revisit, phase chips, per-step input controls, keyboard shortcuts; WD CRUD persistence. (CONVO-01, CONVO-02, CONVO-03, CONVO-04, CONVO-05, API-02)
 - [ ] **Phase 16: OG Classification** — Evidence-based OG classification from confirmed NOC + work description; AS/EC disambiguation; level selection from corrected OG ranges; hard gate; CAF rank advisory; canonical data endpoints. (CLASS-01, CLASS-02, CLASS-03, CLASS-04, CLASS-05, API-06, API-03)
@@ -130,11 +130,11 @@ Plans:
 4. Client-side state uses `useState` + `useMemo` only — no Redux or Zustand; state shape includes `record`, `answers`, `stepIndex`, `draft`, `reviewing`, `editingReturn`, `flashes`
 5. After answering several questions and refreshing the browser, the in-progress WD is restored from localStorage (draft persisted on every step commit)
 
-**Plans:** 3/3 plans complete (Plan 01: 2026-06-04)
+**Plans:** 3/3 plans complete (Plan 01: 2026-06-04, Plan 02: 2026-06-04)
 
 Plans:
 - [x] 13-01-PLAN.md — Wave 0: Vitest + jsdom setup + app.test.jsx stubs (FE-04, FE-05) — completed 2026-06-04
-- [ ] 13-02-PLAN.md — Wave 1: data.jsx + components.jsx + styles.css + index.html + main.jsx (FE-01, FE-03)
+- [x] 13-02-PLAN.md — Wave 1: data.jsx + components.jsx + styles.css + index.html + main.jsx (FE-01, FE-03) — completed 2026-06-04
 - [ ] 13-03-PLAN.md — Wave 2: conversation.jsx + document.jsx + app.jsx + localStorage + tests GREEN (FE-01, FE-04, FE-05)
 
 **UI hint**: yes
@@ -302,7 +302,7 @@ Plans:
 | **10. Project Scaffold** | **v2.0** | **4/4** | **Complete** | **2026-06-03** |
 | **11. Data Foundation** | **v2.0** | **0/2** | **Not started** | — |
 | **12. Socratic Question Bank** | **v2.0** | **0/?** | **Not started** | — |
-| **13. Frontend SPA Shell** | **v2.0** | **1/3** | **In progress** | **2026-06-04** |
+| **13. Frontend SPA Shell** | **v2.0** | **2/3** | **In progress** | **2026-06-04** |
 | **14. NOC Pipeline** | **v2.0** | **0/?** | **Not started** | — |
 | **15. Conversational UX** | **v2.0** | **0/?** | **Not started** | — |
 | **16. OG Classification** | **v2.0** | **0/?** | **Not started** | — |
