@@ -130,7 +130,12 @@ Plans:
 4. Client-side state uses `useState` + `useMemo` only — no Redux or Zustand; state shape includes `record`, `answers`, `stepIndex`, `draft`, `reviewing`, `editingReturn`, `flashes`
 5. After answering several questions and refreshing the browser, the in-progress WD is restored from localStorage (draft persisted on every step commit)
 
-**Plans:** TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 13-01-PLAN.md — Wave 0: Vitest + jsdom setup + app.test.jsx stubs (FE-04, FE-05)
+- [ ] 13-02-PLAN.md — Wave 1: data.jsx + components.jsx + styles.css + index.html + main.jsx (FE-01, FE-03)
+- [ ] 13-03-PLAN.md — Wave 2: conversation.jsx + document.jsx + app.jsx + localStorage + tests GREEN (FE-01, FE-04, FE-05)
 
 **UI hint**: yes
 
