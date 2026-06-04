@@ -38,14 +38,17 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 
 ### QUES — Socratic question bank
 
-- [ ] **QUES-01**: A hardcoded question bank artifact (JSON or Python constant) encodes interview questions
+- [x] **QUES-01
+**: A hardcoded question bank artifact (JSON or Python constant) encodes interview questions
   derived from OG definition signals, JES factor descriptors, and NOC TEER levels; covers AS, EC, IT, FI
   work types at minimum; each question entry includes: question text, answer options, and classification
   signal mapping (OG candidate codes + JES factor hints)
-- [ ] **QUES-02**: The question bank enforces the Socratic constraint: the manager never selects an OG
+- [x] **QUES-02
+**: The question bank enforces the Socratic constraint: the manager never selects an OG
   directly — they answer work-description questions; signals from answers are accumulated and matched to
   OG candidates by the classification engine
-- [ ] **QUES-03**: Question bank entries drive the classification-focused steps in the conversation flow;
+- [x] **QUES-03
+**: Question bank entries drive the classification-focused steps in the conversation flow;
   the CONVO "Work Type" phase renders question bank entries and routes answers to the NOC pipeline and
   OG classifier
 
@@ -247,9 +250,9 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 | FE-02 | Phase 10 | Complete |
 | DATA-01 | Phase 11 | Complete |
 | DATA-02 | Phase 11 | Complete |
-| QUES-01 | Phase 12 | Pending |
-| QUES-02 | Phase 12 | Pending |
-| QUES-03 | Phase 12 | Pending |
+| QUES-01 | Phase 12 | Complete |
+| QUES-02 | Phase 12 | Complete |
+| QUES-03 | Phase 12 | Complete |
 | FE-01 | Phase 13 | Pending |
 | FE-03 | Phase 13 | Pending |
 | FE-04 | Phase 13 | Pending |

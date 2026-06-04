@@ -31,7 +31,7 @@ v2.0 ports v1.0's production NOC + OG classification + JES engine into a convers
 
 - [x] **Phase 10: Project Scaffold** — FastAPI skeleton + Pydantic v2 models + SQLite schema + Vite + React 18 project + Vite proxy. (API-01, API-05, FE-02) (completed 2026-06-03)
 - [x] **Phase 11: Data Foundation** — Fix OG level ranges from rates_of_pay CSVs; encode CAF rank→civilian OG equivalence table. (DATA-01, DATA-02) (completed 2026-06-04)
-- [ ] **Phase 12: Socratic Question Bank** — Design and encode question bank artifact (JSON/Python constant) driving Socratic classification; each entry maps to OG candidates + JES factor hints. (QUES-01, QUES-02, QUES-03)
+- [x] **Phase 12: Socratic Question Bank** — Design and encode question bank artifact (JSON/Python constant) driving Socratic classification; each entry maps to OG candidates + JES factor hints. (QUES-01, QUES-02, QUES-03) (completed 2026-06-04)
 - [ ] **Phase 13: Frontend SPA Shell** — Port 5 JSX files + styles.css into Vite; brand typography; useState/useMemo architecture; localStorage crash-recovery. (FE-01, FE-03, FE-04, FE-05)
 - [ ] **Phase 14: NOC Pipeline** — Port three-stage NL→NOC pipeline (FTS5 → embedding rerank → LLM justification) into FastAPI backend; expose POST `/api/noc/map`; display candidates + advisor confirmation. (NOC-01, NOC-02, API-04)
 - [ ] **Phase 15: Conversational UX** — 6-phase interview with question bank-driven classification and duty steps; revisit, phase chips, per-step input controls, keyboard shortcuts; WD CRUD persistence. (CONVO-01, CONVO-02, CONVO-03, CONVO-04, CONVO-05, API-02)
@@ -107,11 +107,11 @@ Plans:
 2. No question entry asks the manager to name or select an OG group directly; all OG candidates are derived by accumulating answer signals through the classification engine
 3. A standalone test or script imports the question bank and validates structure: every entry has required keys; every OG candidate code in signal mappings exists in `OG_LEVELS`; every JES factor hint references a known factor name
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 12-01-PLAN.md — TDD stubs: test_question_bank.py (RED) + KNOWN_JES_FACTORS + QUESTION_BANK stub
-- [ ] 12-02-PLAN.md — Populate QUESTION_BANK (4 entries, all 9 tests GREEN)
+- [x] 12-01-PLAN.md — TDD stubs: test_question_bank.py (RED) + KNOWN_JES_FACTORS + QUESTION_BANK stub
+- [x] 12-02-PLAN.md — Populate QUESTION_BANK (4 entries, all 9 tests GREEN)
 
 ---
 
