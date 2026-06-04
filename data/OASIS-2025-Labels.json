@@ -1,0 +1,4518 @@
+{
+  "fields": [
+    {
+      "id": "_id",
+      "type": "int"
+    },
+    {
+      "id": "OaSIS profile code",
+      "type": "text"
+    },
+    {
+      "id": "Label",
+      "type": "text"
+    }
+  ],
+  "records": [
+    {
+      "_id": 901,
+      "OaSIS profile code": "00010.00",
+      "Label": "Legislators"
+    },
+    {
+      "_id": 902,
+      "OaSIS profile code": "00011.00",
+      "Label": "Senior government managers and officials"
+    },
+    {
+      "_id": 903,
+      "OaSIS profile code": "00012.00",
+      "Label": "Senior managers - financial, communications and other business services"
+    },
+    {
+      "_id": 904,
+      "OaSIS profile code": "00013.00",
+      "Label": "Senior managers - health, education, social and community services and membership organizations"
+    },
+    {
+      "_id": 905,
+      "OaSIS profile code": "00014.00",
+      "Label": "Senior managers - trade, broadcasting and other services"
+    },
+    {
+      "_id": 906,
+      "OaSIS profile code": "00015.00",
+      "Label": "Senior managers - construction, transportation, production and utilities"
+    },
+    {
+      "_id": 907,
+      "OaSIS profile code": "10010.00",
+      "Label": "Financial managers"
+    },
+    {
+      "_id": 908,
+      "OaSIS profile code": "10011.00",
+      "Label": "Human resources managers"
+    },
+    {
+      "_id": 909,
+      "OaSIS profile code": "10012.00",
+      "Label": "Purchasing managers"
+    },
+    {
+      "_id": 910,
+      "OaSIS profile code": "10019.00",
+      "Label": "Other administrative services managers"
+    },
+    {
+      "_id": 911,
+      "OaSIS profile code": "10020.01",
+      "Label": "Insurance managers"
+    },
+    {
+      "_id": 912,
+      "OaSIS profile code": "10020.02",
+      "Label": "Real estate service managers"
+    },
+    {
+      "_id": 913,
+      "OaSIS profile code": "10020.03",
+      "Label": "Mortgage broker managers"
+    },
+    {
+      "_id": 914,
+      "OaSIS profile code": "10020.04",
+      "Label": "Securities manager"
+    },
+    {
+      "_id": 915,
+      "OaSIS profile code": "10021.01",
+      "Label": "Banking and other investment managers"
+    },
+    {
+      "_id": 916,
+      "OaSIS profile code": "10021.02",
+      "Label": "Credit managers"
+    },
+    {
+      "_id": 917,
+      "OaSIS profile code": "10022.01",
+      "Label": "Advertising managers"
+    },
+    {
+      "_id": 918,
+      "OaSIS profile code": "10022.02",
+      "Label": "Marketing managers"
+    },
+    {
+      "_id": 919,
+      "OaSIS profile code": "10022.03",
+      "Label": "Public relation managers"
+    },
+    {
+      "_id": 920,
+      "OaSIS profile code": "10022.04",
+      "Label": "E-business managers"
+    },
+    {
+      "_id": 921,
+      "OaSIS profile code": "10029.00",
+      "Label": "Other business services managers"
+    },
+    {
+      "_id": 922,
+      "OaSIS profile code": "10030.00",
+      "Label": "Telecommunication carriers managers"
+    },
+    {
+      "_id": 923,
+      "OaSIS profile code": "11100.01",
+      "Label": "Financial auditors"
+    },
+    {
+      "_id": 924,
+      "OaSIS profile code": "11100.02",
+      "Label": "Accountants"
+    },
+    {
+      "_id": 925,
+      "OaSIS profile code": "11101.01",
+      "Label": "Financial analysts"
+    },
+    {
+      "_id": 926,
+      "OaSIS profile code": "11101.02",
+      "Label": "Investment analysts"
+    },
+    {
+      "_id": 927,
+      "OaSIS profile code": "11102.00",
+      "Label": "Financial advisors"
+    },
+    {
+      "_id": 928,
+      "OaSIS profile code": "11103.01",
+      "Label": "Securities agents and investment dealers"
+    },
+    {
+      "_id": 929,
+      "OaSIS profile code": "11103.02",
+      "Label": "Brokers"
+    },
+    {
+      "_id": 930,
+      "OaSIS profile code": "11109.01",
+      "Label": "Financial examiners and inspectors"
+    },
+    {
+      "_id": 931,
+      "OaSIS profile code": "11109.02",
+      "Label": "Financial investigators"
+    },
+    {
+      "_id": 932,
+      "OaSIS profile code": "11109.03",
+      "Label": "Financial Underwriters"
+    },
+    {
+      "_id": 933,
+      "OaSIS profile code": "11109.04",
+      "Label": "Trust officers"
+    },
+    {
+      "_id": 934,
+      "OaSIS profile code": "11109.05",
+      "Label": "Mortgage brokers"
+    },
+    {
+      "_id": 935,
+      "OaSIS profile code": "11200.00",
+      "Label": "Human resources professionals"
+    },
+    {
+      "_id": 936,
+      "OaSIS profile code": "11201.00",
+      "Label": "Professional occupations in business management consulting"
+    },
+    {
+      "_id": 937,
+      "OaSIS profile code": "11202.00",
+      "Label": "Professional occupations in marketing, advertising and public relations"
+    },
+    {
+      "_id": 938,
+      "OaSIS profile code": "12010.00",
+      "Label": "Supervisors, general office and administrative support workers"
+    },
+    {
+      "_id": 939,
+      "OaSIS profile code": "12011.00",
+      "Label": "Supervisors, finance and insurance office workers"
+    },
+    {
+      "_id": 940,
+      "OaSIS profile code": "12012.00",
+      "Label": "Supervisors, library, correspondence and related information workers"
+    },
+    {
+      "_id": 941,
+      "OaSIS profile code": "12013.00",
+      "Label": "Supervisors, supply chain, tracking and scheduling coordination occupations"
+    },
+    {
+      "_id": 942,
+      "OaSIS profile code": "12100.00",
+      "Label": "Executive assistants"
+    },
+    {
+      "_id": 943,
+      "OaSIS profile code": "12101.00",
+      "Label": "Human resources and recruitment officers"
+    },
+    {
+      "_id": 944,
+      "OaSIS profile code": "12102.00",
+      "Label": "Procurement and purchasing agents and officers"
+    },
+    {
+      "_id": 945,
+      "OaSIS profile code": "12103.00",
+      "Label": "Conference and event planners"
+    },
+    {
+      "_id": 946,
+      "OaSIS profile code": "12104.01",
+      "Label": "Excise tax revenue officers"
+    },
+    {
+      "_id": 947,
+      "OaSIS profile code": "12104.02",
+      "Label": "Government benefits services officers"
+    },
+    {
+      "_id": 948,
+      "OaSIS profile code": "12110.01",
+      "Label": "Court reporters"
+    },
+    {
+      "_id": 949,
+      "OaSIS profile code": "12110.02",
+      "Label": "Medical transcriptionists"
+    },
+    {
+      "_id": 950,
+      "OaSIS profile code": "12111.00",
+      "Label": "Health information management occupations"
+    },
+    {
+      "_id": 951,
+      "OaSIS profile code": "12112.00",
+      "Label": "Records management technicians"
+    },
+    {
+      "_id": 952,
+      "OaSIS profile code": "12113.00",
+      "Label": "Statistical officers and related research support occupations"
+    },
+    {
+      "_id": 953,
+      "OaSIS profile code": "12200.00",
+      "Label": "Accounting technicians and bookkeepers"
+    },
+    {
+      "_id": 954,
+      "OaSIS profile code": "12201.01",
+      "Label": "Insurance adjusters"
+    },
+    {
+      "_id": 955,
+      "OaSIS profile code": "12201.02",
+      "Label": "Insurance claims examiners"
+    },
+    {
+      "_id": 956,
+      "OaSIS profile code": "12202.00",
+      "Label": "Insurance underwriters"
+    },
+    {
+      "_id": 957,
+      "OaSIS profile code": "12203.01",
+      "Label": "Assessors"
+    },
+    {
+      "_id": 958,
+      "OaSIS profile code": "12203.02",
+      "Label": "Business valuators"
+    },
+    {
+      "_id": 959,
+      "OaSIS profile code": "12203.03",
+      "Label": "Appraisers"
+    },
+    {
+      "_id": 960,
+      "OaSIS profile code": "13100.00",
+      "Label": "Administrative officers"
+    },
+    {
+      "_id": 961,
+      "OaSIS profile code": "13101.00",
+      "Label": "Property administrators"
+    },
+    {
+      "_id": 962,
+      "OaSIS profile code": "13102.00",
+      "Label": "Payroll administrators"
+    },
+    {
+      "_id": 963,
+      "OaSIS profile code": "13110.00",
+      "Label": "Administrative assistants"
+    },
+    {
+      "_id": 964,
+      "OaSIS profile code": "13111.00",
+      "Label": "Legal administrative assistants"
+    },
+    {
+      "_id": 965,
+      "OaSIS profile code": "13112.00",
+      "Label": "Medical administrative assistants"
+    },
+    {
+      "_id": 966,
+      "OaSIS profile code": "13200.01",
+      "Label": "Customs brokers"
+    },
+    {
+      "_id": 967,
+      "OaSIS profile code": "13200.02",
+      "Label": "Ship brokers"
+    },
+    {
+      "_id": 968,
+      "OaSIS profile code": "13201.01",
+      "Label": "Production logistics coordinators"
+    },
+    {
+      "_id": 969,
+      "OaSIS profile code": "13201.02",
+      "Label": "Transportation logistics coordinators"
+    },
+    {
+      "_id": 970,
+      "OaSIS profile code": "14100.01",
+      "Label": "General office support workers"
+    },
+    {
+      "_id": 971,
+      "OaSIS profile code": "14100.02",
+      "Label": "File clerks"
+    },
+    {
+      "_id": 972,
+      "OaSIS profile code": "14101.01",
+      "Label": "Receptionists"
+    },
+    {
+      "_id": 973,
+      "OaSIS profile code": "14101.02",
+      "Label": "Hospital admitting clerks"
+    },
+    {
+      "_id": 974,
+      "OaSIS profile code": "14101.03",
+      "Label": "Switchboard and answering service operators"
+    },
+    {
+      "_id": 975,
+      "OaSIS profile code": "14101.04",
+      "Label": "Telephone operators"
+    },
+    {
+      "_id": 976,
+      "OaSIS profile code": "14102.00",
+      "Label": "Personnel clerks"
+    },
+    {
+      "_id": 977,
+      "OaSIS profile code": "14103.00",
+      "Label": "Court clerks and related court services occupations"
+    },
+    {
+      "_id": 978,
+      "OaSIS profile code": "14110.01",
+      "Label": "Survey interviewers"
+    },
+    {
+      "_id": 979,
+      "OaSIS profile code": "14110.02",
+      "Label": "Statistical clerks"
+    },
+    {
+      "_id": 980,
+      "OaSIS profile code": "14111.00",
+      "Label": "Data entry clerks"
+    },
+    {
+      "_id": 981,
+      "OaSIS profile code": "14112.01",
+      "Label": "Desktop publishing operators"
+    },
+    {
+      "_id": 982,
+      "OaSIS profile code": "14112.02",
+      "Label": "Typesetting input and output operators"
+    },
+    {
+      "_id": 983,
+      "OaSIS profile code": "14200.00",
+      "Label": "Accounting and related clerks"
+    },
+    {
+      "_id": 984,
+      "OaSIS profile code": "14201.01",
+      "Label": "Bank clerks"
+    },
+    {
+      "_id": 985,
+      "OaSIS profile code": "14201.02",
+      "Label": "Insurance clerks"
+    },
+    {
+      "_id": 986,
+      "OaSIS profile code": "14201.03",
+      "Label": "Other financial clerks"
+    },
+    {
+      "_id": 987,
+      "OaSIS profile code": "14202.00",
+      "Label": "Collection clerks"
+    },
+    {
+      "_id": 988,
+      "OaSIS profile code": "14300.00",
+      "Label": "Library assistants and clerks"
+    },
+    {
+      "_id": 989,
+      "OaSIS profile code": "14301.01",
+      "Label": "Classified advertising clerks"
+    },
+    {
+      "_id": 990,
+      "OaSIS profile code": "14301.02",
+      "Label": "Correspondence clerks"
+    },
+    {
+      "_id": 991,
+      "OaSIS profile code": "14301.03",
+      "Label": "Proofreaders and editorial assistants"
+    },
+    {
+      "_id": 992,
+      "OaSIS profile code": "14301.04",
+      "Label": "Readers and press clippers"
+    },
+    {
+      "_id": 993,
+      "OaSIS profile code": "14301.05",
+      "Label": "Regulatory clerks"
+    },
+    {
+      "_id": 994,
+      "OaSIS profile code": "14400.00",
+      "Label": "Shippers and receivers"
+    },
+    {
+      "_id": 995,
+      "OaSIS profile code": "14401.00",
+      "Label": "Storekeepers and partspersons"
+    },
+    {
+      "_id": 996,
+      "OaSIS profile code": "14402.00",
+      "Label": "Production logistics workers"
+    },
+    {
+      "_id": 997,
+      "OaSIS profile code": "14403.01",
+      "Label": "Purchasing control workers"
+    },
+    {
+      "_id": 998,
+      "OaSIS profile code": "14403.02",
+      "Label": "Inventory control workers"
+    },
+    {
+      "_id": 999,
+      "OaSIS profile code": "14404.00",
+      "Label": "Dispatchers"
+    },
+    {
+      "_id": 1000,
+      "OaSIS profile code": "14405.00",
+      "Label": "Transportation route and crew schedulers"
+    },
+    {
+      "_id": 1001,
+      "OaSIS profile code": "20010.00",
+      "Label": "Engineering managers"
+    },
+    {
+      "_id": 1002,
+      "OaSIS profile code": "20011.01",
+      "Label": "Architecture and urban planning managers"
+    },
+    {
+      "_id": 1003,
+      "OaSIS profile code": "20011.02",
+      "Label": "Science Managers"
+    },
+    {
+      "_id": 1004,
+      "OaSIS profile code": "20012.00",
+      "Label": "Computer and information systems managers"
+    },
+    {
+      "_id": 1005,
+      "OaSIS profile code": "21100.01",
+      "Label": "Physicists"
+    },
+    {
+      "_id": 1006,
+      "OaSIS profile code": "21100.02",
+      "Label": "Astronomers"
+    },
+    {
+      "_id": 1007,
+      "OaSIS profile code": "21101.00",
+      "Label": "Chemists"
+    },
+    {
+      "_id": 1008,
+      "OaSIS profile code": "21102.01",
+      "Label": "Geoscientists"
+    },
+    {
+      "_id": 1009,
+      "OaSIS profile code": "21102.02",
+      "Label": "Oceanographers"
+    },
+    {
+      "_id": 1010,
+      "OaSIS profile code": "21103.00",
+      "Label": "Meteorologists and climatologists"
+    },
+    {
+      "_id": 1011,
+      "OaSIS profile code": "21109.01",
+      "Label": "Metallurgists"
+    },
+    {
+      "_id": 1012,
+      "OaSIS profile code": "21109.02",
+      "Label": "Materials scientists"
+    },
+    {
+      "_id": 1013,
+      "OaSIS profile code": "21109.03",
+      "Label": "Soil scientists"
+    },
+    {
+      "_id": 1014,
+      "OaSIS profile code": "21109.04",
+      "Label": "Astronauts"
+    },
+    {
+      "_id": 1015,
+      "OaSIS profile code": "21110.01",
+      "Label": "Biologists"
+    },
+    {
+      "_id": 1016,
+      "OaSIS profile code": "21110.02",
+      "Label": "Microbiologists and cell and molecular biologists"
+    },
+    {
+      "_id": 1017,
+      "OaSIS profile code": "21111.00",
+      "Label": "Forestry professionals"
+    },
+    {
+      "_id": 1018,
+      "OaSIS profile code": "21112.00",
+      "Label": "Agricultural representatives, consultants and specialists"
+    },
+    {
+      "_id": 1019,
+      "OaSIS profile code": "21120.00",
+      "Label": "Public and environmental health and safety professionals"
+    },
+    {
+      "_id": 1020,
+      "OaSIS profile code": "21200.00",
+      "Label": "Architects"
+    },
+    {
+      "_id": 1021,
+      "OaSIS profile code": "21201.00",
+      "Label": "Landscape architects"
+    },
+    {
+      "_id": 1022,
+      "OaSIS profile code": "21202.00",
+      "Label": "Urban and land use planners"
+    },
+    {
+      "_id": 1023,
+      "OaSIS profile code": "21203.00",
+      "Label": "Land surveyors"
+    },
+    {
+      "_id": 1024,
+      "OaSIS profile code": "21210.01",
+      "Label": "Mathematicians"
+    },
+    {
+      "_id": 1025,
+      "OaSIS profile code": "21210.02",
+      "Label": "Statisticians"
+    },
+    {
+      "_id": 1026,
+      "OaSIS profile code": "21210.03",
+      "Label": "Actuaries"
+    },
+    {
+      "_id": 1027,
+      "OaSIS profile code": "21211.00",
+      "Label": "Data scientists"
+    },
+    {
+      "_id": 1028,
+      "OaSIS profile code": "21220.00",
+      "Label": "Cybersecurity specialists"
+    },
+    {
+      "_id": 1029,
+      "OaSIS profile code": "21221.00",
+      "Label": "Business system specialists"
+    },
+    {
+      "_id": 1030,
+      "OaSIS profile code": "21222.00",
+      "Label": "Information systems specialists"
+    },
+    {
+      "_id": 1031,
+      "OaSIS profile code": "21223.01",
+      "Label": "Database analysts"
+    },
+    {
+      "_id": 1032,
+      "OaSIS profile code": "21223.02",
+      "Label": "Data administrators"
+    },
+    {
+      "_id": 1033,
+      "OaSIS profile code": "21230.00",
+      "Label": "Computer systems developers and programmers"
+    },
+    {
+      "_id": 1034,
+      "OaSIS profile code": "21231.00",
+      "Label": "Software engineers and designers"
+    },
+    {
+      "_id": 1035,
+      "OaSIS profile code": "21232.00",
+      "Label": "Software developers and programmers"
+    },
+    {
+      "_id": 1036,
+      "OaSIS profile code": "21233.00",
+      "Label": "Web designers"
+    },
+    {
+      "_id": 1037,
+      "OaSIS profile code": "21234.00",
+      "Label": "Web developers and programmers"
+    },
+    {
+      "_id": 1038,
+      "OaSIS profile code": "21300.00",
+      "Label": "Civil engineers"
+    },
+    {
+      "_id": 1039,
+      "OaSIS profile code": "21301.00",
+      "Label": "Mechanical engineers"
+    },
+    {
+      "_id": 1040,
+      "OaSIS profile code": "21310.00",
+      "Label": "Electrical and electronics engineers"
+    },
+    {
+      "_id": 1041,
+      "OaSIS profile code": "21311.01",
+      "Label": "Computer and telecommunications hardware engineers"
+    },
+    {
+      "_id": 1042,
+      "OaSIS profile code": "21311.02",
+      "Label": "Network system and data communication engineers"
+    },
+    {
+      "_id": 1043,
+      "OaSIS profile code": "21320.00",
+      "Label": "Chemical engineers"
+    },
+    {
+      "_id": 1044,
+      "OaSIS profile code": "21321.00",
+      "Label": "Industrial and manufacturing engineers"
+    },
+    {
+      "_id": 1045,
+      "OaSIS profile code": "21322.00",
+      "Label": "Metallurgical and materials engineers"
+    },
+    {
+      "_id": 1046,
+      "OaSIS profile code": "21330.00",
+      "Label": "Mining engineers"
+    },
+    {
+      "_id": 1047,
+      "OaSIS profile code": "21331.00",
+      "Label": "Geological engineers"
+    },
+    {
+      "_id": 1048,
+      "OaSIS profile code": "21332.00",
+      "Label": "Petroleum engineers"
+    },
+    {
+      "_id": 1049,
+      "OaSIS profile code": "21390.00",
+      "Label": "Aerospace engineers"
+    },
+    {
+      "_id": 1050,
+      "OaSIS profile code": "21399.01",
+      "Label": "Agricultural and bio-resource engineers"
+    },
+    {
+      "_id": 1051,
+      "OaSIS profile code": "21399.02",
+      "Label": "Biomedical engineers"
+    },
+    {
+      "_id": 1052,
+      "OaSIS profile code": "21399.03",
+      "Label": "Engineering physicists and engineering scientists"
+    },
+    {
+      "_id": 1053,
+      "OaSIS profile code": "21399.04",
+      "Label": "Marine and naval engineers"
+    },
+    {
+      "_id": 1054,
+      "OaSIS profile code": "21399.05",
+      "Label": "Textile engineers"
+    },
+    {
+      "_id": 1055,
+      "OaSIS profile code": "22100.01",
+      "Label": "Chemical technologists"
+    },
+    {
+      "_id": 1056,
+      "OaSIS profile code": "22100.02",
+      "Label": "Chemical technicians"
+    },
+    {
+      "_id": 1057,
+      "OaSIS profile code": "22101.01",
+      "Label": "Geological and mineral technologists"
+    },
+    {
+      "_id": 1058,
+      "OaSIS profile code": "22101.02",
+      "Label": "Geological and mineral technicians"
+    },
+    {
+      "_id": 1059,
+      "OaSIS profile code": "22110.01",
+      "Label": "Biological technologists"
+    },
+    {
+      "_id": 1060,
+      "OaSIS profile code": "22110.02",
+      "Label": "Biological technicians"
+    },
+    {
+      "_id": 1061,
+      "OaSIS profile code": "22111.01",
+      "Label": "Fish and fish products inspectors"
+    },
+    {
+      "_id": 1062,
+      "OaSIS profile code": "22111.02",
+      "Label": "Fruit and vegetables inspectors"
+    },
+    {
+      "_id": 1063,
+      "OaSIS profile code": "22111.03",
+      "Label": "Grain inspectors"
+    },
+    {
+      "_id": 1064,
+      "OaSIS profile code": "22111.04",
+      "Label": "Meat inspectors"
+    },
+    {
+      "_id": 1065,
+      "OaSIS profile code": "22111.05",
+      "Label": "Plant protection inspectors"
+    },
+    {
+      "_id": 1066,
+      "OaSIS profile code": "22112.00",
+      "Label": "Forestry technologists and technicians"
+    },
+    {
+      "_id": 1067,
+      "OaSIS profile code": "22113.00",
+      "Label": "Conservation and fishery officers"
+    },
+    {
+      "_id": 1068,
+      "OaSIS profile code": "22114.01",
+      "Label": "Arborists and tree service technicians"
+    },
+    {
+      "_id": 1069,
+      "OaSIS profile code": "22114.02",
+      "Label": "Golf course superintendents"
+    },
+    {
+      "_id": 1070,
+      "OaSIS profile code": "22114.03",
+      "Label": "Horticulturists"
+    },
+    {
+      "_id": 1071,
+      "OaSIS profile code": "22114.04",
+      "Label": "Landscape designers and landscape architectural technicians and technologists"
+    },
+    {
+      "_id": 1072,
+      "OaSIS profile code": "22114.05",
+      "Label": "Landscape gardeners"
+    },
+    {
+      "_id": 1073,
+      "OaSIS profile code": "22114.06",
+      "Label": "Landscapers"
+    },
+    {
+      "_id": 1074,
+      "OaSIS profile code": "22114.07",
+      "Label": "Lawn care specialists"
+    },
+    {
+      "_id": 1075,
+      "OaSIS profile code": "22210.00",
+      "Label": "Architectural technologists and technicians"
+    },
+    {
+      "_id": 1076,
+      "OaSIS profile code": "22211.00",
+      "Label": "Industrial designers"
+    },
+    {
+      "_id": 1077,
+      "OaSIS profile code": "22212.01",
+      "Label": "Drafting technologists"
+    },
+    {
+      "_id": 1078,
+      "OaSIS profile code": "22212.02",
+      "Label": "Drafting technicians"
+    },
+    {
+      "_id": 1079,
+      "OaSIS profile code": "22213.01",
+      "Label": "Land survey technologists"
+    },
+    {
+      "_id": 1080,
+      "OaSIS profile code": "22213.02",
+      "Label": "Land survey technicians"
+    },
+    {
+      "_id": 1081,
+      "OaSIS profile code": "22214.01",
+      "Label": "Cartographic technologists and technicians"
+    },
+    {
+      "_id": 1082,
+      "OaSIS profile code": "22214.02",
+      "Label": "Photogrammetric technologists and technicians"
+    },
+    {
+      "_id": 1083,
+      "OaSIS profile code": "22214.03",
+      "Label": "Aerial survey and remote sensing technologists and technicians"
+    },
+    {
+      "_id": 1084,
+      "OaSIS profile code": "22214.04",
+      "Label": "Geographic information system (GIS) technologists and technicians"
+    },
+    {
+      "_id": 1085,
+      "OaSIS profile code": "22214.05",
+      "Label": "Meteorological technologists and technicians"
+    },
+    {
+      "_id": 1086,
+      "OaSIS profile code": "22220.01",
+      "Label": "Computer and network operators"
+    },
+    {
+      "_id": 1087,
+      "OaSIS profile code": "22220.02",
+      "Label": "Web technicians"
+    },
+    {
+      "_id": 1088,
+      "OaSIS profile code": "22221.00",
+      "Label": "User support technicians"
+    },
+    {
+      "_id": 1089,
+      "OaSIS profile code": "22222.00",
+      "Label": "Information systems testing technicians"
+    },
+    {
+      "_id": 1090,
+      "OaSIS profile code": "22230.00",
+      "Label": "Non-destructive testers and inspectors"
+    },
+    {
+      "_id": 1091,
+      "OaSIS profile code": "22231.01",
+      "Label": "Motor Vehicle defects investigators"
+    },
+    {
+      "_id": 1092,
+      "OaSIS profile code": "22231.02",
+      "Label": "Railway accident investigation officers"
+    },
+    {
+      "_id": 1093,
+      "OaSIS profile code": "22231.03",
+      "Label": "Airworthiness inspectors"
+    },
+    {
+      "_id": 1094,
+      "OaSIS profile code": "22231.04",
+      "Label": "Inspectors, weights and measures"
+    },
+    {
+      "_id": 1095,
+      "OaSIS profile code": "22231.05",
+      "Label": "Oil and gas drilling rig inspectors"
+    },
+    {
+      "_id": 1096,
+      "OaSIS profile code": "22232.00",
+      "Label": "Occupational health and safety specialists"
+    },
+    {
+      "_id": 1097,
+      "OaSIS profile code": "22233.00",
+      "Label": "Construction inspectors"
+    },
+    {
+      "_id": 1098,
+      "OaSIS profile code": "22300.01",
+      "Label": "Civil engineering technologists"
+    },
+    {
+      "_id": 1099,
+      "OaSIS profile code": "22300.02",
+      "Label": "Civil engineering technicians"
+    },
+    {
+      "_id": 1100,
+      "OaSIS profile code": "22301.01",
+      "Label": "Mechanical engineering technologists"
+    },
+    {
+      "_id": 1101,
+      "OaSIS profile code": "22301.02",
+      "Label": "Mechanical engineering technicians"
+    },
+    {
+      "_id": 1102,
+      "OaSIS profile code": "22302.01",
+      "Label": "Industrial engineering and manufacturing technologists"
+    },
+    {
+      "_id": 1103,
+      "OaSIS profile code": "22302.02",
+      "Label": "Industrial engineering and manufacturing technicians"
+    },
+    {
+      "_id": 1104,
+      "OaSIS profile code": "22303.00",
+      "Label": "Construction estimators"
+    },
+    {
+      "_id": 1105,
+      "OaSIS profile code": "22310.01",
+      "Label": "Electrical and electronics engineering technologists"
+    },
+    {
+      "_id": 1106,
+      "OaSIS profile code": "22310.02",
+      "Label": "Electrical and electronics engineering technicians"
+    },
+    {
+      "_id": 1107,
+      "OaSIS profile code": "22311.00",
+      "Label": "Electronic service technicians (household and business equipment)"
+    },
+    {
+      "_id": 1108,
+      "OaSIS profile code": "22312.00",
+      "Label": "Industrial instrument technicians and mechanics"
+    },
+    {
+      "_id": 1109,
+      "OaSIS profile code": "22313.01",
+      "Label": "Aircraft instrument mechanics and technicians"
+    },
+    {
+      "_id": 1110,
+      "OaSIS profile code": "22313.02",
+      "Label": "Aircraft electrical mechanics and technicians"
+    },
+    {
+      "_id": 1111,
+      "OaSIS profile code": "22313.03",
+      "Label": "Avionics mechanics and technicians"
+    },
+    {
+      "_id": 1112,
+      "OaSIS profile code": "22313.04",
+      "Label": "Avionics inspectors"
+    },
+    {
+      "_id": 1113,
+      "OaSIS profile code": "30010.00",
+      "Label": "Managers in health care"
+    },
+    {
+      "_id": 1114,
+      "OaSIS profile code": "31100.01",
+      "Label": "Anesthesiologists"
+    },
+    {
+      "_id": 1115,
+      "OaSIS profile code": "31100.02",
+      "Label": "Internists, general"
+    },
+    {
+      "_id": 1116,
+      "OaSIS profile code": "31100.03",
+      "Label": "Pediatricians, general"
+    },
+    {
+      "_id": 1117,
+      "OaSIS profile code": "31100.04",
+      "Label": "Psychiatrists"
+    },
+    {
+      "_id": 1118,
+      "OaSIS profile code": "31100.05",
+      "Label": "Allergists and immunologists"
+    },
+    {
+      "_id": 1119,
+      "OaSIS profile code": "31100.06",
+      "Label": "Hospitalists"
+    },
+    {
+      "_id": 1120,
+      "OaSIS profile code": "31100.07",
+      "Label": "Neurologists"
+    },
+    {
+      "_id": 1121,
+      "OaSIS profile code": "31100.08",
+      "Label": "Nuclear medicine physicians"
+    },
+    {
+      "_id": 1122,
+      "OaSIS profile code": "31100.09",
+      "Label": "Dermatologists"
+    },
+    {
+      "_id": 1123,
+      "OaSIS profile code": "31100.10",
+      "Label": "Physical medicine and rehabilitation physicians"
+    },
+    {
+      "_id": 1124,
+      "OaSIS profile code": "31100.11",
+      "Label": "Preventive medicine physicians"
+    },
+    {
+      "_id": 1125,
+      "OaSIS profile code": "31100.12",
+      "Label": "Radiologists"
+    },
+    {
+      "_id": 1126,
+      "OaSIS profile code": "31100.13",
+      "Label": "Other specialists in clinical medicine"
+    },
+    {
+      "_id": 1127,
+      "OaSIS profile code": "31100.14",
+      "Label": "Specialists in laboratory medicine, including pathologists"
+    },
+    {
+      "_id": 1128,
+      "OaSIS profile code": "31101.01",
+      "Label": "General surgeons"
+    },
+    {
+      "_id": 1129,
+      "OaSIS profile code": "31101.02",
+      "Label": "Obstetricians and gynecologists"
+    },
+    {
+      "_id": 1130,
+      "OaSIS profile code": "31101.03",
+      "Label": "Ophthalmologists"
+    },
+    {
+      "_id": 1131,
+      "OaSIS profile code": "31101.04",
+      "Label": "Urologists"
+    },
+    {
+      "_id": 1132,
+      "OaSIS profile code": "31101.05",
+      "Label": "Other specialists in surgery"
+    },
+    {
+      "_id": 1133,
+      "OaSIS profile code": "31102.00",
+      "Label": "General practitioners and family physicians"
+    },
+    {
+      "_id": 1134,
+      "OaSIS profile code": "31103.00",
+      "Label": "Veterinarians"
+    },
+    {
+      "_id": 1135,
+      "OaSIS profile code": "31110.01",
+      "Label": "Dentists, General"
+    },
+    {
+      "_id": 1136,
+      "OaSIS profile code": "31110.02",
+      "Label": "Oral and Maxillofacial Surgeons"
+    },
+    {
+      "_id": 1137,
+      "OaSIS profile code": "31110.03",
+      "Label": "Orthodontists"
+    },
+    {
+      "_id": 1138,
+      "OaSIS profile code": "31110.04",
+      "Label": "Prosthodontists"
+    },
+    {
+      "_id": 1139,
+      "OaSIS profile code": "31111.00",
+      "Label": "Optometrists"
+    },
+    {
+      "_id": 1140,
+      "OaSIS profile code": "31112.01",
+      "Label": "Audiologists"
+    },
+    {
+      "_id": 1141,
+      "OaSIS profile code": "31112.02",
+      "Label": "Speech language pathologists"
+    },
+    {
+      "_id": 1142,
+      "OaSIS profile code": "31120.01",
+      "Label": "Community pharmacists and hospital pharmacists"
+    },
+    {
+      "_id": 1143,
+      "OaSIS profile code": "31120.02",
+      "Label": "Industrial pharmacists"
+    },
+    {
+      "_id": 1144,
+      "OaSIS profile code": "31121.00",
+      "Label": "Dietitians and nutritionists"
+    },
+    {
+      "_id": 1145,
+      "OaSIS profile code": "31200.00",
+      "Label": "Psychologists"
+    },
+    {
+      "_id": 1146,
+      "OaSIS profile code": "31201.00",
+      "Label": "Chiropractors"
+    },
+    {
+      "_id": 1147,
+      "OaSIS profile code": "31202.00",
+      "Label": "Physiotherapists"
+    },
+    {
+      "_id": 1148,
+      "OaSIS profile code": "31203.00",
+      "Label": "Occupational therapists"
+    },
+    {
+      "_id": 1149,
+      "OaSIS profile code": "31204.01",
+      "Label": "Recreational therapists"
+    },
+    {
+      "_id": 1150,
+      "OaSIS profile code": "31204.02",
+      "Label": "Kinesiologists and exercise therapists"
+    },
+    {
+      "_id": 1151,
+      "OaSIS profile code": "31209.01",
+      "Label": "Doctors of Podiatric Medicine"
+    },
+    {
+      "_id": 1152,
+      "OaSIS profile code": "31209.02",
+      "Label": "Chiropodists and diploma or first-degree trained podiatrists"
+    },
+    {
+      "_id": 1153,
+      "OaSIS profile code": "31209.03",
+      "Label": "Doctors of naturopathics medicine"
+    },
+    {
+      "_id": 1154,
+      "OaSIS profile code": "31209.04",
+      "Label": "Doctors of osteopathic medicine"
+    },
+    {
+      "_id": 1155,
+      "OaSIS profile code": "31300.00",
+      "Label": "Nursing coordinators and supervisors"
+    },
+    {
+      "_id": 1156,
+      "OaSIS profile code": "31301.01",
+      "Label": "General duty registered nurses"
+    },
+    {
+      "_id": 1157,
+      "OaSIS profile code": "31301.02",
+      "Label": "Occupational health nurses"
+    },
+    {
+      "_id": 1158,
+      "OaSIS profile code": "31301.03",
+      "Label": "Community Health Nurses"
+    },
+    {
+      "_id": 1159,
+      "OaSIS profile code": "31301.04",
+      "Label": "Registered psychiatric nurses"
+    },
+    {
+      "_id": 1160,
+      "OaSIS profile code": "31301.05",
+      "Label": "Nursing researchers and consultants"
+    },
+    {
+      "_id": 1161,
+      "OaSIS profile code": "31301.06",
+      "Label": "Clinical nurses"
+    },
+    {
+      "_id": 1162,
+      "OaSIS profile code": "31302.00",
+      "Label": "Nurse practitioners"
+    },
+    {
+      "_id": 1163,
+      "OaSIS profile code": "31303.01",
+      "Label": "Physician Assistants"
+    },
+    {
+      "_id": 1164,
+      "OaSIS profile code": "31303.02",
+      "Label": "Midwives"
+    },
+    {
+      "_id": 1165,
+      "OaSIS profile code": "31303.03",
+      "Label": "Genetic counsellors"
+    },
+    {
+      "_id": 1166,
+      "OaSIS profile code": "31303.04",
+      "Label": "Orthoptists"
+    },
+    {
+      "_id": 1167,
+      "OaSIS profile code": "31303.05",
+      "Label": "Pathologist assistants"
+    },
+    {
+      "_id": 1168,
+      "OaSIS profile code": "32100.00",
+      "Label": "Opticians"
+    },
+    {
+      "_id": 1169,
+      "OaSIS profile code": "32101.01",
+      "Label": "Licensed practical nurses"
+    },
+    {
+      "_id": 1170,
+      "OaSIS profile code": "32101.02",
+      "Label": "Operating room technicians"
+    },
+    {
+      "_id": 1171,
+      "OaSIS profile code": "32102.00",
+      "Label": "Paramedical occupations"
+    },
+    {
+      "_id": 1172,
+      "OaSIS profile code": "32103.01",
+      "Label": "Respiratory therapists"
+    },
+    {
+      "_id": 1173,
+      "OaSIS profile code": "32103.02",
+      "Label": "Clinical perfusionists"
+    },
+    {
+      "_id": 1174,
+      "OaSIS profile code": "32103.03",
+      "Label": "Cardiopulmonary  technologists"
+    },
+    {
+      "_id": 1175,
+      "OaSIS profile code": "32104.00",
+      "Label": "Animal health technologists and veterinary technicians"
+    },
+    {
+      "_id": 1176,
+      "OaSIS profile code": "32109.01",
+      "Label": "Hearing instrument practitioners"
+    },
+    {
+      "_id": 1177,
+      "OaSIS profile code": "32109.02",
+      "Label": "Communicative disorders assistants and speech-language pathology assistants"
+    },
+    {
+      "_id": 1178,
+      "OaSIS profile code": "32109.03",
+      "Label": "Ophthalmic technologists and technicians"
+    },
+    {
+      "_id": 1179,
+      "OaSIS profile code": "32109.04",
+      "Label": "Physical Rehabilitation therapists"
+    },
+    {
+      "_id": 1180,
+      "OaSIS profile code": "32109.05",
+      "Label": "Physiotherapy assistants and occupational therapy assistants"
+    },
+    {
+      "_id": 1181,
+      "OaSIS profile code": "32110.00",
+      "Label": "Denturists"
+    },
+    {
+      "_id": 1182,
+      "OaSIS profile code": "32111.01",
+      "Label": "Dental hygienists"
+    },
+    {
+      "_id": 1183,
+      "OaSIS profile code": "32111.02",
+      "Label": "Dental therapists"
+    },
+    {
+      "_id": 1184,
+      "OaSIS profile code": "32112.00",
+      "Label": "Dental technologists and technicians"
+    },
+    {
+      "_id": 1185,
+      "OaSIS profile code": "32120.00",
+      "Label": "Medical laboratory technologists"
+    },
+    {
+      "_id": 1186,
+      "OaSIS profile code": "32121.01",
+      "Label": "Radiological technologists"
+    },
+    {
+      "_id": 1187,
+      "OaSIS profile code": "32121.02",
+      "Label": "Nuclear medicine technologists"
+    },
+    {
+      "_id": 1188,
+      "OaSIS profile code": "32121.03",
+      "Label": "Radiation therapists"
+    },
+    {
+      "_id": 1189,
+      "OaSIS profile code": "32121.04",
+      "Label": "Magnetic Resonance Technologist"
+    },
+    {
+      "_id": 1190,
+      "OaSIS profile code": "32122.00",
+      "Label": "Medical sonographers"
+    },
+    {
+      "_id": 1191,
+      "OaSIS profile code": "32123.01",
+      "Label": "Cardiology technologists"
+    },
+    {
+      "_id": 1192,
+      "OaSIS profile code": "32123.02",
+      "Label": "Electrophysiological technologists"
+    },
+    {
+      "_id": 1193,
+      "OaSIS profile code": "32124.00",
+      "Label": "Pharmacy technicians"
+    },
+    {
+      "_id": 1194,
+      "OaSIS profile code": "32129.01",
+      "Label": "Dietary technicians"
+    },
+    {
+      "_id": 1195,
+      "OaSIS profile code": "32129.02",
+      "Label": "Ocularists"
+    },
+    {
+      "_id": 1196,
+      "OaSIS profile code": "32129.03",
+      "Label": "Prosthetists and orthotists"
+    },
+    {
+      "_id": 1197,
+      "OaSIS profile code": "32129.04",
+      "Label": "Prosthetic and orthotic technicians"
+    },
+    {
+      "_id": 1198,
+      "OaSIS profile code": "32200.01",
+      "Label": "Traditional Chinese medicine practitioners"
+    },
+    {
+      "_id": 1199,
+      "OaSIS profile code": "32200.02",
+      "Label": "Acupuncturists"
+    },
+    {
+      "_id": 1200,
+      "OaSIS profile code": "32201.00",
+      "Label": "Massage therapists"
+    },
+    {
+      "_id": 1201,
+      "OaSIS profile code": "32209.01",
+      "Label": "Herbalists"
+    },
+    {
+      "_id": 1202,
+      "OaSIS profile code": "32209.02",
+      "Label": "Osteopathic manual practitioners"
+    },
+    {
+      "_id": 1203,
+      "OaSIS profile code": "32209.03",
+      "Label": "Homeopaths"
+    },
+    {
+      "_id": 1204,
+      "OaSIS profile code": "32209.04",
+      "Label": "Reflexologists"
+    },
+    {
+      "_id": 1205,
+      "OaSIS profile code": "32209.05",
+      "Label": "Holistic nutritionists"
+    },
+    {
+      "_id": 1206,
+      "OaSIS profile code": "32209.06",
+      "Label": "Naturotherapists"
+    },
+    {
+      "_id": 1207,
+      "OaSIS profile code": "33100.01",
+      "Label": "Dental assistants"
+    },
+    {
+      "_id": 1208,
+      "OaSIS profile code": "33100.02",
+      "Label": "Dental Laboratory Assistants"
+    },
+    {
+      "_id": 1209,
+      "OaSIS profile code": "33101.00",
+      "Label": "Medical laboratory assistants and related technical occupations"
+    },
+    {
+      "_id": 1210,
+      "OaSIS profile code": "33102.00",
+      "Label": "Nurse aides, orderlies and patient service associates"
+    },
+    {
+      "_id": 1211,
+      "OaSIS profile code": "33103.00",
+      "Label": "Pharmacy technical assistants and pharmacy assistants"
+    },
+    {
+      "_id": 1212,
+      "OaSIS profile code": "33109.01",
+      "Label": "Audiometric technicians"
+    },
+    {
+      "_id": 1213,
+      "OaSIS profile code": "33109.02",
+      "Label": "Orthopedic technologists"
+    },
+    {
+      "_id": 1214,
+      "OaSIS profile code": "33109.03",
+      "Label": "Rehabilitation aides"
+    },
+    {
+      "_id": 1215,
+      "OaSIS profile code": "33109.04",
+      "Label": "Ophthalmic assistants"
+    },
+    {
+      "_id": 1216,
+      "OaSIS profile code": "33109.05",
+      "Label": "Optical/ophthalmic laboratory technicians and assistants"
+    },
+    {
+      "_id": 1217,
+      "OaSIS profile code": "33109.06",
+      "Label": "Sterile processing technicians"
+    },
+    {
+      "_id": 1218,
+      "OaSIS profile code": "33109.07",
+      "Label": "Blood donor clinic assistants"
+    },
+    {
+      "_id": 1219,
+      "OaSIS profile code": "33109.08",
+      "Label": "Morgue attendants"
+    },
+    {
+      "_id": 1220,
+      "OaSIS profile code": "40010.00",
+      "Label": "Government managers - health and social policy development and program administration"
+    },
+    {
+      "_id": 1221,
+      "OaSIS profile code": "40011.00",
+      "Label": "Government managers - economic analysis, policy development and program administration"
+    },
+    {
+      "_id": 1222,
+      "OaSIS profile code": "40012.00",
+      "Label": "Government managers - education policy development and program administration"
+    },
+    {
+      "_id": 1223,
+      "OaSIS profile code": "40019.00",
+      "Label": "Other managers in public administration"
+    },
+    {
+      "_id": 1224,
+      "OaSIS profile code": "40020.01",
+      "Label": "Faculty administrators"
+    },
+    {
+      "_id": 1225,
+      "OaSIS profile code": "40020.02",
+      "Label": "Registrars"
+    },
+    {
+      "_id": 1226,
+      "OaSIS profile code": "40020.03",
+      "Label": "Administrator of vocational training schools"
+    },
+    {
+      "_id": 1227,
+      "OaSIS profile code": "40021.01",
+      "Label": "School principals"
+    },
+    {
+      "_id": 1228,
+      "OaSIS profile code": "40021.02",
+      "Label": "Administrators of elementary and secondary education"
+    },
+    {
+      "_id": 1229,
+      "OaSIS profile code": "40030.00",
+      "Label": "Managers in social, community and correctional services"
+    },
+    {
+      "_id": 1230,
+      "OaSIS profile code": "40040.00",
+      "Label": "Commissioned police officers and related occupations in public protection services"
+    },
+    {
+      "_id": 1231,
+      "OaSIS profile code": "40041.00",
+      "Label": "Fire chiefs and senior firefighting officers"
+    },
+    {
+      "_id": 1232,
+      "OaSIS profile code": "40042.00",
+      "Label": "Commissioned officers of the Canadian Armed Forces"
+    },
+    {
+      "_id": 1233,
+      "OaSIS profile code": "41100.00",
+      "Label": "Judges"
+    },
+    {
+      "_id": 1234,
+      "OaSIS profile code": "41101.00",
+      "Label": "Lawyers and Quebec notaries"
+    },
+    {
+      "_id": 1235,
+      "OaSIS profile code": "41200.00",
+      "Label": "University professors and lecturers"
+    },
+    {
+      "_id": 1236,
+      "OaSIS profile code": "41201.01",
+      "Label": "Post-secondary teaching assistants"
+    },
+    {
+      "_id": 1237,
+      "OaSIS profile code": "41201.02",
+      "Label": "Post-secondary research assistants"
+    },
+    {
+      "_id": 1238,
+      "OaSIS profile code": "41210.00",
+      "Label": "College and other vocational instructors"
+    },
+    {
+      "_id": 1239,
+      "OaSIS profile code": "41220.00",
+      "Label": "Secondary school teachers"
+    },
+    {
+      "_id": 1240,
+      "OaSIS profile code": "41221.00",
+      "Label": "Elementary school and kindergarten teachers"
+    },
+    {
+      "_id": 1241,
+      "OaSIS profile code": "41300.00",
+      "Label": "Social workers"
+    },
+    {
+      "_id": 1242,
+      "OaSIS profile code": "41301.00",
+      "Label": "Therapists in counselling and related specialized therapies"
+    },
+    {
+      "_id": 1243,
+      "OaSIS profile code": "41302.00",
+      "Label": "Religious leaders"
+    },
+    {
+      "_id": 1244,
+      "OaSIS profile code": "41310.01",
+      "Label": "Police investigators"
+    },
+    {
+      "_id": 1245,
+      "OaSIS profile code": "41310.02",
+      "Label": "Coroners and medical examiners"
+    },
+    {
+      "_id": 1246,
+      "OaSIS profile code": "41311.00",
+      "Label": "Probation and parole officers"
+    },
+    {
+      "_id": 1247,
+      "OaSIS profile code": "41320.00",
+      "Label": "Educational counsellors"
+    },
+    {
+      "_id": 1248,
+      "OaSIS profile code": "41321.00",
+      "Label": "Career development practitioners and career counsellors (except education)"
+    },
+    {
+      "_id": 1249,
+      "OaSIS profile code": "41400.01",
+      "Label": "Ergonomists"
+    },
+    {
+      "_id": 1250,
+      "OaSIS profile code": "41400.02",
+      "Label": "Occupational or industrial hygienists"
+    },
+    {
+      "_id": 1251,
+      "OaSIS profile code": "41400.03",
+      "Label": "Patent agents"
+    },
+    {
+      "_id": 1252,
+      "OaSIS profile code": "41400.04",
+      "Label": "Science policy and program officers"
+    },
+    {
+      "_id": 1253,
+      "OaSIS profile code": "41400.05",
+      "Label": "Technology transfer officers"
+    },
+    {
+      "_id": 1254,
+      "OaSIS profile code": "41401.00",
+      "Label": "Economists and economic policy researchers and analysts"
+    },
+    {
+      "_id": 1255,
+      "OaSIS profile code": "41402.00",
+      "Label": "Business development officers and market researchers and analysts"
+    },
+    {
+      "_id": 1256,
+      "OaSIS profile code": "41403.01",
+      "Label": "Social policy researchers"
+    },
+    {
+      "_id": 1257,
+      "OaSIS profile code": "41403.02",
+      "Label": "Home economists"
+    },
+    {
+      "_id": 1258,
+      "OaSIS profile code": "41403.03",
+      "Label": "Housing policy analysts"
+    },
+    {
+      "_id": 1259,
+      "OaSIS profile code": "41403.04",
+      "Label": "Immigration and citizenship consultants"
+    },
+    {
+      "_id": 1260,
+      "OaSIS profile code": "41403.05",
+      "Label": "International aid and development project officers"
+    },
+    {
+      "_id": 1261,
+      "OaSIS profile code": "41403.06",
+      "Label": "Social survey researchers"
+    },
+    {
+      "_id": 1262,
+      "OaSIS profile code": "41403.07",
+      "Label": "Social service planners"
+    },
+    {
+      "_id": 1263,
+      "OaSIS profile code": "41404.00",
+      "Label": "Health policy researchers, consultants and program officers"
+    },
+    {
+      "_id": 1264,
+      "OaSIS profile code": "41405.00",
+      "Label": "Education policy researchers, consultants and program officers"
+    },
+    {
+      "_id": 1265,
+      "OaSIS profile code": "41406.01",
+      "Label": "Recreation, sports and fitness consultants"
+    },
+    {
+      "_id": 1266,
+      "OaSIS profile code": "41406.02",
+      "Label": "Recreation, sports and fitness policy analysts"
+    },
+    {
+      "_id": 1267,
+      "OaSIS profile code": "41406.03",
+      "Label": "Recreation, sports and fitness program supervisors"
+    },
+    {
+      "_id": 1268,
+      "OaSIS profile code": "41407.00",
+      "Label": "Program officers unique to government"
+    },
+    {
+      "_id": 1269,
+      "OaSIS profile code": "41409.01",
+      "Label": "Anthropologists"
+    },
+    {
+      "_id": 1270,
+      "OaSIS profile code": "41409.02",
+      "Label": "Archaeologists"
+    },
+    {
+      "_id": 1271,
+      "OaSIS profile code": "41409.03",
+      "Label": "Geographers"
+    },
+    {
+      "_id": 1272,
+      "OaSIS profile code": "41409.04",
+      "Label": "Historians"
+    },
+    {
+      "_id": 1273,
+      "OaSIS profile code": "41409.05",
+      "Label": "Linguists"
+    },
+    {
+      "_id": 1274,
+      "OaSIS profile code": "41409.06",
+      "Label": "Political scientists"
+    },
+    {
+      "_id": 1275,
+      "OaSIS profile code": "41409.07",
+      "Label": "Psychometricians"
+    },
+    {
+      "_id": 1276,
+      "OaSIS profile code": "41409.08",
+      "Label": "Sociologists"
+    },
+    {
+      "_id": 1277,
+      "OaSIS profile code": "41409.09",
+      "Label": "Other social science professionals"
+    },
+    {
+      "_id": 1278,
+      "OaSIS profile code": "42100.00",
+      "Label": "Police officers (except commissioned)"
+    },
+    {
+      "_id": 1279,
+      "OaSIS profile code": "42101.00",
+      "Label": "Firefighters"
+    },
+    {
+      "_id": 1280,
+      "OaSIS profile code": "42102.00",
+      "Label": "Specialized members of the Canadian Armed Forces"
+    },
+    {
+      "_id": 1281,
+      "OaSIS profile code": "42200.01",
+      "Label": "Paralegals"
+    },
+    {
+      "_id": 1282,
+      "OaSIS profile code": "42200.02",
+      "Label": "Independent paralegals"
+    },
+    {
+      "_id": 1283,
+      "OaSIS profile code": "42200.03",
+      "Label": "Notaries public"
+    },
+    {
+      "_id": 1284,
+      "OaSIS profile code": "42200.04",
+      "Label": "Trademark agents"
+    },
+    {
+      "_id": 1285,
+      "OaSIS profile code": "42200.05",
+      "Label": "Justice of the peace"
+    },
+    {
+      "_id": 1286,
+      "OaSIS profile code": "42201.00",
+      "Label": "Social and community service workers"
+    },
+    {
+      "_id": 1287,
+      "OaSIS profile code": "42202.01",
+      "Label": "Early childhood educators"
+    },
+    {
+      "_id": 1288,
+      "OaSIS profile code": "42202.02",
+      "Label": "Early childhood educator assistants"
+    },
+    {
+      "_id": 1289,
+      "OaSIS profile code": "42203.00",
+      "Label": "Instructors of persons with disabilities"
+    },
+    {
+      "_id": 1290,
+      "OaSIS profile code": "42204.00",
+      "Label": "Religion workers"
+    },
+    {
+      "_id": 1291,
+      "OaSIS profile code": "43100.00",
+      "Label": "Elementary and secondary school teacher assistants"
+    },
+    {
+      "_id": 1292,
+      "OaSIS profile code": "43109.01",
+      "Label": "Driving instructors"
+    },
+    {
+      "_id": 1293,
+      "OaSIS profile code": "43109.02",
+      "Label": "Driver's license examiners"
+    },
+    {
+      "_id": 1294,
+      "OaSIS profile code": "43109.03",
+      "Label": "Sewing instructors"
+    },
+    {
+      "_id": 1295,
+      "OaSIS profile code": "43109.04",
+      "Label": "Modelling instructors"
+    },
+    {
+      "_id": 1296,
+      "OaSIS profile code": "43200.00",
+      "Label": "Sheriffs and bailiffs"
+    },
+    {
+      "_id": 1297,
+      "OaSIS profile code": "43201.00",
+      "Label": "Correctional service officers"
+    },
+    {
+      "_id": 1298,
+      "OaSIS profile code": "43202.01",
+      "Label": "Animal control officers"
+    },
+    {
+      "_id": 1299,
+      "OaSIS profile code": "43202.02",
+      "Label": "By-law enforcement officers"
+    },
+    {
+      "_id": 1300,
+      "OaSIS profile code": "43202.03",
+      "Label": "Commercial transport inspectors"
+    },
+    {
+      "_id": 1301,
+      "OaSIS profile code": "43202.04",
+      "Label": "Garbage collection inspectors"
+    },
+    {
+      "_id": 1302,
+      "OaSIS profile code": "43202.05",
+      "Label": "Liquor licence inspectors"
+    },
+    {
+      "_id": 1303,
+      "OaSIS profile code": "43202.06",
+      "Label": "Parking control officers"
+    },
+    {
+      "_id": 1304,
+      "OaSIS profile code": "43202.07",
+      "Label": "Taxi inspectors"
+    },
+    {
+      "_id": 1305,
+      "OaSIS profile code": "43202.08",
+      "Label": "Zoning inspectors"
+    },
+    {
+      "_id": 1306,
+      "OaSIS profile code": "43203.01",
+      "Label": "Border services and customs officers"
+    },
+    {
+      "_id": 1307,
+      "OaSIS profile code": "43203.02",
+      "Label": "Immigration officers"
+    },
+    {
+      "_id": 1308,
+      "OaSIS profile code": "43204.00",
+      "Label": "Operations Members of the Canadian Armed Forces"
+    },
+    {
+      "_id": 1309,
+      "OaSIS profile code": "44100.01",
+      "Label": "Home child care providers"
+    },
+    {
+      "_id": 1310,
+      "OaSIS profile code": "44100.02",
+      "Label": "Foster parents"
+    },
+    {
+      "_id": 1311,
+      "OaSIS profile code": "44101.00",
+      "Label": "Home support workers, caregivers and related occupations"
+    },
+    {
+      "_id": 1312,
+      "OaSIS profile code": "44200.00",
+      "Label": "Primary combat members of the Canadian Armed Forces"
+    },
+    {
+      "_id": 1313,
+      "OaSIS profile code": "45100.01",
+      "Label": "Student monitors"
+    },
+    {
+      "_id": 1314,
+      "OaSIS profile code": "45100.02",
+      "Label": "Crossing guards"
+    },
+    {
+      "_id": 1315,
+      "OaSIS profile code": "50010.00",
+      "Label": "Library, archive, museum and art gallery managers"
+    },
+    {
+      "_id": 1316,
+      "OaSIS profile code": "50011.00",
+      "Label": "Managers - publishing, motion pictures, broadcasting and performing arts"
+    },
+    {
+      "_id": 1317,
+      "OaSIS profile code": "50012.00",
+      "Label": "Recreation, sports and fitness program and service directors"
+    },
+    {
+      "_id": 1318,
+      "OaSIS profile code": "51100.00",
+      "Label": "Librarians"
+    },
+    {
+      "_id": 1319,
+      "OaSIS profile code": "51101.01",
+      "Label": "Conservators"
+    },
+    {
+      "_id": 1320,
+      "OaSIS profile code": "51101.02",
+      "Label": "Curators"
+    },
+    {
+      "_id": 1321,
+      "OaSIS profile code": "51102.00",
+      "Label": "Archivists"
+    },
+    {
+      "_id": 1322,
+      "OaSIS profile code": "51110.00",
+      "Label": "Editors"
+    },
+    {
+      "_id": 1323,
+      "OaSIS profile code": "51111.01",
+      "Label": "Novelists, playwrights, script writers, poets and other creative writers"
+    },
+    {
+      "_id": 1324,
+      "OaSIS profile code": "51111.02",
+      "Label": "Content writers (non-technical)"
+    },
+    {
+      "_id": 1325,
+      "OaSIS profile code": "51111.03",
+      "Label": "Copywriters"
+    },
+    {
+      "_id": 1326,
+      "OaSIS profile code": "51112.00",
+      "Label": "Technical writers"
+    },
+    {
+      "_id": 1327,
+      "OaSIS profile code": "51113.00",
+      "Label": "Journalists"
+    },
+    {
+      "_id": 1328,
+      "OaSIS profile code": "51114.01",
+      "Label": "Translators and translator-revisers"
+    },
+    {
+      "_id": 1329,
+      "OaSIS profile code": "51114.02",
+      "Label": "Terminologists"
+    },
+    {
+      "_id": 1330,
+      "OaSIS profile code": "51114.03",
+      "Label": "Interpreters"
+    },
+    {
+      "_id": 1331,
+      "OaSIS profile code": "51114.04",
+      "Label": "Sign language Interpreters"
+    },
+    {
+      "_id": 1332,
+      "OaSIS profile code": "51120.01",
+      "Label": "Film, radio, television and video game producers"
+    },
+    {
+      "_id": 1333,
+      "OaSIS profile code": "51120.02",
+      "Label": "Directors"
+    },
+    {
+      "_id": 1334,
+      "OaSIS profile code": "51120.03",
+      "Label": "Choreographers"
+    },
+    {
+      "_id": 1335,
+      "OaSIS profile code": "51120.04",
+      "Label": "Art directors"
+    },
+    {
+      "_id": 1336,
+      "OaSIS profile code": "51120.05",
+      "Label": "Film editors"
+    },
+    {
+      "_id": 1337,
+      "OaSIS profile code": "51120.06",
+      "Label": "Record producers"
+    },
+    {
+      "_id": 1338,
+      "OaSIS profile code": "51120.07",
+      "Label": "Directors of photography"
+    },
+    {
+      "_id": 1339,
+      "OaSIS profile code": "51121.01",
+      "Label": "Conductors"
+    },
+    {
+      "_id": 1340,
+      "OaSIS profile code": "51121.02",
+      "Label": "Composers"
+    },
+    {
+      "_id": 1341,
+      "OaSIS profile code": "51121.03",
+      "Label": "Arrangers"
+    },
+    {
+      "_id": 1342,
+      "OaSIS profile code": "51122.01",
+      "Label": "Musicians"
+    },
+    {
+      "_id": 1343,
+      "OaSIS profile code": "51122.02",
+      "Label": "Singers"
+    },
+    {
+      "_id": 1344,
+      "OaSIS profile code": "51122.03",
+      "Label": "Teachers of music or voice"
+    },
+    {
+      "_id": 1345,
+      "OaSIS profile code": "52100.01",
+      "Label": "Library Technicians"
+    },
+    {
+      "_id": 1346,
+      "OaSIS profile code": "52100.02",
+      "Label": "Public archive technicians"
+    },
+    {
+      "_id": 1347,
+      "OaSIS profile code": "52110.00",
+      "Label": "Film and video camera operators"
+    },
+    {
+      "_id": 1348,
+      "OaSIS profile code": "52111.00",
+      "Label": "Graphic arts technicians"
+    },
+    {
+      "_id": 1349,
+      "OaSIS profile code": "52112.00",
+      "Label": "Broadcast technicians"
+    },
+    {
+      "_id": 1350,
+      "OaSIS profile code": "52113.00",
+      "Label": "Audio and video recording technicians"
+    },
+    {
+      "_id": 1351,
+      "OaSIS profile code": "52114.00",
+      "Label": "Announcers and other broadcasters"
+    },
+    {
+      "_id": 1352,
+      "OaSIS profile code": "52119.01",
+      "Label": "Floor managers"
+    },
+    {
+      "_id": 1353,
+      "OaSIS profile code": "52119.02",
+      "Label": "Key grips"
+    },
+    {
+      "_id": 1354,
+      "OaSIS profile code": "52119.03",
+      "Label": "Gaffers and lighting technicians"
+    },
+    {
+      "_id": 1355,
+      "OaSIS profile code": "52119.04",
+      "Label": "Stunt coordinators and special effects technicians"
+    },
+    {
+      "_id": 1356,
+      "OaSIS profile code": "52119.05",
+      "Label": "Make-up artists"
+    },
+    {
+      "_id": 1357,
+      "OaSIS profile code": "52119.06",
+      "Label": "Costumiers"
+    },
+    {
+      "_id": 1358,
+      "OaSIS profile code": "52119.07",
+      "Label": "Settings shop foremen and property masters"
+    },
+    {
+      "_id": 1359,
+      "OaSIS profile code": "52120.01",
+      "Label": "Graphic designers"
+    },
+    {
+      "_id": 1360,
+      "OaSIS profile code": "52120.02",
+      "Label": "Illustrators"
+    },
+    {
+      "_id": 1361,
+      "OaSIS profile code": "52121.00",
+      "Label": "Interior designers and interior decorators"
+    },
+    {
+      "_id": 1362,
+      "OaSIS profile code": "53100.01",
+      "Label": "Conservation and restoration technicians"
+    },
+    {
+      "_id": 1363,
+      "OaSIS profile code": "53100.02",
+      "Label": "Preparators and picture framers"
+    },
+    {
+      "_id": 1364,
+      "OaSIS profile code": "53100.03",
+      "Label": "Museum interpreters"
+    },
+    {
+      "_id": 1365,
+      "OaSIS profile code": "53100.04",
+      "Label": "Curatorial assistants, museum extension officers, museology technicians and museum registrars and cataloguers"
+    },
+    {
+      "_id": 1366,
+      "OaSIS profile code": "53100.05",
+      "Label": "Taxidermists"
+    },
+    {
+      "_id": 1367,
+      "OaSIS profile code": "53110.00",
+      "Label": "Photographers"
+    },
+    {
+      "_id": 1368,
+      "OaSIS profile code": "53111.01",
+      "Label": "Camera crane operators"
+    },
+    {
+      "_id": 1369,
+      "OaSIS profile code": "53111.02",
+      "Label": "Motion picture projectionists"
+    },
+    {
+      "_id": 1370,
+      "OaSIS profile code": "53111.03",
+      "Label": "Props persons and set builders"
+    },
+    {
+      "_id": 1371,
+      "OaSIS profile code": "53111.04",
+      "Label": "Scripts assistants"
+    },
+    {
+      "_id": 1372,
+      "OaSIS profile code": "53111.05",
+      "Label": "Grips and riggers"
+    },
+    {
+      "_id": 1373,
+      "OaSIS profile code": "53111.06",
+      "Label": "Dressers"
+    },
+    {
+      "_id": 1374,
+      "OaSIS profile code": "53111.07",
+      "Label": "Production assistants"
+    },
+    {
+      "_id": 1375,
+      "OaSIS profile code": "53120.01",
+      "Label": "Dancers"
+    },
+    {
+      "_id": 1376,
+      "OaSIS profile code": "53120.02",
+      "Label": "Dance teachers"
+    },
+    {
+      "_id": 1377,
+      "OaSIS profile code": "53121.01",
+      "Label": "Actors and comedians"
+    },
+    {
+      "_id": 1378,
+      "OaSIS profile code": "53121.02",
+      "Label": "Acting teachers"
+    },
+    {
+      "_id": 1379,
+      "OaSIS profile code": "53121.03",
+      "Label": "Circus and other performers"
+    },
+    {
+      "_id": 1380,
+      "OaSIS profile code": "53122.01",
+      "Label": "Painters"
+    },
+    {
+      "_id": 1381,
+      "OaSIS profile code": "53122.02",
+      "Label": "Sculptors"
+    },
+    {
+      "_id": 1382,
+      "OaSIS profile code": "53122.03",
+      "Label": "Art instructors and teachers"
+    },
+    {
+      "_id": 1383,
+      "OaSIS profile code": "53123.01",
+      "Label": "Theatre designers"
+    },
+    {
+      "_id": 1384,
+      "OaSIS profile code": "53123.02",
+      "Label": "Fashion designers"
+    },
+    {
+      "_id": 1385,
+      "OaSIS profile code": "53123.03",
+      "Label": "Exhibit designers"
+    },
+    {
+      "_id": 1386,
+      "OaSIS profile code": "53124.01",
+      "Label": "Carvers"
+    },
+    {
+      "_id": 1387,
+      "OaSIS profile code": "53124.02",
+      "Label": "Glass blowers"
+    },
+    {
+      "_id": 1388,
+      "OaSIS profile code": "53124.03",
+      "Label": "Metal art workers"
+    },
+    {
+      "_id": 1389,
+      "OaSIS profile code": "53124.04",
+      "Label": "Potters"
+    },
+    {
+      "_id": 1390,
+      "OaSIS profile code": "53124.05",
+      "Label": "Stained glass artists"
+    },
+    {
+      "_id": 1391,
+      "OaSIS profile code": "53124.06",
+      "Label": "Instrument makers"
+    },
+    {
+      "_id": 1392,
+      "OaSIS profile code": "53124.07",
+      "Label": "Weavers"
+    },
+    {
+      "_id": 1393,
+      "OaSIS profile code": "53124.08",
+      "Label": "Craft instructors"
+    },
+    {
+      "_id": 1394,
+      "OaSIS profile code": "53124.09",
+      "Label": "Artistic floral arrangers"
+    },
+    {
+      "_id": 1395,
+      "OaSIS profile code": "53125.00",
+      "Label": "Patternmakers - textile, leather and fur products"
+    },
+    {
+      "_id": 1396,
+      "OaSIS profile code": "53200.00",
+      "Label": "Athletes"
+    },
+    {
+      "_id": 1397,
+      "OaSIS profile code": "53201.01",
+      "Label": "Coaches"
+    },
+    {
+      "_id": 1398,
+      "OaSIS profile code": "53201.02",
+      "Label": "Sports scouts"
+    },
+    {
+      "_id": 1399,
+      "OaSIS profile code": "53202.00",
+      "Label": "Sports officials and referees"
+    },
+    {
+      "_id": 1400,
+      "OaSIS profile code": "54100.01",
+      "Label": "Program leaders and instructors in recreation and sport"
+    },
+    {
+      "_id": 1401,
+      "OaSIS profile code": "54100.02",
+      "Label": "Fitness appraisers"
+    },
+    {
+      "_id": 1402,
+      "OaSIS profile code": "55109.01",
+      "Label": "Buskers"
+    },
+    {
+      "_id": 1403,
+      "OaSIS profile code": "55109.02",
+      "Label": "Magicians and illusionists"
+    },
+    {
+      "_id": 1404,
+      "OaSIS profile code": "55109.03",
+      "Label": "Fashion Models"
+    },
+    {
+      "_id": 1405,
+      "OaSIS profile code": "55109.04",
+      "Label": "Influencers"
+    },
+    {
+      "_id": 1406,
+      "OaSIS profile code": "60010.00",
+      "Label": "Corporate sales managers"
+    },
+    {
+      "_id": 1407,
+      "OaSIS profile code": "60020.00",
+      "Label": "Retail and wholesale trade managers"
+    },
+    {
+      "_id": 1408,
+      "OaSIS profile code": "60030.00",
+      "Label": "Restaurant and food service managers"
+    },
+    {
+      "_id": 1409,
+      "OaSIS profile code": "60031.00",
+      "Label": "Accommodation service managers"
+    },
+    {
+      "_id": 1410,
+      "OaSIS profile code": "60040.00",
+      "Label": "Managers in customer and personal services"
+    },
+    {
+      "_id": 1411,
+      "OaSIS profile code": "62010.00",
+      "Label": "Retail sales supervisors"
+    },
+    {
+      "_id": 1412,
+      "OaSIS profile code": "62020.00",
+      "Label": "Food service supervisors"
+    },
+    {
+      "_id": 1413,
+      "OaSIS profile code": "62021.00",
+      "Label": "Executive housekeepers"
+    },
+    {
+      "_id": 1414,
+      "OaSIS profile code": "62022.00",
+      "Label": "Accommodation, travel, tourism and related services supervisors"
+    },
+    {
+      "_id": 1415,
+      "OaSIS profile code": "62023.01",
+      "Label": "Customer service representatives supervisors - financial services"
+    },
+    {
+      "_id": 1416,
+      "OaSIS profile code": "62023.02",
+      "Label": "Customer service representatives supervisors (except financial services)"
+    },
+    {
+      "_id": 1417,
+      "OaSIS profile code": "62024.00",
+      "Label": "Cleaning supervisors"
+    },
+    {
+      "_id": 1418,
+      "OaSIS profile code": "62029.00",
+      "Label": "Other services supervisors"
+    },
+    {
+      "_id": 1419,
+      "OaSIS profile code": "62100.00",
+      "Label": "Technical sales specialists - wholesale trade"
+    },
+    {
+      "_id": 1420,
+      "OaSIS profile code": "62101.00",
+      "Label": "Retail and wholesale buyers"
+    },
+    {
+      "_id": 1421,
+      "OaSIS profile code": "62200.01",
+      "Label": "Head Chefs"
+    },
+    {
+      "_id": 1422,
+      "OaSIS profile code": "62200.02",
+      "Label": "Sous-Chefs"
+    },
+    {
+      "_id": 1423,
+      "OaSIS profile code": "62200.03",
+      "Label": "Specialist chefs"
+    },
+    {
+      "_id": 1424,
+      "OaSIS profile code": "62201.01",
+      "Label": "Funeral directors"
+    },
+    {
+      "_id": 1425,
+      "OaSIS profile code": "62201.02",
+      "Label": "Embalmers"
+    },
+    {
+      "_id": 1426,
+      "OaSIS profile code": "62202.01",
+      "Label": "Jewellers and related workers"
+    },
+    {
+      "_id": 1427,
+      "OaSIS profile code": "62202.02",
+      "Label": "Watch repairers"
+    },
+    {
+      "_id": 1428,
+      "OaSIS profile code": "63100.00",
+      "Label": "Insurance agents and brokers"
+    },
+    {
+      "_id": 1429,
+      "OaSIS profile code": "63101.00",
+      "Label": "Real estate agents and salespersons"
+    },
+    {
+      "_id": 1430,
+      "OaSIS profile code": "63102.00",
+      "Label": "Financial sales representatives"
+    },
+    {
+      "_id": 1431,
+      "OaSIS profile code": "63200.00",
+      "Label": "Cooks"
+    },
+    {
+      "_id": 1432,
+      "OaSIS profile code": "63201.00",
+      "Label": "Butchers - retail and wholesale"
+    },
+    {
+      "_id": 1433,
+      "OaSIS profile code": "63202.00",
+      "Label": "Bakers"
+    },
+    {
+      "_id": 1434,
+      "OaSIS profile code": "63210.01",
+      "Label": "Hairstylists"
+    },
+    {
+      "_id": 1435,
+      "OaSIS profile code": "63210.02",
+      "Label": "Barbers"
+    },
+    {
+      "_id": 1436,
+      "OaSIS profile code": "63211.01",
+      "Label": "Estheticians"
+    },
+    {
+      "_id": 1437,
+      "OaSIS profile code": "63211.02",
+      "Label": "Cosmeticians"
+    },
+    {
+      "_id": 1438,
+      "OaSIS profile code": "63211.03",
+      "Label": "Electrologists"
+    },
+    {
+      "_id": 1439,
+      "OaSIS profile code": "63211.04",
+      "Label": "Manicurists and pedicurists"
+    },
+    {
+      "_id": 1440,
+      "OaSIS profile code": "63211.05",
+      "Label": "Scalp treatment specialists"
+    },
+    {
+      "_id": 1441,
+      "OaSIS profile code": "63211.06",
+      "Label": "Tattoo artists"
+    },
+    {
+      "_id": 1442,
+      "OaSIS profile code": "63211.07",
+      "Label": "Hair replacement technicians (non-medical)"
+    },
+    {
+      "_id": 1443,
+      "OaSIS profile code": "63220.01",
+      "Label": "Shoemakers"
+    },
+    {
+      "_id": 1444,
+      "OaSIS profile code": "63220.02",
+      "Label": "Shoe repairers"
+    },
+    {
+      "_id": 1445,
+      "OaSIS profile code": "63221.00",
+      "Label": "Upholsterers"
+    },
+    {
+      "_id": 1446,
+      "OaSIS profile code": "64100.01",
+      "Label": "Retail salespersons"
+    },
+    {
+      "_id": 1447,
+      "OaSIS profile code": "64100.02",
+      "Label": "Visual merchandisers"
+    },
+    {
+      "_id": 1448,
+      "OaSIS profile code": "64101.00",
+      "Label": "Sales and account representatives - wholesale trade (non-technical)"
+    },
+    {
+      "_id": 1449,
+      "OaSIS profile code": "64200.01",
+      "Label": "Tailors, Dressmakers and Alterationists"
+    },
+    {
+      "_id": 1450,
+      "OaSIS profile code": "64200.02",
+      "Label": "Furriers"
+    },
+    {
+      "_id": 1451,
+      "OaSIS profile code": "64200.03",
+      "Label": "Milliners"
+    },
+    {
+      "_id": 1452,
+      "OaSIS profile code": "64201.01",
+      "Label": "Image consultants"
+    },
+    {
+      "_id": 1453,
+      "OaSIS profile code": "64201.02",
+      "Label": "Wedding consultants"
+    },
+    {
+      "_id": 1454,
+      "OaSIS profile code": "64201.03",
+      "Label": "Weight loss consultants"
+    },
+    {
+      "_id": 1455,
+      "OaSIS profile code": "64300.00",
+      "Label": "Maîtres d'hôtel and hosts/hostesses"
+    },
+    {
+      "_id": 1456,
+      "OaSIS profile code": "64301.00",
+      "Label": "Bartenders"
+    },
+    {
+      "_id": 1457,
+      "OaSIS profile code": "64310.00",
+      "Label": "Travel counsellors"
+    },
+    {
+      "_id": 1458,
+      "OaSIS profile code": "64311.01",
+      "Label": "Flight attendants"
+    },
+    {
+      "_id": 1459,
+      "OaSIS profile code": "64311.02",
+      "Label": "Flight pursers, customer service directors and passenger service directors"
+    },
+    {
+      "_id": 1460,
+      "OaSIS profile code": "64311.03",
+      "Label": "Ship pursers"
+    },
+    {
+      "_id": 1461,
+      "OaSIS profile code": "64312.01",
+      "Label": "Airline passenger, baggage and ticket agents"
+    },
+    {
+      "_id": 1462,
+      "OaSIS profile code": "64312.02",
+      "Label": "Airline cargo and freight agents"
+    },
+    {
+      "_id": 1463,
+      "OaSIS profile code": "64312.03",
+      "Label": "Airline reservation agents"
+    },
+    {
+      "_id": 1464,
+      "OaSIS profile code": "64313.01",
+      "Label": "Ticket agents and related clerks (except airline)"
+    },
+    {
+      "_id": 1465,
+      "OaSIS profile code": "64313.02",
+      "Label": "Cargo service representatives (except airline)"
+    },
+    {
+      "_id": 1466,
+      "OaSIS profile code": "64314.00",
+      "Label": "Hotel front desk clerks"
+    },
+    {
+      "_id": 1467,
+      "OaSIS profile code": "64320.01",
+      "Label": "Tour guides"
+    },
+    {
+      "_id": 1468,
+      "OaSIS profile code": "64320.02",
+      "Label": "Travel guides"
+    },
+    {
+      "_id": 1469,
+      "OaSIS profile code": "64321.00",
+      "Label": "Casino workers"
+    },
+    {
+      "_id": 1470,
+      "OaSIS profile code": "64322.00",
+      "Label": "Outdoor sport and recreational guides"
+    },
+    {
+      "_id": 1471,
+      "OaSIS profile code": "64400.00",
+      "Label": "Customer services representatives - financial institutions"
+    },
+    {
+      "_id": 1472,
+      "OaSIS profile code": "64401.00",
+      "Label": "Postal services representatives"
+    },
+    {
+      "_id": 1473,
+      "OaSIS profile code": "64409.00",
+      "Label": "Other customer and information services representatives"
+    },
+    {
+      "_id": 1474,
+      "OaSIS profile code": "64410.01",
+      "Label": "Security guards"
+    },
+    {
+      "_id": 1475,
+      "OaSIS profile code": "64410.02",
+      "Label": "Armoured car guards"
+    },
+    {
+      "_id": 1476,
+      "OaSIS profile code": "64410.03",
+      "Label": "Corporate security officers"
+    },
+    {
+      "_id": 1477,
+      "OaSIS profile code": "64410.04",
+      "Label": "Private investigators"
+    },
+    {
+      "_id": 1478,
+      "OaSIS profile code": "64410.05",
+      "Label": "Retail loss prevention officers"
+    },
+    {
+      "_id": 1479,
+      "OaSIS profile code": "65100.00",
+      "Label": "Cashiers"
+    },
+    {
+      "_id": 1480,
+      "OaSIS profile code": "65101.00",
+      "Label": "Automotive and watercraft service station attendants"
+    },
+    {
+      "_id": 1481,
+      "OaSIS profile code": "65102.00",
+      "Label": "Store shelf stockers, clerks and order fillers"
+    },
+    {
+      "_id": 1482,
+      "OaSIS profile code": "65109.01",
+      "Label": "Demonstrators and direct distributors"
+    },
+    {
+      "_id": 1483,
+      "OaSIS profile code": "65109.02",
+      "Label": "Door-to-door salespersons and street vendors"
+    },
+    {
+      "_id": 1484,
+      "OaSIS profile code": "65109.03",
+      "Label": "Telephone solicitors and telemarketers"
+    },
+    {
+      "_id": 1485,
+      "OaSIS profile code": "65200.00",
+      "Label": "Food and beverage servers"
+    },
+    {
+      "_id": 1486,
+      "OaSIS profile code": "65201.01",
+      "Label": "Food counter attendants and food preparers"
+    },
+    {
+      "_id": 1487,
+      "OaSIS profile code": "65201.02",
+      "Label": "Kitchen helpers"
+    },
+    {
+      "_id": 1488,
+      "OaSIS profile code": "65201.03",
+      "Label": "Food service helpers"
+    },
+    {
+      "_id": 1489,
+      "OaSIS profile code": "65201.04",
+      "Label": "Dishwashers"
+    },
+    {
+      "_id": 1490,
+      "OaSIS profile code": "65202.00",
+      "Label": "Meat cutters and fishmongers - retail and wholesale"
+    },
+    {
+      "_id": 1491,
+      "OaSIS profile code": "65210.01",
+      "Label": "Guest service attendants and baggage porters"
+    },
+    {
+      "_id": 1492,
+      "OaSIS profile code": "65210.02",
+      "Label": "Ship and train service attendants"
+    },
+    {
+      "_id": 1493,
+      "OaSIS profile code": "65210.03",
+      "Label": "Facilities workers"
+    },
+    {
+      "_id": 1494,
+      "OaSIS profile code": "65211.01",
+      "Label": "Amusement attraction operators"
+    },
+    {
+      "_id": 1495,
+      "OaSIS profile code": "65211.02",
+      "Label": "Attendants in amusement, recreation and sport"
+    },
+    {
+      "_id": 1496,
+      "OaSIS profile code": "65220.00",
+      "Label": "Pet groomers and animal care workers"
+    },
+    {
+      "_id": 1497,
+      "OaSIS profile code": "65229.00",
+      "Label": "Other support occupations in personal services"
+    },
+    {
+      "_id": 1498,
+      "OaSIS profile code": "65310.01",
+      "Label": "Light duty cleaners"
+    },
+    {
+      "_id": 1499,
+      "OaSIS profile code": "65310.02",
+      "Label": "Housekeepers"
+    },
+    {
+      "_id": 1500,
+      "OaSIS profile code": "65311.01",
+      "Label": "Carpet and upholstery cleaners"
+    },
+    {
+      "_id": 1501,
+      "OaSIS profile code": "65311.02",
+      "Label": "Chimney cleaners and sandblasters"
+    },
+    {
+      "_id": 1502,
+      "OaSIS profile code": "65311.03",
+      "Label": "Furnace and ventilation system cleaners"
+    },
+    {
+      "_id": 1503,
+      "OaSIS profile code": "65311.04",
+      "Label": "Vehicle cleaners"
+    },
+    {
+      "_id": 1504,
+      "OaSIS profile code": "65311.05",
+      "Label": "Window cleaners"
+    },
+    {
+      "_id": 1505,
+      "OaSIS profile code": "65312.00",
+      "Label": "Janitors, caretakers and heavy-duty cleaners"
+    },
+    {
+      "_id": 1506,
+      "OaSIS profile code": "65320.01",
+      "Label": "Dry cleaning and laundry machine operators"
+    },
+    {
+      "_id": 1507,
+      "OaSIS profile code": "65320.02",
+      "Label": "Dry cleaning and laundry inspectors and assemblers"
+    },
+    {
+      "_id": 1508,
+      "OaSIS profile code": "65320.03",
+      "Label": "Ironing, pressing and finishing workers"
+    },
+    {
+      "_id": 1509,
+      "OaSIS profile code": "65329.01",
+      "Label": "Beauty salon attendants"
+    },
+    {
+      "_id": 1510,
+      "OaSIS profile code": "65329.02",
+      "Label": "Door attendants"
+    },
+    {
+      "_id": 1511,
+      "OaSIS profile code": "65329.03",
+      "Label": "Funeral home attendants"
+    },
+    {
+      "_id": 1512,
+      "OaSIS profile code": "65329.04",
+      "Label": "Laundromat attendants"
+    },
+    {
+      "_id": 1513,
+      "OaSIS profile code": "65329.05",
+      "Label": "Parking lot attendants and car jockeys"
+    },
+    {
+      "_id": 1514,
+      "OaSIS profile code": "65329.06",
+      "Label": "Ticket takers and ushers"
+    },
+    {
+      "_id": 1515,
+      "OaSIS profile code": "65329.07",
+      "Label": "Other elemental service workers"
+    },
+    {
+      "_id": 1516,
+      "OaSIS profile code": "70010.00",
+      "Label": "Construction managers"
+    },
+    {
+      "_id": 1517,
+      "OaSIS profile code": "70011.00",
+      "Label": "Home building and renovation managers"
+    },
+    {
+      "_id": 1518,
+      "OaSIS profile code": "70012.01",
+      "Label": "Facility operation managers"
+    },
+    {
+      "_id": 1519,
+      "OaSIS profile code": "70012.02",
+      "Label": "Maintenance managers"
+    },
+    {
+      "_id": 1520,
+      "OaSIS profile code": "70020.01",
+      "Label": "Transportation managers, operations"
+    },
+    {
+      "_id": 1521,
+      "OaSIS profile code": "70020.02",
+      "Label": "Transportation managers, freight traffic"
+    },
+    {
+      "_id": 1522,
+      "OaSIS profile code": "70021.00",
+      "Label": "Postal and courier services managers"
+    },
+    {
+      "_id": 1523,
+      "OaSIS profile code": "72010.00",
+      "Label": "Contractors and supervisors, machining, metal forming, shaping and erecting trades and related occupations"
+    },
+    {
+      "_id": 1524,
+      "OaSIS profile code": "72011.00",
+      "Label": "Contractors and supervisors, electrical trades and telecommunications occupations"
+    },
+    {
+      "_id": 1525,
+      "OaSIS profile code": "72012.00",
+      "Label": "Contractors and supervisors, pipefitting trades"
+    },
+    {
+      "_id": 1526,
+      "OaSIS profile code": "72013.00",
+      "Label": "Contractors and supervisors, carpentry trades"
+    },
+    {
+      "_id": 1527,
+      "OaSIS profile code": "72014.00",
+      "Label": "Contractors and supervisors, other construction trades, installers, repairers and servicers"
+    },
+    {
+      "_id": 1528,
+      "OaSIS profile code": "72020.00",
+      "Label": "Contractors and supervisors, mechanic trades"
+    },
+    {
+      "_id": 1529,
+      "OaSIS profile code": "72021.00",
+      "Label": "Contractors and supervisors, heavy equipment operator crews"
+    },
+    {
+      "_id": 1530,
+      "OaSIS profile code": "72022.00",
+      "Label": "Supervisors, printing and related occupations"
+    },
+    {
+      "_id": 1531,
+      "OaSIS profile code": "72023.00",
+      "Label": "Supervisors, railway transport operations"
+    },
+    {
+      "_id": 1532,
+      "OaSIS profile code": "72024.00",
+      "Label": "Supervisors, motor transport and other ground transit operators"
+    },
+    {
+      "_id": 1533,
+      "OaSIS profile code": "72025.00",
+      "Label": "Supervisors, mail and message distribution occupations"
+    },
+    {
+      "_id": 1534,
+      "OaSIS profile code": "72100.01",
+      "Label": "Machinists"
+    },
+    {
+      "_id": 1535,
+      "OaSIS profile code": "72100.02",
+      "Label": "Machining and tooling inspectors"
+    },
+    {
+      "_id": 1536,
+      "OaSIS profile code": "72101.01",
+      "Label": "Tool and die makers"
+    },
+    {
+      "_id": 1537,
+      "OaSIS profile code": "72101.02",
+      "Label": "Metal mould makers and patternmakers"
+    },
+    {
+      "_id": 1538,
+      "OaSIS profile code": "72102.00",
+      "Label": "Sheet metal workers"
+    },
+    {
+      "_id": 1539,
+      "OaSIS profile code": "72103.00",
+      "Label": "Boilermakers"
+    },
+    {
+      "_id": 1540,
+      "OaSIS profile code": "72104.00",
+      "Label": "Structural metal and platework fabricators and fitters"
+    },
+    {
+      "_id": 1541,
+      "OaSIS profile code": "72105.00",
+      "Label": "Ironworkers"
+    },
+    {
+      "_id": 1542,
+      "OaSIS profile code": "72106.01",
+      "Label": "Welders"
+    },
+    {
+      "_id": 1543,
+      "OaSIS profile code": "72106.02",
+      "Label": "Welding, brazing and soldering machine  operators"
+    },
+    {
+      "_id": 1544,
+      "OaSIS profile code": "72200.00",
+      "Label": "Electricians (except industrial and power system)"
+    },
+    {
+      "_id": 1545,
+      "OaSIS profile code": "72201.00",
+      "Label": "Industrial electricians"
+    },
+    {
+      "_id": 1546,
+      "OaSIS profile code": "72202.00",
+      "Label": "Power system electricians"
+    },
+    {
+      "_id": 1547,
+      "OaSIS profile code": "72203.00",
+      "Label": "Electrical power line and cable workers"
+    },
+    {
+      "_id": 1548,
+      "OaSIS profile code": "72204.00",
+      "Label": "Telecommunications line and cable installers and repairers"
+    },
+    {
+      "_id": 1549,
+      "OaSIS profile code": "72205.01",
+      "Label": "Telephone installers and repairers"
+    },
+    {
+      "_id": 1550,
+      "OaSIS profile code": "72205.02",
+      "Label": "Switch network installers and repairers"
+    },
+    {
+      "_id": 1551,
+      "OaSIS profile code": "72205.03",
+      "Label": "Telecommunications service testers"
+    },
+    {
+      "_id": 1552,
+      "OaSIS profile code": "72205.04",
+      "Label": "Telecommunications equipment technicians"
+    },
+    {
+      "_id": 1553,
+      "OaSIS profile code": "72205.05",
+      "Label": "Cable television service technicians"
+    },
+    {
+      "_id": 1554,
+      "OaSIS profile code": "72300.00",
+      "Label": "Plumbers"
+    },
+    {
+      "_id": 1555,
+      "OaSIS profile code": "72301.01",
+      "Label": "Steamfitters and pipefitters"
+    },
+    {
+      "_id": 1556,
+      "OaSIS profile code": "72301.02",
+      "Label": "Sprinkler system installers"
+    },
+    {
+      "_id": 1557,
+      "OaSIS profile code": "72302.00",
+      "Label": "Gas fitters"
+    },
+    {
+      "_id": 1558,
+      "OaSIS profile code": "72310.00",
+      "Label": "Carpenters"
+    },
+    {
+      "_id": 1559,
+      "OaSIS profile code": "72311.00",
+      "Label": "Cabinetmakers"
+    },
+    {
+      "_id": 1560,
+      "OaSIS profile code": "72320.00",
+      "Label": "Bricklayers"
+    },
+    {
+      "_id": 1561,
+      "OaSIS profile code": "72321.00",
+      "Label": "Insulators"
+    },
+    {
+      "_id": 1562,
+      "OaSIS profile code": "72400.01",
+      "Label": "Construction millwrights and industrial mechanics"
+    },
+    {
+      "_id": 1563,
+      "OaSIS profile code": "72400.02",
+      "Label": "Textile machinery mechanics and repairers"
+    },
+    {
+      "_id": 1564,
+      "OaSIS profile code": "72401.00",
+      "Label": "Heavy-duty equipment mechanics"
+    },
+    {
+      "_id": 1565,
+      "OaSIS profile code": "72402.00",
+      "Label": "Heating, refrigeration and air conditioning mechanics"
+    },
+    {
+      "_id": 1566,
+      "OaSIS profile code": "72403.00",
+      "Label": "Railway carmen/women"
+    },
+    {
+      "_id": 1567,
+      "OaSIS profile code": "72404.01",
+      "Label": "Aircraft mechanics"
+    },
+    {
+      "_id": 1568,
+      "OaSIS profile code": "72404.02",
+      "Label": "Aircraft inspectors"
+    },
+    {
+      "_id": 1569,
+      "OaSIS profile code": "72405.00",
+      "Label": "Machine fitters"
+    },
+    {
+      "_id": 1570,
+      "OaSIS profile code": "72406.00",
+      "Label": "Elevator constructors and mechanics"
+    },
+    {
+      "_id": 1571,
+      "OaSIS profile code": "72410.01",
+      "Label": "Automotive service technicians"
+    },
+    {
+      "_id": 1572,
+      "OaSIS profile code": "72410.02",
+      "Label": "Mechanical repairers, motor vehicle manufacturing"
+    },
+    {
+      "_id": 1573,
+      "OaSIS profile code": "72410.03",
+      "Label": "Transport truck and trailer mechanics"
+    },
+    {
+      "_id": 1574,
+      "OaSIS profile code": "72411.00",
+      "Label": "Auto body collision, refinishing and glass technicians and damage repair estimators"
+    },
+    {
+      "_id": 1575,
+      "OaSIS profile code": "72420.00",
+      "Label": "Oil and solid fuel heating mechanics"
+    },
+    {
+      "_id": 1576,
+      "OaSIS profile code": "72421.01",
+      "Label": "Small electrical appliance servicers and repairers"
+    },
+    {
+      "_id": 1577,
+      "OaSIS profile code": "72421.02",
+      "Label": "Major appliance repairers/technicians"
+    },
+    {
+      "_id": 1578,
+      "OaSIS profile code": "72422.00",
+      "Label": "Electrical mechanics"
+    },
+    {
+      "_id": 1579,
+      "OaSIS profile code": "72423.01",
+      "Label": "Motorcycle, all-terrain vehicle and other related mechanics"
+    },
+    {
+      "_id": 1580,
+      "OaSIS profile code": "72423.02",
+      "Label": "Recreation vehicle technicians"
+    },
+    {
+      "_id": 1581,
+      "OaSIS profile code": "72429.00",
+      "Label": "Other small engine and small equipment repairers"
+    },
+    {
+      "_id": 1582,
+      "OaSIS profile code": "72500.00",
+      "Label": "Crane operators"
+    },
+    {
+      "_id": 1583,
+      "OaSIS profile code": "72501.00",
+      "Label": "Water well drillers"
+    },
+    {
+      "_id": 1584,
+      "OaSIS profile code": "72600.01",
+      "Label": "Air pilots"
+    },
+    {
+      "_id": 1585,
+      "OaSIS profile code": "72600.02",
+      "Label": "Flight engineers"
+    },
+    {
+      "_id": 1586,
+      "OaSIS profile code": "72600.03",
+      "Label": "Flying instructors"
+    },
+    {
+      "_id": 1587,
+      "OaSIS profile code": "72601.01",
+      "Label": "Air traffic controllers"
+    },
+    {
+      "_id": 1588,
+      "OaSIS profile code": "72601.02",
+      "Label": "Flight dispatchers"
+    },
+    {
+      "_id": 1589,
+      "OaSIS profile code": "72601.03",
+      "Label": "Flight service specialists"
+    },
+    {
+      "_id": 1590,
+      "OaSIS profile code": "72602.00",
+      "Label": "Deck officers, water transport"
+    },
+    {
+      "_id": 1591,
+      "OaSIS profile code": "72603.00",
+      "Label": "Engineer officers, water transport"
+    },
+    {
+      "_id": 1592,
+      "OaSIS profile code": "72604.01",
+      "Label": "Railway traffic controllers"
+    },
+    {
+      "_id": 1593,
+      "OaSIS profile code": "72604.02",
+      "Label": "Marine traffic regulators"
+    },
+    {
+      "_id": 1594,
+      "OaSIS profile code": "72999.01",
+      "Label": "Gunsmiths"
+    },
+    {
+      "_id": 1595,
+      "OaSIS profile code": "72999.02",
+      "Label": "Locksmiths"
+    },
+    {
+      "_id": 1596,
+      "OaSIS profile code": "72999.03",
+      "Label": "Safe and vault servicers"
+    },
+    {
+      "_id": 1597,
+      "OaSIS profile code": "72999.04",
+      "Label": "Saw fitters"
+    },
+    {
+      "_id": 1598,
+      "OaSIS profile code": "72999.05",
+      "Label": "Die setters"
+    },
+    {
+      "_id": 1599,
+      "OaSIS profile code": "72999.06",
+      "Label": "Commercial divers"
+    },
+    {
+      "_id": 1600,
+      "OaSIS profile code": "73100.00",
+      "Label": "Concrete finishers"
+    },
+    {
+      "_id": 1601,
+      "OaSIS profile code": "73101.00",
+      "Label": "Tilesetters"
+    },
+    {
+      "_id": 1602,
+      "OaSIS profile code": "73102.01",
+      "Label": "Plasterers"
+    },
+    {
+      "_id": 1603,
+      "OaSIS profile code": "73102.02",
+      "Label": "Drywall installers and finishers"
+    },
+    {
+      "_id": 1604,
+      "OaSIS profile code": "73102.03",
+      "Label": "Lathers"
+    },
+    {
+      "_id": 1605,
+      "OaSIS profile code": "73110.01",
+      "Label": "Roofers"
+    },
+    {
+      "_id": 1606,
+      "OaSIS profile code": "73110.02",
+      "Label": "Shinglers"
+    },
+    {
+      "_id": 1607,
+      "OaSIS profile code": "73111.00",
+      "Label": "Glaziers"
+    },
+    {
+      "_id": 1608,
+      "OaSIS profile code": "73112.00",
+      "Label": "Painters and decorators (except interior decorators)"
+    },
+    {
+      "_id": 1609,
+      "OaSIS profile code": "73113.00",
+      "Label": "Floor covering installers"
+    },
+    {
+      "_id": 1610,
+      "OaSIS profile code": "73200.00",
+      "Label": "Residential and commercial installers and servicers"
+    },
+    {
+      "_id": 1611,
+      "OaSIS profile code": "73201.00",
+      "Label": "General building maintenance workers and building superintendents"
+    },
+    {
+      "_id": 1612,
+      "OaSIS profile code": "73202.00",
+      "Label": "Pest controllers and fumigators"
+    },
+    {
+      "_id": 1613,
+      "OaSIS profile code": "73209.00",
+      "Label": "Other repairers and servicers"
+    },
+    {
+      "_id": 1614,
+      "OaSIS profile code": "73300.01",
+      "Label": "Long-haul transport truck drivers"
+    },
+    {
+      "_id": 1615,
+      "OaSIS profile code": "73300.02",
+      "Label": "Short-haul and local transport truck drivers"
+    },
+    {
+      "_id": 1616,
+      "OaSIS profile code": "73301.01",
+      "Label": "Bus and streetcar drivers"
+    },
+    {
+      "_id": 1617,
+      "OaSIS profile code": "73301.02",
+      "Label": "School bus drivers"
+    },
+    {
+      "_id": 1618,
+      "OaSIS profile code": "73301.03",
+      "Label": "Subway train and light rail transit operators"
+    },
+    {
+      "_id": 1619,
+      "OaSIS profile code": "73310.01",
+      "Label": "Railway locomotive engineers"
+    },
+    {
+      "_id": 1620,
+      "OaSIS profile code": "73310.02",
+      "Label": "Yard locomotive engineers"
+    },
+    {
+      "_id": 1621,
+      "OaSIS profile code": "73311.01",
+      "Label": "Railway conductors"
+    },
+    {
+      "_id": 1622,
+      "OaSIS profile code": "73311.02",
+      "Label": "Brakemen"
+    },
+    {
+      "_id": 1623,
+      "OaSIS profile code": "73400.00",
+      "Label": "Heavy equipment operators"
+    },
+    {
+      "_id": 1624,
+      "OaSIS profile code": "73401.00",
+      "Label": "Printing press operators"
+    },
+    {
+      "_id": 1625,
+      "OaSIS profile code": "73402.01",
+      "Label": "Drillers - surface mining, quarrying and construction"
+    },
+    {
+      "_id": 1626,
+      "OaSIS profile code": "73402.02",
+      "Label": "Blasters - surface mining, quarrying and construction"
+    },
+    {
+      "_id": 1627,
+      "OaSIS profile code": "74100.01",
+      "Label": "Mail sorters"
+    },
+    {
+      "_id": 1628,
+      "OaSIS profile code": "74100.02",
+      "Label": "Mailroom clerks"
+    },
+    {
+      "_id": 1629,
+      "OaSIS profile code": "74101.00",
+      "Label": "Letter carriers"
+    },
+    {
+      "_id": 1630,
+      "OaSIS profile code": "74102.00",
+      "Label": "Couriers and messengers"
+    },
+    {
+      "_id": 1631,
+      "OaSIS profile code": "74200.01",
+      "Label": "Railway yard  workers"
+    },
+    {
+      "_id": 1632,
+      "OaSIS profile code": "74200.02",
+      "Label": "Railway track maintenance workers"
+    },
+    {
+      "_id": 1633,
+      "OaSIS profile code": "74201.01",
+      "Label": "Engine room crew, water transport"
+    },
+    {
+      "_id": 1634,
+      "OaSIS profile code": "74201.02",
+      "Label": "Deck crew, water transport"
+    },
+    {
+      "_id": 1635,
+      "OaSIS profile code": "74202.00",
+      "Label": "Air transport ramp attendants"
+    },
+    {
+      "_id": 1636,
+      "OaSIS profile code": "74203.00",
+      "Label": "Automotive and heavy truck and equipment parts installers and servicers"
+    },
+    {
+      "_id": 1637,
+      "OaSIS profile code": "74204.01",
+      "Label": "Waterworks maintenance workers"
+    },
+    {
+      "_id": 1638,
+      "OaSIS profile code": "74204.02",
+      "Label": "Gas maintenance workers"
+    },
+    {
+      "_id": 1639,
+      "OaSIS profile code": "74205.00",
+      "Label": "Public works maintenance equipment operators and related workers"
+    },
+    {
+      "_id": 1640,
+      "OaSIS profile code": "75100.00",
+      "Label": "Longshore workers"
+    },
+    {
+      "_id": 1641,
+      "OaSIS profile code": "75101.01",
+      "Label": "Material handlers (manual)"
+    },
+    {
+      "_id": 1642,
+      "OaSIS profile code": "75101.02",
+      "Label": "Material handlers (equipment operators)"
+    },
+    {
+      "_id": 1643,
+      "OaSIS profile code": "75110.00",
+      "Label": "Construction trades helpers and labourers"
+    },
+    {
+      "_id": 1644,
+      "OaSIS profile code": "75119.00",
+      "Label": "Other trades helpers and labourers"
+    },
+    {
+      "_id": 1645,
+      "OaSIS profile code": "75200.01",
+      "Label": "Taxi and limousine drivers"
+    },
+    {
+      "_id": 1646,
+      "OaSIS profile code": "75200.02",
+      "Label": "Chauffeurs"
+    },
+    {
+      "_id": 1647,
+      "OaSIS profile code": "75201.00",
+      "Label": "Delivery service drivers and door-to-door distributors"
+    },
+    {
+      "_id": 1648,
+      "OaSIS profile code": "75210.01",
+      "Label": "Lock equipment operators"
+    },
+    {
+      "_id": 1649,
+      "OaSIS profile code": "75210.02",
+      "Label": "Cable ferry operators"
+    },
+    {
+      "_id": 1650,
+      "OaSIS profile code": "75210.03",
+      "Label": "Ferry terminal workers"
+    },
+    {
+      "_id": 1651,
+      "OaSIS profile code": "75210.04",
+      "Label": "Boat operators"
+    },
+    {
+      "_id": 1652,
+      "OaSIS profile code": "75211.01",
+      "Label": "Railway labourers"
+    },
+    {
+      "_id": 1653,
+      "OaSIS profile code": "75211.02",
+      "Label": "Motor transport labourers"
+    },
+    {
+      "_id": 1654,
+      "OaSIS profile code": "75212.00",
+      "Label": "Public works and maintenance labourers"
+    },
+    {
+      "_id": 1655,
+      "OaSIS profile code": "80010.00",
+      "Label": "Managers in natural resources production and fishing"
+    },
+    {
+      "_id": 1656,
+      "OaSIS profile code": "80020.00",
+      "Label": "Managers in agriculture"
+    },
+    {
+      "_id": 1657,
+      "OaSIS profile code": "80021.00",
+      "Label": "Managers in horticulture"
+    },
+    {
+      "_id": 1658,
+      "OaSIS profile code": "80022.00",
+      "Label": "Managers in aquaculture"
+    },
+    {
+      "_id": 1659,
+      "OaSIS profile code": "82010.00",
+      "Label": "Supervisors, logging and forestry"
+    },
+    {
+      "_id": 1660,
+      "OaSIS profile code": "82020.00",
+      "Label": "Supervisors, mining and quarrying"
+    },
+    {
+      "_id": 1661,
+      "OaSIS profile code": "82021.00",
+      "Label": "Contractors and supervisors, oil and gas drilling and services"
+    },
+    {
+      "_id": 1662,
+      "OaSIS profile code": "82030.01",
+      "Label": "Agricultural service contractors"
+    },
+    {
+      "_id": 1663,
+      "OaSIS profile code": "82030.02",
+      "Label": "Farm supervisors"
+    },
+    {
+      "_id": 1664,
+      "OaSIS profile code": "82031.00",
+      "Label": "Contractors and supervisors, landscaping, grounds maintenance and horticulture services"
+    },
+    {
+      "_id": 1665,
+      "OaSIS profile code": "83100.00",
+      "Label": "Underground production and development miners"
+    },
+    {
+      "_id": 1666,
+      "OaSIS profile code": "83101.01",
+      "Label": "Oil and gas well drillers and well servicers"
+    },
+    {
+      "_id": 1667,
+      "OaSIS profile code": "83101.02",
+      "Label": "Oil and gas well loggers, testers and related workers"
+    },
+    {
+      "_id": 1668,
+      "OaSIS profile code": "83110.00",
+      "Label": "Logging machinery operators"
+    },
+    {
+      "_id": 1669,
+      "OaSIS profile code": "83120.00",
+      "Label": "Fishing masters and officers"
+    },
+    {
+      "_id": 1670,
+      "OaSIS profile code": "83121.00",
+      "Label": "Fishermen/women"
+    },
+    {
+      "_id": 1671,
+      "OaSIS profile code": "84100.00",
+      "Label": "Underground mine service and support workers"
+    },
+    {
+      "_id": 1672,
+      "OaSIS profile code": "84101.01",
+      "Label": "Oil and gas well drilling workers"
+    },
+    {
+      "_id": 1673,
+      "OaSIS profile code": "84101.02",
+      "Label": "Oil and gas well service operators"
+    },
+    {
+      "_id": 1674,
+      "OaSIS profile code": "84110.00",
+      "Label": "Chainsaw and skidder operators"
+    },
+    {
+      "_id": 1675,
+      "OaSIS profile code": "84111.00",
+      "Label": "Silviculture and forestry workers"
+    },
+    {
+      "_id": 1676,
+      "OaSIS profile code": "84120.01",
+      "Label": "Specialized livestock workers"
+    },
+    {
+      "_id": 1677,
+      "OaSIS profile code": "84120.02",
+      "Label": "Farm machinery operators"
+    },
+    {
+      "_id": 1678,
+      "OaSIS profile code": "84121.00",
+      "Label": "Fishing vessel deckhands"
+    },
+    {
+      "_id": 1679,
+      "OaSIS profile code": "85100.00",
+      "Label": "Livestock labourers"
+    },
+    {
+      "_id": 1680,
+      "OaSIS profile code": "85101.00",
+      "Label": "Harvesting labourers"
+    },
+    {
+      "_id": 1681,
+      "OaSIS profile code": "85102.00",
+      "Label": "Aquaculture and marine harvest labourers"
+    },
+    {
+      "_id": 1682,
+      "OaSIS profile code": "85103.00",
+      "Label": "Nursery and greenhouse labourers"
+    },
+    {
+      "_id": 1683,
+      "OaSIS profile code": "85104.00",
+      "Label": "Trappers and hunters"
+    },
+    {
+      "_id": 1684,
+      "OaSIS profile code": "85110.00",
+      "Label": "Mine labourers"
+    },
+    {
+      "_id": 1685,
+      "OaSIS profile code": "85111.00",
+      "Label": "Oil and gas drilling, servicing and related labourers"
+    },
+    {
+      "_id": 1686,
+      "OaSIS profile code": "85120.00",
+      "Label": "Logging and forestry labourers"
+    },
+    {
+      "_id": 1687,
+      "OaSIS profile code": "85121.00",
+      "Label": "Landscaping and grounds maintenance labourers"
+    },
+    {
+      "_id": 1688,
+      "OaSIS profile code": "90010.00",
+      "Label": "Manufacturing managers"
+    },
+    {
+      "_id": 1689,
+      "OaSIS profile code": "90011.01",
+      "Label": "Water supply managers"
+    },
+    {
+      "_id": 1690,
+      "OaSIS profile code": "90011.02",
+      "Label": "Electrical power distribution managers"
+    },
+    {
+      "_id": 1691,
+      "OaSIS profile code": "90011.03",
+      "Label": "Natural gas and petroleum supply managers"
+    },
+    {
+      "_id": 1692,
+      "OaSIS profile code": "90011.04",
+      "Label": "Water pollution control managers"
+    },
+    {
+      "_id": 1693,
+      "OaSIS profile code": "90011.05",
+      "Label": "Waste systems managers"
+    },
+    {
+      "_id": 1694,
+      "OaSIS profile code": "92010.00",
+      "Label": "Supervisors, mineral and metal processing"
+    },
+    {
+      "_id": 1695,
+      "OaSIS profile code": "92011.00",
+      "Label": "Supervisors, petroleum, gas and chemical processing and utilities"
+    },
+    {
+      "_id": 1696,
+      "OaSIS profile code": "92012.00",
+      "Label": "Supervisors, food and beverage processing"
+    },
+    {
+      "_id": 1697,
+      "OaSIS profile code": "92013.00",
+      "Label": "Supervisors, plastic and rubber products manufacturing"
+    },
+    {
+      "_id": 1698,
+      "OaSIS profile code": "92014.00",
+      "Label": "Supervisors, forest products processing"
+    },
+    {
+      "_id": 1699,
+      "OaSIS profile code": "92015.00",
+      "Label": "Supervisors, textile, fabric, fur and leather products processing and manufacturing"
+    },
+    {
+      "_id": 1700,
+      "OaSIS profile code": "92020.00",
+      "Label": "Supervisors, motor vehicle assembling"
+    },
+    {
+      "_id": 1701,
+      "OaSIS profile code": "92021.00",
+      "Label": "Supervisors, electronics and electrical products manufacturing"
+    },
+    {
+      "_id": 1702,
+      "OaSIS profile code": "92022.00",
+      "Label": "Supervisors, furniture and fixtures manufacturing"
+    },
+    {
+      "_id": 1703,
+      "OaSIS profile code": "92023.00",
+      "Label": "Supervisors, other mechanical and metal products manufacturing"
+    },
+    {
+      "_id": 1704,
+      "OaSIS profile code": "92024.00",
+      "Label": "Supervisors, other products manufacturing and assembly"
+    },
+    {
+      "_id": 1705,
+      "OaSIS profile code": "92100.01",
+      "Label": "Power engineers"
+    },
+    {
+      "_id": 1706,
+      "OaSIS profile code": "92100.02",
+      "Label": "Power systems operators"
+    },
+    {
+      "_id": 1707,
+      "OaSIS profile code": "92101.01",
+      "Label": "Water treatment plant operators"
+    },
+    {
+      "_id": 1708,
+      "OaSIS profile code": "92101.02",
+      "Label": "Liquid waste plant operators"
+    },
+    {
+      "_id": 1709,
+      "OaSIS profile code": "93100.00",
+      "Label": "Central control and process operators, mineral and metal processing"
+    },
+    {
+      "_id": 1710,
+      "OaSIS profile code": "93101.00",
+      "Label": "Central control and process operators, petroleum, gas and chemical processing"
+    },
+    {
+      "_id": 1711,
+      "OaSIS profile code": "93102.00",
+      "Label": "Pulping, papermaking and coating control operators"
+    },
+    {
+      "_id": 1712,
+      "OaSIS profile code": "93200.01",
+      "Label": "Aircraft assemblers"
+    },
+    {
+      "_id": 1713,
+      "OaSIS profile code": "93200.02",
+      "Label": "Aircraft assembly inspectors"
+    },
+    {
+      "_id": 1714,
+      "OaSIS profile code": "94100.00",
+      "Label": "Machine operators, mineral and metal processing"
+    },
+    {
+      "_id": 1715,
+      "OaSIS profile code": "94101.01",
+      "Label": "Mouldmakers and coremakers"
+    },
+    {
+      "_id": 1716,
+      "OaSIS profile code": "94101.02",
+      "Label": "Metal casters"
+    },
+    {
+      "_id": 1717,
+      "OaSIS profile code": "94101.03",
+      "Label": "Foundry furnace operators"
+    },
+    {
+      "_id": 1718,
+      "OaSIS profile code": "94102.01",
+      "Label": "Glass process control operators"
+    },
+    {
+      "_id": 1719,
+      "OaSIS profile code": "94102.02",
+      "Label": "Glass forming machine operators"
+    },
+    {
+      "_id": 1720,
+      "OaSIS profile code": "94102.03",
+      "Label": "Glass finishing machine operators"
+    },
+    {
+      "_id": 1721,
+      "OaSIS profile code": "94102.04",
+      "Label": "Glass cutters"
+    },
+    {
+      "_id": 1722,
+      "OaSIS profile code": "94103.01",
+      "Label": "Concrete products forming and finishing machine operators and workers"
+    },
+    {
+      "_id": 1723,
+      "OaSIS profile code": "94103.02",
+      "Label": "Clay products forming and finishing machine operators"
+    },
+    {
+      "_id": 1724,
+      "OaSIS profile code": "94103.03",
+      "Label": "Stone forming and finishing workers"
+    },
+    {
+      "_id": 1725,
+      "OaSIS profile code": "94104.00",
+      "Label": "Inspectors and testers, mineral and metal processing"
+    },
+    {
+      "_id": 1726,
+      "OaSIS profile code": "94105.01",
+      "Label": "Metalworking machine operators"
+    },
+    {
+      "_id": 1727,
+      "OaSIS profile code": "94105.02",
+      "Label": "Forging machine operators"
+    },
+    {
+      "_id": 1728,
+      "OaSIS profile code": "94106.00",
+      "Label": "Machining tool operators"
+    },
+    {
+      "_id": 1729,
+      "OaSIS profile code": "94107.00",
+      "Label": "Machine operators of other metal products"
+    },
+    {
+      "_id": 1730,
+      "OaSIS profile code": "94110.00",
+      "Label": "Chemical plant machine operators"
+    },
+    {
+      "_id": 1731,
+      "OaSIS profile code": "94111.01",
+      "Label": "Mixing machine operators - plastic processing"
+    },
+    {
+      "_id": 1732,
+      "OaSIS profile code": "94111.02",
+      "Label": "Calendering process operators - plastic processing"
+    },
+    {
+      "_id": 1733,
+      "OaSIS profile code": "94111.03",
+      "Label": "Extruding process operators - plastic processing"
+    },
+    {
+      "_id": 1734,
+      "OaSIS profile code": "94111.04",
+      "Label": "Moulding process operators - plastic processing"
+    },
+    {
+      "_id": 1735,
+      "OaSIS profile code": "94112.01",
+      "Label": "Rubber processing machine operators"
+    },
+    {
+      "_id": 1736,
+      "OaSIS profile code": "94112.02",
+      "Label": "Assemblers, rubber products"
+    },
+    {
+      "_id": 1737,
+      "OaSIS profile code": "94112.03",
+      "Label": "Rubber products inspectors"
+    },
+    {
+      "_id": 1738,
+      "OaSIS profile code": "94120.00",
+      "Label": "Sawmill machine operators"
+    },
+    {
+      "_id": 1739,
+      "OaSIS profile code": "94121.00",
+      "Label": "Pulp mill, papermaking and finishing machine operators"
+    },
+    {
+      "_id": 1740,
+      "OaSIS profile code": "94122.00",
+      "Label": "Paper converting machine operators"
+    },
+    {
+      "_id": 1741,
+      "OaSIS profile code": "94123.01",
+      "Label": "Lumber graders"
+    },
+    {
+      "_id": 1742,
+      "OaSIS profile code": "94123.02",
+      "Label": "Other wood processing inspectors and graders"
+    },
+    {
+      "_id": 1743,
+      "OaSIS profile code": "94124.00",
+      "Label": "Woodworking machine operators"
+    },
+    {
+      "_id": 1744,
+      "OaSIS profile code": "94129.00",
+      "Label": "Other wood processing machine operators"
+    },
+    {
+      "_id": 1745,
+      "OaSIS profile code": "94130.01",
+      "Label": "Textile fibre, yarn, hide and pelt processing machine operators"
+    },
+    {
+      "_id": 1746,
+      "OaSIS profile code": "94130.02",
+      "Label": "Textile, hide and pelt dyeing and finishing machine operators"
+    },
+    {
+      "_id": 1747,
+      "OaSIS profile code": "94131.00",
+      "Label": "Weavers, knitters and other fabric making occupations"
+    },
+    {
+      "_id": 1748,
+      "OaSIS profile code": "94132.00",
+      "Label": "Industrial sewing machine operators"
+    },
+    {
+      "_id": 1749,
+      "OaSIS profile code": "94133.00",
+      "Label": "Inspectors and graders, textile, fabric, fur and leather products manufacturing"
+    },
+    {
+      "_id": 1750,
+      "OaSIS profile code": "94140.01",
+      "Label": "Process control operators, food and beverage processing"
+    },
+    {
+      "_id": 1751,
+      "OaSIS profile code": "94140.02",
+      "Label": "Machine operators, food and beverage  processing"
+    },
+    {
+      "_id": 1752,
+      "OaSIS profile code": "94141.01",
+      "Label": "Industrial butchers"
+    },
+    {
+      "_id": 1753,
+      "OaSIS profile code": "94141.02",
+      "Label": "Industrial meat cutters"
+    },
+    {
+      "_id": 1754,
+      "OaSIS profile code": "94141.03",
+      "Label": "Poultry preparers"
+    },
+    {
+      "_id": 1755,
+      "OaSIS profile code": "94142.01",
+      "Label": "Fish and seafood plant machine operators"
+    },
+    {
+      "_id": 1756,
+      "OaSIS profile code": "94142.02",
+      "Label": "Fish and seafood plant cutters and cleaners"
+    },
+    {
+      "_id": 1757,
+      "OaSIS profile code": "94143.00",
+      "Label": "Testers and graders, food and beverage processing"
+    },
+    {
+      "_id": 1758,
+      "OaSIS profile code": "94150.00",
+      "Label": "Plateless printing equipment operators"
+    },
+    {
+      "_id": 1759,
+      "OaSIS profile code": "94151.01",
+      "Label": "Graphic arts camera operators, scanner operators, film strippers and assemblers"
+    },
+    {
+      "_id": 1760,
+      "OaSIS profile code": "94151.02",
+      "Label": "Etchers and engravers"
+    },
+    {
+      "_id": 1761,
+      "OaSIS profile code": "94151.03",
+      "Label": "Prepress technicians, platemakers, proofmakers, and pre-flight/file-preparation operators"
+    },
+    {
+      "_id": 1762,
+      "OaSIS profile code": "94152.00",
+      "Label": "Binding and finishing machine operators"
+    },
+    {
+      "_id": 1763,
+      "OaSIS profile code": "94153.00",
+      "Label": "Photographic and film processors"
+    },
+    {
+      "_id": 1764,
+      "OaSIS profile code": "94200.01",
+      "Label": "Motor vehicle assemblers"
+    },
+    {
+      "_id": 1765,
+      "OaSIS profile code": "94200.02",
+      "Label": "Motor vehicle inspectors and testers"
+    },
+    {
+      "_id": 1766,
+      "OaSIS profile code": "94201.01",
+      "Label": "Electronics assemblers and fabricators"
+    },
+    {
+      "_id": 1767,
+      "OaSIS profile code": "94201.02",
+      "Label": "Electronics inspectors and testers"
+    },
+    {
+      "_id": 1768,
+      "OaSIS profile code": "94202.01",
+      "Label": "Assemblers, electrical appliance, apparatus and equipment manufacturing"
+    },
+    {
+      "_id": 1769,
+      "OaSIS profile code": "94202.02",
+      "Label": "Inspectors and testers, electrical appliance,  apparatus and equipment manufacturing"
+    },
+    {
+      "_id": 1770,
+      "OaSIS profile code": "94203.01",
+      "Label": "Assemblers, industrial electrical motors and transformers"
+    },
+    {
+      "_id": 1771,
+      "OaSIS profile code": "94203.02",
+      "Label": "Electrical fitters and wirers, industrial electrical motors and transformers"
+    },
+    {
+      "_id": 1772,
+      "OaSIS profile code": "94203.03",
+      "Label": "Inspectors, industrial electrical motors and transformers"
+    },
+    {
+      "_id": 1773,
+      "OaSIS profile code": "94204.01",
+      "Label": "Mechanical assemblers"
+    },
+    {
+      "_id": 1774,
+      "OaSIS profile code": "94204.02",
+      "Label": "Mechanical inspectors"
+    },
+    {
+      "_id": 1775,
+      "OaSIS profile code": "94205.01",
+      "Label": "Machine operators in electrical apparatus manufacturing"
+    },
+    {
+      "_id": 1776,
+      "OaSIS profile code": "94205.02",
+      "Label": "Inspectors and testers in electrical apparatus manufacturing"
+    },
+    {
+      "_id": 1777,
+      "OaSIS profile code": "94210.01",
+      "Label": "Furniture and fixture assemblers"
+    },
+    {
+      "_id": 1778,
+      "OaSIS profile code": "94210.02",
+      "Label": "Furniture finishers"
+    },
+    {
+      "_id": 1779,
+      "OaSIS profile code": "94210.03",
+      "Label": "Furniture refinishers"
+    },
+    {
+      "_id": 1780,
+      "OaSIS profile code": "94210.04",
+      "Label": "Furniture and fixture inspectors"
+    },
+    {
+      "_id": 1781,
+      "OaSIS profile code": "94211.01",
+      "Label": "Other wood products assemblers"
+    },
+    {
+      "_id": 1782,
+      "OaSIS profile code": "94211.02",
+      "Label": "Other wood products inspectors"
+    },
+    {
+      "_id": 1783,
+      "OaSIS profile code": "94212.01",
+      "Label": "Plastic products assemblers and finishers"
+    },
+    {
+      "_id": 1784,
+      "OaSIS profile code": "94212.02",
+      "Label": "Plastic products inspectors"
+    },
+    {
+      "_id": 1785,
+      "OaSIS profile code": "94213.01",
+      "Label": "Industrial painters and coaters"
+    },
+    {
+      "_id": 1786,
+      "OaSIS profile code": "94213.02",
+      "Label": "Industrial metal finishing process operators"
+    },
+    {
+      "_id": 1787,
+      "OaSIS profile code": "94219.01",
+      "Label": "Product assemblers and finishers"
+    },
+    {
+      "_id": 1788,
+      "OaSIS profile code": "94219.02",
+      "Label": "Product inspectors"
+    },
+    {
+      "_id": 1789,
+      "OaSIS profile code": "95100.00",
+      "Label": "Labourers in mineral and metal processing"
+    },
+    {
+      "_id": 1790,
+      "OaSIS profile code": "95101.00",
+      "Label": "Labourers in metal fabrication"
+    },
+    {
+      "_id": 1791,
+      "OaSIS profile code": "95102.00",
+      "Label": "Labourers in chemical products processing and utilities"
+    },
+    {
+      "_id": 1792,
+      "OaSIS profile code": "95103.00",
+      "Label": "Labourers in wood, pulp and paper processing"
+    },
+    {
+      "_id": 1793,
+      "OaSIS profile code": "95104.00",
+      "Label": "Labourers in rubber and plastic products manufacturing"
+    },
+    {
+      "_id": 1794,
+      "OaSIS profile code": "95105.01",
+      "Label": "Labourers in textile processing"
+    },
+    {
+      "_id": 1795,
+      "OaSIS profile code": "95105.02",
+      "Label": "Fabric cutters"
+    },
+    {
+      "_id": 1796,
+      "OaSIS profile code": "95105.03",
+      "Label": "Fur cutters"
+    },
+    {
+      "_id": 1797,
+      "OaSIS profile code": "95105.04",
+      "Label": "Leather cutters"
+    },
+    {
+      "_id": 1798,
+      "OaSIS profile code": "95106.00",
+      "Label": "Labourers in food and beverage processing"
+    },
+    {
+      "_id": 1799,
+      "OaSIS profile code": "95107.00",
+      "Label": "Labourers in fish and seafood processing"
+    },
+    {
+      "_id": 1800,
+      "OaSIS profile code": "95109.00",
+      "Label": "Other labourers in processing, manufacturing and utilities"
+    }
+  ]
+}
