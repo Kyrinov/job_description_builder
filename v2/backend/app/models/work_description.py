@@ -22,6 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .classification import Classification
 from .draft_duty import DraftDuty
+from .noc_match import NOCMatch
 from .qualification_standard import QualificationStandard
 
 
@@ -42,6 +43,8 @@ class WorkDescription(BaseModel):
     duties: list[DraftDuty] = Field(default_factory=list)
     qualification: Optional[QualificationStandard] = None
     drf_id: Optional[str] = None
+    noc_candidates: list[NOCMatch] = Field(default_factory=list)
+    confirmed_noc: Optional[NOCMatch] = None
     schema_version: int = 1
     created_at: datetime
     last_modified: datetime

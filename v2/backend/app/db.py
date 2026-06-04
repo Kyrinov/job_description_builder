@@ -66,3 +66,22 @@ def create_schema(con: sqlite3.Connection) -> None:
     """
     con.executescript(SCHEMA_DDL)
     con.commit()
+
+
+def get_noc_connection(noc_db_path: str) -> sqlite3.Connection:
+    """Open the v1.0 NOC database with sqlite-vec registered.
+
+    The NOC database (app.db, 83 MB) is READ-ONLY from v2's perspective.
+    This factory MUST NOT call create_schema() — the NOC DB schema was
+    created by v1.0 ingest scripts and must not be modified.
+
+    sqlite-vec is loaded here and ONLY here — get_connection() for the
+    v2 WD DB must not load it (WD DB has no vec0 tables).
+    """
+    import sqlite_vec
+    con = sqlite3.connect(noc_db_path, check_same_thread=False)
+    con.row_factory = sqlite3.Row
+    con.enable_load_extension(True)
+    sqlite_vec.load(con)
+    con.enable_load_extension(False)
+    return con
