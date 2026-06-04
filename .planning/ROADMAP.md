@@ -158,7 +158,7 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — Wave 0: test infrastructure stubs + noc_mapping_db fixture + requirements.txt deps
+- [x] 14-01-PLAN.md — Wave 0: test infrastructure stubs + noc_mapping_db fixture + requirements.txt deps (completed 2026-06-04)
 - [ ] 14-02-PLAN.md — Wave 2: noc_ranking.py + noc_mapper.py port + Settings/db/NOCMatch extensions
 - [ ] 14-03-PLAN.md — Wave 2: POST /api/noc/map route + request/response models
 - [ ] 14-04-PLAN.md — Wave 3: NocConfirmList frontend component + UAT checkpoint
