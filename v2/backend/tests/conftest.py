@@ -34,6 +34,28 @@ def env_with_db(tmp_db_path, monkeypatch):
     return tmp_db_path
 
 
+@pytest.fixture(autouse=True)
+def _settings_env_defaults(tmp_path, monkeypatch):
+    """Autouse: set minimum env vars so Settings() can be instantiated at module import.
+
+    Required because v2 Settings (Phase 14) requires NOC_DB_PATH, OLLAMA_GENERATION_MODEL,
+    and OLLAMA_EMBED_MODEL in addition to DB_PATH + PROJECT_ROOT. Any test that
+    transitively imports app.ai.noc_ranking (which builds an instructor_client singleton
+    at import time) needs these env vars present BEFORE the import. monkeypatch auto-
+    restores the env on test teardown so values do not leak between tests.
+
+    Tests that request env_with_db get the same values explicitly — monkeypatch
+    re-setting to the same value is a no-op. Tests that depend on specific NOC pipeline
+    values (test_stage2_calls_embed_model) can still monkeypatch.setenv to override.
+    """
+    monkeypatch.setenv("DB_PATH", str(tmp_path / "test.db"))
+    monkeypatch.setenv("PROJECT_ROOT", str(tmp_path))
+    monkeypatch.setenv("NOC_DB_PATH", str(tmp_path / "test_noc.db"))
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    monkeypatch.setenv("OLLAMA_GENERATION_MODEL", "gemma4:31b")
+    monkeypatch.setenv("OLLAMA_EMBED_MODEL", "nomic-embed-text:latest")
+
+
 @pytest_asyncio.fixture
 async def test_app(env_with_db):
     """FastAPI app with lifespan-driven schema creation against tmp DB.
