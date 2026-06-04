@@ -107,7 +107,11 @@ Plans:
 2. No question entry asks the manager to name or select an OG group directly; all OG candidates are derived by accumulating answer signals through the classification engine
 3. A standalone test or script imports the question bank and validates structure: every entry has required keys; every OG candidate code in signal mappings exists in `OG_LEVELS`; every JES factor hint references a known factor name
 
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 12-01-PLAN.md — TDD stubs: test_question_bank.py (RED) + KNOWN_JES_FACTORS + QUESTION_BANK stub
+- [ ] 12-02-PLAN.md — Populate QUESTION_BANK (4 entries, all 9 tests GREEN)
 
 ---
 
