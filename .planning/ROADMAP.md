@@ -181,7 +181,13 @@ Plans:
 5. Pressing Enter on a text input submits; Cmd/Ctrl+Enter on a textarea submits; Back button is available on step 2+; the active question auto-scrolls into view
 6. `POST /api/wd` creates a WD on first step commit; `PATCH /api/wd/{id}` updates it on each subsequent commit; `GET /api/wd/{id}` can restore an in-progress session
 
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 15-01-PLAN.md — Wave 1: Test stubs (RED) — test_wd.py + conversation.test.jsx
+- [ ] 15-02-PLAN.md — Wave 2: WD CRUD routes (POST/GET/PATCH /api/wd)
+- [ ] 15-03-PLAN.md — Wave 2: data.jsx QUESTION_BANK STEPS + PHASES + accumulateSignals
+- [ ] 15-04-PLAN.md — Wave 3: app.jsx + components.jsx wiring + UAT checkpoint
 
 **UI hint**: yes
 
