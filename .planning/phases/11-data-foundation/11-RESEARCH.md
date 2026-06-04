@@ -528,7 +528,7 @@ def test_caf_table_og_codes_exist_in_og_levels():
 | v1.0: CS as standalone group | v2.0: CS removed (IT covers all CS positions) | Phase 11 | No broken OG lookups for CS positions |
 | v1.0: No CAF rank equivalence table | v2.0: CAF_RANK_OG_EQUIVALENCE in constants.py | Phase 11 | CLASS-05 advisory display can render in Phase 16 |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **EX levels for senior classification**
    - What we know: EX (Executive Group) is not in the rates_of_pay CSVs; EX has its own
