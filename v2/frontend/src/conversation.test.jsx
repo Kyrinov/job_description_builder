@@ -4,11 +4,19 @@
  * Wave 0 stubs: most tests will fail RED until Plan 03 (data.jsx rewrite)
  * and Plan 04 (app.jsx + components.jsx wiring) complete.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
 import { STEPS, PHASES, accumulateSignals } from './data.jsx';
 import { StepInput, answerValid } from './components.jsx';
 import App from './app.jsx';
+
+// jsdom does not implement Element.prototype.scrollTo; App calls it inside a
+// useEffect on the thread ref. Polyfill with a no-op so render paths don't throw.
+beforeAll(() => {
+  if (typeof HTMLElement !== 'undefined' && typeof HTMLElement.prototype.scrollTo !== 'function') {
+    HTMLElement.prototype.scrollTo = function () {};
+  }
+});
 
 describe('CONVO-01: QUESTION_BANK steps in Phase 1', () => {
   it('STEPS contains qb_work_output_type with phase 1', () => {

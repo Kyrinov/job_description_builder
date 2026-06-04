@@ -289,6 +289,7 @@ function StepInput(props) {
   if (t === 'drf') return <DrfPicker {...props} />;
   if (t === 'quals') return <QualEditor {...props} />;
   if (t === 'noc_confirm') return <NocConfirmList {...props} />;
+  if (t === 'og_confirm') return <NocConfirmList {...props} />; // stub — Phase 16 replaces with OgConfirmList
   return null;
 }
 

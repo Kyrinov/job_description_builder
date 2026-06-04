@@ -2,15 +2,18 @@
    JD Builder — main application
    ============================================================ */
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { STEPS, PHASES, I, computeClassification } from './data.jsx';
+import { STEPS, PHASES, I, computeClassification, accumulateSignals } from './data.jsx';
 import { Icon, initialAnswer, answerValid } from './components.jsx';
 import { Header, Exchange, ActiveQuestion, ReviewState } from './conversation.jsx';
 import { DocumentPane } from './document.jsx';
 
 const FLASH = {
   title: 'title', branch: 'title', reports: 'title', supervises: 'summary',
-  summary: 'summary', workType: 'level', scopeDirection: 'level', scopeAdvises: 'level', scopeImpact: 'level',
-  duties: 'duties', drf: 'drf', quals: 'quals'
+  summary: 'summary',
+  qb_work_output_type: 'level', qb_work_audience: 'level',
+  qb_knowledge_specialization: 'level', qb_policy_interpretation: 'level',
+  noc_confirm: 'level',
+  duties: 'duties', quals: 'quals',
 };
 
 /* live classification badge in the preview header */
@@ -71,6 +74,11 @@ function App() {
   const [editingReturn, setEditingReturn] = useState(false);
   const [flashes, setFlashes] = useState(new Set());
   const [toast, setToast] = useState(null);
+  const [wd_id, setWdId] = useState(() => {
+    try { return localStorage.getItem('jd-builder-v2-wd-id') || null; } catch { return null; }
+  });
+  const [nocCandidates, setNocCandidates] = useState([]);
+  const [nocLoading, setNocLoading] = useState(false);
   const threadRef = useRef(null);
   const docRef = useRef(null);
 
@@ -86,6 +94,13 @@ function App() {
       // storage quota exceeded — degrade gracefully, do not throw
     }
   }, [record]);
+
+  // Persist wd_id on change so a page refresh can resume the same WD row
+  useEffect(() => {
+    try {
+      if (wd_id) localStorage.setItem('jd-builder-v2-wd-id', wd_id);
+    } catch {}
+  }, [wd_id]);
 
   // committed record
   const baseRecord = record;
@@ -119,10 +134,64 @@ function App() {
     const newRecord = { ...record, ...patch };
     if (step.id === 'quals') newRecord.qualsVisited = true;
     setRecord(newRecord);
-    setAnswers(prev => ({ ...prev, [step.id]: draft }));
+    const newAnswers = { ...answers, [step.id]: draft };
+    setAnswers(newAnswers);
     flash(FLASH[step.id]);
 
+    // WD persistence — first commit creates row; subsequent commits patch
+    const wdPayload = {
+      record: newRecord,
+      answers: newAnswers,
+      step_index: stepIndex,
+    };
+    if (!wd_id) {
+      fetch('/api/wd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(wdPayload),
+      })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(data => {
+          setWdId(data.id);
+          try { localStorage.setItem('jd-builder-v2-wd-id', data.id); } catch {}
+        })
+        .catch(() => {});
+    } else {
+      fetch(`/api/wd/${wd_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(wdPayload),
+      }).catch(() => {});
+    }
+
+    // NOC pipeline trigger — fires once when the work summary step is committed
+    if (step.id === 'summary') {
+      setNocLoading(true);
+      setNocCandidates([]);
+      fetch('/api/noc/map', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ work_description: newRecord.summary }),
+      })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(data => {
+          setNocCandidates(data.candidates || []);
+          setNocLoading(false);
+        })
+        .catch(() => { setNocLoading(false); });
+    }
+
     if (editingReturn) {
+      // Invalidate NOC state when re-answering any Work Type phase step
+      if (step.phase === 1) {
+        setNocCandidates([]);
+        setNocLoading(false);
+        setAnswers(prev => {
+          const updated = { ...prev };
+          delete updated['noc_confirm'];
+          return updated;
+        });
+      }
       setEditingReturn(false);
       setReviewing(true);
       return;
@@ -172,10 +241,17 @@ function App() {
   function restart() {
     setRecord({}); setAnswers({}); setStepIndex(0);
     setDraft(initialAnswer(STEPS[0], {})); setReviewing(false); setEditingReturn(false);
+    setWdId(null); setNocCandidates([]); setNocLoading(false);
+    try { localStorage.removeItem('jd-builder-v2-wd-id'); } catch {}
   }
 
   const phaseIdx = reviewing ? PHASES.length - 1 : step.phase;
   const answeredSteps = STEPS.slice(0, stepIndex);
+
+  // cfgOverride injects live NOC candidates into the noc_confirm step input
+  const stepCfgOverride = !reviewing && step && step.input.type === 'noc_confirm'
+    ? { ...step.input, candidates: nocCandidates, loading: nocLoading }
+    : undefined;
 
   return (
     <div className="app">
@@ -197,6 +273,9 @@ function App() {
                 onCommit={commit} onBack={goBack}
                 canBack={stepIndex > 0 && !editingReturn}
                 isLast={stepIndex === STEPS.length - 1}
+                cfgOverride={stepCfgOverride}
+                dataTestid={`jump-${stepIndex}`}
+                dataStepId={step.id}
               />
               {editingReturn && (
                 <div style={{ marginLeft: 43, marginTop: 14 }}>

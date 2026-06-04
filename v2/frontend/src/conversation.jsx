@@ -53,12 +53,17 @@ function helperHtml(step, record) {
   return h;
 }
 
-function ActiveQuestion({ step, record, draft, setDraft, onCommit, onBack, canBack, isLast }) {
+function ActiveQuestion({ step, record, draft, setDraft, onCommit, onBack, canBack, isLast, cfgOverride, dataTestid, dataStepId }) {
   const qText = typeof step.q === 'function' ? step.q(record) : step.q;
   const valid = answerValid(step, draft);
   const showEnter = step.input.type === 'text';
   return (
-    <div className="ask" key={step.id}>
+    <div
+      className="ask"
+      key={step.id}
+      data-testid={dataTestid}
+      data-step-id={dataStepId}
+    >
       <div className="ask__row">
         <div className="ask__avatar">
           <Icon path={step.icon || I.spark} size={16} />
@@ -75,7 +80,7 @@ function ActiveQuestion({ step, record, draft, setDraft, onCommit, onBack, canBa
       </div>
       <div className="input-zone">
         <StepInput
-          cfg={step.input}
+          cfg={cfgOverride || step.input}
           value={draft}
           onChange={setDraft}
           onSubmit={() => { if (valid) onCommit(); }}
