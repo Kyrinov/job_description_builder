@@ -64,7 +64,7 @@ class TestOGCandidateSchema:
         except ImportError:
             pytest.skip("app.ai.og_ranking not yet implemented")
         assert OG_LEVELS["AS"] == list(range(1, 9)), "AS levels must be 1-8"
-        assert OG_LEVELS["EC"] == list(range(1, 8)), "EC levels must be 1-7"
+        assert OG_LEVELS["EC"] == list(range(1, 9)), "EC levels must be 1-8"
 
     def test_og_levels_unknown_code_returns_empty(self):
         try:

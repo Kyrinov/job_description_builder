@@ -54,14 +54,11 @@ class PolicyAdjacencyResult(BaseModel):
 
 OG_LEVELS: dict[str, list[int]] = {
     "AS": list(range(1, 9)),
-    "CR": list(range(1, 7)),
-    "PM": list(range(1, 7)),
-    "PE": list(range(1, 8)),
-    "EC": list(range(1, 8)),
-    "IT": list(range(1, 5)),
-    "CS": list(range(1, 6)),
+    "CR": list(range(1, 8)),
+    "PM": list(range(1, 8)),
+    "EC": list(range(1, 9)),
+    "IT": list(range(1, 6)),
     "EX": list(range(1, 6)),
-    "IS": list(range(1, 8)),
     "GT": list(range(1, 9)),
 }
 
