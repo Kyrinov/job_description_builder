@@ -187,6 +187,43 @@ function DutyBuilder({ value, onChange }) {
   );
 }
 
+/* ---- NOC CONFIRM LIST ---------------------------------------- */
+// cfg.type === 'noc_confirm'
+// cfg.candidates: array of { noc_code, noc_title (or title), teer, matched_duties }
+// value: selected noc_code string or null
+// onChange(noc_code): called on card click
+function NocConfirmList({ value, onChange, cfg }) {
+  const candidates = cfg.candidates || [];
+  return (
+    <div className="choices">
+      {candidates.map(c => {
+        const sel = value === c.noc_code;
+        const duties = c.matched_duties || [];
+        return (
+          <button
+            key={c.noc_code}
+            type="button"
+            className={'choice' + (sel ? ' is-sel' : '')}
+            onClick={() => onChange(c.noc_code)}
+          >
+            <span className="choice__main">
+              <span className="choice__title">
+                {c.noc_code} — {c.noc_title || c.title}
+              </span>
+              <span className="choice__desc">TEER {c.teer}</span>
+            </span>
+            {duties.length > 0 && (
+              <ul className="noc-duties">
+                {duties.slice(0, 2).map((d, i) => <li key={i}>{d}</li>)}
+              </ul>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ---- DRF PICKER ---------------------------------------------- */
 function DrfPicker({ value, onChange }) {
   return (
@@ -251,6 +288,7 @@ function StepInput(props) {
   if (t === 'duties') return <DutyBuilder {...props} />;
   if (t === 'drf') return <DrfPicker {...props} />;
   if (t === 'quals') return <QualEditor {...props} />;
+  if (t === 'noc_confirm') return <NocConfirmList {...props} />;
   return null;
 }
 
@@ -262,12 +300,13 @@ function initialAnswer(step, record) {
   if (c.type === 'quals') return QUAL_DEFAULT;
   return null;
 }
-function answerValid(step, a) {
+function answerValid(step, value) {
   const t = step.input.type;
-  if (t === 'text' || t === 'textarea') return !!(a && a.trim());
-  if (t === 'duties') return Array.isArray(a) && a.length > 0;
-  if (t === 'quals') return !!(a && a.education && a.experience);
-  return !!a;
+  if (t === 'text' || t === 'textarea') return !!(value && value.trim());
+  if (t === 'duties') return Array.isArray(value) && value.length > 0;
+  if (t === 'quals') return !!(value && value.education && value.experience);
+  if (t === 'noc_confirm') return typeof value === 'string' && value.length > 0;
+  return !!value;
 }
 
 export { Icon, Check, StepInput, initialAnswer, answerValid };
