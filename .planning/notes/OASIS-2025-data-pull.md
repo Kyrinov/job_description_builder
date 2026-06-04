@@ -52,7 +52,46 @@ text* (duties, exclusions, qual requirements), not the *classification*.
 Phase 14 (NOC Pipeline) is FTS5 over **NOC 2021** — a separate dataset.
 OaSIS 2025 is complementary, not a replacement.
 
-## Decision: incorporate now, as thin slices — NOT a new phase
+## Decision: incorporate now, as two thin slices — NOT a new phase
+
+> **Revised 2026-06-04 (Claude Code + user review)** — supersedes minimax-m3 recommendation below.
+
+| OASIS data | Decision | Target phase | Notes |
+|---|---|---|---|
+| `EmploymentRequirements` | ✅ In-phase | Phase 19 | Replaces hand-written qual defaults; keyed by NOC, maps to confirmed OG |
+| `LeadStatement` | ✅ In-phase (reference only) | Phase 18 | Read-only reference panel in duty builder step; labeled "OASIS occupational context"; NOT composed into WD text |
+| `Exclusions` | ❌ Dropped | — | NOC occupational exclusions ≠ TBS OG definitional exclusions; conflating them risks CLASS-03 regression |
+| `AdditionalInformation` | ❌ Hold | — | Not examined; no clear hook |
+| `Labels` | ❌ Hold | — | Superseded by LeadStatement decision |
+| `WorkContext`, `WorkActivities`, `Interests`, `CoreCompetencies` | ❌ v3 | — | Better fit with DND SJD library corpus work |
+| `SkillsMatch` | ❌ v3 | — | Server has no records; revisit if ESDC publishes v1.1 |
+| `WorkplacesEmployers`, `ExampleTitles` | ❌ v3 | — | Job poster enrichment; defer with rest of poster work |
+| `MainDuties` | ❌ Out | — | Phrasing differs from verbatim NOC text; would corrupt provenance tagging |
+
+### LeadStatement detail (inspected 2026-06-04)
+OaSIS profile code = NOC code + `.00` suffix (e.g. `10010.00` = NOC 10010). Text is
+generic occupational prose at the NOC level, not position-specific. Examples inspected:
+*"Financial managers plan, organize, direct, control and evaluate the operation of
+financial and accounting departments..."*
+
+Use case: show as a collapsible/static reference panel in the Phase 18 duty builder
+step so the advisor sees what the confirmed NOC occupation broadly covers while selecting
+verbatim duties. ~10 LOC lookup. Label clearly: **"OASIS occupational context"** so it
+cannot be mistaken for WD composition text.
+
+Do NOT use LeadStatement in the composed Position Overview paragraph — that formula
+("Located within {branch}, reporting to {reports}, the {title}...") is position-specific;
+LeadStatement is occupation-generic.
+
+### EmploymentRequirements detail
+2,851 rows keyed by NOC. Replaces the hand-written qual defaults in Phase 19 success
+criteria (EC: "degree in environmental science / economics / public policy" etc.).
+Source each default from this file rather than hard-coding, keyed by confirmed NOC+OG.
+Provenance tag: "OASIS Employment Requirements".
+
+---
+
+## Original minimax-m3 recommendation (retained for reference)
 
 Reasoning (in priority order):
 
