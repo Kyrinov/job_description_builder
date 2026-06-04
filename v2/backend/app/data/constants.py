@@ -13,6 +13,9 @@ CAF_RANK_OG_EQUIVALENCE: maps CAF rank name -> approximate civilian OG equivalen
     ADVISORY ONLY — NOT AUTHORITATIVE. Derived by pay-band comparison from
     data/CAF pay grades (effective April 1, 2025). Label as
     "advisory - not authoritative" on all surfaces that display this table.
+
+KNOWN_JES_FACTORS: frozenset of the 9 canonical EC JES factor name strings (use & not "and").
+QUESTION_BANK: list of Socratic work-type question entries; drives Phase 15 conversation flow.
 """
 from __future__ import annotations
 
@@ -147,3 +150,41 @@ CAF_RANK_OG_EQUIVALENCE: dict[str, dict] = {
         "note": "LCol/Cdr pay ($167k-$177k) falls in IT-05 mid-range ($133,249-$173,642).",
     },
 }
+
+
+# ---------------------------------------------------------------------------
+# KNOWN_JES_FACTORS
+# Canonical JES factor names from EC JES 2017 (verified against EC_ELEMENTS in
+# Job Description Builder/jd-builder/data.jsx). Used by test_question_bank.py
+# to cross-reference jes_factor_hints in QUESTION_BANK signals.
+# Key: N/A (frozenset). Value: exact factor name strings — use & not "and".
+# ---------------------------------------------------------------------------
+
+KNOWN_JES_FACTORS: frozenset[str] = frozenset({
+    "Decision making",
+    "Leadership & operational mgmt",
+    "Communication",
+    "Knowledge of specialized fields",
+    "Contextual knowledge",
+    "Research & analysis",
+    "Physical effort",
+    "Sensory effort",
+    "Working conditions",
+})
+
+
+# ---------------------------------------------------------------------------
+# QUESTION_BANK
+# Socratic work-description questions that drive the work_type conversation phase.
+# Each entry elicits a natural-language description from the manager; OG group
+# is derived from accumulated signals, never directly selected by the user.
+# QUES-02 constraint: OG codes must not appear in "question", "helper", or
+# options[].label — only inside signals.og_candidates.
+# Source: designed for v2.0; signals verified against OG_LEVELS and KNOWN_JES_FACTORS.
+# Key: list index. Value: question entry dict with id, phase_slot, question,
+#   helper, input_type, options (each option has id, label, signals).
+# ---------------------------------------------------------------------------
+
+QUESTION_BANK: list[dict] = [
+    # Populated in Phase 12 Plan 02
+]
