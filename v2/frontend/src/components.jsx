@@ -203,7 +203,7 @@ function NocConfirmList({ value, onChange, cfg }) {
           <button
             key={c.noc_code}
             type="button"
-            className={'choice' + (sel ? ' is-sel' : '')}
+            className={'choice choice--noc' + (sel ? ' is-sel' : '')}
             onClick={() => onChange(c.noc_code)}
           >
             <span className="choice__main">
