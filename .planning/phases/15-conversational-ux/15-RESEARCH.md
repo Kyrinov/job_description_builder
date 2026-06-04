@@ -418,22 +418,19 @@ function StepInput(props) {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **QUESTION_BANK duplication: JS copy vs. API endpoint**
+1. **QUESTION_BANK duplication: JS copy vs. API endpoint** (RESOLVED)
    - What we know: QUESTION_BANK is 4 entries, ~350 lines in Python constants; static, never user-editable
-   - What's unclear: Whether maintaining a JS copy is acceptable or a single-source-of-truth API is preferred
-   - Recommendation: JS copy in data.jsx for Phase 15 simplicity; add a note to Phase 16 to unify if needed
+   - **Resolution:** JS copy embedded in data.jsx (Plans 15-03 + 15-04). Static data; avoids loading state for static content.
 
-2. **wd_id lifecycle: created on first commit or on page load?**
+2. **wd_id lifecycle: created on first commit or on page load?** (RESOLVED)
    - What we know: POST /api/wd is called on "first step commit" per CONVO-01 / API-02
-   - What's unclear: Should the WD be pre-created on page load (before any answer) so the ID is stable from session start?
-   - Recommendation: Create on first commit (`commit()` when `step.id === 'title'`). If the user abandons before the first commit, no orphan row is created.
+   - **Resolution:** Create on first commit inside `commit()` — no orphan rows if advisor abandons before answering (Plan 15-04 Task 2).
 
-3. **NOC pipeline async latency during conversation**
+3. **NOC pipeline async latency during conversation** (RESOLVED)
    - What we know: `POST /api/noc/map` can take 2-10 seconds (LLM justification stage)
-   - What's unclear: Whether to show a loading spinner between `summary` commit and NOC candidates arriving, or navigate to a loading step
-   - Recommendation: Add a `noc_loading` boolean state slice; render an inline spinner inside the `noc_confirm` step's input zone while loading. Don't add a separate loading STEP to avoid complicating step-index arithmetic.
+   - **Resolution:** `nocLoading` boolean state slice; inline spinner in noc_confirm step input zone. No separate loading STEP to avoid step-index arithmetic complexity (Plan 15-04 Task 2).
 
 ---
 
