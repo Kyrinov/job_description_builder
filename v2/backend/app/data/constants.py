@@ -186,5 +186,166 @@ KNOWN_JES_FACTORS: frozenset[str] = frozenset({
 # ---------------------------------------------------------------------------
 
 QUESTION_BANK: list[dict] = [
-    # Populated in Phase 12 Plan 02
+    {
+        "id": "work_output_type",
+        "phase_slot": "work_type",
+        "question": "What best describes the main type of output this person produces?",
+        "helper": "Think about what they actually deliver — not their title.",
+        "input_type": "choices",
+        "options": [
+            {
+                "id": "analysis_advice",
+                "label": "Analysis, options, or recommendations for decision-makers",
+                "signals": {
+                    "og_candidates": ["EC"],
+                    "jes_factor_hints": ["Research & analysis", "Decision making"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+            {
+                "id": "financial_reports",
+                "label": "Financial plans, budgets, or costing reports",
+                "signals": {
+                    "og_candidates": ["FI"],
+                    "jes_factor_hints": ["Knowledge of specialized fields"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+            {
+                "id": "systems_data",
+                "label": "Systems, applications, or digital services",
+                "signals": {
+                    "og_candidates": ["IT"],
+                    "jes_factor_hints": ["Knowledge of specialized fields"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+            {
+                "id": "admin_coordination",
+                "label": "Administrative coordination, logistics, or operational support",
+                "signals": {
+                    "og_candidates": ["AS"],
+                    "jes_factor_hints": ["Leadership & operational mgmt"],
+                    "teer_affinity": [2, 3, 4],
+                },
+            },
+        ],
+    },
+    {
+        "id": "work_audience",
+        "phase_slot": "work_type",
+        "question": "Who primarily uses or acts on what this person produces?",
+        "helper": "Consider who would be worse off if this person stopped producing their work.",
+        "input_type": "choices",
+        "options": [
+            {
+                "id": "senior_mgmt_decisions",
+                "label": "Senior management, for decisions or briefings",
+                "signals": {
+                    "og_candidates": ["EC", "FI"],
+                    "jes_factor_hints": ["Communication", "Decision making"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+            {
+                "id": "operational_teams",
+                "label": "Operational teams and staff working within the organization",
+                "signals": {
+                    "og_candidates": ["AS", "IT"],
+                    "jes_factor_hints": ["Leadership & operational mgmt"],
+                    "teer_affinity": [2, 3],
+                },
+            },
+            {
+                "id": "external_stakeholders",
+                "label": "External stakeholders, partner organizations, or the public",
+                "signals": {
+                    "og_candidates": ["EC"],
+                    "jes_factor_hints": ["Communication", "Research & analysis"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+        ],
+    },
+    {
+        "id": "knowledge_specialization",
+        "phase_slot": "work_type",
+        "question": "How specialized is the knowledge this role requires?",
+        "helper": "Focus on the depth of expertise, not the number of tasks.",
+        "input_type": "choices",
+        "options": [
+            {
+                "id": "deep_policy_science",
+                "label": "Deep expertise in a field such as economics, environmental science, or public policy",
+                "signals": {
+                    "og_candidates": ["EC"],
+                    "jes_factor_hints": ["Knowledge of specialized fields", "Contextual knowledge"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+            {
+                "id": "deep_finance_accounting",
+                "label": "Deep expertise in accounting, financial systems, or budget management",
+                "signals": {
+                    "og_candidates": ["FI"],
+                    "jes_factor_hints": ["Knowledge of specialized fields"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+            {
+                "id": "deep_technology",
+                "label": "Deep expertise in software development, infrastructure, or data systems",
+                "signals": {
+                    "og_candidates": ["IT"],
+                    "jes_factor_hints": ["Knowledge of specialized fields"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+            {
+                "id": "general_admin_skills",
+                "label": "General organizational, administrative, and coordination skills",
+                "signals": {
+                    "og_candidates": ["AS"],
+                    "jes_factor_hints": ["Leadership & operational mgmt"],
+                    "teer_affinity": [2, 3, 4],
+                },
+            },
+        ],
+    },
+    {
+        "id": "policy_interpretation",
+        "phase_slot": "work_type",
+        "question": "Does this person develop, interpret, or apply rules, policies, or standards?",
+        "helper": "Select the option that best describes their primary relationship with rules and policy.",
+        "input_type": "choices",
+        "options": [
+            {
+                "id": "develops_policy",
+                "label": "Develops or shapes policy, regulations, or strategic guidance",
+                "signals": {
+                    "og_candidates": ["EC"],
+                    "jes_factor_hints": ["Research & analysis", "Contextual knowledge"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+            {
+                "id": "applies_financial_standards",
+                "label": "Applies financial accounting standards, costing frameworks, or audit procedures",
+                "signals": {
+                    "og_candidates": ["FI"],
+                    "jes_factor_hints": ["Knowledge of specialized fields"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+            {
+                "id": "administers_established",
+                "label": "Administers or implements established procedures and operational processes",
+                "signals": {
+                    "og_candidates": ["AS", "IT"],
+                    "jes_factor_hints": ["Leadership & operational mgmt"],
+                    "teer_affinity": [2, 3, 4],
+                },
+            },
+        ],
+    },
 ]
