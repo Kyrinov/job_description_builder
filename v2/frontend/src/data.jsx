@@ -19,7 +19,7 @@ const I = {
     leaf: '<path d="M16 4C9 4 4 8 4 15c5 1 12-2 12-11z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 13c3-3 6-4 8-4.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>',
     money: '<circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 6v8M8 8.2c0-1 1-1.6 2-1.6s2 .6 2 1.5-1 1.3-2 1.5-2 .6-2 1.5 1 1.5 2 1.5 2-.6 2-1.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>',
     chip: '<rect x="5" y="5" width="10" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 2v2M12 2v2M8 16v2M12 16v2M2 8h2M2 12h2M16 8h2M16 12h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
-    gear: '<circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 2v2.5M10 15.5V18M18 10h-2.5M4.5 10H2M15.7 4.3l-1.8 1.8M6.1 13.9l-1.8 1.8M15.7 15.7l-1.8-1.8M6.1 6.1L4.3 4.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+    gear: '<circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 2v2.5M10 15.5V18M18 10h-2.5M4.5 10H2M15.7 4.3l-1.8 1.8M6.1 13.9l-1.8 1.8M15.7 15.7l-1.8-1.8M6.1 6.1L4.3 4.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
     shield: '<path d="M10 3l6 2v5c0 4-2.6 6.4-6 7.5C6.6 16.4 4 14 4 10V5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>'
   };
 
@@ -102,8 +102,11 @@ const I = {
   const GENERIC_TOTALS = { FI: { 4: 470, 5: 560, 6: 660 }, IT: { 4: 480, 5: 575, 6: 690 },
                            AS: { 4: 430, 5: 510, 6: 600 }, EN: { 4: 500, 5: 600, 6: 720 } };
 
-  /* ---- Classification engine ------------------------------------ */
-  // weights carried on scope answers
+  /* ---- Classification engine (Phase 15 stub) --------------------- */
+  /* Phase 16 will replace this with evidence-based OG ranker.     */
+  /* Current logic uses prototype workType + scope scales. Stays   */
+  /* referenced by app.jsx for legacy badge render; will be removed */
+  /* when Phase 16 lands OgConfirmList.                            */
   function levelFromScope(r) {
     const s = (r.scopeDirection || 0) + (r.scopeAdvises || 0) + (r.scopeImpact || 0);
     if (!s) return null;
@@ -115,13 +118,13 @@ const I = {
   function computeClassification(r) {
     if (!r.workType) return { status: 'analyzing' };
     const wt = WORK_TYPES.find(w => w.id === r.workType);
+    if (!wt) return { status: 'analyzing' };
     const lvNum = levelFromScope(r);
     if (!lvNum) {
       return { status: 'group', group: wt.group, groupName: wt.groupName,
                standard: wt.standard, confidence: 0.61 };
     }
     const code = `${wt.group}-0${lvNum}`;
-    // confidence rises when scope answers are consistent (low spread)
     const vals = [r.scopeDirection, r.scopeAdvises, r.scopeImpact];
     const spread = Math.max(...vals) - Math.min(...vals);
     const confidence = Math.min(0.96, 0.99 - spread * 0.06);
@@ -191,122 +194,109 @@ const I = {
     experience: 'Significant* experience in environmental program or policy analysis, including providing advice and recommendations to management. (*Significant = depth and breadth normally acquired over approximately three years.)'
   };
 
+  /* ---- Signal accumulation from QUESTION_BANK answers ----------- */
+  /* Pure derived function — never persisted to record or backend.   */
+  function accumulateSignals(answers) {
+    const qbStepIds = [
+      'qb_work_output_type', 'qb_work_audience',
+      'qb_knowledge_specialization', 'qb_policy_interpretation',
+    ];
+    const tally = {};
+    for (const stepId of qbStepIds) {
+      const ans = answers[stepId];
+      if (!ans || !ans.signals) continue;
+      for (const ogCode of (ans.signals.og_candidates || [])) {
+        tally[ogCode] = (tally[ogCode] || 0) + 1;
+      }
+    }
+    const sorted = Object.entries(tally).sort((a, b) => b[1] - a[1]);
+    return sorted.length > 0 ? { dominant: sorted[0][0], tally } : null;
+  }
+
   /* ============================================================
-     The interview script
+     The interview script — v2.0 6-phase conversational flow.
      ============================================================ */
   const STEPS = [
-    /* ----- Phase 1: Role ----- */
-    { id: 'title', phase: 0, icon: I.user,
-      q: 'Let\u2019s build this job description together. What\u2019s the role you\u2019re hiring for?',
-      helper: 'Just a working title in plain words \u2014 we\u2019ll handle the official classification for you.',
-      input: { type: 'text', placeholder: 'e.g. Environmental Officer', preset: 'Environmental Officer' },
-      apply: (r, a) => ({ title: a }),
-      transcript: a => a },
+    /* ----- Phase 0: Role ----- */
+    { id: 'title',   phase: 0, icon: I.user, q: 'What is the job title for this position?', helper: 'Use the official or working title — you can refine it later.', input: { type: 'text', placeholder: 'e.g. Senior Policy Analyst', preset: '' }, apply: (r, a) => ({ title: a }), transcript: a => a },
+    { id: 'branch',  phase: 0, icon: I.org,  q: 'Which branch or directorate does this position sit within?', helper: 'e.g. Strategic Policy Branch, ADM(Mat)', input: { type: 'text', placeholder: 'e.g. Strategic Policy Branch', preset: '' }, apply: (r, a) => ({ branch: a }), transcript: a => a },
+    { id: 'reports', phase: 0, icon: I.ladder, q: 'Who does this position report to?', helper: 'Use the title of the direct supervisor — e.g. Director General, Strategic Policy', input: { type: 'text', placeholder: 'e.g. Director, Policy Development', preset: '' }, apply: (r, a) => ({ reports: a }), transcript: a => a },
+    { id: 'supervises', phase: 0, icon: I.user, q: 'Will this person supervise or lead others?', helper: 'This helps us gauge the level of responsibility.', input: { type: 'choices', options: [{ id: 'none', title: 'No — individual contributor' }, { id: 'few', title: 'Leads 1–3 people or a small team' }, { id: 'team', title: 'Manages a team of 4–10' }, { id: 'many', title: 'Leads multiple teams' }] }, apply: (r, a) => ({ supervises: a.title }), transcript: a => a.title },
 
-    { id: 'branch', phase: 0, icon: I.org,
-      q: r => `Which team will the ${r.title || 'new hire'} join?`,
-      helper: 'The branch or directorate they\u2019ll work in.',
-      input: { type: 'text', placeholder: 'e.g. Real Property Operations \u2014 Environmental Services', preset: 'Real Property Operations \u2014 Environmental Services' },
-      apply: (r, a) => ({ branch: a }),
-      transcript: a => a },
-
-    { id: 'reports', phase: 0, icon: I.ladder,
-      q: 'Who will this position report to?',
-      helper: 'The supervisor\u2019s title is enough.',
-      input: { type: 'text', placeholder: 'e.g. Manager, Environmental Services', preset: 'Manager, Environmental Services' },
-      apply: (r, a) => ({ reports: a }),
-      transcript: a => a },
-
-    { id: 'supervises', phase: 0, icon: I.user,
-      q: 'Will this person supervise or lead others?',
-      helper: 'This helps us gauge the level of responsibility.',
+    /* ----- Phase 1: Work Type (QUESTION_BANK-driven) ----- */
+    { id: 'summary', phase: 1, icon: I.spark, q: 'Describe the primary work of this position in your own words.', helper: 'A few sentences is enough. Focus on what the person actually does, not the org chart.', input: { type: 'textarea', placeholder: 'e.g. Develops and coordinates departmental policy on environmental regulations; provides briefings to senior leadership; manages relationships with central agencies.' }, apply: (r, a) => ({ summary: a }), transcript: a => a },
+    { id: 'qb_work_output_type', phase: 1, icon: I.list,
+      q: 'What best describes the main type of output this person produces?',
+      helper: 'Think about what they actually deliver — not their title.',
       input: { type: 'choices', options: [
-        { id: 'none', title: 'No \u2014 individual contributor' },
-        { id: 'few', title: 'Leads 1\u20133 people or a small team' },
-        { id: 'team', title: 'Manages a team of 4\u201310' },
-        { id: 'many', title: 'Leads multiple teams' }
-      ]},
-      apply: (r, a) => ({ supervises: a.title }),
+        { id: 'analysis_advice', title: 'Analysis, options, or recommendations for decision-makers', signals: { og_candidates: ['EC'], jes_factor_hints: ['Research & analysis', 'Decision making'], teer_affinity: [1, 2] } },
+        { id: 'financial_reports', title: 'Financial plans, budgets, or costing reports', signals: { og_candidates: ['FI'], jes_factor_hints: ['Knowledge of specialized fields'], teer_affinity: [1, 2] } },
+        { id: 'systems_data', title: 'Systems, applications, or digital services', signals: { og_candidates: ['IT'], jes_factor_hints: ['Knowledge of specialized fields'], teer_affinity: [1, 2] } },
+        { id: 'admin_coordination', title: 'Administrative coordination, logistics, or operational support', signals: { og_candidates: ['AS'], jes_factor_hints: ['Leadership & operational mgmt'], teer_affinity: [2, 3, 4] } },
+      ] },
+      apply: (r, a) => ({ qb_work_output_type: a.id }),
+      transcript: a => a.title },
+    { id: 'qb_work_audience', phase: 1, icon: I.user,
+      q: 'Who primarily uses or acts on what this person produces?',
+      helper: 'Consider who would be worse off if this person stopped producing their work.',
+      input: { type: 'choices', options: [
+        { id: 'senior_mgmt_decisions', title: 'Senior management, for decisions or briefings', signals: { og_candidates: ['EC', 'FI'], jes_factor_hints: ['Communication', 'Decision making'], teer_affinity: [1, 2] } },
+        { id: 'operational_teams', title: 'Operational teams and staff working within the organization', signals: { og_candidates: ['AS', 'IT'], jes_factor_hints: ['Leadership & operational mgmt'], teer_affinity: [2, 3] } },
+        { id: 'external_stakeholders', title: 'External stakeholders, partner organizations, or the public', signals: { og_candidates: ['EC'], jes_factor_hints: ['Communication', 'Research & analysis'], teer_affinity: [1, 2] } },
+      ] },
+      apply: (r, a) => ({ qb_work_audience: a.id }),
+      transcript: a => a.title },
+    { id: 'qb_knowledge_specialization', phase: 1, icon: I.cap,
+      q: 'How specialized is the knowledge this role requires?',
+      helper: 'Focus on the depth of expertise, not the number of tasks.',
+      input: { type: 'choices', options: [
+        { id: 'deep_policy_science', title: 'Deep expertise in a field such as economics, environmental science, or public policy', signals: { og_candidates: ['EC'], jes_factor_hints: ['Knowledge of specialized fields', 'Contextual knowledge'], teer_affinity: [1, 2] } },
+        { id: 'deep_finance_accounting', title: 'Deep expertise in accounting, financial systems, or budget management', signals: { og_candidates: ['FI'], jes_factor_hints: ['Knowledge of specialized fields'], teer_affinity: [1, 2] } },
+        { id: 'deep_technology', title: 'Deep expertise in software development, infrastructure, or data systems', signals: { og_candidates: ['IT'], jes_factor_hints: ['Knowledge of specialized fields'], teer_affinity: [1, 2] } },
+        { id: 'general_admin_skills', title: 'General organizational, administrative, and coordination skills', signals: { og_candidates: ['AS'], jes_factor_hints: ['Leadership & operational mgmt'], teer_affinity: [2, 3, 4] } },
+      ] },
+      apply: (r, a) => ({ qb_knowledge_specialization: a.id }),
+      transcript: a => a.title },
+    { id: 'qb_policy_interpretation', phase: 1, icon: I.flag,
+      q: 'Does this person develop, interpret, or apply rules, policies, or standards?',
+      helper: 'Select the option that best describes their primary relationship with rules and policy.',
+      input: { type: 'choices', options: [
+        { id: 'develops_policy', title: 'Develops or shapes policy, regulations, or strategic guidance', signals: { og_candidates: ['EC'], jes_factor_hints: ['Research & analysis', 'Contextual knowledge'], teer_affinity: [1, 2] } },
+        { id: 'applies_financial_standards', title: 'Applies financial accounting standards, costing frameworks, or audit procedures', signals: { og_candidates: ['FI'], jes_factor_hints: ['Knowledge of specialized fields'], teer_affinity: [1, 2] } },
+        { id: 'administers_established', title: 'Administers or implements established procedures and operational processes', signals: { og_candidates: ['AS', 'IT'], jes_factor_hints: ['Leadership & operational mgmt'], teer_affinity: [2, 3, 4] } },
+      ] },
+      apply: (r, a) => ({ qb_policy_interpretation: a.id }),
       transcript: a => a.title },
 
-    /* ----- Phase 2: Focus ----- */
-    { id: 'summary', phase: 1, icon: I.compass,
-      q: r => `In a sentence or two, what is the ${r.title || 'role'} mostly about?`,
-      helper: 'Plain language is perfect. We\u2019ll turn this into a polished position overview.',
-      input: { type: 'textarea', placeholder: 'e.g. Leads environmental cleanup and advises the base on meeting federal environmental rules and emissions targets.',
-               preset: 'Leads environmental assessment and cleanup projects across defence sites, and advises leadership on meeting federal environmental rules and emissions targets.' },
-      apply: (r, a) => ({ summary: a }),
-      transcript: a => a.length > 60 ? a.slice(0, 60) + '\u2026' : a },
+    /* ----- Phase 2: Classification ----- */
+    { id: 'noc_confirm', phase: 2, icon: I.compass,
+      q: 'Review the top NOC matches and confirm the best fit for this role.',
+      helper: 'Select the NOC code that best describes the work.',
+      input: { type: 'noc_confirm', candidates: [] },
+      apply: (r, a) => ({ confirmed_noc: a }),
+      transcript: a => a ? (a.noc_code + ' — ' + a.title) : 'Pending' },
 
-    { id: 'workType', phase: 1, icon: I.list,
-      q: 'Which best describes the main type of work?',
-      helper: 'This is how we find the right occupational group \u2014 the public-service family this job belongs to.',
-      input: { type: 'choices', source: 'workTypes' },
-      apply: (r, a) => ({ workType: a.id }),
-      transcript: a => a.title },
-
-    /* ----- Phase 3: Scope / level ----- */
-    { id: 'scopeDirection', phase: 2, icon: I.ladder,
-      q: 'Day to day, how much direction does this person work under?',
-      helper: 'There are no wrong answers \u2014 this is one of three questions that set the level.',
-      input: { type: 'scale', ends: ['Lots of guidance', 'Highly independent'], options: [
-        { v: 1, lbl: 'Regular supervision' },
-        { v: 2, lbl: 'General direction' },
-        { v: 3, lbl: 'Sets own objectives' }
-      ]},
-      apply: (r, a) => ({ scopeDirection: a.v }),
-      transcript: a => a.lbl },
-
-    { id: 'scopeAdvises', phase: 2, icon: I.compass,
-      q: 'When this person makes a recommendation, who acts on it?',
-      helper: 'This tells us how far their advice reaches.',
-      input: { type: 'scale', ends: ['Stays local', 'Reaches the top'], options: [
-        { v: 1, lbl: 'Supervisor reviews it' },
-        { v: 2, lbl: 'Middle management' },
-        { v: 3, lbl: 'Senior management (DG+)' }
-      ]},
-      apply: (r, a) => ({ scopeAdvises: a.v }),
-      transcript: a => a.lbl },
-
-    { id: 'scopeImpact', phase: 2, icon: I.flag,
-      q: 'What\u2019s the biggest thing this person is responsible for?',
-      helper: 'The scope of what could go right \u2014 or wrong \u2014 on their watch.',
-      input: { type: 'scale', ends: ['Focused', 'Far-reaching'], options: [
-        { v: 1, lbl: 'A set of assigned tasks' },
-        { v: 2, lbl: 'A program or project portfolio' },
-        { v: 3, lbl: 'A multi-year strategy / budget' }
-      ]},
-      apply: (r, a) => ({ scopeImpact: a.v }),
-      transcript: a => a.lbl },
-
-    /* ----- Phase 4: Responsibilities ----- */
+    /* ----- Phase 3: Duties ----- */
     { id: 'duties', phase: 3, icon: I.list,
       q: 'Here are the responsibilities managers usually pick for a role like this.',
-      helper: 'Tick the ones that fit, and add anything in your own words \u2014 we\u2019ll phrase them formally for you.',
+      helper: 'Tick the ones that fit, and add anything in your own words — we\u2019ll phrase them formally for you.',
       input: { type: 'duties' },
       apply: (r, a) => ({ duties: a }),
       transcript: a => `${a.length} ${a.length === 1 ? 'responsibility' : 'responsibilities'}` },
 
-    /* ----- Phase 5: Mission ----- */
-    { id: 'drf', phase: 4, icon: I.shield,
-      q: 'Which part of National Defence\u2019s mission does this role support?',
-      helper: 'We\u2019ll link the position to the right Departmental Result \u2014 a requirement for DND positions.',
-      input: { type: 'drf' },
-      apply: (r, a) => ({ drf: a }),
-      transcript: a => a.cr },
-
-    /* ----- Phase 6: Qualifications then review ----- */
-    { id: 'quals', phase: 5, icon: I.cap,
-      q: 'Last step \u2014 here are the essential qualifications for this level.',
+    /* ----- Phase 4: Qualifications ----- */
+    { id: 'quals', phase: 4, icon: I.cap,
+      q: 'Last step — here are the essential qualifications for this level.',
       helper: 'Pre-filled from the qualification standard for the classification. Edit anything that doesn\u2019t fit.',
       input: { type: 'quals' },
       apply: (r, a) => ({ quals: a }),
       transcript: () => 'Reviewed' }
   ];
 
-const PHASES = ['Role', 'Focus', 'Level', 'Duties', 'Mission', 'Review'];
+const PHASES = ['Role', 'Work Type', 'Classification', 'Duties', 'Qualifications', 'Review'];
 
 export {
   I, STEPS, PHASES, DRF, WORK_TYPES, DUTY_SUGGESTIONS, QUAL_DEFAULT,
-  EC_ELEMENTS, computeClassification, refineDuty, ecFactors
+  EC_ELEMENTS, computeClassification, refineDuty, ecFactors,
+  accumulateSignals,
 };
