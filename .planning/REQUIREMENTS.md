@@ -54,10 +54,10 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 
 ### NOC — NL→NOC pipeline
 
-- [ ] **NOC-01**: Three-stage NL→NOC pipeline runs in the FastAPI backend: FTS5 shortlist → embedding
+- [x] **NOC-01**: Three-stage NL→NOC pipeline runs in the FastAPI backend: FTS5 shortlist → embedding
   rerank → LLM justification; ported from `app/services/noc_mapper.py` and its dependencies
   (sqlite-vec, Ollama); exposed via POST `/api/noc/map`
-- [ ] **NOC-02**: NOC candidates returned include code, title, TEER level, and verbatim duty matches from
+- [x] **NOC-02**: NOC candidates returned include code, title, TEER level, and verbatim duty matches from
   the FTS5-indexed NOC 2021 dataset; the SPA displays candidates and waits for advisor confirmation
   before classification proceeds
 
@@ -174,7 +174,7 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
   PATCH `/api/wd/{id}` (update draft)
 - [ ] **API-03**: Canonical data endpoints: GET `/api/quals/default?og_code=EC` (OG-matched qual standard
   text); GET `/api/og/definitions?og_code=EC` (OG definition, inclusions, exclusions for display)
-- [ ] **API-04**: POST `/api/noc/map` — accepts free-text work description; returns top-3 NOC candidates
+- [x] **API-04**: POST `/api/noc/map` — accepts free-text work description; returns top-3 NOC candidates
   (code, title, TEER, verbatim duty matches) via three-stage FTS5 → embedding rerank → LLM pipeline
 - [x] **API-05**: SQLite single-file at `DB_PATH` with `work_descriptions` and `audit_log` tables;
   idempotent `create_schema` on lifespan startup — validated in Phase 10
@@ -260,9 +260,9 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 | FE-03 | Phase 13 | Complete (Plan 02) |
 | FE-04 | Phase 13 | Complete |
 | FE-05 | Phase 13 | Complete |
-| NOC-01 | Phase 14 | Pending |
-| NOC-02 | Phase 14 | Pending |
-| API-04 | Phase 14 | Pending |
+| NOC-01 | Phase 14 | Complete |
+| NOC-02 | Phase 14 | Complete |
+| API-04 | Phase 14 | Complete |
 | CONVO-01 | Phase 15 | Pending |
 | CONVO-02 | Phase 15 | Pending |
 | CONVO-03 | Phase 15 | Pending |
