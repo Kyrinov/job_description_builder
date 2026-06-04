@@ -3,20 +3,20 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Real Guided Conversation
 current_phase: 13
-status: ready_to_verify
+status: ready_to_plan
 last_updated: "2026-06-04T16:30:00.000Z"
 progress:
   total_phases: 11
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 11
   completed_plans: 11
-  percent: 100
+  percent: 36
 ---
 
 # Project State
 
-**Status:** Phase 13 plans complete — ready to verify
-**Current phase:** 13
+**Status:** Ready to plan
+**Current phase:** 14
 **Last updated:** 2026-06-04
 **Next action:** Run gsd-verifier on Phase 13 (auto via execute-phase, or `/gsd-verify-work 13`)
 
@@ -136,7 +136,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **v2.0 Phase 13 (Frontend SPA Shell) Plan 02 complete 2026-06-04:** Wave 1 — ported prototype data layer, shared input controls, and brand CSS into Vite as ES modules. Created `v2/frontend/src/data.jsx` (312 lines; exports I, STEPS, PHASES, DRF, WORK_TYPES, DUTY_SUGGESTIONS, QUAL_DEFAULT, EC_ELEMENTS, computeClassification, refineDuty, ecFactors). Created `v2/frontend/src/components.jsx` (273 lines; JSX-only, exports Icon, Check, StepInput, initialAnswer, answerValid; imports from `./data.jsx`; XSS-safe comment on Icon's dangerouslySetInnerHTML). Created `v2/frontend/src/styles.css` (27,995 bytes; verbatim from prototype, contains --ui/--doc/--mono brand font custom properties). Added Google Fonts `<link>` with variable range `300..800` to `v2/frontend/index.html`. Replaced `v2/frontend/src/main.jsx` to import `./app.jsx` (lowercase) and `./styles.css`. FE-01 and FE-03 validated at the file-structure and brand-typography level. Vite build now fails with exactly the expected `Could not resolve "./app.jsx"` — confirming all ported modules are syntactically valid. Plan 03 creates app.jsx.
 
-**v2.0 Phase 13 (Frontend SPA Shell) Plan 03 complete 2026-06-04:** Wave 2 — ported conversation.jsx, document.jsx, app.jsx as ES modules with JSX. Created `v2/frontend/src/conversation.jsx` (Header, Exchange, ActiveQuestion, ReviewState), `v2/frontend/src/document.jsx` (DocumentPane with internal helpers), and `v2/frontend/src/app.jsx` (7 state slices + lazy localStorage init + useEffect persistence). Deleted obsolete `v2/frontend/src/App.jsx` placeholder. Activated 9 vitest tests in `app.test.jsx` (6 FE-04 + 3 FE-05) — all GREEN. Created `v2/frontend/vitest.config.js` (vitest 4.x config discovery workaround) and `v2/frontend/vitest.setup.js` (in-memory localStorage polyfill for vitest 4.x + jsdom 29 empty-storage bug). `npm test` exits 0 (9/9 passing). `npm run build` exits 0, dist/index.html 0.78 kB, dist/assets/index-*.js 179.71 kB (gzip 57.52 kB). FE-01, FE-04, FE-05 validated. Phase 13 ready for verifier review.
+**v2.0 Phase 13 (Frontend SPA Shell) Plan 03 complete 2026-06-04:** Wave 2 — ported conversation.jsx, document.jsx, app.jsx as ES modules with JSX. Created `v2/frontend/src/conversation.jsx` (Header, Exchange, ActiveQuestion, ReviewState), `v2/frontend/src/document.jsx` (DocumentPane with internal helpers), and `v2/frontend/src/app.jsx` (8 state slices + lazy localStorage init + useEffect persistence). Deleted obsolete `v2/frontend/src/App.jsx` placeholder. Activated 9 vitest tests in `app.test.jsx` (6 FE-04 + 3 FE-05) — all GREEN. Created `v2/frontend/vitest.config.js` (vitest 4.x config discovery workaround) and `v2/frontend/vitest.setup.js` (in-memory localStorage polyfill for vitest 4.x + jsdom 29 empty-storage bug). `npm test` exits 0 (9/9 passing). `npm run build` exits 0, dist/index.html 0.78 kB, dist/assets/index-*.js 179.71 kB (gzip 57.52 kB). FE-01, FE-04, FE-05 validated. **Phase 13 verified** (5/5 success criteria, 4/4 requirements; 1 major toast-icon bug fixed in commit 24c0c05). 2 manual UAT items remain per VALIDATION.md (visual font render, end-to-end localStorage restore).
 
 **v2.0 design source of truth:** `Job Description Builder/jd-builder/` — React 18 prototype (5 .jsx files + styles.css + JD Builder.html). Visual design and conversation flow preserved; classification backing replaced by v1.0 engine.
 

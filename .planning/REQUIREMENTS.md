@@ -190,7 +190,7 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 
 ### FE — Frontend SPA
 
-- [ ] **FE-01**: React 18 SPA built with Vite; multi-file structure mirrors the Claude Design prototype:
+- [x] **FE-01**: React 18 SPA built with Vite; multi-file structure mirrors the Claude Design prototype:
   `app.jsx`, `data.jsx`, `conversation.jsx`, `document.jsx`, `components.jsx`, `styles.css`
   — partial: data.jsx, components.jsx, styles.css, main.jsx, index.html ported in Phase 13 Plan 02
   (FE-01 completion requires Plan 03's app.jsx, conversation.jsx, document.jsx)
@@ -200,9 +200,9 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
   (eyebrow / labels); layered CSS scoped to `.app`, `.convo`, `.preview`, `.doc`, etc.; visual fidelity
   to the Claude Design prototype is required — validated in Phase 13 Plan 02 (styles.css + Google Fonts
   with variable range 300..800)
-- [ ] **FE-04**: Client-side state: `useState` + `useMemo` only; record (committed answers), answers
+- [x] **FE-04**: Client-side state: `useState` + `useMemo` only; record (committed answers), answers
   (per-step), stepIndex, draft, reviewing, editingReturn, flashes; no Redux/Zustand
-- [ ] **FE-05**: Persist draft WD to localStorage on every step commit; restore most recent in-progress
+- [x] **FE-05**: Persist draft WD to localStorage on every step commit; restore most recent in-progress
   WD on reload; provides crash-recovery for the single-user local app
 
 ## Future Requirements (v2.1+)
@@ -258,8 +258,8 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 | QUES-03 | Phase 12 | Complete |
 | FE-01 | Phase 13 | Pending (partial — Plan 02) |
 | FE-03 | Phase 13 | Complete (Plan 02) |
-| FE-04 | Phase 13 | Pending |
-| FE-05 | Phase 13 | Pending |
+| FE-04 | Phase 13 | Complete |
+| FE-05 | Phase 13 | Complete |
 | NOC-01 | Phase 14 | Pending |
 | NOC-02 | Phase 14 | Pending |
 | API-04 | Phase 14 | Pending |
