@@ -86,7 +86,11 @@ Plans:
 3. Both constants are importable from a single module (e.g. `app/data/constants.py`); unit tests confirm the shape and spot-check key entries against the source files
 4. The CAF table is annotated "advisory — not authoritative" in code comments and in any surface that displays it
 
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 11-01-PLAN.md — Wave 0 test stubs + package marker + OG_LEVELS constant + v1.0 og_ranking.py fix (Wave 1)
+- [ ] 11-02-PLAN.md — CAF_RANK_OG_EQUIVALENCE table (verify/populate) + DATA-02 tests GREEN (Wave 1)
 
 ---
 
@@ -287,7 +291,7 @@ Plans:
 | 8.1. JES Advisor Override | v1.0 | 3/3 | Complete | 2026-06-03 |
 | 9. DND DRF Integration | v1.0 | 4/4 | Complete | 2026-06-03 |
 | **10. Project Scaffold** | **v2.0** | **4/4** | **Complete** | **2026-06-03** |
-| **11. Data Foundation** | **v2.0** | **0/?** | **Not started** | — |
+| **11. Data Foundation** | **v2.0** | **0/2** | **Not started** | — |
 | **12. Socratic Question Bank** | **v2.0** | **0/?** | **Not started** | — |
 | **13. Frontend SPA Shell** | **v2.0** | **0/?** | **Not started** | — |
 | **14. NOC Pipeline** | **v2.0** | **0/?** | **Not started** | — |
