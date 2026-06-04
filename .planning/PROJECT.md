@@ -11,6 +11,8 @@ v1.0 (MVP, HTMX wizard) shipped 2026-06-03 and is archived. v2.0 ("Real Guided C
 - **v1.0 (archived):** FastAPI + HTMX 2.x + SQLite + sqlite-vec + Ollama. ~15,539 LOC Python, 188 tests passing. Reference: `.planning/milestones/v1.0-ROADMAP.md` and `.planning/milestones/v1.0-REQUIREMENTS.md`.
 - **v2.0 (active — replanned 2026-06-03):** React 18 conversational SPA + FastAPI JSON API. Phase 10 scaffold complete. Phases 11–19 (original plan) scrapped — they were built around the Claude Design prototype's hardcoded work-type picker and simplified scope-question classifier. v2.0 is being replanned around v1.0's production NOC + OG + JES engine. The React prototype at `Job Description Builder/jd-builder/` remains the UX design source of truth (visual design, conversation flow, live preview) but its classification logic is replaced.
 - **Phase 10 (Project Scaffold) complete** — `v2/backend/` (FastAPI + Pydantic v2 + SQLite) and `v2/frontend/` (Vite + React 18 + proxy) wired together. 10/10 tests pass; `v2/scripts/verify.sh` exits 0 with 7/7 checks. The placeholder SPA loads at `localhost:5173` and proxies `/api/*` to FastAPI on `:8000`. Conversational UX port lands in Phase 11.
+- **Phase 11 (Data Foundation) complete** — `OG_LEVELS` corrected (EC 1-8, IT 1-5, CS merged into IT) and `CAF_RANK_OG_EQUIVALENCE` populated from `data/CAF pay grades` (14 CAF rank entries, advisory-flagged). 8 new tests; 18/18 green.
+- **Phase 12 (Socratic Question Bank) complete** — `QUESTION_BANK` constant with 4 Socratic work-type entries (14 answer options total) covering EC, AS, IT, FI without naming any OG group in user-visible text. `KNOWN_JES_FACTORS` frozenset (9 canonical EC JES factor names). 9 new tests; 27/27 green, 0 regressions. Phase 15 conversational UX and Phase 16 OG ranker are unblocked.
 
 ## Current Milestone: v2.0 Real Guided Conversation
 
@@ -63,6 +65,8 @@ An HR advisor can describe work in plain language and receive a legally defensib
 - ✓ **API-01** — FastAPI app with 5 Pydantic v2 models (WorkDescription, DraftDuty, Classification, JESFactor, QualificationStandard) — validated in Phase 10 (Project Scaffold, completed 2026-06-03)
 - ✓ **API-05** — Single-file SQLite at `DB_PATH` with `work_descriptions` and `audit_log` tables (idempotent `create_schema` on lifespan startup) — validated in Phase 10 (Project Scaffold, completed 2026-06-03)
 - ✓ **FE-02** — Vite dev server proxies `/api/*` to FastAPI on a separate port (8000) with `changeOrigin: true` — validated in Phase 10 (Project Scaffold, completed 2026-06-03)
+- ✓ **DATA-01, DATA-02** — `OG_LEVELS` corrected (EC 1-8, IT 1-5, CS removed) and `CAF_RANK_OG_EQUIVALENCE` populated with 14 advisory-flagged CAF rank entries — validated in Phase 11 (Data Foundation, completed 2026-06-04)
+- ✓ **QUES-01, QUES-02, QUES-03** — `QUESTION_BANK` constant with 4 Socratic work-type entries (14 options) and `KNOWN_JES_FACTORS` frozenset; OG codes appear only in `signals.og_candidates` (Socratic constraint enforced) — validated in Phase 12 (Socratic Question Bank, completed 2026-06-04)
 
 ### Active (v2.0)
 
@@ -169,4 +173,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-03 after Phase 10 (Project Scaffold) completion*
+*Last updated: 2026-06-04 after Phase 12 (Socratic Question Bank) completion*
