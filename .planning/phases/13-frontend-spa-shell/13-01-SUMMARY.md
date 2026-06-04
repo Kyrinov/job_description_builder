@@ -125,6 +125,18 @@ None - no external service configuration required.
 
 **TDD Gate Compliance:** RED gate commit present (4130ba7, `test(...)` type) and GREEN gate is intentionally deferred to Plan 13-03 per the plan's TDD staging. This is correct Wave 0 behavior — the test file exists so the runner is exercised, but the real assertions land with the implementation.
 
+## Self-Check: PASSED
+
+All claims verified:
+- `v2/frontend/src/app.test.jsx` exists (38 lines, 11 `.todo` stubs across 2 describe blocks)
+- `v2/frontend/vite.config.js` contains `test: { environment: 'jsdom', globals: true, setupFiles: [] }`
+- `v2/frontend/package.json` devDependencies: `vitest`, `@testing-library/react`, `@testing-library/user-event`, `jsdom`
+- Commit `5dee927` (feat) and commit `4130ba7` (test) present in git log
+- Final metadata commit `504e4db` (docs) present
+- `npx vitest run src/app.test.jsx` exits 0, reports "11 todo (11), 0 failures"
+- No unexpected file deletions
+- `data/CAF pay grades` and `data/SJD Examples.txt` correctly left untracked (out of scope per hard constraints)
+
 ---
 *Phase: 13-frontend-spa-shell*
 *Completed: 2026-06-04*
