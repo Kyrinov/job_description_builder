@@ -29,10 +29,10 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 
 ### DATA — Data correctness
 
-- [ ] **DATA-01**: System encodes correct OG level ranges for all groups extracted from `data/rates_of_pay/`
+- [x] **DATA-01**: System encodes correct OG level ranges for all groups extracted from `data/rates_of_pay/`
   (EC: 01–08, IT: 01–05, FI: 01–04, AS: 01–08 and all other active groups); the `OG_LEVELS` dict in
   `app/ai/og_ranking.py` is replaced with the corrected full set derived from the rates CSVs
-- [ ] **DATA-02**: System encodes a CAF rank→civilian OG equivalence table (hardcoded constant) derived by
+- [x] **DATA-02**: System encodes a CAF rank→civilian OG equivalence table (hardcoded constant) derived by
   pay-band comparison from `data/CAF pay grades`; table maps NCM and officer ranks to approximate civilian
   OG-level ranges; flagged "advisory — not authoritative" in all surfaces
 
@@ -245,8 +245,8 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 | API-01 | Phase 10 | Complete |
 | API-05 | Phase 10 | Complete |
 | FE-02 | Phase 10 | Complete |
-| DATA-01 | Phase 11 | Pending |
-| DATA-02 | Phase 11 | Pending |
+| DATA-01 | Phase 11 | Complete |
+| DATA-02 | Phase 11 | Complete |
 | QUES-01 | Phase 12 | Pending |
 | QUES-02 | Phase 12 | Pending |
 | QUES-03 | Phase 12 | Pending |

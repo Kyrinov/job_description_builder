@@ -30,7 +30,7 @@ Full phase details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 v2.0 ports v1.0's production NOC + OG classification + JES engine into a conversational React SPA backed by corrected authoritative data. The Claude Design prototype at `Job Description Builder/jd-builder/` is the UX source of truth; its hardcoded work-type picker and simplified classification are replaced by v1.0's evidence-based engine. Original Phases 11–19 scrapped 2026-06-03; new phases 11–20 defined below.
 
 - [x] **Phase 10: Project Scaffold** — FastAPI skeleton + Pydantic v2 models + SQLite schema + Vite + React 18 project + Vite proxy. (API-01, API-05, FE-02) (completed 2026-06-03)
-- [ ] **Phase 11: Data Foundation** — Fix OG level ranges from rates_of_pay CSVs; encode CAF rank→civilian OG equivalence table. (DATA-01, DATA-02)
+- [x] **Phase 11: Data Foundation** — Fix OG level ranges from rates_of_pay CSVs; encode CAF rank→civilian OG equivalence table. (DATA-01, DATA-02) (completed 2026-06-04)
 - [ ] **Phase 12: Socratic Question Bank** — Design and encode question bank artifact (JSON/Python constant) driving Socratic classification; each entry maps to OG candidates + JES factor hints. (QUES-01, QUES-02, QUES-03)
 - [ ] **Phase 13: Frontend SPA Shell** — Port 5 JSX files + styles.css into Vite; brand typography; useState/useMemo architecture; localStorage crash-recovery. (FE-01, FE-03, FE-04, FE-05)
 - [ ] **Phase 14: NOC Pipeline** — Port three-stage NL→NOC pipeline (FTS5 → embedding rerank → LLM justification) into FastAPI backend; expose POST `/api/noc/map`; display candidates + advisor confirmation. (NOC-01, NOC-02, API-04)
@@ -86,11 +86,11 @@ Plans:
 3. Both constants are importable from a single module (e.g. `app/data/constants.py`); unit tests confirm the shape and spot-check key entries against the source files
 4. The CAF table is annotated "advisory — not authoritative" in code comments and in any surface that displays it
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 11-01-PLAN.md — Wave 0 test stubs + package marker + OG_LEVELS constant + v1.0 og_ranking.py fix (Wave 1)
-- [ ] 11-02-PLAN.md — CAF_RANK_OG_EQUIVALENCE table (verify/populate) + DATA-02 tests GREEN (Wave 1)
+- [x] 11-01-PLAN.md — Wave 0 test stubs + package marker + OG_LEVELS constant + v1.0 og_ranking.py fix (Wave 1)
+- [x] 11-02-PLAN.md — CAF_RANK_OG_EQUIVALENCE table (verify/populate) + DATA-02 tests GREEN (Wave 1)
 
 ---
 

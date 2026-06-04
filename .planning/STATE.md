@@ -2,23 +2,23 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Real Guided Conversation
-current_phase: 11
+current_phase: 12
 status: planning
 last_updated: "2026-06-04"
 progress:
   total_phases: 11
-  completed_phases: 1
-  total_plans: 6
-  completed_plans: 4
-  percent: 9
+  completed_phases: 2
+  total_plans: 8
+  completed_plans: 8
+  percent: 18
 ---
 
 # Project State
 
-**Status:** Ready to execute Phase 11
-**Current phase:** Phase 11 (Data Foundation) — 2 plans ready
+**Status:** Ready to plan Phase 12
+**Current phase:** Phase 12 (Socratic Question Bank)
 **Last updated:** 2026-06-04
-**Next action:** `/gsd-execute-phase 11` (Data Foundation — OG levels fix + CAF rank equivalence table)
+**Next action:** `/gsd-discuss-phase 12` then `/gsd-plan-phase 12` then `/gsd-execute-phase 12`
 
 ---
 
@@ -27,7 +27,7 @@ progress:
 | # | Phase | Status |
 |---|-------|--------|
 | 10 | Project Scaffold | ✅ Complete (2026-06-03) |
-| 11 | Data Foundation | 🟡 Ready to execute (2 plans) |
+| 11 | Data Foundation | ✅ Complete (2026-06-04) |
 | 12 | Socratic Question Bank | Not started |
 | 13 | Frontend SPA Shell | Not started |
 | 14 | NOC Pipeline | Not started |
@@ -109,11 +109,11 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 | Metric | Value |
 |--------|-------|
 | Phases total | 11 (10–20) |
-| Phases complete | 1 (Phase 10) |
+| Phases complete | 2 (Phases 10, 11) |
 | Requirements total | 52 |
-| Requirements validated | 3 (API-01, API-05, FE-02 — Phase 10) |
-| Requirements active | 49 |
-| Tests passing | 10 (Phase 10 suite) |
+| Requirements validated | 5 (API-01, API-05, FE-02, DATA-01, DATA-02) |
+| Requirements active | 47 |
+| Tests passing | 18 (10 Phase 10 + 8 Phase 11) |
 
 ---
 
@@ -124,18 +124,19 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 - Original Phases 11–19 scrapped — hardcoded work-type picker / simplified classifier architecture was wrong
 - New Phases 11–20 defined around v1.0's production NOC + OG + JES engine
 - 52 requirements across 13 categories (DATA, QUES, NOC, CONVO, CLASS, JES, JD, DOC, QUAL, AMEND, EXP, API, FE)
-- 11 phases (10–20); Phase 10 complete; Phase 11 next
+- 11 phases (10–20); Phases 10 & 11 complete; Phase 12 next
 - 100% requirement coverage; 0 unmapped; 0 orphans
 - DRF integration deferred to v2.1 (DOC-01 notes Defence Results Linkage deferred)
+- v2.0 Phase 11 (Data Foundation) complete 2026-06-04: 2 plans, 8 new tests, 0 regressions; 18 tests passing total in v2 backend
 
-**Next action:** `/gsd-execute-phase 11`
+**Next action:** `/gsd-discuss-phase 12` (Socratic Question Bank — question bank artifact)
 
 **v2.0 design source of truth:** `Job Description Builder/jd-builder/` — React 18 prototype (5 .jsx files + styles.css + JD Builder.html). Visual design and conversation flow preserved; classification backing replaced by v1.0 engine.
 
 **v2.0 build order (new phases):**
 
-- Phase 11: Data Foundation — fix OG_LEVELS, encode CAF rank table — DATA-01, DATA-02
-- Phase 12: Socratic Question Bank — question bank artifact (design-first) — QUES-01, QUES-02, QUES-03
+- Phase 11: Data Foundation — fix OG_LEVELS, encode CAF rank table — DATA-01, DATA-02 ✅
+- Phase 12: Socratic Question Bank — question bank artifact (design-first) — QUES-01, QUES-02, QUES-03 (NEXT)
 - Phase 13: Frontend SPA Shell — port 5 JSX files, brand styles, state, localStorage — FE-01, FE-03, FE-04, FE-05
 - Phase 14: NOC Pipeline — FTS5 → embedding rerank → LLM justification + POST /api/noc/map — NOC-01, NOC-02, API-04
 - Phase 15: Conversational UX — 6-phase interview, question bank steps, revisit, phase chips, WD CRUD — CONVO-01..05, API-02
