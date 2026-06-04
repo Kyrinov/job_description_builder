@@ -33,7 +33,7 @@ v2.0 ports v1.0's production NOC + OG classification + JES engine into a convers
 - [x] **Phase 11: Data Foundation** — Fix OG level ranges from rates_of_pay CSVs; encode CAF rank→civilian OG equivalence table. (DATA-01, DATA-02) (completed 2026-06-04)
 - [x] **Phase 12: Socratic Question Bank** — Design and encode question bank artifact (JSON/Python constant) driving Socratic classification; each entry maps to OG candidates + JES factor hints. (QUES-01, QUES-02, QUES-03) (completed 2026-06-04)
 - [x] **Phase 13: Frontend SPA Shell** — Port 5 JSX files + styles.css into Vite; brand typography; useState/useMemo architecture; localStorage crash-recovery. (FE-01, FE-03, FE-04, FE-05) (completed 2026-06-04)
-- [ ] **Phase 14: NOC Pipeline** — Port three-stage NL→NOC pipeline (FTS5 → embedding rerank → LLM justification) into FastAPI backend; expose POST `/api/noc/map`; display candidates + advisor confirmation. (NOC-01, NOC-02, API-04)
+- [x] **Phase 14: NOC Pipeline** — Port three-stage NL→NOC pipeline (FTS5 → embedding rerank → LLM justification) into FastAPI backend; expose POST `/api/noc/map`; display candidates + advisor confirmation. (NOC-01, NOC-02, API-04) (completed 2026-06-04)
 - [ ] **Phase 15: Conversational UX** — 6-phase interview with question bank-driven classification and duty steps; revisit, phase chips, per-step input controls, keyboard shortcuts; WD CRUD persistence. (CONVO-01, CONVO-02, CONVO-03, CONVO-04, CONVO-05, API-02)
 - [ ] **Phase 16: OG Classification** — Evidence-based OG classification from confirmed NOC + work description; AS/EC disambiguation; level selection from corrected OG ranges; hard gate; CAF rank advisory; canonical data endpoints. (CLASS-01, CLASS-02, CLASS-03, CLASS-04, CLASS-05, API-06, API-03)
 - [ ] **Phase 17: JES Scoring** — EC JES 2017 9-factor scoring with per-factor retry + advisor override; non-EC approximate totals; JES scorecard in live preview; POST `/api/jes/score`. (JES-01, JES-02, JES-03, JES-04, API-07)
@@ -155,13 +155,13 @@ Plans:
 3. The SPA displays the NOC candidates as confirmation cards; the advisor selects one to confirm; the confirmed NOC code is stored in the `WorkDescription` model before classification proceeds
 4. The pipeline is ported from `app/services/noc_mapper.py` and its sqlite-vec + Ollama dependencies; existing unit tests from v1.0 are adapted and pass in the v2.0 test suite
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 14-01-PLAN.md — Wave 0: test infrastructure stubs + noc_mapping_db fixture + requirements.txt deps (completed 2026-06-04)
 - [x] 14-02-PLAN.md — Wave 2: noc_ranking.py + noc_mapper.py port + Settings/db/NOCMatch extensions (completed 2026-06-04)
 - [x] 14-03-PLAN.md — Wave 2: POST /api/noc/map route + request/response models (completed 2026-06-04)
-- [ ] 14-04-PLAN.md — Wave 3: NocConfirmList frontend component + UAT checkpoint
+- [x] 14-04-PLAN.md — Wave 3: NocConfirmList frontend component + UAT checkpoint (completed 2026-06-04)
 
 ---
 
@@ -309,7 +309,7 @@ Plans:
 | **11. Data Foundation** | **v2.0** | **0/2** | **Not started** | — |
 | **12. Socratic Question Bank** | **v2.0** | **0/2** | **Not started** | — |
 | **13. Frontend SPA Shell** | **v2.0** | **3/3** | **Complete** | **2026-06-04** |
-| **14. NOC Pipeline** | **v2.0** | **0/?** | **Not started** | — |
+| **14. NOC Pipeline** | **v2.0** | **4/4** | **Complete** | **2026-06-04** |
 | **15. Conversational UX** | **v2.0** | **0/?** | **Not started** | — |
 | **16. OG Classification** | **v2.0** | **0/?** | **Not started** | — |
 | **17. JES Scoring** | **v2.0** | **0/?** | **Not started** | — |
