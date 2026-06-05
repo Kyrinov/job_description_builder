@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Real Guided Conversation
 current_phase: 17
-status: ready_to_plan
-last_updated: "2026-06-05T09:50:00.000Z"
+status: ready_to_execute
+last_updated: "2026-06-05T11:30:00.000Z"
 progress:
   total_phases: 11
   completed_phases: 7
-  total_plans: 23
+  total_plans: 27
   completed_plans: 19
   percent: 76
 ---
@@ -18,7 +18,7 @@ progress:
 **Status:** Ready to plan
 **Current phase:** 17
 **Last updated:** 2026-06-05
-**Next action:** Plan or execute Phase 17 — `/gsd-execute-phase 17` or `/gsd-plan-phase 17`
+**Next action:** Execute Phase 17 — `/gsd-execute-phase 17`
 
 ---
 
@@ -33,7 +33,7 @@ progress:
 | 14 | NOC Pipeline | ✅ Complete (2026-06-04) |
 | 15 | Conversational UX | ✅ Complete (2026-06-04) |
 | 16 | OG Classification | ✅ Complete (2026-06-05) |
-| 17 | JES Scoring | Not started |
+| 17 | JES Scoring | Plans complete (4/4) — ready to execute |
 | 18 | JD Composition & Live Preview | Not started |
 | 19 | Qualifications & Amendments | Not started |
 | 20 | Export | Not started |
@@ -138,7 +138,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 **v2.0 Phase 15 (Conversational UX) complete 2026-06-04:** 4 plans (15-01 through 15-04). Wave 0 added WD CRUD endpoints (POST/GET/PATCH /api/wd) and frontend CONVO-01..05 RED stubs. Wave 1 added frontend STEPS + PHASES + accumulateSignals. Wave 2 wired app.jsx WD CRUD + NOC trigger + og_confirm stub. Wave 3 added OG-group-keyed duty suggestions (CONVO-01, CONVO-03). **Phase 15 verified** (4/4 plans, 7/7 requirements: CONVO-01..05, API-02, FE-04/05 deferred to Phase 13). 39 v2 backend + 9 vitest tests GREEN at completion.
 
-**Next action:** Plan or execute Phase 17 — `/gsd-execute-phase 17` or `/gsd-plan-phase 17`
+**Next action:** Execute Phase 17 — `/gsd-execute-phase 17`
 
 **v2.0 design source of truth:** `Job Description Builder/jd-builder/` — React 18 prototype (5 .jsx files + styles.css + JD Builder.html). Visual design and conversation flow preserved; classification backing replaced by v1.0 engine.
 
