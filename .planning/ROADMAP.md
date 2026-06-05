@@ -235,7 +235,13 @@ Plans:
 3. When a factor score fails after 3 retries (instructor retry wrapper), the SPA prompts the advisor to manually enter a degree value (1–N per factor scale); the override is stored as an `audit_log` entry with `type="jes_override"`
 4. The Classification & Evaluation section of the live document preview renders per-factor rows (name, D{degree}, points) and a totals row for EC; non-EC renders a single totals line; the scorecard populates as soon as the classification step is confirmed
 
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 17-01-PLAN.md — Wave 0: JES constants + model extensions + RED test stubs
+- [ ] 17-02-PLAN.md — Wave 2: ai/jes_scoring.py + services/jes_service.py + POST /api/jes/score + POST /api/jes/override
+- [ ] 17-03-PLAN.md — Wave 3: app.jsx JES trigger + document.jsx Section 4 scorecard + ClassBlock tests GREEN
+- [ ] 17-04-PLAN.md — Wave 4: full suite green gate + UAT checkpoint
 
 **UI hint**: yes
 
