@@ -45,6 +45,9 @@ class WorkDescription(BaseModel):
     drf_id: Optional[str] = None
     noc_candidates: list[NOCMatch] = Field(default_factory=list)
     confirmed_noc: Optional[NOCMatch] = None
+    confirmed_og: Optional[dict] = None
+    og_level: Optional[int] = Field(default=None, ge=1)
+    reports_to_military: Optional[bool] = None
     schema_version: int = 1
     created_at: datetime
     last_modified: datetime

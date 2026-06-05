@@ -39,15 +39,40 @@ describe('CONVO-03: Phase chips use new phase names', () => {
   });
 });
 
-describe('CONVO-04: StepInput dispatches og_confirm type', () => {
-  it('StepInput with type og_confirm renders something (not null)', () => {
-    // og_confirm stub uses NocConfirmList — must render without crashing
-    // and return a non-null element
-    const cfg = { type: 'og_confirm', candidates: [] };
-    const { container } = render(
+describe('CONVO-04: OgConfirmList renders candidates from cfg', () => {
+  it('renders candidate button when candidates array is non-empty', () => {
+    const cfg = {
+      type: 'og_confirm',
+      candidates: [
+        {
+          og_code: 'EC',
+          og_name: 'Economics and Social Science Services',
+          confidence: 0.85,
+          rank: 1,
+          rationale: 'Signal profile matches EC group',
+          evidence_quotes: [],
+          definition_excerpt: 'The EC Group comprises positions primarily involved...',
+          relevant_inclusions: '',
+          relevant_exclusions: '',
+          available_levels: [1, 2, 3, 4, 5, 6, 7, 8],
+        },
+      ],
+    };
+    const { getByText } = render(
       <StepInput cfg={cfg} value={null} onChange={() => {}} onSubmit={() => {}} record={{}} />
     );
-    expect(container.firstChild).not.toBeNull();
+    expect(getByText(/EC/)).toBeTruthy();
+  });
+});
+
+describe('CLASS-03: OgLevelPicker renders level range', () => {
+  it('renders 8 level buttons for EC range 1-8', () => {
+    const cfg = { type: 'og_level', levels: [1, 2, 3, 4, 5, 6, 7, 8] };
+    const { getAllByRole } = render(
+      <StepInput cfg={cfg} value={null} onChange={() => {}} onSubmit={() => {}} record={{}} />
+    );
+    const buttons = getAllByRole('button');
+    expect(buttons.length).toBe(8);
   });
 });
 
