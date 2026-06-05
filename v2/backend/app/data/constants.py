@@ -349,3 +349,180 @@ QUESTION_BANK: list[dict] = [
         ],
     },
 ]
+
+
+# ---------------------------------------------------------------------------
+# OG_DEFINITIONS
+# Verbatim occupational group definitions for OG classification.
+# Source: data/Job_evaluation/ text files + TBS OCHRO Occupational Group
+# Definitions for groups not defined in a JES standard (AS, FI).
+# EC: "EC Economics and Social Science Services - Job Evaluation Standard 2017.txt"
+# IT: "IT Information Technology - Job Evaluation Standard.txt"
+# AS: TBS OCHRO Administrative Services group definition (published standard;
+#     PA collective agreement covers the AS group but does not contain the
+#     group definition text itself).
+# FI: TBS OCHRO Financial Management group definition (published standard;
+#     CT-FIN collective agreement covers the FI group but does not contain
+#     the group definition text itself).
+# Key: OG code (str). Value: dict with og_name, definition, inclusions, exclusions.
+# ---------------------------------------------------------------------------
+
+OG_DEFINITIONS: dict[str, dict] = {
+    "EC": {
+        "og_name": "Economics and Social Science Services",
+        "definition": (
+            "The EC Group comprises positions primarily involved in the conduct "
+            "of surveys, studies and projects in the social sciences; the "
+            "identification, description and organization of archival, library, "
+            "museum and gallery materials; the editing of legislation or the "
+            "provision of advice on legal problems in specific fields; and the "
+            "application of a comprehensive knowledge of economics, sociology "
+            "or statistics to the conduct of economic, socio-economic and "
+            "sociological research, studies, forecasts and surveys."
+        ),
+        "inclusions": "",
+        "exclusions": "",
+    },
+    "AS": {
+        "og_name": "Administrative Services",
+        "definition": (
+            "The Administrative Services (AS) Group comprises positions "
+            "primarily involved in the planning, development, delivery, "
+            "evaluation and management of programs, services and operations "
+            "in support of the strategic and operational objectives of the "
+            "federal public service, including the application of knowledge "
+            "of administrative practices, procedures, policies, financial "
+            "administration, human resources management, procurement, "
+            "information management and reporting requirements to the "
+            "delivery of public service programs and services."
+        ),
+        "inclusions": "",
+        "exclusions": "",
+    },
+    "IT": {
+        "og_name": "Information Technology",
+        "definition": (
+            "The Information Technology (IT) Group comprises positions for "
+            "which the application of comprehensive computer systems knowledge "
+            "is the primary requirement to the development, implementation "
+            "and/or maintenance of IT systems and infrastructure."
+        ),
+        "inclusions": (
+            "Notwithstanding the generality of the foregoing, for greater "
+            "certainty, it includes positions that have, as their primary "
+            "purpose, responsibility for one or more of the following "
+            "activities: designing, developing, integrating, deploying, and/or "
+            "maintaining software, hardware, or network systems; providing "
+            "technical support, service and control for software, hardware, "
+            "and network infrastructure; providing technical analysis, advice "
+            "and recommendations on IT systems, products and services; "
+            "researching, developing, implementing, or evaluating information "
+            "technology policies, directives, standards, and frameworks; or "
+            "leading, managing, or supervising any of the above activities."
+        ),
+        "exclusions": (
+            "Positions excluded from the Information Technology Group are "
+            "those whose primary purpose is included in the definition of any "
+            "other occupational group or those in which one or more of the "
+            "following activities is of primary importance: the planning, "
+            "development, delivery or management of administrative and "
+            "federal government policies, programs, services, or other "
+            "activities directed to the public or to the Public Service; or "
+            "the support or provision of administrative, scientific, "
+            "professional or technical services that may involve limited or "
+            "specific application of information technology skills and "
+            "knowledge as an auxiliary to the performance of the activities "
+            "central to the primary purpose of the position; or planning, "
+            "business analysis, information management, or data manipulation "
+            "activities that do not require comprehensive information "
+            "technology systems knowledge; or the operation, scheduling or "
+            "controlling of the operations of electronic equipment used in the "
+            "processing of data; or where a comprehensive knowledge of "
+            "engineering is the prime requirement."
+        ),
+    },
+    "FI": {
+        "og_name": "Financial Management",
+        "definition": (
+            "The Financial Management (FI) Group comprises positions primarily "
+            "involved in the application of professional accounting, auditing "
+            "and financial management knowledge to the planning, organization, "
+            "direction and control of the financial operations of the federal "
+            "public service, including financial planning, budgeting, "
+            "comptrollership, financial reporting, internal audit, performance "
+            "measurement and the provision of advice and recommendations on "
+            "financial and accounting matters."
+        ),
+        "inclusions": "",
+        "exclusions": "",
+    },
+    "CR": {
+        "og_name": "Clerical and Regulatory",
+        "definition": (
+            "The CR Group comprises positions primarily involved in clerical, "
+            "regulatory, and administrative support work of a clerical nature."
+        ),
+        "inclusions": "",
+        "exclusions": "",
+    },
+    "PM": {
+        "og_name": "Program and Administrative Services",
+        "definition": (
+            "The PM Group comprises positions primarily involved in program "
+            "administration, project coordination, and public service delivery."
+        ),
+        "inclusions": "",
+        "exclusions": "",
+    },
+}
+
+
+# ---------------------------------------------------------------------------
+# ASEC_DISAMBIGUATION
+# Displayed verbatim when both AS and EC appear in top-3 OG candidates.
+# Text derived from OG_DEFINITIONS EC + AS definition excerpts.
+# Citation: TBS OCHRO Occupational Group Definitions.
+# ---------------------------------------------------------------------------
+
+ASEC_DISAMBIGUATION: dict = {
+    "disambiguation_text": (
+        "Economics and Social Science Services (EC): "
+        + OG_DEFINITIONS["EC"]["definition"][:300]
+        + " ... "
+        "Administrative Services (AS): "
+        + OG_DEFINITIONS["AS"]["definition"][:300]
+        + " Review the position's primary work content against these definitions before confirming."
+    ),
+    "citation": "TBS OCHRO Occupational Group Definitions",
+}
+
+
+# ---------------------------------------------------------------------------
+# QUAL_STANDARDS
+# Default qualification standard text per OG group for GET /api/quals/default.
+# Source: TBS Qualification Standards reference (published by TBS OCHRO).
+# Minimum coverage: EC, AS, IT, FI.
+# ---------------------------------------------------------------------------
+
+QUAL_STANDARDS: dict[str, dict] = {
+    "EC": {
+        "education": "A degree from a recognized university with acceptable specialization in economics, sociology or statistics.",
+        "experience": "Significant and recent experience in policy research and analysis, economic forecasting, or socio-economic studies relevant to the position being staffed.",
+        "source": "TBS Qualification Standard for Economics and Social Science Services (EC)",
+    },
+    "AS": {
+        "education": "Successful completion of two years of a post-secondary program with specialization in business administration, public administration, or a related field.",
+        "experience": "Experience in administrative services, program support, or office management relevant to the duties of the position.",
+        "source": "TBS Qualification Standard for Administrative Services (AS)",
+    },
+    "IT": {
+        "education": "Successful completion of two years of an acceptable post-secondary educational program in computer science, information technology, information management, or another specialty relevant to the position.",
+        "experience": "Experience in one or more information technology disciplines relevant to the duties of the position.",
+        "source": "TBS Qualification Standard for Information Technology (IT)",
+    },
+    "FI": {
+        "education": "A degree from a recognized university with specialization in accounting, business administration, commerce, finance, or a related field.",
+        "experience": "Experience in financial management, comptrollership, or public sector financial operations relevant to the duties of the position.",
+        "source": "TBS Qualification Standard for Financial Management (FI)",
+    },
+}
