@@ -213,6 +213,52 @@ function App() {
         .catch(() => { setOgLoading(false); });
     }
 
+    // JES pipeline trigger — fires after og_level PATCH resolves (avoids 409 race per Pitfall 6)
+    if (step.id === 'og_level') {
+      const confirmedOg = newRecord.confirmed_og || {};
+      const ogCode = typeof confirmedOg === 'string' ? confirmedOg : (confirmedOg.og_code || '');
+      const ogLevel = newRecord.og_level || 0;
+      const duties = (newRecord.duties || []).map(d => d.polished || d.text || '');
+
+      if (wd_id && ogCode && ogLevel) {
+        // Chain a minimal og_level PATCH inside the JES fetch: ensures og_level is
+        // persisted before /api/jes/score reads the WD (avoids the 409 race).
+        fetch('/api/wd/' + wd_id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ og_level: ogLevel }),
+        })
+          .then(r => r.ok ? r.json() : Promise.reject(r.status))
+          .then(() => fetch('/api/jes/score', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ wd_id, og_code: ogCode, og_level: ogLevel, duties }),
+          }))
+          .then(r => r.ok ? r.json() : Promise.reject(r.status))
+          .then(data => {
+            setRecord(prev => ({
+              ...prev,
+              jes_scores: data.factors || [],
+              jes_total_points: data.total_points ?? null,
+              jes_standard_name: data.standard_name || '',
+              jes_is_ec: data.is_ec ?? false,
+            }));
+            // Persist jes_scores on the WD record so a refresh restores them
+            if (wd_id) {
+              fetch('/api/wd/' + wd_id, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  jes_scores: data.factors || [],
+                  jes_total_points: data.total_points ?? null,
+                }),
+              }).catch(() => {});
+            }
+          })
+          .catch(() => {});
+      }
+    }
+
     if (editingReturn) {
       // Invalidate NOC + OG state when re-answering any Work Type phase step
       if (step.phase === 1) {
@@ -238,6 +284,20 @@ function App() {
           const updated = { ...prev };
           delete updated['og_confirm'];
           delete updated['og_level'];
+          return updated;
+        });
+      }
+      // Invalidate JES state when re-answering og_confirm or og_level
+      // (the new og_level commit will trigger a fresh /api/jes/score fetch
+      //  which will replace these fields, so we clear them to avoid stale
+      //  scorecards in the preview while the re-fetch is in flight).
+      if (step.id === 'og_confirm' || step.id === 'og_level') {
+        setRecord(prev => {
+          const updated = { ...prev };
+          delete updated.jes_scores;
+          delete updated.jes_total_points;
+          delete updated.jes_standard_name;
+          delete updated.jes_is_ec;
           return updated;
         });
       }
@@ -293,6 +353,31 @@ function App() {
     setWdId(null); setNocCandidates([]); setNocLoading(false);
     setOgCandidates([]); setOgLoading(false); setOgAlert(null);
     try { localStorage.removeItem('jd-builder-v2-wd-id'); } catch {}
+  }
+
+  // JES override handler — fires POST /api/jes/override/{wd_id}/{factor_name}
+  // when an advisor enters a manual degree for a failed factor (degree === -1).
+  // Updates record.jes_scores and record.jes_total_points in place from response.
+  function handleJesOverride(factorName, degree) {
+    if (!wd_id) return;
+    fetch(`/api/jes/override/${wd_id}/${encodeURIComponent(factorName)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ degree, rationale: 'Advisor override via UI' }),
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(data => {
+        setRecord(prev => ({
+          ...prev,
+          jes_scores: (prev.jes_scores || []).map(f =>
+            f.factor_name === factorName
+              ? { ...f, degree: data.degree, points: data.points, advisor_adjusted: true }
+              : f
+          ),
+          jes_total_points: data.jes_total_points ?? prev.jes_total_points,
+        }));
+      })
+      .catch(() => {});
   }
 
   const phaseIdx = reviewing ? PHASES.length - 1 : step.phase;
@@ -366,6 +451,7 @@ function App() {
           <DocumentPane
             record={reviewing ? record : liveRecord} cls={cls} flashes={flashes}
             reviewing={reviewing} onEditStep={editStep}
+            onJesOverride={handleJesOverride}
           />
         </div>
       </div>
