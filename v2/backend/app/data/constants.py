@@ -526,3 +526,70 @@ QUAL_STANDARDS: dict[str, dict] = {
         "source": "TBS Qualification Standard for Financial Management (FI)",
     },
 }
+
+
+# ---------------------------------------------------------------------------
+# EC_JES_ELEMENTS
+# EC JES 2017 factor scales — 9 elements, degree→points dicts.
+# Source: verified against Job Description Builder/jd-builder/data.jsx
+# EC_ELEMENTS (data.jsx lines 93-103).
+# Key: list index. Value: dict with name (str), category (str), pts (dict[int, int]).
+# ---------------------------------------------------------------------------
+
+EC_JES_ELEMENTS: list[dict] = [
+    {"name": "Decision making",                 "category": "Responsibility", "pts": {1:5, 2:15, 3:35, 4:60, 5:90, 6:125, 7:165, 8:210}},
+    {"name": "Leadership & operational mgmt",   "category": "Responsibility", "pts": {1:5, 2:20, 3:50, 4:90, 5:140}},
+    {"name": "Communication",                   "category": "Skill",          "pts": {1:5, 2:25, 3:50, 4:75, 5:100, 6:140, 7:180}},
+    {"name": "Knowledge of specialized fields", "category": "Skill",          "pts": {1:5, 2:15, 3:35, 4:55, 5:80, 6:105}},
+    {"name": "Contextual knowledge",            "category": "Skill",          "pts": {1:5, 2:20, 3:40, 4:60, 5:80, 6:105}},
+    {"name": "Research & analysis",             "category": "Skill",          "pts": {1:5, 2:30, 3:75, 4:120, 5:165, 6:210}},
+    {"name": "Physical effort",                 "category": "Effort",         "pts": {1:3, 2:4, 3:6, 4:10, 5:15}},
+    {"name": "Sensory effort",                  "category": "Effort",         "pts": {1:2, 2:3, 3:5, 4:10}},
+    {"name": "Working conditions",              "category": "Conditions",     "pts": {1:5, 2:8, 3:12, 4:17, 5:25}},
+]
+
+
+# ---------------------------------------------------------------------------
+# EC_DEGREES
+# Degree vectors per EC level (index aligns with EC_JES_ELEMENTS).
+# Source: verified against Job Description Builder/jd-builder/data.jsx
+# EC_DEGREES (data.jsx lines 105-108).
+# Levels not in this table fall back to EC-05 (same fallback as data.jsx ecFactors()).
+# ---------------------------------------------------------------------------
+
+EC_DEGREES: dict[str, list[int]] = {
+    "EC-04": [4, 2, 4, 4, 3, 3, 1, 2, 2],
+    "EC-05": [5, 3, 5, 5, 4, 4, 1, 2, 2],
+    "EC-06": [6, 4, 6, 5, 5, 5, 1, 2, 2],
+}
+
+
+# ---------------------------------------------------------------------------
+# NON_EC_TOTALS
+# Approximate total JES points for non-EC groups at each level.
+# Source: verified against Job Description Builder/jd-builder/data.jsx
+# GENERIC_TOTALS (data.jsx lines 118-120).
+# Key: OG code (str). Value: dict[int level, int points].
+# ---------------------------------------------------------------------------
+
+NON_EC_TOTALS: dict[str, dict[int, int]] = {
+    "FI": {4: 470, 5: 560, 6: 660},
+    "IT": {4: 480, 5: 575, 6: 690},
+    "AS": {4: 430, 5: 510, 6: 600},
+    "EN": {4: 500, 5: 600, 6: 720},
+}
+
+
+# ---------------------------------------------------------------------------
+# NON_EC_STANDARD_NAMES
+# Human-readable JES standard name per non-EC group.
+# Source: verified against Job Description Builder/jd-builder/data.jsx
+# WORK_TYPES standard field (data.jsx lines 79-88).
+# ---------------------------------------------------------------------------
+
+NON_EC_STANDARD_NAMES: dict[str, str] = {
+    "FI": "FI / CT Job Evaluation Standard (2023)",
+    "IT": "IT Job Evaluation Standard",
+    "AS": "AS / PA Job Evaluation Standard",
+    "EN": "EN Job Evaluation Standard",
+}

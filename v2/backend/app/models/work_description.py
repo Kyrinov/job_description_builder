@@ -48,6 +48,8 @@ class WorkDescription(BaseModel):
     confirmed_og: Optional[dict] = None
     og_level: Optional[int] = Field(default=None, ge=1)
     reports_to_military: Optional[bool] = None
+    jes_scores: list[dict] = Field(default_factory=list)
+    jes_total_points: Optional[int] = None
     schema_version: int = 1
     created_at: datetime
     last_modified: datetime

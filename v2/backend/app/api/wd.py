@@ -46,6 +46,8 @@ class WDPatchRequest(BaseModel):
     confirmed_og: Optional[dict] = None
     og_level: Optional[int] = None
     reports_to_military: Optional[bool] = None
+    jes_scores: Optional[list[dict]] = None
+    jes_total_points: Optional[int] = None
 
 
 @router.post("/wd", status_code=201)
