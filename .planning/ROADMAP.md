@@ -209,7 +209,13 @@ Plans:
 5. When the position reports to a military supervisor (captured in the org context step), the CAF rank equivalence from DATA-02 is displayed beside the reporting relationship with the label "advisory — not authoritative"
 6. `GET /api/og/definitions?og_code=EC` returns the OG definition, inclusions, and exclusions for display; `GET /api/quals/default?og_code=EC` returns the OG-matched qualification standard text
 
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 16-01-PLAN.md — Wave 0: OG_DEFINITIONS + QUAL_STANDARDS + ASEC_DISAMBIGUATION constants + model extensions + test stubs RED
+- [ ] 16-02-PLAN.md — Wave 1: POST /api/og/classify + GET /api/og/definitions + GET /api/quals/default + classification_gate.py
+- [ ] 16-03-PLAN.md — Wave 2: OgConfirmList + OgLevelPicker components + data.jsx STEPS wiring + app.jsx OG pipeline
+- [ ] 16-04-PLAN.md — Wave 3: document.jsx Classification pending + CAF advisory + UAT checkpoint
 
 **UI hint**: yes
 
