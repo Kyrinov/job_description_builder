@@ -229,6 +229,87 @@ function NocConfirmList({ value, onChange, cfg }) {
   );
 }
 
+/* ---- OG CONFIRM LIST ----------------------------------------- */
+// cfg.type === 'og_confirm'
+// cfg.candidates: array from POST /api/og/classify response
+// cfg.asec_alert: { disambiguation_text, citation } or null — from API response via ogAlert state in app.jsx
+// cfg.loading: boolean — true while /api/og/classify is in flight
+// value: selected candidate object or null (stores full candidate, not just og_code)
+// onChange(candidate): stores full OGCandidate object — og_level step reads .og_code from it
+function OgConfirmList({ value, onChange, cfg }) {
+  const candidates = cfg.candidates || [];
+  const alert = cfg.asec_alert || null;
+  if (cfg.loading) {
+    return <p className="step-loading">Finding occupational group matches...</p>;
+  }
+  return (
+    <div>
+      {alert && (
+        <div className="asec-alert">
+          <p className="asec-alert__title">
+            Both Administrative Services (AS) and Economics and Social Science
+            Services (EC) appear in the top candidates.
+          </p>
+          <p className="asec-alert__body">{alert.disambiguation_text}</p>
+          <span className="asec-alert__cite">{alert.citation}</span>
+        </div>
+      )}
+      <div className="choices">
+        {candidates.map(c => {
+          const sel = value && value.og_code === c.og_code;
+          return (
+            <button
+              key={c.og_code}
+              type="button"
+              className={'choice choice--og' + (sel ? ' is-sel' : '')}
+              onClick={() => onChange(c)}
+            >
+              <span className="choice__main">
+                <span className="choice__title">{c.og_code} — {c.og_name}</span>
+                <span className="choice__desc">{Math.round(c.confidence * 100)}% match</span>
+                {c.definition_excerpt && (
+                  <span className="choice__excerpt">{c.definition_excerpt}</span>
+                )}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ---- OG LEVEL PICKER ----------------------------------------- */
+// cfg.type === 'og_level'
+// cfg.levels: array of integers from OG_LEVELS[og_code] — populated by cfgOverride in app.jsx
+// value: selected level integer or null
+// onChange(level): stores selected integer — PATCH /api/wd/{id} persists og_level
+function OgLevelPicker({ value, onChange, cfg }) {
+  const levels = cfg.levels || [];
+  if (levels.length === 0) {
+    return <p className="step-loading">Confirm occupational group first to see level options.</p>;
+  }
+  return (
+    <div className="choices">
+      {levels.map(lv => {
+        const sel = value === lv;
+        return (
+          <button
+            key={lv}
+            type="button"
+            className={'choice' + (sel ? ' is-sel' : '')}
+            onClick={() => onChange(lv)}
+          >
+            <span className="choice__main">
+              <span className="choice__title">Level {lv < 10 ? '0' + lv : lv}</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ---- DRF PICKER ---------------------------------------------- */
 function DrfPicker({ value, onChange }) {
   return (
@@ -294,7 +375,8 @@ function StepInput(props) {
   if (t === 'drf') return <DrfPicker {...props} />;
   if (t === 'quals') return <QualEditor {...props} />;
   if (t === 'noc_confirm') return <NocConfirmList {...props} />;
-  if (t === 'og_confirm') return <NocConfirmList {...props} />; // stub — Phase 16 replaces with OgConfirmList
+  if (t === 'og_confirm') return <OgConfirmList {...props} />;
+  if (t === 'og_level') return <OgLevelPicker {...props} />;
   return null;
 }
 
@@ -312,6 +394,8 @@ function answerValid(step, value) {
   if (t === 'duties') return Array.isArray(value) && value.length > 0;
   if (t === 'quals') return !!(value && value.education && value.experience);
   if (t === 'noc_confirm') return typeof value === 'string' && value.length > 0;
+  if (t === 'og_confirm') return value !== null && value !== undefined && !!value.og_code;
+  if (t === 'og_level') return typeof value === 'number' && value >= 1;
   return !!value;
 }
 

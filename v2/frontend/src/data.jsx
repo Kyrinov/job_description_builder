@@ -23,6 +23,23 @@ const I = {
     shield: '<path d="M10 3l6 2v5c0 4-2.6 6.4-6 7.5C6.6 16.4 4 14 4 10V5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>'
   };
 
+  // JS copy of OG_LEVELS from v2/backend/app/data/constants.py.
+  // Avoids an API round-trip for static reference data used in og_level cfgOverride.
+  const OG_LEVELS = {
+    EC: [1,2,3,4,5,6,7,8],
+    IT: [1,2,3,4,5],
+    AS: [1,2,3,4,5,6,7,8],
+    FI: [1,2,3,4],
+    CR: [1,2,3,4,5,6,7],
+    PM: [1,2,3,4,5,6,7],
+    GT: [1,2,3,4,5,6,7,8],
+    EL: [1,2,3,4,5,6,7,8,9],
+    FB: [1,2,3,4,5,6,7,8],
+    FS: [1,2,3,4],
+    AI: [1,2,3,4,5,6,7],
+    AU: [1,2,3,4,5,6],
+  };
+
   /* ---- DND Departmental Results Framework (real data) ----------- */
   const DRF = [
     { id: 'ops', icon: I.shield, cr: 'Operations',
@@ -301,6 +318,15 @@ const I = {
     { id: 'title',   phase: 0, icon: I.user, q: 'What is the job title for this position?', helper: 'Use the official or working title — you can refine it later.', input: { type: 'text', placeholder: 'e.g. Senior Policy Analyst', preset: '' }, apply: (r, a) => ({ title: a }), transcript: a => a },
     { id: 'branch',  phase: 0, icon: I.org,  q: 'Which branch or directorate does this position sit within?', helper: 'e.g. Strategic Policy Branch, ADM(Mat)', input: { type: 'text', placeholder: 'e.g. Strategic Policy Branch', preset: '' }, apply: (r, a) => ({ branch: a }), transcript: a => a },
     { id: 'reports', phase: 0, icon: I.ladder, q: 'Who does this position report to?', helper: 'Use the title of the direct supervisor — e.g. Director General, Strategic Policy', input: { type: 'text', placeholder: 'e.g. Director, Policy Development', preset: '' }, apply: (r, a) => ({ reports: a }), transcript: a => a },
+    { id: 'reports_to_military', phase: 0, icon: I.shield,
+      q: 'Does this position report to a military officer?',
+      helper: 'This determines whether CAF rank equivalence information is displayed in the final document.',
+      input: { type: 'choices', options: [
+        { id: 'yes', title: 'Yes — reports to a military officer' },
+        { id: 'no', title: 'No — reports to a civilian supervisor' },
+      ] },
+      apply: (r, a) => ({ reports_to_military: a.id === 'yes' }),
+      transcript: a => a ? a.title : 'Pending' },
     { id: 'supervises', phase: 0, icon: I.user, q: 'Will this person supervise or lead others?', helper: 'This helps us gauge the level of responsibility.', input: { type: 'choices', options: [{ id: 'none', title: 'No — individual contributor' }, { id: 'few', title: 'Leads 1–3 people or a small team' }, { id: 'team', title: 'Manages a team of 4–10' }, { id: 'many', title: 'Leads multiple teams' }] }, apply: (r, a) => ({ supervises: a.title }), transcript: a => a.title },
 
     /* ----- Phase 1: Work Type (QUESTION_BANK-driven) ----- */
@@ -356,6 +382,20 @@ const I = {
       apply: (r, a) => ({ confirmed_noc: a }),
       transcript: a => a ? (a.noc_code + ' — ' + a.title) : 'Pending' },
 
+    { id: 'og_confirm', phase: 2, icon: I.compass,
+      q: 'Review the top occupational group matches and confirm the best fit.',
+      helper: 'Select the occupational group that best fits the work described.',
+      input: { type: 'og_confirm', candidates: [] },
+      apply: (r, a) => ({ confirmed_og: a }),
+      transcript: a => a ? (a.og_code + ' — ' + a.og_name) : 'Pending' },
+
+    { id: 'og_level', phase: 2, icon: I.ladder,
+      q: 'Select the level for this position.',
+      helper: 'Level ranges are derived from the collective agreement for the confirmed occupational group.',
+      input: { type: 'og_level', levels: [] },
+      apply: (r, a) => ({ og_level: a }),
+      transcript: a => a !== null && a !== undefined ? String(a) : 'Pending' },
+
     /* ----- Phase 3: Duties ----- */
     { id: 'duties', phase: 3, icon: I.list,
       q: 'Here are the responsibilities managers usually pick for a role like this.',
@@ -376,7 +416,7 @@ const I = {
 const PHASES = ['Role', 'Work Type', 'Classification', 'Duties', 'Qualifications', 'Review'];
 
 export {
-  I, STEPS, PHASES, DRF, WORK_TYPES, DUTY_SUGGESTIONS, QUAL_DEFAULT,
+  I, STEPS, PHASES, OG_LEVELS, DRF, WORK_TYPES, DUTY_SUGGESTIONS, QUAL_DEFAULT,
   EC_ELEMENTS, computeClassification, refineDuty, ecFactors,
   accumulateSignals, getDutySuggestions,
 };
