@@ -143,7 +143,14 @@ async def map_work_description(
         # --- Stage 3: instructor LLM justification ---
         candidate_block = _format_candidates(vec_rows)
         extra_kwargs: dict = {}
-        if not settings.cloud_api_key:
+        if settings.cloud_api_key:
+            # Cloud model (MiniMax-M3) emits long <think>...</think> reasoning blocks
+            # that consume the output token budget before the JSON response completes.
+            # Disable thinking via extra_body so the model returns the JSON directly.
+            # API expects ThinkingConfig object, not a bool.
+            extra_kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
+        else:
+            # Ollama path: extend context window to fit the candidate block.
             extra_kwargs["extra_body"] = {"options": {"num_ctx": 8192}}
 
         result: NOCRankingResult = await instructor_client.chat.completions.create(
@@ -172,7 +179,7 @@ async def map_work_description(
             ],
             response_model=NOCRankingResult,
             max_retries=3,
-            max_tokens=2048,
+            max_tokens=4096,
             temperature=0.0,
             **extra_kwargs,
         )
