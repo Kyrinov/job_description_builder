@@ -145,12 +145,22 @@ function App() {
     setAnswers(newAnswers);
     flash(FLASH[step.id]);
 
-    // WD persistence — first commit creates row; subsequent commits patch
+    // WD persistence — first commit creates row; subsequent commits patch.
+    // The backend WorkDescription model has classification-level fields
+    // (confirmed_noc, confirmed_og, og_level, reports_to_military, jes_scores,
+    // jes_total_points) at the root — NOT nested in `record`. Mirror them up
+    // here so the stored WD has the data the JES endpoint reads via
+    // require_og_confirmed (otherwise /api/jes/score 409s even after og_level
+    // is committed in the local record).
     const wdPayload = {
       record: newRecord,
       answers: newAnswers,
       step_index: stepIndex,
     };
+    ['confirmed_noc', 'confirmed_og', 'og_level', 'reports_to_military',
+     'jes_scores', 'jes_total_points'].forEach(k => {
+      if (k in newRecord) wdPayload[k] = newRecord[k];
+    });
     if (!wd_id) {
       fetch('/api/wd', {
         method: 'POST',

@@ -7,8 +7,8 @@
  * CLI warning is the symptom; the upstream issue is in vitest's jsdom integration).
  * This shim is shared across tests within a file (clear() resets it).
  */
-import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
-import { render } from '@testing-library/react';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
+import { render, fireEvent } from '@testing-library/react';
 import App from './app.jsx';
 
 const _store = new Map();
@@ -96,5 +96,68 @@ describe('localStorage crash-recovery (FE-05)', () => {
   it('corrupt localStorage value falls back to empty record without throwing', () => {
     globalThis.localStorage.setItem('jd-builder-v2-record', 'NOT_VALID_JSON{{{');
     expect(() => render(<App />)).not.toThrow();
+  });
+});
+
+describe('WD PATCH payload mirrors classification fields to root (JES-01 fix)', () => {
+  // Regression: backend WorkDescription stores confirmed_og / og_level /
+  // confirmed_noc / reports_to_military / jes_scores / jes_total_points at
+  // the root, not nested in `record`. The frontend commit() must mirror them
+  // up — otherwise /api/jes/score 409s on require_og_confirmed because the
+  // stored WD has those fields null at root even after the local record
+  // commits them.
+  beforeEach(() => {
+    resetStorage();
+    vi.restoreAllMocks();
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    resetStorage();
+  });
+
+  it('PATCH payload sent to /api/wd/{id} includes confirmed_og and og_level at root when present in local record', async () => {
+    globalThis.localStorage.setItem('jd-builder-v2-wd-id', 'test-wd-id');
+    globalThis.localStorage.setItem('jd-builder-v2-record', JSON.stringify({
+      title: 'Test Position',
+      confirmed_og: { og_code: 'EC', og_name: 'Economics and Social Science Services' },
+      og_level: 5,
+    }));
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ id: 'test-wd-id' }),
+    });
+    globalThis.fetch = fetchMock;
+
+    const { container } = render(<App />);
+    // First step is "title" (a text input — TextInput renders <input className="tf">).
+    // The initial draft is empty so the primary button is disabled — fill the
+    // input first to enable it.
+    const input = container.querySelector('input.tf, textarea');
+    expect(input).not.toBeNull();
+    fireEvent.change(input, { target: { value: 'Test Position' } });
+
+    const btn = container.querySelector('.btn.btn--primary');
+    expect(btn).not.toBeNull();
+    expect(btn.disabled).toBe(false);
+    fireEvent.click(btn);
+
+    // Allow microtasks (PATCH is fire-and-forget) to flush
+    await new Promise(r => setTimeout(r, 50));
+
+    // The PATCH is the second call (POST /api/wd is the first). Find by URL+method.
+    const patchCall = fetchMock.mock.calls.find(
+      ([url, init]) => typeof url === 'string'
+        && url.includes('/api/wd/test-wd-id')
+        && init && init.method === 'PATCH'
+    );
+    expect(patchCall).toBeDefined();
+    const body = JSON.parse(patchCall[1].body);
+    expect(body.confirmed_og).toEqual({ og_code: 'EC', og_name: 'Economics and Social Science Services' });
+    expect(body.og_level).toBe(5);
+    // record is still sent (for full-state restoration)
+    expect(body.record).toBeDefined();
+    expect(body.record.confirmed_og).toEqual({ og_code: 'EC', og_name: 'Economics and Social Science Services' });
+    expect(body.record.og_level).toBe(5);
   });
 });
