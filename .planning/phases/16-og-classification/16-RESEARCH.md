@@ -1008,22 +1008,11 @@ describe('CLASS-03: OgLevelPicker renders level range', () => {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **AS group definition text source**
-   - What we know: EC JES 2017 text file in `data/Job_evaluation/` has the verbatim EC group definition. AS uses the PA collective agreement; its group definition lives in a TBS OCHRO publication not confirmed to be in `data/`.
-   - What's unclear: Is there a text file in `data/agreements/` or `data/Job_evaluation/` that contains the AS group definition with verbatim inclusions/exclusions?
-   - Recommendation: Wave 0 task to `ls data/agreements/` and scan for AS-related content. If absent, source from https://www.canada.ca/en/treasury-board-secretariat/services/collective-agreements/occupational-groups.html and hardcode verbatim.
-
-2. **Qualification standard text for AS, IT, FI**
-   - What we know: `QUAL_DEFAULT` in data.jsx has hardcoded EC-05 environmental text (noted as a Phase 19 fix). No AS/IT/FI qual standard text found in data files yet.
-   - What's unclear: Does `data/agreements/` or another directory contain TBS Qualification Standards text for these groups?
-   - Recommendation: Check `data/` for qual standard files; if absent, source from TBS OCHRO quals pages and hardcode. This is required for `GET /api/quals/default`.
-
-3. **reports_to_military step insertion point**
-   - What we know: Phase 0 (Role) has 4 steps: title, branch, reports, supervises. Adding `reports_to_military` after `reports` inserts at index 3, shifting `supervises` to index 4.
-   - What's unclear: Does the Phase 15 implementation have any hardcoded step index references that will break on insertion?
-   - Recommendation: Read `app.jsx` FLASH map and `conversation.jsx` before inserting; verify no step is referenced by index rather than by `step.id`.
+1. **AS group definition text source** — RESOLVED: Plan 16-01 Task 1 adds a Wave 0 discovery task that reads `data/agreements/` and sources verbatim AS group definition text from TBS OCHRO if absent; hardcoded in OG_DEFINITIONS constant.
+2. **Qualification standard text for AS, IT, FI** — RESOLVED (deferred to Phase 19): Plan 16-01 confirms QUAL_DEFAULT remains EC-05 for this phase; AS/IT/FI qual standard text is a Phase 19 deliverable (QUAL-01). Out of scope for Phase 16.
+3. **reports_to_military step insertion point** — RESOLVED: Plan 16-03 Task 2 Edit 4 reads app.jsx FLASH map before inserting. FLASH map confirmed to use step.id keys (not indices); no hardcoded index references found. Insertion is safe (confirmed by Plan 16-03 threat model entry T-16-07).
 
 ---
 
