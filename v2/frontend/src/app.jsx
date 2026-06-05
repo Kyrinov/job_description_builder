@@ -2,17 +2,21 @@
    JD Builder — main application
    ============================================================ */
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { STEPS, PHASES, I, computeClassification, accumulateSignals, getDutySuggestions } from './data.jsx';
+import { STEPS, PHASES, I, OG_LEVELS, computeClassification, accumulateSignals, getDutySuggestions } from './data.jsx';
 import { Icon, initialAnswer, answerValid } from './components.jsx';
 import { Header, Exchange, ActiveQuestion, ReviewState } from './conversation.jsx';
 import { DocumentPane } from './document.jsx';
 
 const FLASH = {
-  title: 'title', branch: 'title', reports: 'title', supervises: 'summary',
+  title: 'title', branch: 'title', reports: 'title',
+  reports_to_military: 'title',
+  supervises: 'summary',
   summary: 'summary',
   qb_work_output_type: 'level', qb_work_audience: 'level',
   qb_knowledge_specialization: 'level', qb_policy_interpretation: 'level',
   noc_confirm: 'level',
+  og_confirm: 'level',
+  og_level: 'level',
   duties: 'duties', quals: 'quals',
 };
 
@@ -79,6 +83,9 @@ function App() {
   });
   const [nocCandidates, setNocCandidates] = useState([]);
   const [nocLoading, setNocLoading] = useState(false);
+  const [ogCandidates, setOgCandidates] = useState([]);
+  const [ogLoading, setOgLoading] = useState(false);
+  const [ogAlert, setOgAlert] = useState(null);
   const threadRef = useRef(null);
   const docRef = useRef(null);
 
@@ -181,14 +188,56 @@ function App() {
         .catch(() => { setNocLoading(false); });
     }
 
+    // OG pipeline trigger — fires once when noc_confirm step is committed
+    if (step.id === 'noc_confirm') {
+      setOgLoading(true);
+      setOgCandidates([]);
+      setOgAlert(null);
+      const signalTally = accumulateSignals(answers);
+      const confirmedNoc = newRecord.confirmed_noc || {};
+      fetch('/api/og/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          confirmed_noc_code: typeof confirmedNoc === 'string' ? confirmedNoc : (confirmedNoc.noc_code || ''),
+          work_description: newRecord.summary || '',
+          signal_tally: (signalTally && signalTally.tally) || {},
+        }),
+      })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(data => {
+          setOgCandidates(data.candidates || []);
+          setOgAlert(data.asec_alert || null);
+          setOgLoading(false);
+        })
+        .catch(() => { setOgLoading(false); });
+    }
+
     if (editingReturn) {
-      // Invalidate NOC state when re-answering any Work Type phase step
+      // Invalidate NOC + OG state when re-answering any Work Type phase step
       if (step.phase === 1) {
         setNocCandidates([]);
         setNocLoading(false);
+        setOgCandidates([]);
+        setOgLoading(false);
+        setOgAlert(null);
         setAnswers(prev => {
           const updated = { ...prev };
           delete updated['noc_confirm'];
+          delete updated['og_confirm'];
+          delete updated['og_level'];
+          return updated;
+        });
+      }
+      // Invalidate OG state when re-answering noc_confirm (NOC changed)
+      if (step.id === 'noc_confirm') {
+        setOgCandidates([]);
+        setOgLoading(false);
+        setOgAlert(null);
+        setAnswers(prev => {
+          const updated = { ...prev };
+          delete updated['og_confirm'];
+          delete updated['og_level'];
           return updated;
         });
       }
@@ -242,20 +291,28 @@ function App() {
     setRecord({}); setAnswers({}); setStepIndex(0);
     setDraft(initialAnswer(STEPS[0], {})); setReviewing(false); setEditingReturn(false);
     setWdId(null); setNocCandidates([]); setNocLoading(false);
+    setOgCandidates([]); setOgLoading(false); setOgAlert(null);
     try { localStorage.removeItem('jd-builder-v2-wd-id'); } catch {}
   }
 
   const phaseIdx = reviewing ? PHASES.length - 1 : step.phase;
   const answeredSteps = STEPS.slice(0, stepIndex);
 
-  // cfgOverride injects live NOC candidates into the noc_confirm step input
-  // and OG-group-keyed duty suggestions into the duties step.
+  // cfgOverride injects live NOC candidates into the noc_confirm step input,
+  // OG candidates + AS/EC disambiguation alert into og_confirm, OG_LEVELS
+  // range into og_level, and OG-group-keyed duty suggestions into duties.
   const stepCfgOverride = !reviewing && step
     ? (step.input.type === 'noc_confirm'
         ? { ...step.input, candidates: nocCandidates, loading: nocLoading }
-        : step.id === 'duties'
-          ? { ...step.input, suggestions: getDutySuggestions(answers) }
-          : undefined)
+        : step.input.type === 'og_confirm'
+          ? { ...step.input, candidates: ogCandidates, loading: ogLoading, asec_alert: ogAlert }
+          : step.input.type === 'og_level'
+            ? { ...step.input, levels: record.confirmed_og
+                  ? OG_LEVELS[record.confirmed_og.og_code] || []
+                  : [] }
+            : step.id === 'duties'
+              ? { ...step.input, suggestions: getDutySuggestions(answers) }
+              : undefined)
     : undefined;
 
   return (

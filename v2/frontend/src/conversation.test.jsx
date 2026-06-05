@@ -58,10 +58,13 @@ describe('CONVO-04: OgConfirmList renders candidates from cfg', () => {
         },
       ],
     };
-    const { getByText } = render(
+    const { getByRole, queryAllByText } = render(
       <StepInput cfg={cfg} value={null} onChange={() => {}} onSubmit={() => {}} record={{}} />
     );
-    expect(getByText(/EC/)).toBeTruthy();
+    // The component renders a <button> per candidate; EC appears in both the
+    // title (og_code) and the definition_excerpt — use getAllByText via queryAllByText
+    expect(getByRole('button')).toBeTruthy();
+    expect(queryAllByText(/EC/).length).toBeGreaterThan(0);
   });
 });
 
