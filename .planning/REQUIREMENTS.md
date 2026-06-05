@@ -78,17 +78,22 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 
 ### CLASS — OG classification
 
-- [ ] **CLASS-01**: Evidence-based OG classification: confirmed NOC code + work description → top-3 OG
+- [x] **CLASS-01
+**: Evidence-based OG classification: confirmed NOC code + work description → top-3 OG
   candidates with verbatim TBS inclusions/exclusions and confidence scores; ported from
   `app/services/og_classifier.py` and `app/ai/og_ranking.py`
-- [ ] **CLASS-02**: AS/EC disambiguation surfaced from `data/directive_on_classification.txt` verbatim
+- [x] **CLASS-02
+**: AS/EC disambiguation surfaced from `data/directive_on_classification.txt` verbatim
   citations when both AS and EC appear in the top-3 candidates; disambiguation rationale displayed to
   the advisor
-- [ ] **CLASS-03**: Level determination: after OG is confirmed, advisor selects a level from the confirmed
+- [x] **CLASS-03
+**: Level determination: after OG is confirmed, advisor selects a level from the confirmed
   OG's corrected level range (DATA-01); level selection rendered as a choice step in the conversation
-- [ ] **CLASS-04**: Hard gate: JD generation blocked until OG + level are both confirmed and stored in the
+- [x] **CLASS-04
+**: Hard gate: JD generation blocked until OG + level are both confirmed and stored in the
   WorkDescription model; the document preview shows a "Classification pending" state until confirmed
-- [ ] **CLASS-05**: CAF rank context: when the position reports to a military supervisor (captured in org
+- [x] **CLASS-05
+**: CAF rank context: when the position reports to a military supervisor (captured in org
   context step), the system displays the approximate civilian OG equivalent from DATA-02 beside the
   reporting relationship in the conversation; labelled "advisory — not authoritative"
 
@@ -172,13 +177,15 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
   JESFactor, QualificationStandard — validated in Phase 10
 - [x] **API-02**: WD CRUD: POST `/api/wd` (create WD from answers), GET `/api/wd/{id}` (load WD),
   PATCH `/api/wd/{id}` (update draft)
-- [ ] **API-03**: Canonical data endpoints: GET `/api/quals/default?og_code=EC` (OG-matched qual standard
+- [x] **API-03
+**: Canonical data endpoints: GET `/api/quals/default?og_code=EC` (OG-matched qual standard
   text); GET `/api/og/definitions?og_code=EC` (OG definition, inclusions, exclusions for display)
 - [x] **API-04**: POST `/api/noc/map` — accepts free-text work description; returns top-3 NOC candidates
   (code, title, TEER, verbatim duty matches) via three-stage FTS5 → embedding rerank → LLM pipeline
 - [x] **API-05**: SQLite single-file at `DB_PATH` with `work_descriptions` and `audit_log` tables;
   idempotent `create_schema` on lifespan startup — validated in Phase 10
-- [ ] **API-06**: POST `/api/og/classify` — accepts confirmed NOC code + work description; returns
+- [x] **API-06
+**: POST `/api/og/classify` — accepts confirmed NOC code + work description; returns
   top-3 OG candidates with verbatim rationale and confidence scores; includes AS/EC disambiguation
   when applicable
 - [ ] **API-07**: POST `/api/jes/score` — accepts OG code + level + duties; returns JES factor scorecard
@@ -269,13 +276,13 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 | CONVO-04 | Phase 15 | Complete |
 | CONVO-05 | Phase 15 | Complete |
 | API-02 | Phase 15 | Complete |
-| CLASS-01 | Phase 16 | Pending |
-| CLASS-02 | Phase 16 | Pending |
-| CLASS-03 | Phase 16 | Pending |
-| CLASS-04 | Phase 16 | Pending |
-| CLASS-05 | Phase 16 | Pending |
-| API-06 | Phase 16 | Pending |
-| API-03 | Phase 16 | Pending |
+| CLASS-01 | Phase 16 | Complete |
+| CLASS-02 | Phase 16 | Complete |
+| CLASS-03 | Phase 16 | Complete |
+| CLASS-04 | Phase 16 | Complete |
+| CLASS-05 | Phase 16 | Complete |
+| API-06 | Phase 16 | Complete |
+| API-03 | Phase 16 | Complete |
 | JES-01 | Phase 17 | Pending |
 | JES-02 | Phase 17 | Pending |
 | JES-03 | Phase 17 | Pending |

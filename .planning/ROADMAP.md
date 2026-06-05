@@ -35,7 +35,7 @@ v2.0 ports v1.0's production NOC + OG classification + JES engine into a convers
 - [x] **Phase 13: Frontend SPA Shell** — Port 5 JSX files + styles.css into Vite; brand typography; useState/useMemo architecture; localStorage crash-recovery. (FE-01, FE-03, FE-04, FE-05) (completed 2026-06-04)
 - [x] **Phase 14: NOC Pipeline** — Port three-stage NL→NOC pipeline (FTS5 → embedding rerank → LLM justification) into FastAPI backend; expose POST `/api/noc/map`; display candidates + advisor confirmation. (NOC-01, NOC-02, API-04) (completed 2026-06-04)
 - [x] **Phase 15: Conversational UX** — 6-phase interview with question bank-driven classification and duty steps; revisit, phase chips, per-step input controls, keyboard shortcuts; WD CRUD persistence. (CONVO-01, CONVO-02, CONVO-03, CONVO-04, CONVO-05, API-02) (completed 2026-06-05)
-- [ ] **Phase 16: OG Classification** — Evidence-based OG classification from confirmed NOC + work description; AS/EC disambiguation; level selection from corrected OG ranges; hard gate; CAF rank advisory; canonical data endpoints. (CLASS-01, CLASS-02, CLASS-03, CLASS-04, CLASS-05, API-06, API-03)
+- [x] **Phase 16: OG Classification** — Evidence-based OG classification from confirmed NOC + work description; AS/EC disambiguation; level selection from corrected OG ranges; hard gate; CAF rank advisory; canonical data endpoints. (CLASS-01, CLASS-02, CLASS-03, CLASS-04, CLASS-05, API-06, API-03) (completed 2026-06-05)
 - [ ] **Phase 17: JES Scoring** — EC JES 2017 9-factor scoring with per-factor retry + advisor override; non-EC approximate totals; JES scorecard in live preview; POST `/api/jes/score`. (JES-01, JES-02, JES-03, JES-04, API-07)
 - [ ] **Phase 18: JD Composition & Live Preview** — Verbatim NOC duty selection with provenance; advisor-added duties; orphan check; live document preview with ghost placeholders, composed overview, section click-to-edit, provenance footer. (JD-01, JD-02, JD-03, JD-04, DOC-01, DOC-02, DOC-03, DOC-04, DOC-05)
 - [ ] **Phase 19: Qualifications & Amendments** — OG-matched qual standard defaults; editable textareas with validation; EQ section render; manager amendment notes per section; DOCX appendix for amendments. (QUAL-01, QUAL-02, QUAL-03, AMEND-01, AMEND-02)
@@ -209,13 +209,13 @@ Plans:
 5. When the position reports to a military supervisor (captured in the org context step), the CAF rank equivalence from DATA-02 is displayed beside the reporting relationship with the label "advisory — not authoritative"
 6. `GET /api/og/definitions?og_code=EC` returns the OG definition, inclusions, and exclusions for display; `GET /api/quals/default?og_code=EC` returns the OG-matched qualification standard text
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 16-01-PLAN.md — Wave 0: OG_DEFINITIONS + QUAL_STANDARDS + ASEC_DISAMBIGUATION constants + model extensions + test stubs RED
-- [ ] 16-02-PLAN.md — Wave 1: POST /api/og/classify + GET /api/og/definitions + GET /api/quals/default + classification_gate.py
-- [ ] 16-03-PLAN.md — Wave 2: OgConfirmList + OgLevelPicker components + data.jsx STEPS wiring + app.jsx OG pipeline
-- [ ] 16-04-PLAN.md — Wave 3: document.jsx Classification pending + CAF advisory + UAT checkpoint
+- [x] 16-01-PLAN.md — Wave 0: OG_DEFINITIONS + QUAL_STANDARDS + ASEC_DISAMBIGUATION constants + model extensions + test stubs RED
+- [x] 16-02-PLAN.md — Wave 1: POST /api/og/classify + GET /api/og/definitions + GET /api/quals/default + classification_gate.py
+- [x] 16-03-PLAN.md — Wave 2: OgConfirmList + OgLevelPicker components + data.jsx STEPS wiring + app.jsx OG pipeline
+- [x] 16-04-PLAN.md — Wave 3: document.jsx Classification pending + CAF advisory + UAT checkpoint
 
 **UI hint**: yes
 
