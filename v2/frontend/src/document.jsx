@@ -102,7 +102,7 @@ function Sec({ n, title, src, ghost, fresh, editable, onEdit, children }) {
 }
 
 /* the classification + JES block */
-function ClassBlock({ cls }) {
+export function ClassBlock({ cls, onOverride }) {
   if (cls.factors) {
     return (
       <div>
@@ -120,7 +120,14 @@ function ClassBlock({ cls }) {
           {cls.factors.map(f => (
             <div key={f.name} className="jes__row">
               <span className="jes__name">{f.name}</span>
-              <span className="jes__deg">D{f.degree}</span>
+              {f.degree === -1
+                ? <input
+                    type="number" min="1" max="8" className="jes__override-input"
+                    placeholder="Enter degree"
+                    onChange={e => onOverride && onOverride(f.name, parseInt(e.target.value, 10))}
+                  />
+                : <span className="jes__deg">D{f.degree}</span>
+              }
               <span className="jes__pts">{f.points}</span>
             </div>
           ))}
@@ -165,7 +172,7 @@ function metaItem(k, v, strong) {
   );
 }
 
-function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep }) {
+function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOverride }) {
   const overview = buildOverview(r);
   const hasDuties = r.duties && r.duties.length;
   const isFresh = (k) => flashes && flashes.has(k);
@@ -282,6 +289,24 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep }) {
             </div>
           </div>
         </div>
+        {/* JES scorecard — renders once record.jes_scores is populated (JES-04) */}
+        {r.jes_scores && r.jes_scores.length > 0 && (
+          <ClassBlock
+            cls={{
+              code: resolvedCode,
+              group: r.confirmed_og.og_code,
+              groupName: r.confirmed_og.og_name,
+              standard: r.jes_standard_name || (r.jes_is_ec ? 'EC JES 2017' : ''),
+              points: r.jes_total_points,
+              factors: r.jes_is_ec ? r.jes_scores.map(f => ({
+                name: f.factor_name,
+                degree: f.degree,
+                points: f.points,
+              })) : null,
+            }}
+            onOverride={onJesOverride}
+          />
+        )}
       </Sec>
     );
   }
