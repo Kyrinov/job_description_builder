@@ -2,7 +2,7 @@
    JD Builder — main application
    ============================================================ */
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { STEPS, PHASES, I, computeClassification, accumulateSignals } from './data.jsx';
+import { STEPS, PHASES, I, computeClassification, accumulateSignals, getDutySuggestions } from './data.jsx';
 import { Icon, initialAnswer, answerValid } from './components.jsx';
 import { Header, Exchange, ActiveQuestion, ReviewState } from './conversation.jsx';
 import { DocumentPane } from './document.jsx';
@@ -249,8 +249,13 @@ function App() {
   const answeredSteps = STEPS.slice(0, stepIndex);
 
   // cfgOverride injects live NOC candidates into the noc_confirm step input
-  const stepCfgOverride = !reviewing && step && step.input.type === 'noc_confirm'
-    ? { ...step.input, candidates: nocCandidates, loading: nocLoading }
+  // and OG-group-keyed duty suggestions into the duties step.
+  const stepCfgOverride = !reviewing && step
+    ? (step.input.type === 'noc_confirm'
+        ? { ...step.input, candidates: nocCandidates, loading: nocLoading }
+        : step.id === 'duties'
+          ? { ...step.input, suggestions: getDutySuggestions(answers) }
+          : undefined)
     : undefined;
 
   return (

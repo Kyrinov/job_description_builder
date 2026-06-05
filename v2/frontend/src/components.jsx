@@ -4,6 +4,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { I, WORK_TYPES, DUTY_SUGGESTIONS, DRF, QUAL_DEFAULT, refineDuty } from './data.jsx';
 
+const DUTY_PLACEHOLDER = 'Add one in your own words… e.g. clean up contaminated sites';
+
 /* ---- icon helper --------------------------------------------- */
 function Icon({ path, size, cls }) {
   return (
@@ -103,11 +105,14 @@ function ScaleInput({ value, onChange, cfg }) {
 }
 
 /* ---- DUTY BUILDER -------------------------------------------- */
-function DutyBuilder({ value, onChange }) {
+function DutyBuilder({ value, onChange, cfg }) {
   const list = value || [];
   const [text, setText] = useState('');
   const [preview, setPreview] = useState('');
   const inputRef = useRef(null);
+  // cfg.suggestions is injected by app.jsx (keyed to OG group via getDutySuggestions).
+  // Falls back to the 'default' set when the group is unmapped or no overrides.
+  const suggestions = (cfg && cfg.suggestions) || DUTY_SUGGESTIONS.default;
 
   function isOn(plain) { return list.some(d => d.plain === plain); }
   function toggle(s) {
@@ -125,7 +130,7 @@ function DutyBuilder({ value, onChange }) {
 
   return (
     <div className="duties">
-      {DUTY_SUGGESTIONS.map(s => {
+      {suggestions.map(s => {
         const on = isOn(s.plain);
         return (
           <button
@@ -171,7 +176,7 @@ function DutyBuilder({ value, onChange }) {
           ref={inputRef}
           className="tf"
           value={text}
-          placeholder="Add one in your own words\u2026 e.g. clean up contaminated sites"
+          placeholder={DUTY_PLACEHOLDER}
           onChange={e => { setText(e.target.value); setPreview(e.target.value.trim() ? refineDuty(e.target.value) : ''); }}
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
         />

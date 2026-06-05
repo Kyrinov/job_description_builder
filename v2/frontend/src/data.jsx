@@ -141,22 +141,102 @@ const I = {
   }
 
   /* ---- Suggested duties (plain trigger → polished statement) ---- */
-  const DUTY_SUGGESTIONS = [
-    { plain: 'Clean up contaminated sites',
-      polished: 'Plans, leads and delivers environmental assessment and remediation projects at defence establishments, ensuring compliance with federal environmental legislation.' },
-    { plain: 'Advise leadership on environmental risk',
-      polished: 'Provides expert advice and recommendations to senior management on environmental risks, contaminated-sites liability, and greenhouse-gas reduction strategies.' },
-    { plain: 'Develop environmental policy & standards',
-      polished: 'Develops, analyzes and interprets environmental policies, standards and program frameworks, and assesses their implications for departmental operations.' },
-    { plain: 'Work with regulators and communities',
-      polished: 'Manages relationships with regulatory authorities, Indigenous communities and stakeholders to support the department\u2019s environmental obligations.' },
-    { plain: 'Write briefings for senior decision-makers',
-      polished: 'Prepares briefing materials, options analyses and reports for senior decision-makers, translating complex technical findings into clear recommendations.' },
-    { plain: 'Track and report on emissions targets',
-      polished: 'Monitors and reports on environmental performance indicators \u2014 including emissions reduction and contaminated-sites liability \u2014 against departmental targets.' },
-    { plain: 'Represent DND on working groups',
-      polished: 'Leads or contributes to multidisciplinary working groups and represents the department in interdepartmental environmental initiatives.' }
-  ];
+  /* Group-keyed so the duties match the OG group the advisor has been       */
+  /* steered toward via the Socratic question bank. Falls back to a generic */
+  /* set when no group is derivable (e.g. EN, unmapped NOC, or revisit with  */
+  /* no answers yet). Each set covers the typical work patterns of that OG.  */
+  const DUTY_SUGGESTIONS = {
+    EC: [
+      { plain: 'Develop and analyze policy options',
+        polished: 'Develops, analyzes and interprets policy options, program frameworks and strategic guidance, and assesses their implications for departmental operations.' },
+      { plain: 'Provide evidence-based advice to management',
+        polished: 'Provides expert advice, options analyses and recommendations to senior management on programs, policies and emerging issues.' },
+      { plain: 'Conduct research on economic or social issues',
+        polished: 'Plans, leads and conducts research on economic, social, environmental or policy issues using appropriate qualitative and quantitative methods.' },
+      { plain: 'Prepare briefing materials and submissions',
+        polished: 'Prepares briefing materials, ministerial correspondence, cabinet documents and submissions for senior decision-makers.' },
+      { plain: 'Lead or contribute to interdepartmental committees',
+        polished: 'Leads or contributes to interdepartmental committees, working groups and horizontal initiatives on policy and program matters.' },
+      { plain: 'Liaise with central agencies and stakeholders',
+        polished: 'Manages relationships with central agencies, other departments, stakeholders and external partners to advance departmental objectives.' },
+      { plain: 'Monitor and report on program performance',
+        polished: 'Develops performance indicators, monitors program delivery and reports on outcomes against established targets and commitments.' }
+    ],
+    FI: [
+      { plain: 'Develop and manage budgets and forecasts',
+        polished: 'Develops, manages and monitors budgets, financial plans and forecasts in accordance with Treasury Board policies and departmental priorities.' },
+      { plain: 'Prepare financial reports and analyses',
+        polished: 'Prepares financial reports, costing analyses, variance explanations and recommendations for senior management and central agencies.' },
+      { plain: 'Advise on financial management controls',
+        polished: 'Advises management on financial management policies, internal controls, expenditure review and compliance with financial authorities.' },
+      { plain: 'Review financial transactions for compliance',
+        polished: 'Reviews financial transactions, commitments and expenditures to ensure accuracy, completeness and compliance with applicable authorities.' },
+      { plain: 'Coordinate funding and resource allocation',
+        polished: 'Coordinates funding, resource allocation and financial arrangements with central agencies, other departments and program areas.' },
+      { plain: 'Support financial planning cycles',
+        polished: 'Supports the departmental financial planning cycle, including estimates, main estimates, supplementary estimates and year-end closing.' },
+      { plain: 'Liaise with auditors and review bodies',
+        polished: 'Liaises with internal audit, the Office of the Auditor General and other review bodies on financial management matters.' }
+    ],
+    IT: [
+      { plain: 'Design and develop software systems',
+        polished: 'Designs, develops, tests and maintains software systems, applications and digital services in accordance with enterprise architecture and security standards.' },
+      { plain: 'Provide technical advice and support',
+        polished: 'Provides technical advice, troubleshooting support and guidance to clients, team members and stakeholders on IT systems and solutions.' },
+      { plain: 'Manage IT projects and initiatives',
+        polished: 'Plans, manages and delivers IT projects and initiatives, including requirements, scope, schedule, risk and stakeholder engagement.' },
+      { plain: 'Ensure data quality and integrity',
+        polished: 'Implements controls and processes to ensure the quality, integrity, security and availability of data and information assets.' },
+      { plain: 'Analyze requirements and propose solutions',
+        polished: 'Analyzes business requirements, evaluates options and proposes technical solutions that meet user needs and align with enterprise standards.' },
+      { plain: 'Document technical designs and procedures',
+        polished: 'Documents technical designs, configurations, operating procedures and user guides to support the maintainability and continuity of IT services.' },
+      { plain: 'Coordinate with stakeholders on requirements',
+        polished: 'Coordinates with clients, stakeholders and vendors to elicit, refine and validate requirements throughout the project lifecycle.' }
+    ],
+    AS: [
+      { plain: 'Coordinate administrative and operational services',
+        polished: 'Coordinates and delivers administrative, operational and corporate services in support of program delivery and organizational objectives.' },
+      { plain: 'Manage logistics, scheduling and resources',
+        polished: 'Manages logistics, scheduling, workspace, equipment and resources to support the effective operation of the unit or program.' },
+      { plain: 'Prepare correspondence and briefing materials',
+        polished: 'Prepares correspondence, briefing materials, meeting agendas and minutes for management and stakeholders.' },
+      { plain: 'Maintain records and information systems',
+        polished: 'Maintains records, files, databases and information management systems to ensure the integrity, accessibility and confidentiality of information.' },
+      { plain: 'Liaise with internal and external stakeholders',
+        polished: 'Liaises with internal and external stakeholders, clients and partners to coordinate activities, exchange information and resolve issues.' },
+      { plain: 'Support program and service delivery',
+        polished: 'Provides operational and administrative support for program and service delivery, including intake, processing and follow-up activities.' },
+      { plain: 'Organize meetings, events and travel',
+        polished: 'Organizes meetings, events, conferences and travel arrangements, including logistics, materials, hospitality and expense reconciliation.' }
+    ],
+    default: [
+      { plain: 'Develop and deliver work products',
+        polished: 'Develops and delivers work products, analyses and recommendations in support of the unit\u2019s mandate and objectives.' },
+      { plain: 'Provide advice to stakeholders',
+        polished: 'Provides advice, guidance and recommendations to management, colleagues and stakeholders on issues within the area of responsibility.' },
+      { plain: 'Coordinate with internal and external partners',
+        polished: 'Coordinates with internal and external partners to advance shared objectives, exchange information and resolve issues.' },
+      { plain: 'Prepare reports and briefing materials',
+        polished: 'Prepares reports, briefing materials, correspondence and other documents to support decision-making and communication.' },
+      { plain: 'Represent the department in meetings',
+        polished: 'Represents the department in meetings, committees and working groups on matters within the area of responsibility.' },
+      { plain: 'Monitor and report on key metrics',
+        polished: 'Monitors and reports on key performance indicators, project status and program outcomes against established targets.' },
+      { plain: 'Support team and organizational objectives',
+        polished: 'Supports team and organizational objectives through collaboration, knowledge-sharing and contribution to a positive work environment.' }
+    ]
+  };
+
+  /* Resolve the OG group from the advisor's Socratic answers and return the  */
+  /* matching duty set. Used by the duties step so suggestions are not the  */
+  /* hardcoded environmental set from the prototype.                        */
+  function getDutySuggestions(answers) {
+    const sig = typeof accumulateSignals === 'function' ? accumulateSignals(answers) : null;
+    const group = sig && sig.dominant;
+    if (group && DUTY_SUGGESTIONS[group]) return DUTY_SUGGESTIONS[group];
+    return DUTY_SUGGESTIONS.default;
+  }
 
   /* refine a manager's plain words into a formal duty statement */
   const VERB_MAP = {
@@ -298,5 +378,5 @@ const PHASES = ['Role', 'Work Type', 'Classification', 'Duties', 'Qualifications
 export {
   I, STEPS, PHASES, DRF, WORK_TYPES, DUTY_SUGGESTIONS, QUAL_DEFAULT,
   EC_ELEMENTS, computeClassification, refineDuty, ecFactors,
-  accumulateSignals,
+  accumulateSignals, getDutySuggestions,
 };
