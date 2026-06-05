@@ -152,6 +152,10 @@ function App() {
     // here so the stored WD has the data the JES endpoint reads via
     // require_og_confirmed (otherwise /api/jes/score 409s even after og_level
     // is committed in the local record).
+    //
+    // Return a promise that resolves with the persisted wd_id so downstream
+    // triggers (NOC / OG / JES) can chain off the persistence and avoid the
+    // 409 race where the read races the write.
     const wdPayload = {
       record: newRecord,
       answers: newAnswers,
@@ -161,8 +165,9 @@ function App() {
      'jes_scores', 'jes_total_points'].forEach(k => {
       if (k in newRecord) wdPayload[k] = newRecord[k];
     });
+    let wdPromise;
     if (!wd_id) {
-      fetch('/api/wd', {
+      wdPromise = fetch('/api/wd', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(wdPayload),
@@ -171,15 +176,18 @@ function App() {
         .then(data => {
           setWdId(data.id);
           try { localStorage.setItem('jd-builder-v2-wd-id', data.id); } catch {}
-        })
-        .catch(() => {});
+          return data.id;
+        });
     } else {
-      fetch(`/api/wd/${wd_id}`, {
+      wdPromise = fetch(`/api/wd/${wd_id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(wdPayload),
-      }).catch(() => {});
+      })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(() => wd_id);
     }
+    wdPromise.catch(() => {});
 
     // NOC pipeline trigger — fires once when the work summary step is committed
     if (step.id === 'summary') {
@@ -223,26 +231,22 @@ function App() {
         .catch(() => { setOgLoading(false); });
     }
 
-    // JES pipeline trigger — fires after og_level PATCH resolves (avoids 409 race per Pitfall 6)
+    // JES pipeline trigger — chains off the WD persistence promise so the
+    // WD is fully persisted (with confirmed_og + og_level at root) before
+    // /api/jes/score reads it. Avoids the 409 race on the classification
+    // gate where the JES read raced the write of og_level.
     if (step.id === 'og_level') {
       const confirmedOg = newRecord.confirmed_og || {};
       const ogCode = typeof confirmedOg === 'string' ? confirmedOg : (confirmedOg.og_code || '');
       const ogLevel = newRecord.og_level || 0;
       const duties = (newRecord.duties || []).map(d => d.polished || d.text || '');
 
-      if (wd_id && ogCode && ogLevel) {
-        // Chain a minimal og_level PATCH inside the JES fetch: ensures og_level is
-        // persisted before /api/jes/score reads the WD (avoids the 409 race).
-        fetch('/api/wd/' + wd_id, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ og_level: ogLevel }),
-        })
-          .then(r => r.ok ? r.json() : Promise.reject(r.status))
-          .then(() => fetch('/api/jes/score', {
+      if (ogCode && ogLevel) {
+        wdPromise
+          .then((id) => fetch('/api/jes/score', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ wd_id, og_code: ogCode, og_level: ogLevel, duties }),
+            body: JSON.stringify({ wd_id: id, og_code: ogCode, og_level: ogLevel, duties }),
           }))
           .then(r => r.ok ? r.json() : Promise.reject(r.status))
           .then(data => {
@@ -254,15 +258,16 @@ function App() {
               jes_is_ec: data.is_ec ?? false,
             }));
             // Persist jes_scores on the WD record so a refresh restores them
-            if (wd_id) {
-              fetch('/api/wd/' + wd_id, {
+            const persistId = wd_id || data.wd_id;
+            if (persistId) {
+              return fetch('/api/wd/' + persistId, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   jes_scores: data.factors || [],
                   jes_total_points: data.total_points ?? null,
                 }),
-              }).catch(() => {});
+              });
             }
           })
           .catch(() => {});
