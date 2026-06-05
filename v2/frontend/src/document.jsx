@@ -38,6 +38,47 @@ function Ghost({ lines }) {
   );
 }
 
+/* Compact JS copy of CAF rank equivalence lookup.
+   Returns matching rank entries for a given og_code + og_level combination.
+   Source: CAF_RANK_OG_EQUIVALENCE constant in v2/backend/app/data/constants.py.
+   Advisory only — not authoritative. */
+function getCafEquivalence(ogCode, ogLevel) {
+  if (!ogCode || !ogLevel) return null;
+  const target = `${ogCode}-${ogLevel < 10 ? '0' + ogLevel : ogLevel}`;
+  const CAF_EQUIV = {
+    'CR-02': ['Private / Able Seaman', 'Corporal / Master Seaman'],
+    'CR-03': ['Private / Able Seaman', 'Corporal / Master Seaman'],
+    'CR-04': ['Corporal / Master Seaman', 'Master Corporal / Leading Seaman'],
+    'CR-05': ['Master Corporal / Leading Seaman', 'Sergeant / Petty Officer 2nd Class'],
+    'CR-06': ['Sergeant / Petty Officer 2nd Class', 'Warrant Officer / Petty Officer 1st Class'],
+    'CR-07': ['Warrant Officer / Petty Officer 1st Class'],
+    'AS-01': ['Corporal / Master Seaman'],
+    'AS-02': ['Master Corporal / Leading Seaman'],
+    'AS-03': ['Sergeant / Petty Officer 2nd Class'],
+    'AS-04': ['Warrant Officer / Petty Officer 1st Class', 'Master Warrant Officer / Chief Petty Officer 2nd Class'],
+    'AS-05': ['Master Warrant Officer / Chief Petty Officer 2nd Class', 'Chief Warrant Officer / Chief Petty Officer 1st Class'],
+    'AS-06': ['Lieutenant / Lieutenant (N)', 'Captain / Lieutenant (N)'],
+    'AS-07': ['Major / Lieutenant-Commander'],
+    'AS-08': ['Lieutenant-Colonel / Commander'],
+    'EC-04': ['Captain / Lieutenant (N)', 'Major / Lieutenant-Commander'],
+    'EC-05': ['Major / Lieutenant-Commander'],
+    'EC-06': ['Major / Lieutenant-Commander', 'Lieutenant-Colonel / Commander'],
+    'EC-07': ['Lieutenant-Colonel / Commander', 'Colonel / Captain (N)'],
+    'EC-08': ['Colonel / Captain (N)', 'Brigadier-General / Commodore'],
+    'IT-01': ['Corporal / Master Seaman'],
+    'IT-02': ['Sergeant / Petty Officer 2nd Class'],
+    'IT-03': ['Warrant Officer / Petty Officer 1st Class'],
+    'IT-04': ['Master Warrant Officer / Chief Petty Officer 2nd Class'],
+    'IT-05': ['Chief Warrant Officer / Chief Petty Officer 1st Class', 'Lieutenant / Lieutenant (N)'],
+    'FI-01': ['Corporal / Master Seaman'],
+    'FI-02': ['Sergeant / Petty Officer 2nd Class'],
+    'FI-03': ['Warrant Officer / Petty Officer 1st Class'],
+    'FI-04': ['Master Warrant Officer / Chief Petty Officer 2nd Class'],
+  };
+  const ranks = CAF_EQUIV[target];
+  return ranks ? ranks.join(', ') : null;
+}
+
 /* a document section wrapper with section number + source tag */
 function Sec({ n, title, src, ghost, fresh, editable, onEdit, children }) {
   return (
@@ -134,6 +175,11 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep }) {
 
   // 1 — Position identification (always, fills as we go)
   n++;
+  // Classification value (for the metaItem): prefer the v2.0 evidence-based
+  // confirmed_og + og_level over the legacy workType-based cls object.
+  const classificationValue = r.confirmed_og && r.og_level
+    ? `${r.confirmed_og.og_code}-${r.og_level < 10 ? '0' + r.og_level : r.og_level}`
+    : (cls.code || (cls.group ? cls.group + ' group' : null));
   sections.push(
     <Sec
       key="id" n={'\u2014'} title="Position Identification"
@@ -142,10 +188,21 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep }) {
     >
       <div className="doc__meta" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
         {metaItem('Position title', r.title)}
-        {metaItem('Classification', cls.code || (cls.group ? cls.group + ' group' : null), cls.status === 'resolved')}
+        {metaItem('Classification', classificationValue, !!(r.confirmed_og && r.og_level))}
         {metaItem('Branch / directorate', r.branch)}
         {metaItem('Reports to', r.reports)}
       </div>
+      {/* CLASS-05: CAF rank advisory — only when reports_to_military = true and OG confirmed */}
+      {r.reports_to_military && r.confirmed_og && r.og_level && (
+        <div className="caf-advisory">
+          <span className="caf-advisory__label">
+            CAF Rank Equivalent (advisory — not authoritative):
+          </span>
+          <span className="caf-advisory__value">
+            {getCafEquivalence(r.confirmed_og.og_code, r.og_level) || 'See TBS advisory tables'}
+          </span>
+        </div>
+      )}
     </Sec>
   );
 
@@ -190,16 +247,41 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep }) {
     </Sec>
   );
 
-  // 4 — Classification & evaluation (only once resolved)
-  if (cls.status === 'resolved') {
-    n++;
+  // 4 — Classification & evaluation (CLASS-04 frontend gate)
+  // Always render this section. "Classification pending" when confirmed_og or
+  // og_level is null; resolved content when both are set.
+  n++;
+  if (!r.confirmed_og || !r.og_level) {
     sections.push(
       <Sec
         key="cls" n={String(n)} title="Classification & Evaluation"
-        src={cls.factors ? cls.standard : 'Job Evaluation Standard'} fresh={isFresh('level')}
-        editable={reviewing} onEdit={() => onEditStep('scopeDirection')}
+        src="TBS Directive on Classification"
+        editable={reviewing} onEdit={() => onEditStep('og_confirm')}
       >
-        <ClassBlock cls={cls} />
+        <p className="sec__pending">
+          Classification pending — confirm occupational group and level to proceed.
+        </p>
+      </Sec>
+    );
+  } else {
+    const resolvedCode = `${r.confirmed_og.og_code}-${r.og_level < 10 ? '0' + r.og_level : r.og_level}`;
+    sections.push(
+      <Sec
+        key="cls" n={String(n)} title="Classification & Evaluation"
+        src="TBS Directive on Classification" fresh={isFresh('og_level')}
+        editable={reviewing} onEdit={() => onEditStep('og_level')}
+      >
+        <div className="cls-block">
+          <div className="cls-block__badge">
+            <div className="cls-block__code">{resolvedCode}</div>
+          </div>
+          <div className="cls-block__body">
+            <div className="cls-block__name">{r.confirmed_og.og_name}</div>
+            <div className="cls-block__why">
+              Occupational group <b>{r.confirmed_og.og_code}</b> at level <b>{r.og_level < 10 ? '0' + r.og_level : r.og_level}</b>, confirmed by the Socratic question bank signals and the confirmed NOC code.
+            </div>
+          </div>
+        </div>
       </Sec>
     );
   }
