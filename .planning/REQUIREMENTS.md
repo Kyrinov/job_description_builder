@@ -63,17 +63,17 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 
 ### CONVO — Conversational UX
 
-- [ ] **CONVO-01**: Advisor progresses through a 6-phase interview (Role → Work Type → Classification →
+- [x] **CONVO-01**: Advisor progresses through a 6-phase interview (Role → Work Type → Classification →
   Duties → Qualifications → Review); the Work Type and Classification phases use question bank-driven
   steps rather than fixed work-type choice cards
-- [ ] **CONVO-02**: Advisor can click any answered exchange in the transcript to revisit and re-answer that
+- [x] **CONVO-02**: Advisor can click any answered exchange in the transcript to revisit and re-answer that
   step without losing prior answers; re-answering a classification step re-runs the downstream pipeline
-- [ ] **CONVO-03**: Conversation pane header shows 6 phase chips with active / done / pending states as
+- [x] **CONVO-03**: Conversation pane header shows 6 phase chips with active / done / pending states as
   the advisor advances
-- [ ] **CONVO-04**: Each step renders the appropriate input control: text input, textarea, choice cards
+- [x] **CONVO-04**: Each step renders the appropriate input control: text input, textarea, choice cards
   with icons, duty builder, qualification editor, NOC candidate confirmation card, OG candidate
   confirmation card
-- [ ] **CONVO-05**: Advisor can press Enter to continue (Cmd/Ctrl+Enter for textarea), use Back button on
+- [x] **CONVO-05**: Advisor can press Enter to continue (Cmd/Ctrl+Enter for textarea), use Back button on
   step 2+; active question auto-scrolls into view
 
 ### CLASS — OG classification
@@ -170,7 +170,7 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 
 - [x] **API-01**: FastAPI app with Pydantic v2 models for WorkDescription, DraftDuty, Classification,
   JESFactor, QualificationStandard — validated in Phase 10
-- [ ] **API-02**: WD CRUD: POST `/api/wd` (create WD from answers), GET `/api/wd/{id}` (load WD),
+- [x] **API-02**: WD CRUD: POST `/api/wd` (create WD from answers), GET `/api/wd/{id}` (load WD),
   PATCH `/api/wd/{id}` (update draft)
 - [ ] **API-03**: Canonical data endpoints: GET `/api/quals/default?og_code=EC` (OG-matched qual standard
   text); GET `/api/og/definitions?og_code=EC` (OG definition, inclusions, exclusions for display)
@@ -263,12 +263,12 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 | NOC-01 | Phase 14 | Complete |
 | NOC-02 | Phase 14 | Complete |
 | API-04 | Phase 14 | Complete |
-| CONVO-01 | Phase 15 | Pending |
-| CONVO-02 | Phase 15 | Pending |
-| CONVO-03 | Phase 15 | Pending |
-| CONVO-04 | Phase 15 | Pending |
-| CONVO-05 | Phase 15 | Pending |
-| API-02 | Phase 15 | Pending |
+| CONVO-01 | Phase 15 | Complete |
+| CONVO-02 | Phase 15 | Complete |
+| CONVO-03 | Phase 15 | Complete |
+| CONVO-04 | Phase 15 | Complete |
+| CONVO-05 | Phase 15 | Complete |
+| API-02 | Phase 15 | Complete |
 | CLASS-01 | Phase 16 | Pending |
 | CLASS-02 | Phase 16 | Pending |
 | CLASS-03 | Phase 16 | Pending |

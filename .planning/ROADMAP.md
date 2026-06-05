@@ -34,7 +34,7 @@ v2.0 ports v1.0's production NOC + OG classification + JES engine into a convers
 - [x] **Phase 12: Socratic Question Bank** — Design and encode question bank artifact (JSON/Python constant) driving Socratic classification; each entry maps to OG candidates + JES factor hints. (QUES-01, QUES-02, QUES-03) (completed 2026-06-04)
 - [x] **Phase 13: Frontend SPA Shell** — Port 5 JSX files + styles.css into Vite; brand typography; useState/useMemo architecture; localStorage crash-recovery. (FE-01, FE-03, FE-04, FE-05) (completed 2026-06-04)
 - [x] **Phase 14: NOC Pipeline** — Port three-stage NL→NOC pipeline (FTS5 → embedding rerank → LLM justification) into FastAPI backend; expose POST `/api/noc/map`; display candidates + advisor confirmation. (NOC-01, NOC-02, API-04) (completed 2026-06-04)
-- [ ] **Phase 15: Conversational UX** — 6-phase interview with question bank-driven classification and duty steps; revisit, phase chips, per-step input controls, keyboard shortcuts; WD CRUD persistence. (CONVO-01, CONVO-02, CONVO-03, CONVO-04, CONVO-05, API-02)
+- [x] **Phase 15: Conversational UX** — 6-phase interview with question bank-driven classification and duty steps; revisit, phase chips, per-step input controls, keyboard shortcuts; WD CRUD persistence. (CONVO-01, CONVO-02, CONVO-03, CONVO-04, CONVO-05, API-02) (completed 2026-06-05)
 - [ ] **Phase 16: OG Classification** — Evidence-based OG classification from confirmed NOC + work description; AS/EC disambiguation; level selection from corrected OG ranges; hard gate; CAF rank advisory; canonical data endpoints. (CLASS-01, CLASS-02, CLASS-03, CLASS-04, CLASS-05, API-06, API-03)
 - [ ] **Phase 17: JES Scoring** — EC JES 2017 9-factor scoring with per-factor retry + advisor override; non-EC approximate totals; JES scorecard in live preview; POST `/api/jes/score`. (JES-01, JES-02, JES-03, JES-04, API-07)
 - [ ] **Phase 18: JD Composition & Live Preview** — Verbatim NOC duty selection with provenance; advisor-added duties; orphan check; live document preview with ghost placeholders, composed overview, section click-to-edit, provenance footer. (JD-01, JD-02, JD-03, JD-04, DOC-01, DOC-02, DOC-03, DOC-04, DOC-05)
@@ -181,13 +181,13 @@ Plans:
 5. Pressing Enter on a text input submits; Cmd/Ctrl+Enter on a textarea submits; Back button is available on step 2+; the active question auto-scrolls into view
 6. `POST /api/wd` creates a WD on first step commit; `PATCH /api/wd/{id}` updates it on each subsequent commit; `GET /api/wd/{id}` can restore an in-progress session
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 15-01-PLAN.md — Wave 1: Test stubs (RED) — test_wd.py + conversation.test.jsx
-- [ ] 15-02-PLAN.md — Wave 2: WD CRUD routes (POST/GET/PATCH /api/wd)
-- [ ] 15-03-PLAN.md — Wave 2: data.jsx QUESTION_BANK STEPS + PHASES + accumulateSignals
-- [ ] 15-04-PLAN.md — Wave 3: app.jsx + components.jsx wiring + UAT checkpoint
+- [x] 15-01-PLAN.md — Wave 1: Test stubs (RED) — test_wd.py + conversation.test.jsx
+- [x] 15-02-PLAN.md — Wave 2: WD CRUD routes (POST/GET/PATCH /api/wd)
+- [x] 15-03-PLAN.md — Wave 2: data.jsx QUESTION_BANK STEPS + PHASES + accumulateSignals
+- [x] 15-04-PLAN.md — Wave 3: app.jsx + components.jsx wiring + UAT checkpoint
 
 **UI hint**: yes
 
