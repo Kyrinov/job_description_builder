@@ -81,6 +81,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 - WeasyPrint ARM64 Pango/Cairo feasibility check on Jane before Phase 20 begins (EXP-03)
 - Confirm sqlite-vec ARM64 wheel available for v2.0 NOC pipeline (Phase 14 dependency)
+- **Phase 19 (Qualifications) backlog**: replace `v2/frontend/src/data.jsx` `QUAL_DEFAULT` with OG-group-keyed defaults (EC/FI/IT/AS) + `getQualDefault(answers)` function. Hardcoded EC-05 environmental text is a Phase 13 prototype port. Surfaces in Phase 15 UAT — user opted to defer to Phase 19 (strict scope) rather than land the fix now.
 
 ### Roadmap Evolution
 
