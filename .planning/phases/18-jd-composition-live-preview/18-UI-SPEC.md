@@ -48,8 +48,8 @@ The project uses an 8-point base grid. All values are multiples of 4px.
 | 3xl | 52px | Doc paper top padding (matches `.doc`) |
 
 **Exceptions for Phase 18:**
-- Duty selector cards: `padding: 12px 14px` (matches existing `.duty-sug` — 12px is
-  within the grid tolerance for card padding).
+- Duty selector cards: `padding: 12px 14px` — pre-existing code value from styles.css
+  (`.duty-sug`); not introduced by Phase 18. Not a new spacing declaration.
 - Orphan warning badge: `padding: 4px 8px` (follows `.prov__tag` rhythm).
 - "Add your own duty" submit button: min touch target 44px height (accessibility).
 
@@ -65,13 +65,14 @@ no new type sizes.
 | Body / prose | Spectral (--doc) | 15.5px | 400 | 1.62 | Duty text in document preview (`.prose`) |
 | Doc duty | Spectral (--doc) | 14.8px | 400 | 1.55 | Each `.doc-duty` in Key Responsibilities |
 | UI body | Hanken Grotesk (--ui) | 14.5px | 640 | 1.3 | Duty card plain label (`.duty-sug__plain`) |
-| Label / eyebrow | Spline Sans Mono (--mono) | 10–11px | 600 | 1.2 | Section header, provenance tags, orphan badge |
+| Label / eyebrow | Spline Sans Mono (--mono) | 11px | 600 | 1.2 | Section header, provenance tags, orphan badge label, orphan badge cite, selection count indicator |
 
 **Active sizes for Phase 18: 15.5 / 14.8 / 14.5 / 11px**
 **Active weights: 400 (regular) + 640 (semibold-equivalent)**
 
 Ghost note type: 12.5px Hanken Grotesk, weight 400, `font-style: italic`,
-`color: var(--ink-faint)` — pre-existing `.ghost-note` class; reuse exactly.
+`color: var(--ink-faint)` — **pre-existing `.ghost-note` class; not a new Phase 18
+size declaration. Reuse exactly without change.**
 
 ---
 
@@ -146,7 +147,7 @@ NOC duties fetched from the backend for the confirmed NOC code.
 2. Render each duty as a `.duty-sug` card with `.duty-sug__plain` showing verbatim text.
 3. Selected state: `.duty-sug.is-sel` — same accent border + background as existing
    selection pattern.
-4. Selection count badge: show `N selected` in Spline Sans Mono 10px, `color:
+4. Selection count badge: show `N selected` in Spline Sans Mono 11px, `color:
    var(--ink-faint)`, above the duty list. Updates live as cards are toggled. No
    separate popover or drawer needed.
 5. "Add your own duty" row: retain existing `.duty-add` row exactly. Advisor-added
@@ -180,39 +181,44 @@ time (JD-04). Appears below the duty text, inline.
 ```css
 .orphan-badge {
   display: inline-flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin-top: 6px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.4;
   color: oklch(0.58 0.14 35);       /* amber-orange */
   background: oklch(0.97 0.035 50); /* warm near-white */
   border: 1px solid oklch(0.88 0.07 42);
   border-radius: var(--radius-sm);  /* 9px */
-  padding: 5px 9px;
+  padding: 4px 8px;
 }
 .orphan-badge__icon {
   flex: 0 0 auto;
-  margin-top: 1px;
+  /* margin-top omitted — align-items: center on parent handles vertical alignment */
 }
 .orphan-badge__body {}
 .orphan-badge__label {
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  font-size: 9px;
 }
 .orphan-badge__cite {
   display: block;
-  margin-top: 3px;
+  margin-top: 4px;
+  font-size: 11px;
   font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
-  font-size: 10px;
   color: oklch(0.50 0.10 35);
 }
 ```
+
+**Differentiation between `.orphan-badge__label` and `.orphan-badge__cite`:** both use
+11px. The label is distinguished by `font-weight: 600` + `text-transform: uppercase` +
+`letter-spacing: 0.03em`. The cite uses `font-weight: 400` + no transform. Do NOT use
+a different font size to differentiate them.
 
 **Icon:** Use a small warning triangle inline SVG (path: a triangle with exclamation,
 16×16 viewBox). Render via the existing `Icon` helper at `size={13}`.
@@ -261,7 +267,7 @@ verbatim, not LLM-refined.
 | Element | Copy | Notes |
 |---------|------|-------|
 | Primary CTA — duty step | **"Add to description"** | `.btn--primary` in `.actions` row; disabled until ≥1 selected |
-| Selection count indicator | **"N duties selected"** | Mono 10px above duty list; singular: "1 duty selected" |
+| Selection count indicator | **"N duties selected"** | Mono 11px above duty list; singular: "1 duty selected" |
 | Empty state heading (Section 3) | _(no heading, ghost only)_ | Ghost shimmer is the visual; note below |
 | Empty state body (Section 3) | **"Select duties from the NOC list — they will appear here, verbatim and traceable."** | `.ghost-note` class; replaces old copy in document.jsx:253 |
 | Duty step helper text | **"These are verbatim duties from NOC {noc_code}. Select those that match your position, then add any that are missing."** | `.ask__helper` below the step question |
