@@ -99,17 +99,17 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 
 ### JES — Job Evaluation Standard
 
-- [ ] **JES-01**: Per-factor JES scoring for EC group (9 elements verbatim from EC JES 2017): Decision
+- [x] **JES-01**: Per-factor JES scoring for EC group (9 elements verbatim from EC JES 2017): Decision
   making, Leadership & operational mgmt, Communication, Knowledge of specialized fields, Contextual
   knowledge, Research & analysis, Physical effort, Sensory effort, Working conditions; ported from
   `app/services/jes_service.py` with instructor retry wrapper (max 3 retries per factor)
-- [ ] **JES-02**: Per-factor retry + advisor override: if a factor score fails after 3 retries, advisor
+- [x] **JES-02**: Per-factor retry + advisor override: if a factor score fails after 3 retries, advisor
   can manually enter a degree value (1–N per factor scale); override stored as an audit_log entry with
   type="jes_override"; ported from v1.0 Phase 8.1
-- [ ] **JES-03**: Approximate point totals for non-EC groups (FI, IT, AS, EN) at the confirmed level;
+- [x] **JES-03**: Approximate point totals for non-EC groups (FI, IT, AS, EN) at the confirmed level;
   displayed as a single totals line with the applicable JES standard name cited (e.g. "CT JES 2023" for
   FI, "IT JES" for IT, "UCS" for AS)
-- [ ] **JES-04**: JES scorecard rendered in the Classification & Evaluation section of the live document
+- [x] **JES-04**: JES scorecard rendered in the Classification & Evaluation section of the live document
   preview: per-factor rows (element name, degree, points) for EC groups; single totals line for non-EC
 
 ### JD — Job description composition
@@ -188,7 +188,7 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 **: POST `/api/og/classify` — accepts confirmed NOC code + work description; returns
   top-3 OG candidates with verbatim rationale and confidence scores; includes AS/EC disambiguation
   when applicable
-- [ ] **API-07**: POST `/api/jes/score` — accepts OG code + level + duties; returns JES factor scorecard
+- [x] **API-07**: POST `/api/jes/score` — accepts OG code + level + duties; returns JES factor scorecard
   (EC: per-factor with degrees and points; non-EC: single totals line with JES standard name)
 - [ ] **API-08**: POST `/api/wd/{id}/export/docx` — renders the TBS WD DOCX template from saved WD data;
   returns `.docx` file
@@ -283,11 +283,11 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 | CLASS-05 | Phase 16 | Complete |
 | API-06 | Phase 16 | Complete |
 | API-03 | Phase 16 | Complete |
-| JES-01 | Phase 17 | Pending |
-| JES-02 | Phase 17 | Pending |
-| JES-03 | Phase 17 | Pending |
-| JES-04 | Phase 17 | Pending |
-| API-07 | Phase 17 | Pending |
+| JES-01 | Phase 17 | Complete |
+| JES-02 | Phase 17 | Complete |
+| JES-03 | Phase 17 | Complete |
+| JES-04 | Phase 17 | Complete |
+| API-07 | Phase 17 | Complete |
 | JD-01 | Phase 18 | Pending |
 | JD-02 | Phase 18 | Pending |
 | JD-03 | Phase 18 | Pending |

@@ -36,7 +36,7 @@ v2.0 ports v1.0's production NOC + OG classification + JES engine into a convers
 - [x] **Phase 14: NOC Pipeline** — Port three-stage NL→NOC pipeline (FTS5 → embedding rerank → LLM justification) into FastAPI backend; expose POST `/api/noc/map`; display candidates + advisor confirmation. (NOC-01, NOC-02, API-04) (completed 2026-06-04)
 - [x] **Phase 15: Conversational UX** — 6-phase interview with question bank-driven classification and duty steps; revisit, phase chips, per-step input controls, keyboard shortcuts; WD CRUD persistence. (CONVO-01, CONVO-02, CONVO-03, CONVO-04, CONVO-05, API-02) (completed 2026-06-05)
 - [x] **Phase 16: OG Classification** — Evidence-based OG classification from confirmed NOC + work description; AS/EC disambiguation; level selection from corrected OG ranges; hard gate; CAF rank advisory; canonical data endpoints. (CLASS-01, CLASS-02, CLASS-03, CLASS-04, CLASS-05, API-06, API-03) (completed 2026-06-05)
-- [ ] **Phase 17: JES Scoring** — EC JES 2017 9-factor scoring with per-factor retry + advisor override; non-EC approximate totals; JES scorecard in live preview; POST `/api/jes/score`. (JES-01, JES-02, JES-03, JES-04, API-07)
+- [x] **Phase 17: JES Scoring** (4/4 plans) — EC JES 2017 9-factor scoring with per-factor retry + advisor override; non-EC approximate totals; JES scorecard in live preview; POST `/api/jes/score`. (JES-01, JES-02, JES-03, JES-04, API-07) — completed 2026-06-08; browser UAT pending retest, see `17-HUMAN-UAT.md`
 - [ ] **Phase 18: JD Composition & Live Preview** — Verbatim NOC duty selection with provenance; advisor-added duties; orphan check; live document preview with ghost placeholders, composed overview, section click-to-edit, provenance footer. (JD-01, JD-02, JD-03, JD-04, DOC-01, DOC-02, DOC-03, DOC-04, DOC-05)
 - [ ] **Phase 19: Qualifications & Amendments** — OG-matched qual standard defaults; editable textareas with validation; EQ section render; manager amendment notes per section; DOCX appendix for amendments. (QUAL-01, QUAL-02, QUAL-03, AMEND-01, AMEND-02)
 - [ ] **Phase 20: Export** — DOCX WD export (docxtpl, provenance citations, version manifest); job poster DOCX; PDF export via WeasyPrint (ARM64 gate); POST `/api/wd/{id}/export/docx` + `/poster`. (EXP-01, EXP-02, EXP-03, API-08, API-09)
@@ -235,13 +235,13 @@ Plans:
 3. When a factor score fails after 3 retries (instructor retry wrapper), the SPA prompts the advisor to manually enter a degree value (1–N per factor scale); the override is stored as an `audit_log` entry with `type="jes_override"`
 4. The Classification & Evaluation section of the live document preview renders per-factor rows (name, D{degree}, points) and a totals row for EC; non-EC renders a single totals line; the scorecard populates as soon as the classification step is confirmed
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 17-01-PLAN.md — Wave 0: JES constants + model extensions + RED test stubs
-- [ ] 17-02-PLAN.md — Wave 2: ai/jes_scoring.py + services/jes_service.py + POST /api/jes/score + POST /api/jes/override
-- [ ] 17-03-PLAN.md — Wave 3: app.jsx JES trigger + document.jsx Section 4 scorecard + ClassBlock tests GREEN
-- [ ] 17-04-PLAN.md — Wave 4: full suite green gate + UAT checkpoint
+- [x] 17-01-PLAN.md — Wave 0: JES constants + model extensions + RED test stubs
+- [x] 17-02-PLAN.md — Wave 2: ai/jes_scoring.py + services/jes_service.py + POST /api/jes/score + POST /api/jes/override
+- [x] 17-03-PLAN.md — Wave 3: app.jsx JES trigger + document.jsx Section 4 scorecard + ClassBlock tests GREEN
+- [x] 17-04-PLAN.md — Wave 4: full suite green gate + UAT checkpoint
 
 **UI hint**: yes
 
@@ -330,7 +330,7 @@ Plans:
 | **14. NOC Pipeline** | **v2.0** | **4/4** | **Complete** | **2026-06-04** |
 | **15. Conversational UX** | **v2.0** | **0/?** | **Not started** | — |
 | **16. OG Classification** | **v2.0** | **0/?** | **Not started** | — |
-| **17. JES Scoring** | **v2.0** | **0/?** | **Not started** | — |
+| **17. JES Scoring** | **v2.0** | **4/4** | **Complete** | **2026-06-08** |
 | **18. JD Composition & Live Preview** | **v2.0** | **0/?** | **Not started** | — |
 | **19. Qualifications & Amendments** | **v2.0** | **0/?** | **Not started** | — |
 | **20. Export** | **v2.0** | **0/?** | **Not started** | — |
