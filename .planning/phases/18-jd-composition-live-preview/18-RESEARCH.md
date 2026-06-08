@@ -667,22 +667,22 @@ Note: `I.warn` needs a warning triangle SVG path added to the `I` object in `dat
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Warning triangle icon path**
    - What we know: `I` object in data.jsx has spark, check, user, org, compass, etc. — no warning icon
    - What's unclear: whether a suitable warning SVG path should be added to `data.jsx` or inline in the `OrphanBadge` component
-   - Recommendation: Add `warn` key to `I` in data.jsx; keeps all icons centralized
+   - RESOLVED: Add `warn` key to `I` in data.jsx; keeps all icons centralized (implemented in 18-03 Task 1)
 
 2. **Confirmed NOC code type in `record`**
    - What we know: `record.confirmed_noc` can be a string (NOC code) or a NOCMatch object `{noc_code, title, teer, ...}` depending on how the noc_confirm step stores it (see app.jsx line 383: `apply: (r, a) => ({ confirmed_noc: a })` where `a` is the full `noc_code` string from `NocConfirmList onChange`)
    - What's unclear: Is `record.confirmed_noc` always a string by Phase 18, or could it be a NOCMatch object? app.jsx line 220 extracts: `typeof confirmedNoc === 'string' ? confirmedNoc : (confirmedNoc.noc_code || '')`
-   - Recommendation: In the cfgOverride for duties, use the same pattern as the OG pipeline trigger: `typeof record.confirmed_noc === 'string' ? record.confirmed_noc : record.confirmed_noc?.noc_code`
+   - RESOLVED: In the cfgOverride for duties, use the same pattern as the OG pipeline trigger: `typeof record.confirmed_noc === 'string' ? record.confirmed_noc : record.confirmed_noc?.noc_code || null` (implemented in 18-04 Task 1)
 
 3. **Orphan check trigger timing in app.jsx**
    - What we know: The orphan check should run "at review time" (JD-04). App.jsx enters review state when all steps are answered OR when `editingReturn` completes.
    - What's unclear: Should orphan check fire automatically on entering review state, or only when the advisor explicitly clicks a "Check duties" action?
-   - Recommendation: Fire automatically when `reviewing` becomes `true` AND `record.duties.length > 0` AND `record.confirmed_og` is set. No manual trigger button needed — the check is silent (no blocking gate).
+   - RESOLVED: Fire automatically when `reviewing` becomes `true` AND `record.duties.length > 0` AND `record.confirmed_og` is set via `useEffect([reviewing, wd_id])`. No manual trigger button needed (implemented in 18-04 Task 1)
 
 ---
 
