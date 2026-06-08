@@ -263,7 +263,13 @@ Plans:
 5. Unfilled sections show ghost shimmer placeholders (3 lines for prose, 2 for duties) with a hint note; the Position Overview paragraph is composed from answers as "Located within {branch}, and reporting to the {reports}, the {title} {summary-lowercased}." plus a supervises sentence
 6. In review state, each section header is clickable to jump back to the corresponding conversation step; outside review state sections are non-interactive; the document footer shows provenance tags updating live as sections populate
 
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 18-01-PLAN.md — Wave 0: RED test stubs (backend + frontend) + noc_duties_db fixture
+- [ ] 18-02-PLAN.md — Wave 1: DraftDuty model extension + GET /api/noc/{noc_code}/duties + WDPatchRequest.duties + POST /api/wd/{id}/orphan_check
+- [ ] 18-03-PLAN.md — Wave 2: DutyBuilder FTS5 fetch + document.jsx Section 3/5 updates + OrphanBadge + CSS + icon
+- [ ] 18-04-PLAN.md — Wave 3: app.jsx orphan_check wiring + full suite green gate + UAT checkpoint
 
 **UI hint**: yes
 
