@@ -54,6 +54,12 @@ def _settings_env_defaults(tmp_path, monkeypatch):
     monkeypatch.setenv("OLLAMA_BASE_URL", "http://localhost:11434")
     monkeypatch.setenv("OLLAMA_GENERATION_MODEL", "gemma4:31b")
     monkeypatch.setenv("OLLAMA_EMBED_MODEL", "nomic-embed-text:latest")
+    # Reset the module-level Settings singleton so each test gets a fresh instance
+    # that reflects this test's tmp_path. Without this, the singleton caches values
+    # from a prior test, causing test_app's create_schema() to write the schema into
+    # a stale tmp_path that the test never reads.
+    import app.config
+    app.config._settings = None
 
 
 @pytest_asyncio.fixture
@@ -226,4 +232,9 @@ def noc_duties_db(tmp_path, monkeypatch) -> str:
     con.commit()
     con.close()
     monkeypatch.setenv("NOC_DB_PATH", db_path)
+    # Clear the module-level Settings singleton so the route's get_settings() picks
+    # up the new NOC_DB_PATH (env_with_db / _settings_env_defaults cached the WD DB
+    # path before this fixture ran and instantiated Settings with it).
+    import app.config
+    app.config._settings = None
     return db_path

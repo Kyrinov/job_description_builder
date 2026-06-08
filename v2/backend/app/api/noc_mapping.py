@@ -13,6 +13,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 
 from app.config import get_settings
+from app.db import get_noc_connection
 from app.models.noc import NocCandidateOut, NocMapResponse, WorkDescriptionRequest
 from app.services.noc_mapper import map_work_description
 
@@ -49,3 +50,40 @@ async def map_noc(body: WorkDescriptionRequest) -> NocMapResponse:
         for c in result.candidates
     ]
     return NocMapResponse(candidates=candidates_out)
+
+
+@router.get("/noc/{noc_code}/duties")
+async def get_noc_duties(noc_code: str) -> dict:
+    """Return verbatim Main duties for a confirmed NOC code.
+
+    Reads noc_elements WHERE element_type='Main duties' for the given noc_code.
+    Returns source_hash for ProvenanceTag content hash (JD-02).
+    Uses get_noc_connection() — NOT get_connection() (different DB files).
+    EC and IT positions have exclusions defined; EC orphan check always returns 0 flags.
+    """
+    if not noc_code or len(noc_code) < 3:
+        raise HTTPException(status_code=422, detail="noc_code must be at least 3 characters")
+    settings = get_settings()
+    con = get_noc_connection(settings.noc_db_path)
+    try:
+        rows = con.execute(
+            "SELECT id, element_text, source_hash FROM noc_elements "
+            "WHERE noc_code = ? AND element_type = 'Main duties' "
+            "ORDER BY id",
+            (noc_code,),
+        ).fetchall()
+    finally:
+        con.close()
+    if not rows:
+        raise HTTPException(status_code=404, detail=f"No Main duties found for NOC {noc_code!r}")
+    return {
+        "noc_code": noc_code,
+        "duties": [
+            {
+                "id": row["id"],
+                "text": row["element_text"],
+                "source_hash": row["source_hash"] or None,
+            }
+            for row in rows
+        ],
+    }

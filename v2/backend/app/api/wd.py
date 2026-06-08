@@ -48,6 +48,7 @@ class WDPatchRequest(BaseModel):
     reports_to_military: Optional[bool] = None
     jes_scores: Optional[list[dict]] = None
     jes_total_points: Optional[int] = None
+    duties: Optional[list[dict]] = None
 
 
 @router.post("/wd", status_code=201)
@@ -114,8 +115,14 @@ async def patch_wd(wd_id: str, body: WDPatchRequest) -> WorkDescription:
         if row is None:
             raise HTTPException(status_code=404, detail="Work description not found")
         wd = WorkDescription.model_validate_json(row["data"])
-        for field, val in body.model_dump(exclude_unset=True).items():
+        # Separate duties from scalar fields to enable validated merge
+        raw_duties = body.duties  # extract before model_dump excludes it
+        for field, val in body.model_dump(exclude_unset=True, exclude={'duties'}).items():
             setattr(wd, field, val)
+        # Duties: validate each item against DraftDuty; cap at 20 (DoS mitigation)
+        if raw_duties is not None:
+            from app.models.draft_duty import DraftDuty as DD
+            wd.duties = [DD(**d) for d in raw_duties[:20]]
         wd.last_modified = datetime.now(timezone.utc)
         con.execute(
             "UPDATE work_descriptions SET data = ?, last_modified = ? WHERE id = ?",
@@ -125,3 +132,59 @@ async def patch_wd(wd_id: str, body: WDPatchRequest) -> WorkDescription:
     finally:
         con.close()
     return wd
+
+
+def _duty_contradicts_og(duty_lower: str, exclusions_text: str) -> bool:
+    """Keyword check: True if any exclusion keyword appears in duty text.
+
+    EC exclusions are empty — always returns False for EC positions.
+    IT exclusions contain keywords like 'business analysis', 'administrative programs'.
+    """
+    exclusion_keywords = [
+        phrase.strip().lower()
+        for phrase in exclusions_text.replace(';', ',').split(',')
+        if len(phrase.strip()) > 4
+    ]
+    return any(kw in duty_lower for kw in exclusion_keywords)
+
+
+@router.post("/wd/{wd_id}/orphan_check")
+async def run_orphan_check(wd_id: str) -> dict:
+    """Deterministic orphan check: verb-keyword match against OG_DEFINITIONS.exclusions.
+
+    No LLM — v2.0 policy is deterministic classification throughout.
+    EC positions always return flagged: [] (EC has no exclusions defined).
+    """
+    from app.data.constants import OG_DEFINITIONS
+    settings = get_settings()
+    con = get_connection(settings.db_path)
+    try:
+        row = con.execute(
+            "SELECT data FROM work_descriptions WHERE id = ?", (wd_id,)
+        ).fetchone()
+    finally:
+        con.close()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Work description not found")
+    wd = WorkDescription.model_validate_json(row["data"])
+    if not wd.confirmed_og:
+        raise HTTPException(status_code=422, detail="OG not confirmed — orphan check requires confirmed OG")
+    og_code = (
+        wd.confirmed_og.get("og_code")
+        if isinstance(wd.confirmed_og, dict)
+        else wd.confirmed_og.og_code
+    )
+    defn = OG_DEFINITIONS.get(og_code, {})
+    exclusions_text = defn.get("exclusions", "")
+    flagged = []
+    for duty in wd.duties:
+        duty_lower = duty.text.lower()
+        if exclusions_text and _duty_contradicts_og(duty_lower, exclusions_text):
+            flagged.append({
+                "duty_id": duty.id,
+                "orphan_rationale": (
+                    f"This duty may fall outside the {og_code} functional authority: "
+                    f"{exclusions_text[:200]}"
+                ),
+            })
+    return {"wd_id": wd_id, "flagged": flagged}

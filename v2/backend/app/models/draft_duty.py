@@ -19,6 +19,14 @@ class DraftDuty(BaseModel):
     id: str
     text: str
     plain_trigger: Optional[str] = None
-    source: Literal["suggested", "advisor"]
+    source: Literal["noc", "advisor"]
     source_index: Optional[int] = None  # Index into DUTY_SUGGESTIONS (suggested only)
     refined_at: Optional[datetime] = None  # When verb-mapping was applied (advisor only)
+    # ProvenanceTag fields — Phase 18 (JD-02, JD-03)
+    provenance_noc_code: Optional[str] = None
+    provenance_section: str = "Main duties"
+    provenance_hash: Optional[str] = None
+    advisor: bool = False
+    # Orphan check — Phase 18 (JD-04)
+    orphan: bool = False
+    orphan_rationale: Optional[str] = None
