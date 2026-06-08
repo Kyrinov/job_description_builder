@@ -4,7 +4,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { I, WORK_TYPES, DUTY_SUGGESTIONS, DRF, QUAL_DEFAULT, refineDuty } from './data.jsx';
 
-const DUTY_PLACEHOLDER = 'Add one in your own words… e.g. clean up contaminated sites';
+const DUTY_PLACEHOLDER = 'Describe a duty not listed above…';
 
 /* ---- icon helper --------------------------------------------- */
 function Icon({ path, size, cls }) {
@@ -109,29 +109,94 @@ function DutyBuilder({ value, onChange, cfg }) {
   const list = value || [];
   const [text, setText] = useState('');
   const [preview, setPreview] = useState('');
+  const [nocDuties, setNocDuties] = useState(null); // null=loading, []=empty/error, [...]=fetched
   const inputRef = useRef(null);
-  // cfg.suggestions is injected by app.jsx (keyed to OG group via getDutySuggestions).
-  // Falls back to the 'default' set when the group is unmapped or no overrides.
+  // Phase 18: prefer cfg.noc_code (verbatim NOC duties from /api/noc/{noc_code}/duties)
+  // over the legacy cfg.suggestions static array.
+  const noc_code = cfg && cfg.noc_code;
+  useEffect(() => {
+    if (!noc_code) return;
+    setNocDuties(null); // trigger shimmer
+    fetch(`/api/noc/${encodeURIComponent(noc_code)}/duties`)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(data => setNocDuties(data.duties || []))
+      .catch(() => setNocDuties([]));
+  }, [noc_code]);
+  // Legacy fallback: cfg.suggestions keyed to OG group via getDutySuggestions.
+  // Used only when noc_code is not present (e.g. pre-NOC-confirm flow / tests).
   const suggestions = (cfg && cfg.suggestions) || DUTY_SUGGESTIONS.default;
 
-  function isOn(plain) { return list.some(d => d.plain === plain); }
+  function isOn(dutyId) { return list.some(d => d.id === dutyId); }
+  function toggleNoc(d) {
+    const dutyId = `noc-${d.id}`;
+    if (isOn(dutyId)) onChange(list.filter(x => x.id !== dutyId));
+    else onChange([...list, {
+      id: dutyId,
+      plain: d.text,
+      text: d.text,
+      source: 'noc',
+      advisor: false,
+      provenance_noc_code: noc_code,
+      provenance_section: 'Main duties',
+      provenance_hash: d.source_hash || null,
+    }]);
+  }
   function toggle(s) {
-    if (isOn(s.plain)) onChange(list.filter(d => d.plain !== s.plain));
-    else onChange([...list, { id: 'sug-' + s.plain, plain: s.plain, polished: s.polished, advisor: false }]);
+    const dutyId = 'sug-' + s.plain;
+    if (isOn(dutyId)) onChange(list.filter(d => d.id !== dutyId));
+    else onChange([...list, { id: dutyId, plain: s.plain, polished: s.polished, advisor: false }]);
   }
   function add() {
     const raw = text.trim();
     if (!raw) return;
     const polished = refineDuty(raw);
-    onChange([...list, { id: 'adv-' + Date.now(), plain: raw, polished, advisor: true }]);
+    onChange([...list, {
+      id: `adv-${Date.now()}`,
+      plain: raw,
+      text: polished,
+      source: 'advisor',
+      advisor: true,
+      provenance_noc_code: null,
+      provenance_section: null,
+      provenance_hash: null,
+    }]);
     setText(''); setPreview('');
     if (inputRef.current) inputRef.current.focus();
   }
 
   return (
     <div className="duties">
-      {suggestions.map(s => {
-        const on = isOn(s.plain);
+      {/* NOC duties fetched from backend (Phase 18) */}
+      {noc_code && (
+        nocDuties === null
+          ? <Ghost lines={3} />
+          : nocDuties.length === 0
+            ? <p className="step-loading">No duties found for NOC {noc_code}.</p>
+            : nocDuties.map(d => {
+                const on = isOn(`noc-${d.id}`);
+                return (
+                  <button
+                    key={d.id}
+                    type="button"
+                    className={'duty-sug' + (on ? ' is-sel' : '')}
+                    onClick={() => toggleNoc(d)}
+                  >
+                    <span className="duty-sug__check"><Check /></span>
+                    <span className="duty-sug__main">
+                      <span className="duty-sug__plain">{d.text}</span>
+                      {on && (
+                        <span className="duty-sug__tag">
+                          NOC 2021 · {noc_code}
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                );
+              })
+      )}
+      {/* Legacy static suggestions fallback (no noc_code) */}
+      {!noc_code && suggestions.map(s => {
+        const on = isOn('sug-' + s.plain);
         return (
           <button
             key={s.plain}
@@ -158,9 +223,9 @@ function DutyBuilder({ value, onChange, cfg }) {
           <span className="duty-sug__check"><Check /></span>
           <span className="duty-sug__main">
             <span className="duty-sug__plain">{'\u201c' + d.plain + '\u201d'}</span>
-            <span className="duty-sug__polished">{d.polished}</span>
+            <span className="duty-sug__polished">{d.text || d.polished}</span>
             <span className="duty-sug__tag">
-              <Icon path={I.spark} size={11} />refined from your words
+              <Icon path={I.spark} size={11} />advisor-added
             </span>
           </span>
           <span
@@ -188,6 +253,9 @@ function DutyBuilder({ value, onChange, cfg }) {
           <span><b>Will read as: </b>{preview}</span>
         </div>
       )}
+      <span aria-live="polite" className="visually-hidden">
+        {list.length} {list.length === 1 ? 'duty' : 'duties'} selected.
+      </span>
     </div>
   );
 }

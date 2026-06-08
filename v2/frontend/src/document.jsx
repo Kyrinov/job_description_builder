@@ -2,7 +2,7 @@
    JD Builder — live document preview (right pane)
    ============================================================ */
 import React from 'react';
-import { QUAL_DEFAULT } from './data.jsx';
+import { I, QUAL_DEFAULT } from './data.jsx';
 import { Icon } from './components.jsx';
 
 /* compose a cohesive overview paragraph from the answers */
@@ -34,6 +34,22 @@ function Ghost({ lines }) {
       {Array.from({ length: lines }).map((_, i) => (
         <div key={i} className={'ph-line ' + w[i % w.length]} />
       ))}
+    </div>
+  );
+}
+
+/* Phase 18: Orphan warning badge (JD-04) — rendered inside flagged duty li
+   when d.orphan && reviewing. Rationale is the OG_DEFINITIONS exclusion text. */
+function OrphanBadge({ rationale }) {
+  return (
+    <div className="orphan-badge">
+      <span className="orphan-badge__icon">
+        <Icon path={I.warn} size={13} />
+      </span>
+      <span className="orphan-badge__body">
+        <span className="orphan-badge__label">Orphan Warning</span>
+        <span className="orphan-badge__cite">{rationale}</span>
+      </span>
     </div>
   );
 }
@@ -173,6 +189,7 @@ function metaItem(k, v, strong) {
 }
 
 function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOverride }) {
+  const safeCls = cls || {};
   const overview = buildOverview(r);
   const hasDuties = r.duties && r.duties.length;
   const isFresh = (k) => flashes && flashes.has(k);
@@ -186,7 +203,7 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
   // confirmed_og + og_level over the legacy workType-based cls object.
   const classificationValue = r.confirmed_og && r.og_level
     ? `${r.confirmed_og.og_code}-${r.og_level < 10 ? '0' + r.og_level : r.og_level}`
-    : (cls.code || (cls.group ? cls.group + ' group' : null));
+    : (safeCls.code || (safeCls.group ? safeCls.group + ' group' : null));
   sections.push(
     <Sec
       key="id" n={'—'} title="Position Identification"
@@ -232,7 +249,7 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
   sections.push(
     <Sec
       key="du" n={String(n)} title="Key Responsibilities"
-      src={hasDuties ? 'NOC 2021 · refined' : null} ghost={!hasDuties} fresh={isFresh('duties')}
+      src={hasDuties ? 'NOC 2021' : null} ghost={!hasDuties} fresh={isFresh('duties')}
       editable={reviewing} onEdit={() => onEditStep('duties')}
     >
       {hasDuties
@@ -240,7 +257,8 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
           <ul className="doc-duties">
             {r.duties.map(d => (
               <li key={d.id} className={`doc-duty${d.advisor ? ' is-advisor' : ''}`}>
-                {d.polished}
+                {d.text || d.polished}
+                {d.orphan && reviewing && <OrphanBadge rationale={d.orphan_rationale} />}
               </li>
             ))}
           </ul>
@@ -248,7 +266,7 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
         : (
           <div>
             <Ghost lines={2} />
-            <p className="ghost-note">Your responsibilities will appear here, formally worded.</p>
+            <p className="ghost-note">Select duties from the NOC list — they will appear here, verbatim and traceable.</p>
           </div>
         )}
     </Sec>
@@ -333,39 +351,47 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
     );
   }
 
-  // 6 — Qualifications
-  if (r.qualsVisited) {
-    n++;
-    const quals = r.quals || QUAL_DEFAULT;
-    sections.push(
-      <Sec
-        key="q" n={String(n)} title="Essential Qualifications"
-        src="TBS Qualification Standard" fresh={isFresh('quals')}
-        editable={reviewing} onEdit={() => onEditStep('quals')}
-      >
-        <div>
-          <p className="prose" style={{ marginBottom: 12 }}>
-            <b style={{ fontFamily: 'var(--mono)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ink-faint)', display: 'block', marginBottom: 4 }}>
-              Education
-            </b>
-            {quals.education}
-          </p>
-          <p className="prose">
-            <b style={{ fontFamily: 'var(--mono)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ink-faint)', display: 'block', marginBottom: 4 }}>
-              Experience
-            </b>
-            {quals.experience}
-          </p>
-        </div>
-      </Sec>
-    );
-  }
+  // 6 — Qualifications (DOC-01: always render with ghost state when not visited)
+  n++;
+  const quals = r.quals || QUAL_DEFAULT;
+  const qualsGhost = !r.qualsVisited;
+  sections.push(
+    <Sec
+      key="q" n={String(n)} title="Essential Qualifications"
+      src={qualsGhost ? null : "TBS Qualification Standard"} ghost={qualsGhost} fresh={isFresh('quals')}
+      editable={reviewing} onEdit={() => onEditStep('quals')}
+    >
+      {qualsGhost
+        ? (
+          <div>
+            <Ghost lines={3} />
+            <p className="ghost-note">Essential qualifications appear here once you have confirmed the classification.</p>
+          </div>
+        )
+        : (
+          <div>
+            <p className="prose" style={{ marginBottom: 12 }}>
+              <b style={{ fontFamily: 'var(--mono)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ink-faint)', display: 'block', marginBottom: 4 }}>
+                Education
+              </b>
+              {quals.education}
+            </p>
+            <p className="prose">
+              <b style={{ fontFamily: 'var(--mono)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ink-faint)', display: 'block', marginBottom: 4 }}>
+                Experience
+              </b>
+              {quals.experience}
+            </p>
+          </div>
+        )}
+    </Sec>
+  );
 
   // provenance footer
   const provTags = [];
   if (hasDuties) provTags.push('NOC 2021');
-  if (cls.status === 'resolved') provTags.push(cls.factors ? 'EC JES 2017' : cls.standard);
-  if (cls.group) provTags.push('TBS OG Definitions');
+  if (safeCls.status === 'resolved') provTags.push(safeCls.factors ? 'EC JES 2017' : safeCls.standard);
+  if (safeCls.group) provTags.push('TBS OG Definitions');
   if (r.drf) provTags.push('DND DRF');
   if (r.qualsVisited) provTags.push('TBS Qualification Standard');
   if (r.duties && r.duties.some(d => d.advisor)) provTags.push('Advisor-added');
@@ -397,4 +423,4 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
   );
 }
 
-export { DocumentPane };
+export { DocumentPane, OrphanBadge };
