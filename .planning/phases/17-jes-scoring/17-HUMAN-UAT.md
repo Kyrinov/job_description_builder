@@ -1,13 +1,25 @@
 ---
-status: open
+status: pending-retest
 phase: 17-jes-scoring
-source: [17-04-PLAN.md, 17-04-SUMMARY.md]
+source: [17-04-PLAN.md, 17-04-SUMMARY.md, 17-04-SUMMARY.md]
 created: 2026-06-08
 updated: 2026-06-08
-priority: high
+priority: medium
 subsystem: jes-frontend-render
-tags: [uat-deferred, browser-rendering, je-04, jes-04]
+tags: [uat-deferred, browser-rendering, jes-04, fixes-applied]
 ---
+
+# Phase 17 — Human UAT Items (deferred, fixes applied)
+
+> **Update 2026-06-08:** A follow-up debug session identified the actual
+> root cause — the render gate in `document.jsx:293` was `r.jes_scores &&
+> r.jes_scores.length > 0`, which fails for non-EC groups (backend returns
+> `factors: []` by design for FI/IT/AS/EN). The gate was changed to
+> `r.jes_total_points != null` in commit `723f3d8`, with 2 regression tests
+> added to `document.test.jsx` (24/24 frontend tests green). The three
+> fixes in place (commits `7ad3568`, `a8b1c8e`, `723f3d8`) address all
+> identified root causes. Visual browser retest is still pending at user
+> request; phase 17 is proceeding to completion per user direction.
 
 # Phase 17 — Human UAT Items (deferred)
 
