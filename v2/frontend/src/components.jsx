@@ -105,6 +105,20 @@ function ScaleInput({ value, onChange, cfg }) {
 }
 
 /* ---- DUTY BUILDER -------------------------------------------- */
+// Local shimmer for DutyBuilder loading state. Ghost is defined in document.jsx;
+// importing it would create a circular import (document.jsx imports Icon from
+// components.jsx). Inline a minimal version here.
+const _shimmerWidths = ['w90', 'w70', 'w50', 'w90', 'w70'];
+function LocalShimmer({ lines }) {
+  return (
+    <div className="prose">
+      {Array.from({ length: lines }).map((_, i) => (
+        <div key={i} className={'ph-line ' + _shimmerWidths[i % _shimmerWidths.length]} />
+      ))}
+    </div>
+  );
+}
+
 function DutyBuilder({ value, onChange, cfg }) {
   const list = value || [];
   const [text, setText] = useState('');
@@ -169,7 +183,7 @@ function DutyBuilder({ value, onChange, cfg }) {
       {/* NOC duties fetched from backend (Phase 18) */}
       {noc_code && (
         nocDuties === null
-          ? <Ghost lines={3} />
+          ? <LocalShimmer lines={3} />
           : nocDuties.length === 0
             ? <p className="step-loading">No duties found for NOC {noc_code}.</p>
             : nocDuties.map(d => {
