@@ -67,3 +67,49 @@ describe('DocumentPane — JES-04 regression: scorecard gate', () => {
     expect(screen.queryByText(/IT Job Evaluation Standard/)).toBeFalsy();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 18: JD Composition & Live Preview stubs (RED — Wave 2 makes them GREEN)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('DocumentPane — DOC-01: Section 5 ghost renders unconditionally', () => {
+  it('renders Essential Qualifications section even when qualsVisited is falsy', () => {
+    // RED stub — Wave 2 changes condition in document.jsx
+    expect(false, 'RED stub — DOC-01').toBe(true);
+  });
+});
+
+describe('DocumentPane — DOC-03: Section 3 ghost note copy', () => {
+  it('shows "Select duties from the NOC list" when no duties', () => {
+    // RED stub — Wave 2 changes ghost-note copy in document.jsx
+    expect(false, 'RED stub — DOC-03').toBe(true);
+  });
+});
+
+describe('DocumentPane — DOC-04: Section 3 header click calls onEditStep duties', () => {
+  it('calls onEditStep("duties") when Section 3 header clicked in review state', () => {
+    // RED stub — Wave 2 confirms onEditStep wiring in document.jsx
+    expect(false, 'RED stub — DOC-04').toBe(true);
+  });
+});
+
+describe('DocumentPane — DOC-05: Section 3 src pill shows "NOC 2021" not "NOC 2021 · refined"', () => {
+  it('src pill text is "NOC 2021" when duties present', () => {
+    // RED stub — Wave 2 removes "· refined" suffix from document.jsx
+    expect(false, 'RED stub — DOC-05').toBe(true);
+  });
+});
+
+describe('OrphanBadge — JD-04: badge renders when d.orphan true + reviewing', () => {
+  it('renders orphan badge inside duty li when orphan is true and reviewing is true', () => {
+    // RED stub — Wave 2 adds OrphanBadge component + export to document.jsx
+    expect(false, 'RED stub — JD-04').toBe(true);
+  });
+});
+
+describe('DutyBuilder — JD-01: fetches from API when noc_code prop present', () => {
+  it('calls fetch /api/noc/{noc_code}/duties on mount', () => {
+    // RED stub — Wave 2 rewires DutyBuilder in components.jsx
+    expect(false, 'RED stub — JD-01 frontend').toBe(true);
+  });
+});

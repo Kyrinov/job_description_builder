@@ -187,3 +187,43 @@ def noc_mapping_db(tmp_path) -> str:
     con.commit()
     con.close()
     return db_path
+
+
+@pytest.fixture
+def noc_duties_db(tmp_path, monkeypatch) -> str:
+    """Lightweight NOC DB with noc_elements rows for duty fetch tests.
+
+    No vec0 table, no FTS5 — GET /api/noc/{noc_code}/duties only reads noc_elements.
+    Sets NOC_DB_PATH so Settings.noc_db_path resolves to this fixture DB.
+    Note: _settings_env_defaults autouse sets a default NOC_DB_PATH; monkeypatch
+    overrides it for tests that request noc_duties_db.
+    """
+    import sqlite3
+    import sqlite_vec as sv
+
+    db_path = str(tmp_path / "test_noc_duties.db")
+    con = sqlite3.connect(db_path, check_same_thread=False)
+    con.row_factory = sqlite3.Row
+    con.enable_load_extension(True)
+    sv.load(con)
+    con.enable_load_extension(False)
+
+    con.executescript("""
+        CREATE TABLE IF NOT EXISTS noc_elements (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            noc_code     TEXT NOT NULL,
+            element_type TEXT NOT NULL,
+            element_text TEXT NOT NULL,
+            source_hash  TEXT NOT NULL DEFAULT ''
+        );
+    """)
+    # Synthetic NOC 21232 "Main duties" row
+    con.execute(
+        "INSERT INTO noc_elements(noc_code, element_type, element_text, source_hash) "
+        "VALUES (?, ?, ?, ?)",
+        ("21232", "Main duties", "Develop and maintain application software.", "fakehash_v1"),
+    )
+    con.commit()
+    con.close()
+    monkeypatch.setenv("NOC_DB_PATH", db_path)
+    return db_path
