@@ -17,9 +17,9 @@ function buildOverview(r) {
   let para = lead + s;
   if (!/[.!?]$/.test(para)) para += '.';
   const supMap = {
-    'No \u2014 individual contributor': ' The incumbent works as an individual contributor and subject-matter resource.',
-    'Leads 1\u20133 people or a small team': ' The incumbent provides functional leadership to a small team.',
-    'Manages a team of 4\u201310': ' The incumbent manages a team and is accountable for its collective results.',
+    'No — individual contributor': ' The incumbent works as an individual contributor and subject-matter resource.',
+    'Leads 1–3 people or a small team': ' The incumbent provides functional leadership to a small team.',
+    'Manages a team of 4–10': ' The incumbent manages a team and is accountable for its collective results.',
     'Leads multiple teams': ' The incumbent leads multiple teams and integrates their work toward common objectives.'
   };
   if (r.supervises && supMap[r.supervises]) para += supMap[r.supervises];
@@ -189,7 +189,7 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
     : (cls.code || (cls.group ? cls.group + ' group' : null));
   sections.push(
     <Sec
-      key="id" n={'\u2014'} title="Position Identification"
+      key="id" n={'—'} title="Position Identification"
       src="TBS Directive on Classification"
       editable={reviewing} onEdit={() => onEditStep('title')}
     >
@@ -232,7 +232,7 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
   sections.push(
     <Sec
       key="du" n={String(n)} title="Key Responsibilities"
-      src={hasDuties ? 'NOC 2021 \u00b7 refined' : null} ghost={!hasDuties} fresh={isFresh('duties')}
+      src={hasDuties ? 'NOC 2021 · refined' : null} ghost={!hasDuties} fresh={isFresh('duties')}
       editable={reviewing} onEdit={() => onEditStep('duties')}
     >
       {hasDuties
@@ -289,8 +289,10 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
             </div>
           </div>
         </div>
-        {/* JES scorecard — renders once record.jes_scores is populated (JES-04) */}
-        {r.jes_scores && r.jes_scores.length > 0 && (
+        {/* JES scorecard — renders once jes_total_points is set (JES-04).
+            Gate on jes_total_points (not jes_scores.length) so non-EC groups
+            (which return factors:[] from the backend) also render the scorecard. */}
+        {r.jes_total_points != null && (
           <ClassBlock
             cls={{
               code: resolvedCode,
