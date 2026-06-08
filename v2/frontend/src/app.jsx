@@ -2,7 +2,7 @@
    JD Builder — main application
    ============================================================ */
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { STEPS, PHASES, I, OG_LEVELS, computeClassification, accumulateSignals, getDutySuggestions } from './data.jsx';
+import { STEPS, PHASES, I, OG_LEVELS, computeClassification, accumulateSignals } from './data.jsx';
 import { Icon, initialAnswer, answerValid } from './components.jsx';
 import { Header, Exchange, ActiveQuestion, ReviewState } from './conversation.jsx';
 import { DocumentPane } from './document.jsx';
@@ -86,6 +86,7 @@ function App() {
   const [ogCandidates, setOgCandidates] = useState([]);
   const [ogLoading, setOgLoading] = useState(false);
   const [ogAlert, setOgAlert] = useState(null);
+  const [orphanFlags, setOrphanFlags] = useState([]);
   const threadRef = useRef(null);
   const docRef = useRef(null);
 
@@ -108,6 +109,29 @@ function App() {
       if (wd_id) localStorage.setItem('jd-builder-v2-wd-id', wd_id);
     } catch {}
   }, [wd_id]);
+
+  // Orphan check: fire automatically when reviewing becomes true and duties + OG are present (JD-04)
+  // Silent advisory check — non-blocking; EC positions always return 0 flags (no exclusions defined)
+  useEffect(() => {
+    if (!reviewing || !wd_id || !record.duties?.length || !record.confirmed_og) return;
+    fetch(`/api/wd/${wd_id}/orphan_check`, { method: 'POST' })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(data => {
+        if (data.flagged && data.flagged.length > 0) {
+          setRecord(prev => ({
+            ...prev,
+            duties: (prev.duties || []).map(d => {
+              const flag = data.flagged.find(f => f.duty_id === d.id);
+              return flag
+                ? { ...d, orphan: true, orphan_rationale: flag.orphan_rationale }
+                : d;
+            }),
+          }));
+        }
+        setOrphanFlags(data.flagged || []);
+      })
+      .catch(() => {}); // silent on failure — orphan check is advisory only
+  }, [reviewing, wd_id]);
 
   // committed record
   const baseRecord = record;
@@ -165,6 +189,10 @@ function App() {
      'jes_scores', 'jes_total_points'].forEach(k => {
       if (k in newRecord) wdPayload[k] = newRecord[k];
     });
+    // Persist duties with provenance when committing the duties step (JD-02)
+    if (step.id === 'duties' && newRecord.duties) {
+      wdPayload.duties = newRecord.duties;
+    }
     let wdPromise;
     if (!wd_id) {
       wdPromise = fetch('/api/wd', {
@@ -400,7 +428,8 @@ function App() {
 
   // cfgOverride injects live NOC candidates into the noc_confirm step input,
   // OG candidates + AS/EC disambiguation alert into og_confirm, OG_LEVELS
-  // range into og_level, and OG-group-keyed duty suggestions into duties.
+  // range into og_level, and confirmed NOC code into the duties step so
+  // DutyBuilder can fetch verbatim duties from /api/noc/{noc_code}/duties.
   const stepCfgOverride = !reviewing && step
     ? (step.input.type === 'noc_confirm'
         ? { ...step.input, candidates: nocCandidates, loading: nocLoading }
@@ -411,7 +440,11 @@ function App() {
                   ? OG_LEVELS[record.confirmed_og.og_code] || []
                   : [] }
             : step.id === 'duties'
-              ? { ...step.input, suggestions: getDutySuggestions(answers) }
+              ? { ...step.input, noc_code: record.confirmed_noc
+                    ? (typeof record.confirmed_noc === 'string'
+                        ? record.confirmed_noc
+                        : record.confirmed_noc?.noc_code || null)
+                    : null }
               : undefined)
     : undefined;
 
