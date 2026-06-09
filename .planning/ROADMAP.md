@@ -317,7 +317,12 @@ Plans:
 4. `POST /api/wd/{id}/export/pdf` (or equivalent endpoint) renders to PDF via WeasyPrint after confirming ARM64 Pango/Cairo system libs are present on Jane; if libs are absent the endpoint returns 501 Not Implemented with a diagnostic message
 5. The advisor can trigger all three export formats from the review screen in the SPA; each download starts immediately with the correct MIME type and filename
 
-**Plans:** TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 20-01-PLAN.md — Wave 1: RED test stubs + WeasyPrint install + template build scripts + .docx binary artifacts
+- [ ] 20-02-PLAN.md — Wave 2: export_service.py + export.py router + api/__init__.py + tests GREEN
+- [ ] 20-03-PLAN.md — Wave 3: app.jsx exportAs() wiring + UAT checkpoint
 
 ---
 
