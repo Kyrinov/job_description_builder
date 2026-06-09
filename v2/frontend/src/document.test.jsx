@@ -141,9 +141,26 @@ describe('DutyBuilder — JD-01: API fetch stub', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('DocumentPane — QUAL-03: Section 5 uses .qual-sub-k class (not inline style)', () => {
-  it.todo('renders EDUCATION and EXPERIENCE sub-labels with qual-sub-k class when quals populated');
-  // RED stub: passes trivially until Plan 02 wires .qual-sub-k into document.jsx
-  // Implementation in Plan 02 will replace this with a real assertion:
-  //   expect(container.innerHTML).toContain('qual-sub-k');
-  // For now: it.todo registers the test name (30 passing + 1 todo, 0 failed)
+  it('renders EDUCATION and EXPERIENCE sub-labels with qual-sub-k class when quals populated', () => {
+    const record = {
+      confirmed_og: { og_code: 'EC', og_name: 'Economics' },
+      og_level: 5,
+      jes_total_points: 720,
+      jes_is_ec: true,
+      jes_scores: [],
+      quals: {
+        education: 'A degree from a recognized post-secondary institution.',
+        experience: 'Significant experience in policy analysis.',
+      },
+      qualsVisited: true,
+    };
+    const { container } = render(
+      <DocumentPane record={record} cls={null} flashes={new Set()} reviewing={false} onEditStep={() => {}} onJesOverride={() => {}} />
+    );
+    // Plan 02 wires .qual-sub-k into document.jsx — assert it appears in the rendered DOM
+    expect(container.innerHTML).toContain('qual-sub-k');
+    // The two sub-labels (EDUCATION, EXPERIENCE) should be present
+    expect(container.innerHTML).toContain('EDUCATION');
+    expect(container.innerHTML).toContain('EXPERIENCE');
+  });
 });

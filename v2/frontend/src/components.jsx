@@ -2,7 +2,7 @@
    JD Builder — shared components & input controls
    ============================================================ */
 import React, { useState, useRef, useEffect } from 'react';
-import { I, WORK_TYPES, DUTY_SUGGESTIONS, DRF, QUAL_DEFAULT, refineDuty } from './data.jsx';
+import { I, WORK_TYPES, DUTY_SUGGESTIONS, DRF, QUAL_DEFAULT, getQualDefault, refineDuty } from './data.jsx';
 
 const DUTY_PLACEHOLDER = 'Describe a duty not listed above…';
 
@@ -421,8 +421,10 @@ function DrfPicker({ value, onChange }) {
 }
 
 /* ---- QUALIFICATION EDITOR ------------------------------------ */
-function QualEditor({ value, onChange }) {
-  const v = value || QUAL_DEFAULT;
+function QualEditor({ value, onChange, og_code }) {
+  const v = value || getQualDefault(og_code);
+  const [touched, setTouched] = useState({ education: false, experience: false });
+
   return (
     <div className="quals">
       <label className="qual-field">
@@ -431,8 +433,16 @@ function QualEditor({ value, onChange }) {
           className="tf"
           rows={3}
           value={v.education}
+          placeholder="Degree or diploma requirements and acceptable equivalencies…"
           onChange={e => onChange({ ...v, education: e.target.value })}
+          onBlur={() => setTouched(t => ({ ...t, education: true }))}
         />
+        {touched.education && !v.education && (
+          <p className="qual-error" role="alert">
+            <Icon path={I.warn} size={12} />
+            Education field is required.
+          </p>
+        )}
       </label>
       <label className="qual-field">
         <span className="qual-k">Experience</span>
@@ -440,8 +450,16 @@ function QualEditor({ value, onChange }) {
           className="tf"
           rows={3}
           value={v.experience}
+          placeholder="Experience requirements relevant to the position…"
           onChange={e => onChange({ ...v, experience: e.target.value })}
+          onBlur={() => setTouched(t => ({ ...t, experience: true }))}
         />
+        {touched.experience && !v.experience && (
+          <p className="qual-error" role="alert">
+            <Icon path={I.warn} size={12} />
+            Experience field is required.
+          </p>
+        )}
       </label>
     </div>
   );
@@ -455,7 +473,7 @@ function StepInput(props) {
   if (t === 'scale') return <ScaleInput {...props} />;
   if (t === 'duties') return <DutyBuilder {...props} />;
   if (t === 'drf') return <DrfPicker {...props} />;
-  if (t === 'quals') return <QualEditor {...props} />;
+  if (t === 'quals') return <QualEditor {...props} og_code={props.record?.confirmed_og?.og_code} />;
   if (t === 'noc_confirm') return <NocConfirmList {...props} />;
   if (t === 'og_confirm') return <OgConfirmList {...props} />;
   if (t === 'og_level') return <OgLevelPicker {...props} />;
@@ -467,7 +485,7 @@ function initialAnswer(step, record) {
   const c = step.input;
   if (c.type === 'text' || c.type === 'textarea') return c.preset || '';
   if (c.type === 'duties') return [];
-  if (c.type === 'quals') return QUAL_DEFAULT;
+  if (c.type === 'quals') return getQualDefault(record?.confirmed_og?.og_code);
   return null;
 }
 function answerValid(step, value) {

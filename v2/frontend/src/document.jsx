@@ -371,15 +371,11 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
         : (
           <div>
             <p className="prose" style={{ marginBottom: 12 }}>
-              <b style={{ fontFamily: 'var(--mono)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ink-faint)', display: 'block', marginBottom: 4 }}>
-                Education
-              </b>
+              <span className="qual-sub-k">EDUCATION</span>
               {quals.education}
             </p>
             <p className="prose">
-              <b style={{ fontFamily: 'var(--mono)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ink-faint)', display: 'block', marginBottom: 4 }}>
-                Experience
-              </b>
+              <span className="qual-sub-k">EXPERIENCE</span>
               {quals.experience}
             </p>
           </div>
