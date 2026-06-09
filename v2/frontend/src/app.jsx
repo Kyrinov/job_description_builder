@@ -426,7 +426,17 @@ function App() {
         let detail = `HTTP ${resp.status}`;
         try {
           const data = await resp.json();
-          if (data && data.detail) detail = `${resp.status}: ${data.detail}`;
+          if (data && data.detail != null) {
+            const d = data.detail;
+            if (typeof d === 'string') {
+              detail = `${resp.status}: ${d}`;
+            } else if (typeof d === 'object') {
+              const msg = d.message || d.error || JSON.stringify(d);
+              detail = `${resp.status}: ${msg}`;
+            } else {
+              detail = `${resp.status}: ${String(d)}`;
+            }
+          }
         } catch (_e) { /* non-JSON body — keep status code only */ }
         setToast(`Export failed — ${detail}`);
         setTimeout(() => setToast(null), 5000);
