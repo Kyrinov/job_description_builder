@@ -42,6 +42,7 @@ async def _create_wd_with_jes_scores(client) -> str:
                 {
                     "id": "d1",
                     "text": "Provides advice on economic policy.",
+                    "source": "noc",
                     "provenance_noc_code": "4163",
                     "provenance_hash": "abc123",
                     "advisor": False,
@@ -53,7 +54,6 @@ async def _create_wd_with_jes_scores(client) -> str:
     return wd_id
 
 
-@pytest.mark.skip(reason="export.py not yet implemented — unblock in Plan 02")
 async def test_export_wd_docx_returns_bytes(client, env_with_db):
     """EXP-01 / API-08 — POST /api/wd/{id}/export/docx returns .docx bytes with correct MIME type."""
     wd_id = await _create_wd_with_jes_scores(client)
@@ -65,7 +65,6 @@ async def test_export_wd_docx_returns_bytes(client, env_with_db):
     assert len(resp.content) > 0
 
 
-@pytest.mark.skip(reason="export.py not yet implemented — unblock in Plan 02")
 async def test_export_wd_docx_manifest(client, env_with_db):
     """EXP-01 — Exported DOCX bytes are non-zero (version manifest rendered in template)."""
     wd_id = await _create_wd_with_jes_scores(client)
@@ -75,7 +74,6 @@ async def test_export_wd_docx_manifest(client, env_with_db):
     assert len(resp.content) > 5000, "DOCX file suspiciously small — manifest may not have rendered"
 
 
-@pytest.mark.skip(reason="export.py not yet implemented — unblock in Plan 02")
 async def test_export_wd_docx_amendments_appendix(client, env_with_db):
     """EXP-01 / AMEND-02 — DOCX bytes delivered even when amendment notes exist."""
     wd_id = await _create_wd_with_jes_scores(client)
@@ -89,7 +87,6 @@ async def test_export_wd_docx_amendments_appendix(client, env_with_db):
     assert len(resp.content) > 0
 
 
-@pytest.mark.skip(reason="export.py not yet implemented — unblock in Plan 02")
 async def test_export_poster_returns_bytes(client, env_with_db):
     """EXP-02 / API-09 — POST /api/wd/{id}/export/poster returns .docx bytes."""
     wd_id = await _create_wd_with_jes_scores(client)
@@ -101,7 +98,6 @@ async def test_export_poster_returns_bytes(client, env_with_db):
     assert len(resp.content) > 0
 
 
-@pytest.mark.skip(reason="export.py not yet implemented — unblock in Plan 02")
 async def test_export_pdf_501_when_weasyprint_absent(client, env_with_db, monkeypatch):
     """EXP-03 — POST /api/wd/{id}/export/pdf returns 501 when WeasyPrint import fails."""
     import sys
@@ -112,14 +108,12 @@ async def test_export_pdf_501_when_weasyprint_absent(client, env_with_db, monkey
     assert "WeasyPrint" in resp.json()["detail"]
 
 
-@pytest.mark.skip(reason="export.py not yet implemented — unblock in Plan 02")
 async def test_export_docx_404(client, env_with_db):
     """API-08 — POST /api/wd/does-not-exist/export/docx returns 404."""
     resp = await client.post("/api/wd/does-not-exist/export/docx")
     assert resp.status_code == 404
 
 
-@pytest.mark.skip(reason="export.py not yet implemented — unblock in Plan 02")
 async def test_export_poster_404(client, env_with_db):
     """API-09 — POST /api/wd/does-not-exist/export/poster returns 404."""
     resp = await client.post("/api/wd/does-not-exist/export/poster")
