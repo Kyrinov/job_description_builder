@@ -397,11 +397,49 @@ function App() {
     setDraft(answers[s.id] !== undefined ? answers[s.id] : initialAnswer(s, record));
   }
 
-  function exportAs(kind) {
-    const msg = kind === 'clipboard' ? 'Job description copied to clipboard'
-      : `${record.title || 'Work description'} exported as ${kind}`;
-    setToast(msg);
-    setTimeout(() => setToast(null), 2600);
+  async function exportAs(kind) {
+    if (kind === 'clipboard') {
+      setToast('Job description copied to clipboard');
+      setTimeout(() => setToast(null), 2600);
+      return;
+    }
+    if (!wd_id) {
+      setToast('Save your work description first before exporting.');
+      setTimeout(() => setToast(null), 2600);
+      return;
+    }
+    const isPdf = kind === 'PDF';
+    const endpoint = isPdf
+      ? `/api/wd/${wd_id}/export/pdf`
+      : `/api/wd/${wd_id}/export/docx`;
+    const ext = isPdf ? 'pdf' : 'docx';
+    const filename = `${(record.title || 'work-description').toLowerCase().replace(/\s+/g, '-')}.${ext}`;
+    try {
+      const resp = await fetch(endpoint, { method: 'POST' });
+      if (resp.status === 501) {
+        const data = await resp.json();
+        setToast(data.detail || 'PDF export unavailable. Download DOCX instead.');
+        setTimeout(() => setToast(null), 5000);
+        return;
+      }
+      if (!resp.ok) {
+        setToast('Export failed. Please try again.');
+        setTimeout(() => setToast(null), 2600);
+        return;
+      }
+      const blob = await resp.blob();
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(href);
+    } catch (_err) {
+      setToast('Export failed. Please try again.');
+      setTimeout(() => setToast(null), 2600);
+    }
   }
 
   function restart() {
