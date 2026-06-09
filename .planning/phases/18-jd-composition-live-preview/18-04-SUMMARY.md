@@ -38,8 +38,11 @@ files_modified:
 - `grep "orphanFlags"` → 2+ matches (useState + setOrphanFlags)
 - `npm run build` clean
 
-## Pending — UAT human verification
+## UAT human verification — APPROVED with one minor open issue
 
-This plan has `autonomous: false` — Tasks 1 and 2 (auto) are complete. Task 3 (`type="checkpoint:human-verify"`) requires the advisor to verify the implementation in a live browser session.
+All 18 UAT checks passed by the user on 2026-06-09. Duties selection, document preview (DOC-01..05), click-to-edit (DOC-04) all confirmed working in browser.
+
+**Known issue (advisory only, not blocking):**
+- `.orphan-badge` rendering appears blue instead of amber-orange in some browser conditions. Logged in `.planning/notes/ISSUE-18-01-orphan-badge-styling.md`. User accepted as minor feature; deferred to future polish.
 
 See "How to verify" instructions in the plan file for the 18-step UAT procedure covering duty selection, document preview, orphan check, and click-to-edit.
