@@ -286,11 +286,41 @@ const I = {
     return out;
   }
 
-  /* ---- Qualification standard (EC-05 default) ------------------- */
-  const QUAL_DEFAULT = {
-    education: 'Graduation with a degree from a recognized post-secondary institution with specialization in environmental science, economics, public policy or a discipline relevant to the position.',
-    experience: 'Significant* experience in environmental program or policy analysis, including providing advice and recommendations to management. (*Significant = depth and breadth normally acquired over approximately three years.)'
+  /* ---- Qualification standard defaults (keyed by OG group) -------- */
+  /* Phase 19 QUAL-01: Replaces the hardcoded EC-05 environmental text with
+     a per-OG-group map. Source text mirrors v2/backend QUAL_STANDARDS constant
+     in app/data/constants.py (verbatim TBS Qualification Standards reference). */
+  const QUAL_DEFAULTS = {
+    EC: {
+      education: 'A degree from a recognized post-secondary institution, with acceptable specialization in economics, sociology or statistics, or a field of study related to the duties of the position (environmental science, public policy, or a natural or social science field).',
+      experience: 'Significant experience in policy analysis, economic research, or program evaluation relevant to the duties of the position.'
+    },
+    AS: {
+      education: 'A secondary school diploma or an acceptable combination of education, training and/or experience.',
+      experience: 'Experience in administrative, financial, or operational support functions relevant to the duties of the position.'
+    },
+    IT: {
+      education: 'Successful completion of two years of an acceptable post-secondary educational program in computer science, information technology, information management or another specialty relevant to the position.',
+      experience: 'Experience in information technology functions relevant to the duties of the position.'
+    },
+    FI: {
+      education: "A bachelor's degree from a recognized post-secondary institution with a specialization in accounting, finance or a related field.",
+      experience: 'Significant experience in financial management, financial analysis, or accounting relevant to the duties of the position.'
+    },
+    default: {
+      education: 'A degree or diploma from a recognized post-secondary institution in a field relevant to the duties of the position, or an equivalent combination of education and experience.',
+      experience: 'Experience performing duties relevant to the position.'
+    }
   };
+
+  function getQualDefault(og_code) {
+    return QUAL_DEFAULTS[og_code] || QUAL_DEFAULTS['default'];
+  }
+
+  /* Backward-compat alias — consumers that still import QUAL_DEFAULT (singular)
+     continue to work; they receive the generic default text. New code should
+     call getQualDefault(og_code) for OG-matched prefill. */
+  const QUAL_DEFAULT = QUAL_DEFAULTS['default'];
 
   /* ---- Signal accumulation from QUESTION_BANK answers ----------- */
   /* Pure derived function — never persisted to record or backend.   */
@@ -417,7 +447,8 @@ const I = {
 const PHASES = ['Role', 'Work Type', 'Classification', 'Duties', 'Qualifications', 'Review'];
 
 export {
-  I, STEPS, PHASES, OG_LEVELS, DRF, WORK_TYPES, DUTY_SUGGESTIONS, QUAL_DEFAULT,
+  I, STEPS, PHASES, OG_LEVELS, DRF, WORK_TYPES, DUTY_SUGGESTIONS,
+  QUAL_DEFAULT, QUAL_DEFAULTS, getQualDefault,
   EC_ELEMENTS, computeClassification, refineDuty, ecFactors,
   accumulateSignals, getDutySuggestions,
 };
