@@ -96,11 +96,16 @@ function getCafEquivalence(ogCode, ogLevel) {
 }
 
 /* a document section wrapper with section number + source tag */
-function Sec({ n, title, src, ghost, fresh, editable, onEdit, children }) {
+function Sec({ n, title, src, ghost, fresh, editable, onEdit, children,
+               sectionKey, amendmentNote, amendmentPanel, onAmendToggle, onAmendSave, reviewing }) {
+  const panelOpen = amendmentPanel?.open;
+  const panelText = amendmentPanel?.text ?? '';
+  const savedNote = amendmentPanel?.saved ?? amendmentNote ?? null;
+
   return (
     <section
       className={`sec${ghost ? ' is-ghost' : ''}${editable ? ' sec--editable' : ''}`}
-      onClick={editable ? onEdit : undefined}
+      onClick={(!panelOpen && editable) ? onEdit : undefined}
     >
       <div className="sec__h">
         {n && <span className="n">{n}</span>}
@@ -111,7 +116,45 @@ function Sec({ n, title, src, ghost, fresh, editable, onEdit, children }) {
             {src}
           </span>
         )}
+        {reviewing && sectionKey && (
+          <>
+            <button
+              className={`amend-btn${panelOpen ? ' is-active' : ''}`}
+              aria-label={`Add amendment note for ${title}`}
+              aria-expanded={!!panelOpen}
+              onClick={e => { e.stopPropagation(); onAmendToggle(sectionKey); }}
+            >
+              <Icon path='<path d="M14 3l3 3-9 9H5v-3L14 3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' size={13} />
+            </button>
+            {savedNote && (
+              <span className="amend-indicator" aria-label="Amendment note exists" />
+            )}
+          </>
+        )}
       </div>
+      {panelOpen && (
+        <div className="amend-panel" style={{ animation: 'rise 0.3s ease both' }}>
+          <span className="amend-panel__label">Note for: {title}</span>
+          <textarea
+            className="tf"
+            value={panelText}
+            placeholder="Enter a note for the advisor or reviewing manager…"
+            onChange={e => onAmendToggle(sectionKey, e.target.value)}
+          />
+          <div className="amend-panel__actions">
+            <button
+              className="btn--primary"
+              disabled={!panelText.trim()}
+              onClick={() => onAmendSave(sectionKey, panelText)}
+            >Save note</button>
+            <button
+              className="btn--ghost"
+              onClick={() => onAmendToggle(sectionKey, null)}
+            >Discard note</button>
+            <span className="amend-count">{panelText.length} characters</span>
+          </div>
+        </div>
+      )}
       <div className={fresh ? 'fresh' : ''}>{children}</div>
     </section>
   );
@@ -188,7 +231,8 @@ function metaItem(k, v, strong) {
   );
 }
 
-function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOverride }) {
+function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOverride,
+                        amendmentNotes, amendmentPanels, onAmendToggle, onAmendSave }) {
   const safeCls = cls || {};
   const overview = buildOverview(r);
   const hasDuties = r.duties && r.duties.length;
@@ -209,6 +253,9 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
       key="id" n={'—'} title="Position Identification"
       src="TBS Directive on Classification"
       editable={reviewing} onEdit={() => onEditStep('title')}
+      sectionKey="id" reviewing={reviewing}
+      amendmentNote={amendmentNotes?.id} amendmentPanel={amendmentPanels?.id}
+      onAmendToggle={onAmendToggle} onAmendSave={onAmendSave}
     >
       <div className="doc__meta" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
         {metaItem('Position title', r.title)}
@@ -237,6 +284,9 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
       key="ov" n={String(n)} title="Position Overview"
       src="Drafted from your answers" ghost={!overview} fresh={isFresh('summary')}
       editable={reviewing} onEdit={() => onEditStep('summary')}
+      sectionKey="ov" reviewing={reviewing}
+      amendmentNote={amendmentNotes?.ov} amendmentPanel={amendmentPanels?.ov}
+      onAmendToggle={onAmendToggle} onAmendSave={onAmendSave}
     >
       {overview
         ? <p className="prose">{overview}</p>
@@ -251,6 +301,9 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
       key="du" n={String(n)} title="Key Responsibilities"
       src={hasDuties ? 'NOC 2021' : null} ghost={!hasDuties} fresh={isFresh('duties')}
       editable={reviewing} onEdit={() => onEditStep('duties')}
+      sectionKey="du" reviewing={reviewing}
+      amendmentNote={amendmentNotes?.du} amendmentPanel={amendmentPanels?.du}
+      onAmendToggle={onAmendToggle} onAmendSave={onAmendSave}
     >
       {hasDuties
         ? (
@@ -282,6 +335,9 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
         key="cls" n={String(n)} title="Classification & Evaluation"
         src="TBS Directive on Classification"
         editable={reviewing} onEdit={() => onEditStep('og_confirm')}
+        sectionKey="cls" reviewing={reviewing}
+        amendmentNote={amendmentNotes?.cls} amendmentPanel={amendmentPanels?.cls}
+        onAmendToggle={onAmendToggle} onAmendSave={onAmendSave}
       >
         <p className="sec__pending">
           Classification pending — confirm occupational group and level to proceed.
@@ -295,6 +351,9 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
         key="cls" n={String(n)} title="Classification & Evaluation"
         src="TBS Directive on Classification" fresh={isFresh('og_level')}
         editable={reviewing} onEdit={() => onEditStep('og_level')}
+        sectionKey="cls" reviewing={reviewing}
+        amendmentNote={amendmentNotes?.cls} amendmentPanel={amendmentPanels?.cls}
+        onAmendToggle={onAmendToggle} onAmendSave={onAmendSave}
       >
         <div className="cls-block">
           <div className="cls-block__badge">
@@ -339,6 +398,9 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
         key="drf" n={String(n)} title="Defence Results Linkage"
         src="DND Departmental Results Framework" fresh={isFresh('drf')}
         editable={reviewing} onEdit={() => onEditStep('drf')}
+        sectionKey="drf" reviewing={reviewing}
+        amendmentNote={amendmentNotes?.drf} amendmentPanel={amendmentPanels?.drf}
+        onAmendToggle={onAmendToggle} onAmendSave={onAmendSave}
       >
         <div className="drf">
           <div className="drf__cr">{r.drf.cr}</div>
@@ -360,6 +422,9 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
       key="q" n={String(n)} title="Essential Qualifications"
       src={qualsGhost ? null : "TBS Qualification Standard"} ghost={qualsGhost} fresh={isFresh('quals')}
       editable={reviewing} onEdit={() => onEditStep('quals')}
+      sectionKey="q" reviewing={reviewing}
+      amendmentNote={amendmentNotes?.q} amendmentPanel={amendmentPanels?.q}
+      onAmendToggle={onAmendToggle} onAmendSave={onAmendSave}
     >
       {qualsGhost
         ? (

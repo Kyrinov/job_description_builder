@@ -108,7 +108,7 @@ function ActiveQuestion({ step, record, draft, setDraft, onCommit, onBack, canBa
 }
 
 /* completion / review state */
-function ReviewState({ record, cls, onExport, onRestart }) {
+function ReviewState({ record, cls, onExport, onRestart, amendmentNotes = {} }) {
   const dutyCount = (record.duties || []).length;
   const checks = [
     ['Position identified', record.title],
@@ -117,6 +117,14 @@ function ReviewState({ record, cls, onExport, onRestart }) {
     [record.drf ? `Linked to: ${record.drf.cr}` : 'Defence result linked', !!record.drf],
     ['Essential qualifications set', !!record.qualsVisited]
   ];
+  // AMEND-01: amendment count checklist row (only when at least 1 note saved)
+  const amendmentCount = Object.values(amendmentNotes).filter(n => n).length;
+  if (amendmentCount > 0) {
+    checks.push([
+      `${amendmentCount} amendment note${amendmentCount === 1 ? '' : 's'} attached`,
+      true,
+    ]);
+  }
   return (
     <div className="thread">
       <div className="done-card">

@@ -87,6 +87,8 @@ function App() {
   const [ogLoading, setOgLoading] = useState(false);
   const [ogAlert, setOgAlert] = useState(null);
   const [orphanFlags, setOrphanFlags] = useState([]);
+  const [amendmentNotes, setAmendmentNotes] = useState({});    // { [sectionKey]: string } — saved notes from API
+  const [amendmentPanels, setAmendmentPanels] = useState({});  // { [sectionKey]: { open, text, saved } } — UI panel state
   const threadRef = useRef(null);
   const docRef = useRef(null);
 
@@ -132,6 +134,18 @@ function App() {
       })
       .catch(() => {}); // silent on failure — orphan check is advisory only
   }, [reviewing, wd_id]);
+
+  // Amendment notes hydration: load saved notes from audit_log when review state begins
+  // (AMEND-01). Mirrors the orphan_check useEffect pattern above.
+  useEffect(() => {
+    if (!wd_id || !reviewing) return;
+    fetch(`/api/wd/${wd_id}/amendments`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.notes) setAmendmentNotes(data.notes);
+      })
+      .catch(() => {});
+  }, [wd_id, reviewing]);
 
   // committed record
   const baseRecord = record;
@@ -423,6 +437,62 @@ function App() {
       .catch(() => {});
   }
 
+  // Amendment panel open/close/text toggle. Three call modes:
+  //   onAmendToggle(key)               — toggle panel open/close
+  //   onAmendToggle(key, null)         — discard (close + reset to saved)
+  //   onAmendToggle(key, "new text")   — text update while panel is open
+  // The Sec component in document.jsx calls onAmendToggle(key) when the amend
+  // button is clicked and onAmendToggle(key, e.target.value) on textarea change.
+  function handleAmendToggle(sectionKey, textOrNull) {
+    setAmendmentPanels(prev => {
+      const cur = prev[sectionKey] || { open: false, text: '', saved: null };
+      if (textOrNull === null) {
+        // Discard — close and reset to saved value (or empty if no saved note)
+        return { ...prev, [sectionKey]: { ...cur, open: false, text: cur.saved || '' } };
+      }
+      if (typeof textOrNull === 'string' && cur.open) {
+        // Text update while panel is open
+        return { ...prev, [sectionKey]: { ...cur, text: textOrNull } };
+      }
+      // Toggle open/close; prefill textarea with the saved value (if any)
+      return { ...prev, [sectionKey]: { ...cur, open: !cur.open, text: cur.saved || '' } };
+    });
+  }
+
+  // Save amendment note via POST /api/wd/{id}/amendments.
+  // On success: set the saved note in amendmentNotes, close the panel, fire toast.
+  // On failure: fire an error toast; panel state preserved so user can retry.
+  const SECTION_NAMES = {
+    id: 'Position Identification',
+    ov: 'Position Overview',
+    du: 'Key Responsibilities',
+    cls: 'Classification & Evaluation',
+    q: 'Essential Qualifications',
+    drf: 'Defence Results Linkage',
+  };
+  function handleAmendSave(sectionKey, text) {
+    if (!wd_id || !text.trim()) return;
+    fetch(`/api/wd/${wd_id}/amendments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ section: sectionKey, comment: text }),
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(() => {
+        setAmendmentNotes(prev => ({ ...prev, [sectionKey]: text }));
+        setAmendmentPanels(prev => ({
+          ...prev,
+          [sectionKey]: { open: false, text, saved: text },
+        }));
+        setToast(`Note saved for ${SECTION_NAMES[sectionKey] || sectionKey}.`);
+        setTimeout(() => setToast(null), 3500);
+      })
+      .catch(() => {
+        setToast('Could not save note. Try again.');
+        setTimeout(() => setToast(null), 3500);
+      });
+  }
+
   const phaseIdx = reviewing ? PHASES.length - 1 : step.phase;
   const answeredSteps = STEPS.slice(0, stepIndex);
 
@@ -454,7 +524,7 @@ function App() {
       <div className="convo">
         <Header phaseIdx={phaseIdx} />
         {reviewing
-          ? <ReviewState record={record} cls={cls} onExport={exportAs} onRestart={restart} />
+          ? <ReviewState record={record} cls={cls} onExport={exportAs} onRestart={restart} amendmentNotes={amendmentNotes} />
           : (
             <div className="thread" ref={threadRef}>
               {answeredSteps.map((s, i) => (
@@ -500,6 +570,8 @@ function App() {
             record={reviewing ? record : liveRecord} cls={cls} flashes={flashes}
             reviewing={reviewing} onEditStep={editStep}
             onJesOverride={handleJesOverride}
+            amendmentNotes={amendmentNotes} amendmentPanels={amendmentPanels}
+            onAmendToggle={handleAmendToggle} onAmendSave={handleAmendSave}
           />
         </div>
       </div>

@@ -847,3 +847,72 @@ body.no-prov .prov { display: none; }
   align-items: center;
   gap: 4px;
 }
+
+/* AMEND-01: Amendment note trigger button inside .sec__h */
+.amend-btn {
+  margin-left: 8px;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink-faint);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.amend-btn:hover,
+.amend-btn.is-active {
+  border-color: var(--accent-line);
+  color: var(--accent-deep);
+  background: var(--accent-soft);
+}
+
+/* Gold dot indicator when a saved amendment note exists for a section */
+.amend-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  flex: 0 0 auto;
+  margin-left: 4px;
+}
+
+/* Inline amendment panel — renders between section header and section body */
+.amend-panel {
+  margin-top: 8px;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+.amend-panel__label {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-soft);
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
+}
+.amend-panel textarea.tf {
+  min-height: 72px;
+}
+.amend-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.amend-count {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--ink-faint);
+  letter-spacing: 0.02em;
+}
