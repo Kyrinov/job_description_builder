@@ -423,8 +423,13 @@ function App() {
         return;
       }
       if (!resp.ok) {
-        setToast('Export failed. Please try again.');
-        setTimeout(() => setToast(null), 2600);
+        let detail = `HTTP ${resp.status}`;
+        try {
+          const data = await resp.json();
+          if (data && data.detail) detail = `${resp.status}: ${data.detail}`;
+        } catch (_e) { /* non-JSON body — keep status code only */ }
+        setToast(`Export failed — ${detail}`);
+        setTimeout(() => setToast(null), 5000);
         return;
       }
       const blob = await resp.blob();
