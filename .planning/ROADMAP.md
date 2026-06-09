@@ -290,7 +290,13 @@ Plans:
 4. In review state, the advisor can open an amendment note panel for any JD section, enter a free-text comment, and save it; each saved note is stored as an `audit_log` entry with `type="manager_amendment"`, `section`, `comment`, and `timestamp`
 5. When a WD with amendment notes is exported to DOCX, an appendix section "Manager Amendments for Review" lists each note with its section reference and a provenance tag "Manager-proposed — pending advisor ratification"
 
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 19-01-PLAN.md — Wave 0: RED test stubs (test_quals.py + test_amendments.py + document.test.jsx)
+- [ ] 19-02-PLAN.md — Wave 1: QUAL-01/02/03 — OG-keyed defaults, touched validation, .qual-sub-k CSS
+- [ ] 19-03-PLAN.md — Wave 2: AMEND-01 — amendments.py backend + frontend panel + ReviewState checklist
+- [ ] 19-04-PLAN.md — Wave 3: Full suite green gate + UAT checkpoint
 
 **UI hint**: yes
 
