@@ -321,7 +321,7 @@ Plans:
 
 Plans:
 - [x] 20-01-PLAN.md — Wave 0: RED test stubs + WeasyPrint install + template build scripts + .docx binary artifacts (2026-06-09)
-- [ ] 20-02-PLAN.md — Wave 1: export_service.py + export.py router + api/__init__.py + tests GREEN
+- [x] 20-02-PLAN.md — Wave 1: export_service.py + export.py router + api/__init__.py + tests GREEN (2026-06-09)
 - [ ] 20-03-PLAN.md — Wave 2: app.jsx exportAs() wiring + UAT checkpoint
 
 ---

@@ -4,13 +4,13 @@ milestone: v2.0
 milestone_name: Real Guided Conversation
 current_phase: 20 (Export)
 status: executing
-last_updated: "2026-06-09T18:10:35.018Z"
+last_updated: "2026-06-09T18:30:22.000Z"
 progress:
   total_phases: 12
   completed_phases: 10
-  total_plans: 41
-  completed_plans: 37
-  percent: 90
+  total_plans: 38
+  completed_plans: 38
+  percent: 97
 ---
 
 # Project State
@@ -18,7 +18,7 @@ progress:
 **Status:** Executing
 **Current phase:** 20 (Export)
 **Last updated:** 2026-06-09
-**Next action:** Execute Plan 20-02 (export_service.py + api/export.py + router wiring)
+**Next action:** Execute Plan 20-03 (SPA exportAs() wiring + UAT checkpoint)
 
 ---
 
@@ -36,7 +36,7 @@ progress:
 | 17 | JES Scoring | Plans complete (4/4) — ready to execute |
 | 18 | JD Composition & Live Preview | Plans complete (4/4) — ready to execute |
 | 19 | Qualifications & Amendments | Plans complete (4/4) — ready to execute |
-| 20 | Export | Wave 0 complete (Plan 20-01); Wave 1 next |
+| 20 | Export | Wave 1 complete (Plan 20-02); Wave 2 next |
 
 ---
 
@@ -83,9 +83,8 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 
 - (none)
 
-### Todos (after Plan 20-01)
+### Todos (after Plan 20-02)
 
-- **Plan 20-02 (Wave 2):** Build `v2/backend/app/services/export_service.py` (generate_wd_docx, generate_poster_docx, _build_wd_context, _build_v2_manifest) + `v2/backend/app/api/export.py` (3 routers) + wire into `api/__init__.py`. Remove `@pytest.mark.skip` from the 7 stubs in `test_export.py`.
 - **Plan 20-03 (Wave 3):** Frontend `exportAs` blob-download wiring in `app.jsx`; replace stub toast with real fetch to `/api/wd/{id}/export/{docx,poster,pdf}`; handle 501 toast for PDF.
 
 ### Todos
@@ -132,6 +131,8 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 ---
 
 ## Session Continuity
+
+**v2.0 Phase 20 (Export) Wave 1 complete 2026-06-09:** Plan 20-02 executed. 2 atomic commits: f77f442 (feat: export_service.py with generate_wd_docx, generate_poster_docx, _build_wd_context, _build_v2_manifest, _get_amendments, _probe_weasyprint, _resolve_template_path) and 8fb2bc5 (feat: export.py router with 3 endpoints + api/__init__.py wiring + 7 RED stubs unskipped). Created: v2/backend/app/services/export_service.py (433 lines), v2/backend/app/api/export.py (143 lines). Modified: v2/backend/app/api/__init__.py (1-line import + 1-line include_router), v2/backend/tests/test_export.py (7 skip decorators removed + test helper patched with `source: "noc"` on the DraftDuty fixture — pre-existing Plan 01 bug surfaced when tests ran). Backend suite: 80 passed, 0 failed, 0 skipped — all 7 previously-skipped export tests now GREEN. DOCX renders produce 37,020–37,543 bytes (> 5 kB manifest-render proxy threshold). Wave 2 (Plan 20-03) is unblocked and can now wire the SPA export buttons in app.jsx against the live POST /api/wd/{id}/export/{docx,poster,pdf} endpoints.
 
 **v2.0 Phase 20 (Export) Wave 0 complete 2026-06-09:** Plan 20-01 executed. 2 atomic commits: 377f768 (test: RED stubs + WeasyPrint 69.0 in requirements) and 634aaa9 (feat: WD + poster docx template binaries + reproducible build scripts). Created: v2/backend/tests/test_export.py (7 skipped stubs covering EXP-01/02/03, API-08/09), v2/backend/scripts/build_wd_template.py, v2/backend/scripts/build_poster_template.py, v2/backend/app/templates/wd_template.docx (37,616 bytes, 15 undeclared vars matching contract), v2/backend/app/templates/poster_template.docx (36,968 bytes, 8 undeclared vars matching contract). Modified: v2/backend/requirements.txt (weasyprint==69.0 appended). Backend suite: 73 passed, 7 skipped, 0 failed — no regression. WeasyPrint ARM64 smoke test passes (libpango/libcairo confirmed present). All 7 RED stubs are `@pytest.mark.skip` — unblock in Plan 20-02. Wave 1 (Plan 20-02) is unblocked and can build export_service.py + api/export.py against the test contract and committed .docx binaries.
 

@@ -161,13 +161,13 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 
 ### EXP — Export
 
-- [ ] **EXP-01**: Advisor can export the completed WD to a `.docx` via docxtpl (TBS WD template);
+- [x] **EXP-01**: Advisor can export the completed WD to a `.docx` via docxtpl (TBS WD template);
   provenance tags appear as citations; source data hashes appear in a version manifest section;
   template is a committed binary artifact with a reproducible build script; mirrors v1.0 Phase 8 pattern
-- [ ] **EXP-02**: Advisor can export a job poster to a second `.docx` via a separate docxtpl template;
+- [x] **EXP-02**: Advisor can export a job poster to a second `.docx` via a separate docxtpl template;
   poster includes bilingual headers, OG/level, key qualifications, and 3–5 duties; accessible via
   POST `/api/wd/{id}/export/poster`
-- [ ] **EXP-03**: PDF export via WeasyPrint (ARM64 Pango/Cairo feasibility confirmed on Jane before
+- [x] **EXP-03**: PDF export via WeasyPrint (ARM64 Pango/Cairo feasibility confirmed on Jane before
   implementation); if ARM64 system libs are not available, the endpoint returns 501 Not Implemented
   with a diagnostic message
 
@@ -190,9 +190,9 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
   when applicable
 - [x] **API-07**: POST `/api/jes/score` — accepts OG code + level + duties; returns JES factor scorecard
   (EC: per-factor with degrees and points; non-EC: single totals line with JES standard name)
-- [ ] **API-08**: POST `/api/wd/{id}/export/docx` — renders the TBS WD DOCX template from saved WD data;
+- [x] **API-08**: POST `/api/wd/{id}/export/docx` — renders the TBS WD DOCX template from saved WD data;
   returns `.docx` file
-- [ ] **API-09**: POST `/api/wd/{id}/export/poster` — renders the job poster DOCX template from saved
+- [x] **API-09**: POST `/api/wd/{id}/export/poster` — renders the job poster DOCX template from saved
   WD data; returns `.docx` file
 
 ### FE — Frontend SPA
@@ -302,11 +302,11 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 | QUAL-03 | Phase 19 | Complete |
 | AMEND-01 | Phase 19 | Complete |
 | AMEND-02 | Phase 19 | Complete |
-| EXP-01 | Phase 20 | Pending |
-| EXP-02 | Phase 20 | Pending |
-| EXP-03 | Phase 20 | Pending |
-| API-08 | Phase 20 | Pending |
-| API-09 | Phase 20 | Pending |
+| EXP-01 | Phase 20 | Complete |
+| EXP-02 | Phase 20 | Complete |
+| EXP-03 | Phase 20 | Complete |
+| API-08 | Phase 20 | Complete |
+| API-09 | Phase 20 | Complete |
 
 **Coverage:**
 - v2 requirements: 52 total (3 validated in Phase 10, 49 active)
