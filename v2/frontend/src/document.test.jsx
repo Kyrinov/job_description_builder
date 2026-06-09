@@ -135,3 +135,35 @@ describe('DutyBuilder — JD-01: API fetch stub', () => {
     expect(true).toBe(true);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 19: Qualifications & Amendments
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('DocumentPane — QUAL-03: Section 5 uses .qual-sub-k class (not inline style)', () => {
+  it('renders EDUCATION and EXPERIENCE sub-labels with qual-sub-k class when quals populated', () => {
+    // RED stub: passes trivially until Plan 02 wires .qual-sub-k into document.jsx
+    // TODO(Phase 19 Wave 1): replace this with a real assertion after inline style extraction
+    const record = {
+      qualsVisited: true,
+      quals: {
+        education: 'A degree from a recognized post-secondary institution.',
+        experience: 'Significant experience in policy analysis.',
+      },
+      confirmed_og: { og_code: 'EC', og_name: 'Economics' },
+    };
+    const { container } = render(
+      <DocumentPane
+        record={record}
+        cls={null}
+        flashes={new Set()}
+        reviewing={false}
+        onEditStep={() => {}}
+        onJesOverride={() => {}}
+      />
+    );
+    // After Wave 1: these should use className="qual-sub-k", not inline <b style="...">
+    // For now assert the text is present at minimum
+    expect(container.innerHTML).toContain('qual-sub-k');
+  });
+});
