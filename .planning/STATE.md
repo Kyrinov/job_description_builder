@@ -2,23 +2,23 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Real Guided Conversation
-current_phase: 19
-status: ready_to_plan
-last_updated: "2026-06-09T14:04:03.439Z"
+current_phase: 20 (Export)
+status: executing
+last_updated: "2026-06-09T18:10:35.018Z"
 progress:
-  total_phases: 11
+  total_phases: 12
   completed_phases: 10
-  total_plans: 35
-  completed_plans: 31
-  percent: 91
+  total_plans: 41
+  completed_plans: 37
+  percent: 90
 ---
 
 # Project State
 
-**Status:** Ready to plan
-**Current phase:** 20
-**Last updated:** 2026-06-08
-**Next action:** Execute Phase 18 — `/gsd-execute-phase 18`
+**Status:** Executing
+**Current phase:** 20 (Export)
+**Last updated:** 2026-06-09
+**Next action:** Execute Plan 20-02 (export_service.py + api/export.py + router wiring)
 
 ---
 
@@ -36,7 +36,7 @@ progress:
 | 17 | JES Scoring | Plans complete (4/4) — ready to execute |
 | 18 | JD Composition & Live Preview | Plans complete (4/4) — ready to execute |
 | 19 | Qualifications & Amendments | Plans complete (4/4) — ready to execute |
-| 20 | Export | Not started |
+| 20 | Export | Wave 0 complete (Plan 20-01); Wave 1 next |
 
 ---
 
@@ -75,14 +75,22 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 | v2.0 OG classification is deterministic (no LLM in /api/og/classify) | OG ranking is purely signal-based; confidence capped at 0.9. LLM only used in Phase 14 NOC pipeline. Avoids hallucinated OG justifications |
 | v2.0 AS/EC disambiguation via `ogAlert` state | Both AS and EC appear in top-3 frequently (both broad group definitions). The disambiguation alert is derived from OG_DEFINITIONS excerpts at API layer; frontend surfaces it via `asec_alert: ogAlert` cfgOverride |
 | v2.0 OG_LEVELS duplicated as JS constant in data.jsx | Avoids API round-trip for static reference data (the levels array is used in og_level cfgOverride). Source of truth is the Python constant |
+| Phase 20 WD template: amendments as unnumbered appendix, not renumbered Section 7 (Plan 20-01) | Preserves citation stability — downstream reviewers cite "Section 3 (Duties)" or "Section 4 (Classification)" and renumbering would break those references; matches v1.0 DRF-01 appendix pattern |
+| Phase 20 WD template: 3-column JES table (Factor/Degree/Points) not 4-column (Plan 20-01) | v2.0 context dict doesn't carry per-factor `source_id`/`source_version` (those are in the manifest only); matching the contract |
+| Phase 20 build scripts: output repo-root-relative paths (Plan 20-01) | Invariant file location regardless of CWD when invoked correctly; run command is `python v2/backend/scripts/build_<name>.py` from repo root |
 
 ### Active Blockers
 
 - (none)
 
+### Todos (after Plan 20-01)
+
+- **Plan 20-02 (Wave 2):** Build `v2/backend/app/services/export_service.py` (generate_wd_docx, generate_poster_docx, _build_wd_context, _build_v2_manifest) + `v2/backend/app/api/export.py` (3 routers) + wire into `api/__init__.py`. Remove `@pytest.mark.skip` from the 7 stubs in `test_export.py`.
+- **Plan 20-03 (Wave 3):** Frontend `exportAs` blob-download wiring in `app.jsx`; replace stub toast with real fetch to `/api/wd/{id}/export/{docx,poster,pdf}`; handle 501 toast for PDF.
+
 ### Todos
 
-- WeasyPrint ARM64 Pango/Cairo feasibility check on Jane before Phase 20 begins (EXP-03)
+- ~~WeasyPrint ARM64 Pango/Cairo feasibility check on Jane before Phase 20 begins (EXP-03)~~ — RESOLVED in Plan 20-01: weasyprint==69.0 installed, ARM64 smoke test (`weasyprint.HTML(string='<p>x</p>').write_pdf()`) passes; pinned in requirements.txt
 - Confirm sqlite-vec ARM64 wheel available for v2.0 NOC pipeline (Phase 14 dependency — already validated in Phase 14)
 - **Phase 19 (Qualifications) backlog**: replace `v2/frontend/src/data.jsx` `QUAL_DEFAULT` with OG-group-keyed defaults (EC/FI/IT/AS) + `getQualDefault(answers)` function. Hardcoded EC-05 environmental text is a Phase 13 prototype port. Surfaces in Phase 15 UAT — user opted to defer to Phase 19 (strict scope) rather than land the fix now.
 - **Phase 17 forward**: `require_og_confirmed` hard gate ready in `app/services/classification_gate.py` for Phase 17/18/20 to import
@@ -124,6 +132,8 @@ See: `.planning/PROJECT.md` (updated 2026-06-03)
 ---
 
 ## Session Continuity
+
+**v2.0 Phase 20 (Export) Wave 0 complete 2026-06-09:** Plan 20-01 executed. 2 atomic commits: 377f768 (test: RED stubs + WeasyPrint 69.0 in requirements) and 634aaa9 (feat: WD + poster docx template binaries + reproducible build scripts). Created: v2/backend/tests/test_export.py (7 skipped stubs covering EXP-01/02/03, API-08/09), v2/backend/scripts/build_wd_template.py, v2/backend/scripts/build_poster_template.py, v2/backend/app/templates/wd_template.docx (37,616 bytes, 15 undeclared vars matching contract), v2/backend/app/templates/poster_template.docx (36,968 bytes, 8 undeclared vars matching contract). Modified: v2/backend/requirements.txt (weasyprint==69.0 appended). Backend suite: 73 passed, 7 skipped, 0 failed — no regression. WeasyPrint ARM64 smoke test passes (libpango/libcairo confirmed present). All 7 RED stubs are `@pytest.mark.skip` — unblock in Plan 20-02. Wave 1 (Plan 20-02) is unblocked and can build export_service.py + api/export.py against the test contract and committed .docx binaries.
 
 **v2.0 "Real Guided Conversation" milestone replanned 2026-06-03:**
 
