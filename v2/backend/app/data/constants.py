@@ -525,6 +525,13 @@ QUAL_STANDARDS: dict[str, dict] = {
         "experience": "Experience in financial management, comptrollership, or public sector financial operations relevant to the duties of the position.",
         "source": "TBS Qualification Standard for Financial Management (FI)",
     },
+    # Default fallback — used when og_code is not one of the keys above (Phase 19 QUAL-01).
+    # Mirrors the frontend QUAL_DEFAULTS['default'] entry in data.jsx.
+    "default": {
+        "education": "A degree or diploma from a recognized post-secondary institution in a field relevant to the duties of the position, or an equivalent combination of education and experience.",
+        "experience": "Experience performing duties relevant to the position.",
+        "source": "TBS Qualification Standards (general fallback)",
+    },
 }
 
 
