@@ -40,8 +40,8 @@ Inherited from Phase 18 UI-SPEC without change.
 
 | Token | Value | Usage in this phase |
 |-------|-------|---------------------|
-| xs | 4px | Icon-to-text gaps, `.qual-sub-k` bottom margin |
-| sm | 8px | Gap between qual fields, amendment panel internal gap, `.prov__tag` padding |
+| xs | 4px | Icon-to-text gaps, `.qual-sub-k` bottom margin, `.qual-error` margin-top and gap, `.amend-indicator` margin-left |
+| sm | 8px | Gap between qual fields, amendment panel internal gap, `.prov__tag` padding, `.amend-panel__actions` gap and margin-top |
 | md | 16px | Default element spacing, `.input-zone` gap, amendment textarea gap |
 | lg | 24px | Section `margin-top` between doc sections |
 | xl | 32px | Layout-level gaps |
@@ -57,7 +57,7 @@ Inherited from Phase 18 UI-SPEC without change.
 - Amendment indicator dot: `width: 8px; height: 8px` — follows the `--line` dot
   rhythm used elsewhere (phase bar: 4px; live dot: 7px; prov dot: 5px). 8px chosen
   for visibility at section-header size.
-- Amendment "Save" button: min touch target 44px height (accessibility).
+- Amendment "Save note" button: min touch target 44px height (accessibility).
 
 ---
 
@@ -76,8 +76,8 @@ no new type sizes.
 **Active sizes for Phase 19: 15.5 / 14.5 / 11 / 9.5px**
 **Active weights: 400 (regular) + 600/640 (semibold-equivalent)**
 
-Ghost note type: 12.5px Hanken Grotesk, weight 400, `font-style: italic`,
-`color: var(--ink-faint)` — **pre-existing `.ghost-note` class; reuse without change.**
+Ghost note: pre-existing `.ghost-note` class (12.5px / 400 / italic) — not a Phase 19
+typography token. Reuse without modification. See Component Inventory — Reused without change.
 
 ---
 
@@ -99,7 +99,7 @@ Phase 19 introduces no new color tokens.
 - Section number badge (`.sec__h .n`) background + border — pre-existing
 - Provenance dot on `.prov__tag i` — pre-existing
 - "Finish & review" primary CTA button gradient — pre-existing `.btn--primary`
-- Amendment "Save" button — `.btn--primary` (reused, same gradient)
+- Amendment "Save note" button — `.btn--primary` (reused, same gradient)
 
 **Gold reserved for — Phase 19 specific:**
 - Amendment indicator dot on section header when a saved amendment note exists
@@ -127,11 +127,11 @@ Do NOT use `--gold` or `--accent` for error states.
 | `.sec--editable` + hover `"edit"` label | styles.css | Section click-to-edit in review state — all sections including Section 5 |
 | `Sec` component | document.jsx | Section wrapper for Section 5 Essential Qualifications |
 | `.prose` | styles.css | Education and experience text in document preview |
-| `.ghost-note` | styles.css | Ghost hint text in Section 5 when quals not yet visited |
+| `.ghost-note` | styles.css | Ghost hint text in Section 5 when quals not yet visited; 12.5px / 400 / italic / `--ink-faint` — pre-existing class, reuse without modification |
 | `Ghost` component | document.jsx | 3-line shimmer for Section 5 before quals step visited |
 | `.prov` + `.prov__tag` | styles.css | Provenance footer; "TBS Qualification Standard" tag |
-| `.btn--primary` | styles.css | "Finish & review" CTA; amendment "Save" button |
-| `.btn--ghost` | styles.css | Amendment "Cancel" button |
+| `.btn--primary` | styles.css | "Finish & review" CTA; amendment "Save note" button |
+| `.btn--ghost` | styles.css | Amendment "Discard note" button |
 | `.actions` | styles.css | Button row in qualification step; also used for amendment panel actions row |
 | `.fresh` / `freshWash` animation | styles.css | Applied to Section 5 wrapper when quals first populate |
 | `rise` animation | styles.css | Qual step question rises in when step activates |
@@ -232,10 +232,10 @@ per-field state in `QualEditor` (local `useState`).
   font-size: 12.5px;
   font-weight: 500;
   color: oklch(0.58 0.14 25);
-  margin-top: 6px;
+  margin-top: 4px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 ```
 
@@ -263,7 +263,7 @@ to the left of the "edit" hover label. The button is always visible in review st
 │  ┌───────────────────────────────────────────────────┐  │
 │  │ textarea (.tf) — free text                        │  │
 │  └───────────────────────────────────────────────────┘  │
-│  [Save note]  [Cancel]              N characters        │
+│  [Save note]  [Discard note]        N characters        │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -346,8 +346,8 @@ down from `app.jsx`):
 .amend-panel__actions {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 8px;
 }
 /* Character count hint */
 .amend-count {
@@ -375,7 +375,7 @@ existing `@keyframes rise` in styles.css.
 On success: set `saved = text`, close panel, show toast "Note saved for {section name}."
 On failure: show toast error "Could not save note. Try again."
 
-**Cancel action:** close panel without saving; reset textarea to `saved` value (or
+**Discard action:** close panel without saving; reset textarea to `saved` value (or
 empty if no saved note).
 
 #### E. Amendment Indicator (review state, per section)
@@ -412,7 +412,7 @@ span.
 | Amendment panel label | **"Note for {section name}"** | `.amend-panel__label`; mono 10px uppercase; section name in sentence case |
 | Amendment textarea placeholder | **"Enter a note for the advisor or reviewing manager…"** | `.tf` placeholder in `.amend-panel` |
 | Amendment "Save" button | **"Save note"** | `.btn--primary` in `.amend-panel__actions`; disabled until textarea has content |
-| Amendment "Cancel" button | **"Cancel"** | `.btn--ghost` in `.amend-panel__actions` |
+| Amendment "Discard" button | **"Discard note"** | `.btn--ghost` in `.amend-panel__actions`; closes panel and resets textarea to last saved value |
 | Amendment character count | **"{N} characters"** | `.amend-count`; updates live as user types |
 | Toast — amendment saved | **"Note saved for {section name}."** | Existing `.toast` / `is-show` pattern; 3.5s |
 | Toast — amendment save failed | **"Could not save note. Try again."** | Same toast pattern |
@@ -459,7 +459,7 @@ span.
 | `.amend-btn` click — panel open | Close panel without saving; reset to `saved` value |
 | User types in amendment textarea | `text` state updates live; character count updates |
 | "Save note" button click | POST `/api/wd/{id}/amendments` with `{ section, comment: text }`; on success: set `saved = text`, close panel, fire toast "Note saved for {section name}."; on failure: fire error toast; button returns to enabled state |
-| "Cancel" button click | Close panel; reset `text` to `saved` (or empty); no API call |
+| "Discard note" button click | Close panel; reset `text` to `saved` (or empty); no API call |
 | Section has `saved` note | Gold `.amend-indicator` dot visible in `.sec__h`; panel pre-fills with saved text on open |
 | Section has no saved note | No `.amend-indicator`; panel opens with empty textarea |
 | "Save note" button while textarea empty | Button is `disabled`; keyboard/screen reader cannot activate it |
@@ -575,7 +575,7 @@ No new animations introduced in Phase 19.
 - `.amend-btn` must have `aria-label="Add amendment note for {section name}"` and
   `aria-expanded={open}` so screen reader users know the panel state.
 - `.amend-indicator` dot: `aria-label="Amendment note exists"` on the `<span>`.
-- "Save note" and "Cancel" buttons: `disabled` attribute must be set on the Save
+- "Save note" and "Discard note" buttons: `disabled` attribute must be set on the Save
   button (not just `opacity: 0.45`) when textarea is empty.
 - `prefers-reduced-motion` block in styles.css already disables all animations
   globally — amendment panel appearance will not animate for users who prefer reduced
