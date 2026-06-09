@@ -141,21 +141,21 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 
 ### QUAL — Qualification standard
 
-- [ ] **QUAL-01**: System pre-fills the Essential Qualifications section with a default text matched to
+- [x] **QUAL-01**: System pre-fills the Essential Qualifications section with a default text matched to
   the confirmed OG: EC default (degree in environmental science / economics / public policy; significant
   experience in policy/analysis); AS default; IT default; FI default — drawn from TBS Qualification
   Standards reference text
-- [ ] **QUAL-02**: Both education and experience textareas are directly editable; empty values in either
+- [x] **QUAL-02**: Both education and experience textareas are directly editable; empty values in either
   field block the Finish button (inline validation)
-- [ ] **QUAL-03**: Essential Qualifications section renders in the document preview with Education /
+- [x] **QUAL-03**: Essential Qualifications section renders in the document preview with Education /
   Experience sub-labels in monospace caps; provenance tag "TBS Qualification Standard"
 
 ### AMEND — Manager amendment space
 
-- [ ] **AMEND-01**: In review state, advisor can add a manager amendment note per JD section (section
+- [x] **AMEND-01**: In review state, advisor can add a manager amendment note per JD section (section
   reference + free-text comment); each note is stored as an audit_log entry with
   type="manager_amendment", section, comment, and timestamp
-- [ ] **AMEND-02**: Manager amendments render in the DOCX export as an appendix section ("Manager
+- [x] **AMEND-02**: Manager amendments render in the DOCX export as an appendix section ("Manager
   Amendments for Review") listing each note with its section reference and a provenance tag
   "Manager-proposed — pending advisor ratification"
 
@@ -297,11 +297,11 @@ conversation flow are preserved; its hardcoded work-type picker and simplified c
 | DOC-03 | Phase 18 | Pending |
 | DOC-04 | Phase 18 | Pending |
 | DOC-05 | Phase 18 | Pending |
-| QUAL-01 | Phase 19 | Pending |
-| QUAL-02 | Phase 19 | Pending |
-| QUAL-03 | Phase 19 | Pending |
-| AMEND-01 | Phase 19 | Pending |
-| AMEND-02 | Phase 19 | Pending |
+| QUAL-01 | Phase 19 | Complete |
+| QUAL-02 | Phase 19 | Complete |
+| QUAL-03 | Phase 19 | Complete |
+| AMEND-01 | Phase 19 | Complete |
+| AMEND-02 | Phase 19 | Complete |
 | EXP-01 | Phase 20 | Pending |
 | EXP-02 | Phase 20 | Pending |
 | EXP-03 | Phase 20 | Pending |
