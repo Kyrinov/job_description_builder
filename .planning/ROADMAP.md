@@ -296,7 +296,7 @@ Plans:
 - [x] 19-01-PLAN.md — Wave 0: RED test stubs (test_quals.py + test_amendments.py + document.test.jsx)
 - [x] 19-02-PLAN.md — Wave 1: QUAL-01/02/03 — OG-keyed defaults, touched validation, .qual-sub-k CSS
 - [x] 19-03-PLAN.md — Wave 2: AMEND-01 — amendments.py backend + frontend panel + ReviewState checklist
-- [ ] 19-04-PLAN.md — Wave 3: Full suite green gate + UAT checkpoint
+- [x] 19-04-PLAN.md — Wave 3: Full suite green gate + UAT checkpoint (UAT approved 2026-06-09)
 
 **UI hint**: yes
 
