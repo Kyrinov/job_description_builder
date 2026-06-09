@@ -23,7 +23,6 @@ async def _create_wd(client) -> str:
     return resp.json()["id"]
 
 
-@pytest.mark.skip(reason="amendments.py not yet implemented — unblock in Wave 2")
 async def test_save_amendment_creates_audit_row(client, env_with_db):
     """AMEND-01 — POST /api/wd/{id}/amendments returns 201; writes audit_log row."""
     from app.config import get_settings
@@ -58,7 +57,6 @@ async def test_save_amendment_creates_audit_row(client, env_with_db):
     assert detail["comment"] == "This duty seems outside scope."
 
 
-@pytest.mark.skip(reason="amendments.py not yet implemented — unblock in Wave 2")
 async def test_get_amendments_latest_per_section(client, env_with_db):
     """AMEND-01 — GET /api/wd/{id}/amendments returns only the latest note per section."""
     wd_id = await _create_wd(client)
@@ -78,7 +76,6 @@ async def test_get_amendments_latest_per_section(client, env_with_db):
     assert data["notes"]["ov"] == "Updated version"
 
 
-@pytest.mark.skip(reason="amendments.py not yet implemented — unblock in Wave 2")
 async def test_save_amendment_404(client, env_with_db):
     """AMEND-01 — POST returns 404 for non-existent WD."""
     resp = await client.post(
@@ -88,7 +85,6 @@ async def test_save_amendment_404(client, env_with_db):
     assert resp.status_code == 404
 
 
-@pytest.mark.skip(reason="amendments.py not yet implemented — unblock in Wave 2")
 async def test_amendment_audit_log_fields(client, env_with_db):
     """AMEND-02 — audit_log row has event='manager_amendment', section, comment in detail JSON."""
     from app.config import get_settings
@@ -120,7 +116,6 @@ async def test_amendment_audit_log_fields(client, env_with_db):
     assert detail["comment"] == "Review the OG level."
 
 
-@pytest.mark.skip(reason="amendments.py not yet implemented — unblock in Wave 2")
 async def test_save_amendment_invalid_section(client, env_with_db):
     """AMEND-01 security — section key outside allowed Literal set returns 422."""
     wd_id = await _create_wd(client)
@@ -131,7 +126,6 @@ async def test_save_amendment_invalid_section(client, env_with_db):
     assert resp.status_code == 422
 
 
-@pytest.mark.skip(reason="amendments.py not yet implemented — unblock in Wave 2")
 async def test_save_amendment_oversized_comment(client, env_with_db):
     """AMEND-01 security — comment exceeding 2000 chars returns 422."""
     wd_id = await _create_wd(client)
