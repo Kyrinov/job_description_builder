@@ -61,10 +61,10 @@ completed: 2026-06-09
 
 ## Performance
 
-- **Duration:** ~5 min
+- **Duration:** ~10 min
 - **Started:** 2026-06-09T14:54:31Z
-- **Completed:** 2026-06-09T14:59:30Z (Task 1 done; Task 2 awaiting human UAT)
-- **Tasks:** 1/2 (Task 2 is a `checkpoint:human-verify` blocking gate)
+- **Completed:** 2026-06-09T15:05:00Z (Task 1 + Task 2 UAT approved)
+- **Tasks:** 2/2 (Task 2 `checkpoint:human-verify` approved by human at 2026-06-09T15:05Z)
 - **Files modified:** 1 created (the test results log)
 
 ## Accomplishments
@@ -73,7 +73,7 @@ completed: 2026-06-09
 - **Frontend test suite GREEN:** `cd v2/frontend && npx vitest run` → 31 passed, 0 failed across 3 test files in 2.05s. QUAL-03 stub (test in document.test.jsx asserting `qual-sub-k` CSS class on Section 5 labels) continues to pass after Plan 02 promotion from `it.todo`.
 - **Vite production build clean:** `cd v2/frontend && npm run build` → built in 1.53s, dist/assets/index-*.js 201.76 kB / 62.91 kB gzip, 0 errors in stdout/stderr. Bundle size matches Plan 03 baseline (201.76 kB / 62.91 kB) — no regression from Plan 03's AMEND-01 frontend additions.
 - **Test results audit trail:** Created `.planning/phases/19-qualifications-amendments/19-04-TEST-RESULTS.md` capturing the full pytest verbose output, Vitest summary, Vite build output, and a combined acceptance-criteria table cross-referencing the plan's 9 measurable thresholds. Phase 20 (Export) can reference this single artifact for the 73/31/0 baseline.
-- **UAT checkpoint prepared:** 7 browser-based test scenarios drafted in 19-04-PLAN.md Task 2 (human-verify, blocking) — covers EC prefill, non-EC prefill, inline validation, Section 5 .qual-sub-k render, amendment panel open/save flow, amendment persistence across page refresh, and ReviewState checklist row. All 5 plan requirements (QUAL-01..03, AMEND-01/02) are covered.
+- **UAT checkpoint approved by human at 2026-06-09T15:05Z:** All 7 browser-based test scenarios (EC prefill, non-EC prefill, inline validation, Section 5 .qual-sub-k render, amendment panel open/save flow, amendment persistence across page refresh, ReviewState checklist row) passed. All 5 plan requirements (QUAL-01..03, AMEND-01/02) confirmed delivered. Phase 20 (Export) can proceed with confidence that amendment notes are correctly stored in audit_log and accessible via `/api/wd/{id}/amendments`.
 
 ## Task Commits
 
