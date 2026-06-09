@@ -320,9 +320,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 20-01-PLAN.md — Wave 1: RED test stubs + WeasyPrint install + template build scripts + .docx binary artifacts
-- [ ] 20-02-PLAN.md — Wave 2: export_service.py + export.py router + api/__init__.py + tests GREEN
-- [ ] 20-03-PLAN.md — Wave 3: app.jsx exportAs() wiring + UAT checkpoint
+- [x] 20-01-PLAN.md — Wave 0: RED test stubs + WeasyPrint install + template build scripts + .docx binary artifacts (2026-06-09)
+- [ ] 20-02-PLAN.md — Wave 1: export_service.py + export.py router + api/__init__.py + tests GREEN
+- [ ] 20-03-PLAN.md — Wave 2: app.jsx exportAs() wiring + UAT checkpoint
 
 ---
 
@@ -350,4 +350,4 @@ Plans:
 | **17. JES Scoring** | **v2.0** | **4/4** | **Complete** | **2026-06-08** |
 | **18. JD Composition & Live Preview** | **v2.0** | **0/?** | **Not started** | — |
 | **19. Qualifications & Amendments** | **v2.0** | **0/?** | **Not started** | — |
-| **20. Export** | **v2.0** | **0/?** | **Not started** | — |
+| **20. Export** | **v2.0** | **1/3** | **Wave 0 complete** | **2026-06-09** |
