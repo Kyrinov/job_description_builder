@@ -88,31 +88,29 @@
 
 ## Traceability
 
-*(populated by roadmapper)*
-
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| OGX-01 | — | Active |
-| OGX-02 | — | Active |
-| OGX-03 | — | Active |
-| OGX-04 | — | Active |
-| OGX-05 | — | Active |
-| OGX-06 | — | Active |
-| OGX-07 | — | Active |
-| UI-01  | — | Active |
-| SJD-01 | — | Active |
-| SJD-02 | — | Active |
-| SJD-03 | — | Active |
-| WG-01  | — | Active |
-| WG-02  | — | Active |
-| WG-03  | — | Active |
-| WG-04  | — | Active |
-| AUDIT-01 | — | Active |
-| AUDIT-02 | — | Active |
-| AUDIT-03 | — | Active |
-| AUDIT-04 | — | Active |
-| AUDIT-05 | — | Active |
-| ACC-01 | — | Active |
-| ACC-02 | — | Active |
-| ACC-03 | — | Active |
-| ACC-04 | — | Active |
+| OGX-01 | Phase 21 | Pending |
+| OGX-02 | Phase 21 | Pending |
+| OGX-03 | Phase 21 | Pending |
+| OGX-04 | Phase 21 | Pending |
+| OGX-05 | Phase 21 | Pending |
+| OGX-06 | Phase 21 | Pending |
+| OGX-07 | Phase 21 | Pending |
+| UI-01  | Phase 21 | Pending |
+| SJD-01 | Phase 22 | Pending |
+| SJD-02 | Phase 22 | Pending |
+| SJD-03 | Phase 22 | Pending |
+| WG-01  | Phase 23 | Pending |
+| WG-02  | Phase 23 | Pending |
+| WG-03  | Phase 23 | Pending |
+| WG-04  | Phase 23 | Pending |
+| AUDIT-01 | Phase 24 | Pending |
+| AUDIT-02 | Phase 24 | Pending |
+| AUDIT-03 | Phase 24 | Pending |
+| AUDIT-04 | Phase 24 | Pending |
+| AUDIT-05 | Phase 24 | Pending |
+| ACC-01 | Phase 25 | Pending |
+| ACC-02 | Phase 25 | Pending |
+| ACC-03 | Phase 25 | Pending |
+| ACC-04 | Phase 25 | Pending |

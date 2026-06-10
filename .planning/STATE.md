@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Classification Depth & Document Quality
-current_phase: not started
-status: defining_requirements
+current_phase: 21
+status: roadmap_complete
 last_updated: "2026-06-10T00:00:00Z"
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -15,16 +15,22 @@ progress:
 
 # Project State
 
-**Status:** Defining requirements
-**Current phase:** Not started
+**Status:** Roadmap complete — ready for Phase 21 planning
+**Current phase:** 21 (not started)
 **Last updated:** 2026-06-10
-**Next action:** Define requirements and roadmap for v3.0
+**Next action:** `/gsd-plan-phase 21`
 
 ---
 
 ## Phase Status
 
-*(phases defined after roadmapping)*
+| Phase | Name | Status |
+|-------|------|--------|
+| 21 | OG Expansion + Preview Fix | Not started |
+| 22 | SJD Library | Not started |
+| 23 | Writing Guide Integration | Not started |
+| 24 | Risk Audit | Not started |
+| 25 | Accessible Template | Not started |
 
 ---
 
@@ -55,6 +61,16 @@ See: `.planning/PROJECT.md`
 | Phase numbering continues (v3.0 starts at Phase 21) | Single linear history; v1.0 phases 1–9, v2.0 phases 10–20 archived |
 | docxtpl for DOCX export | Python-native, ARM64 compatible, Jinja2 template model |
 
+### v3.0 Key Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| Phase 21 opens with UI-01 CSS fix (1-line) | Immediate visible win; no risk to data work that follows |
+| NON_EC_STANDARD_NAMES consolidated in constants.py (OGX-02) | Eliminates v2.0 dual-copy drift between constants.py and export_service.py |
+| QUAL_DEFAULTS/QUAL_STANDARDS parity test written before new group text is authored (OGX-03) | Failing test first prevents the AS content-drift pattern from recurring for 12 new groups |
+| All v3.0 audit and validation rules are deterministic | No LLM in audit, duty validation, or CBA matching — keeps output reproducible and offline |
+| Accessible Template replaces TBS WD template entirely (not an optional format) | Single export path simplifies maintenance; Accessible format is the current GoC standard |
+
 ### Active Blockers
 
 - (none)
@@ -63,7 +79,7 @@ See: `.planning/PROJECT.md`
 
 - v1.0 closed 2026-06-03: Phases 1–9 (incl. 8.1), 188 tests, 21/21 requirements
 - v2.0 closed 2026-06-10: Phases 10–20, 299 tests (80 backend + 31 frontend + 188 v1), 52/52 requirements
-- v3.0 started 2026-06-10: roadmap TBD after requirements
+- v3.0 started 2026-06-10: Phases 21–25, 24 requirements, roadmap defined
 
 ---
 
@@ -91,6 +107,6 @@ See: `.planning/PROJECT.md`
 
 | Metric | Value |
 |--------|-------|
-| Phases total | TBD |
-| Requirements total | TBD |
-| Tests passing | 299 (inherited) |
+| Phases total | 5 (21–25) |
+| Requirements total | 24 |
+| Tests passing (inherited) | 299 |
