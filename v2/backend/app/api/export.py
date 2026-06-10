@@ -137,6 +137,35 @@ async def export_pdf(wd_id: str) -> Response:
     wd = _load_wd(wd_id, settings.db_path)
     require_og_confirmed(wd)
 
+    # WR-01: mirror DOCX self-healing so PDF also has JES scores when available.
+    # WR-02: fall back to record.duties for scoring (same as _build_wd_context).
+    _has_duties = bool(wd.duties) or bool((wd.record or {}).get("duties"))
+    _all_floor = (
+        bool(wd.jes_scores)
+        and all(s.get("degree", 0) <= 1 for s in wd.jes_scores)
+        and _has_duties
+    )
+    if wd.jes_total_points is None or _all_floor:
+        og_code_heal = _og_code_from(wd)
+        og_level_heal = wd.og_level or 0
+        duties_heal = [d.text for d in (wd.duties or [])]
+        if not duties_heal:
+            duties_heal = [
+                d.get("text", "") for d in ((wd.record or {}).get("duties") or [])
+            ]
+        if og_code_heal and og_level_heal:
+            try:
+                await score_jes_v2(
+                    wd_id=wd_id,
+                    og_code=og_code_heal,
+                    og_level=og_level_heal,
+                    duties=duties_heal,
+                    db_path=settings.db_path,
+                )
+            except Exception:
+                pass  # proceed with empty JES section rather than blocking
+        wd = _load_wd(wd_id, settings.db_path)
+
     # Build HTML representation from WD data — never accept raw HTML from the client
     og_code = _og_code_from(wd)
     og_level_int = wd.og_level or 0
