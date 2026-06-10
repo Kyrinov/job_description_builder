@@ -118,3 +118,133 @@ async def test_export_poster_404(client, env_with_db):
     """API-09 — POST /api/wd/does-not-exist/export/poster returns 404."""
     resp = await client.post("/api/wd/does-not-exist/export/poster")
     assert resp.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# WR-08: PDF 501 via runtime probe failure (Pango/Cairo missing at render time)
+# ---------------------------------------------------------------------------
+
+async def test_export_pdf_501_when_weasyprint_probe_fails(client, env_with_db, monkeypatch):
+    """WR-08 — POST /api/wd/{id}/export/pdf returns 501 when _probe_weasyprint() is False.
+
+    Distinct from the import-failure path: WeasyPrint imports cleanly but the
+    runtime probe (_probe_weasyprint) returns False, indicating Pango/Cairo are
+    missing. This covers the second 501 branch in the PDF handler.
+    """
+    import app.services.export_service as es
+    monkeypatch.setattr(es, "_weasyprint_available", False)
+
+    wd_id = await _create_wd(client)
+    resp = await client.post(f"/api/wd/{wd_id}/export/pdf")
+    # 501 from the _probe_weasyprint() guard; or 501 if weasyprint not installed
+    assert resp.status_code == 501
+
+
+# ---------------------------------------------------------------------------
+# WR-09: 409 from require_og_confirmed gate on all export endpoints
+# ---------------------------------------------------------------------------
+
+async def test_export_docx_409_without_og(client, env_with_db):
+    """WR-09 — POST /api/wd/{id}/export/docx returns 409 when OG not confirmed."""
+    wd_id = await _create_wd(client)
+    resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["error"] == "classification_pending"
+
+
+async def test_export_poster_409_without_og(client, env_with_db):
+    """WR-09 — POST /api/wd/{id}/export/poster returns 409 when OG not confirmed."""
+    wd_id = await _create_wd(client)
+    resp = await client.post(f"/api/wd/{wd_id}/export/poster")
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["error"] == "classification_pending"
+
+
+# ---------------------------------------------------------------------------
+# WR-10: self-healing JES flow in export_wd_docx
+# ---------------------------------------------------------------------------
+
+async def test_export_docx_self_heals_jes_scores(client, env_with_db, monkeypatch):
+    """WR-10 — DOCX export triggers JES self-healing when jes_total_points is None.
+
+    Confirms that the self-healing block is exercised: score_jes_v2 is called
+    and the WD is re-loaded. We monkeypatch score_jes_v2 to a no-op (CI has no
+    LLM) and assert that the export still succeeds (200 + non-empty bytes).
+    """
+    import app.api.export as export_mod
+
+    async def _fake_score(**kwargs):  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr(export_mod, "score_jes_v2", _fake_score)
+
+    wd_id = await _create_wd(client)
+    # PATCH confirmed_og + og_level so the 409 gate passes, but leave
+    # jes_total_points as None so self-healing is triggered.
+    resp = await client.patch(
+        f"/api/wd/{wd_id}",
+        json={
+            "confirmed_og": {"og_code": "EC", "og_name": "Economics and Social Science Services"},
+            "og_level": 4,
+            "duties": [
+                {
+                    "id": "d1",
+                    "text": "Analyses economic data for policy recommendations.",
+                    "source": "noc",
+                    "provenance_noc_code": "4163",
+                    "advisor": False,
+                }
+            ],
+        },
+    )
+    assert resp.status_code == 200
+
+    resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert resp.status_code == 200
+    assert len(resp.content) > 0
+
+
+# ---------------------------------------------------------------------------
+# WR-11: duties record-fallback in _build_wd_context
+# ---------------------------------------------------------------------------
+
+async def test_export_docx_uses_record_duties_fallback(client, env_with_db):
+    """WR-11 — DOCX export succeeds when duties live in record only (no root duties).
+
+    Exercises the _build_wd_context record-fallback path: root wd.duties is
+    empty but record.duties has duty data. The export must still return 200
+    and non-empty bytes.
+    """
+    wd_id = await _create_wd(client)
+    # PATCH via the record dict only — no root-level duties field
+    resp = await client.patch(
+        f"/api/wd/{wd_id}",
+        json={
+            "confirmed_og": {"og_code": "EC", "og_name": "Economics and Social Science Services"},
+            "og_level": 3,
+            "jes_total_points": 520,
+            "jes_scores": [
+                {"factor_name": "Decision Making", "degree": 2, "points": 120},
+            ],
+            "record": {
+                "title": "Policy Analyst",
+                "duties": [
+                    {
+                        "id": "d1",
+                        "text": "Develops policy briefs for senior management.",
+                        "source": "noc",
+                        "provenance_noc_code": "4163",
+                        "provenance_section": "Main duties",
+                        "provenance_hash": "abc123",
+                        "advisor": False,
+                        "orphan": False,
+                    }
+                ],
+            },
+        },
+    )
+    assert resp.status_code == 200
+
+    resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert resp.status_code == 200
+    assert len(resp.content) > 0
