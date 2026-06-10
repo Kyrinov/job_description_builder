@@ -55,7 +55,12 @@ async def export_wd_docx(wd_id: str) -> Response:
     settings = get_settings()
     wd = _load_wd(wd_id, settings.db_path)
     require_og_confirmed(wd)
-    if wd.jes_total_points is None:
+    _all_floor = (
+        bool(wd.jes_scores)
+        and all(s.get("degree", 0) <= 1 for s in wd.jes_scores)
+        and bool(wd.duties)
+    )
+    if wd.jes_total_points is None or _all_floor:
         og_code = (
             wd.confirmed_og.get("og_code", "")
             if isinstance(wd.confirmed_og, dict)

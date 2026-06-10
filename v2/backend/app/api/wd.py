@@ -55,6 +55,7 @@ class WDPatchRequest(BaseModel):
     jes_scores: Optional[list[dict]] = None
     jes_total_points: Optional[int] = None
     duties: Optional[list[dict]] = None
+    qualification: Optional[dict] = None
 
 
 @router.post("/wd", status_code=201)
@@ -124,7 +125,8 @@ async def patch_wd(wd_id: str, body: WDPatchRequest) -> WorkDescription:
         wd = WorkDescription.model_validate_json(row["data"])
         # Separate duties from scalar fields to enable validated merge
         raw_duties = body.duties  # extract before model_dump excludes it
-        body_dump = body.model_dump(exclude_unset=True, exclude={'duties'})
+        raw_qualification = body.qualification
+        body_dump = body.model_dump(exclude_unset=True, exclude={'duties', 'qualification'})
         # Diagnostic: log classification-related fields if present
         cls_keys = [k for k in body_dump if k in ('confirmed_og', 'og_level', 'confirmed_noc', 'jes_total_points')]
         if cls_keys:
@@ -138,6 +140,10 @@ async def patch_wd(wd_id: str, body: WDPatchRequest) -> WorkDescription:
         if raw_duties is not None:
             from app.models.draft_duty import DraftDuty as DD
             wd.duties = [DD(**d) for d in raw_duties[:20]]
+        # Qualification: validate against QualificationStandard
+        if raw_qualification is not None:
+            from app.models.qualification_standard import QualificationStandard as QS
+            wd.qualification = QS(**raw_qualification)
         wd.last_modified = datetime.now(timezone.utc)
         con.execute(
             "UPDATE work_descriptions SET data = ?, last_modified = ? WHERE id = ?",

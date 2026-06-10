@@ -207,6 +207,14 @@ function App() {
     if (step.id === 'duties' && newRecord.duties) {
       wdPayload.duties = newRecord.duties;
     }
+    // Persist qualification when committing the quals step (QUAL-01/02)
+    if (step.id === 'quals' && newRecord.quals) {
+      wdPayload.qualification = {
+        ...newRecord.quals,
+        source: 'advisor-edited',
+        last_modified: new Date().toISOString(),
+      };
+    }
     let wdPromise;
     if (!wd_id) {
       wdPromise = fetch('/api/wd', {
@@ -273,11 +281,10 @@ function App() {
         .catch(() => { setOgLoading(false); });
     }
 
-    // JES pipeline trigger — chains off the WD persistence promise so the
-    // WD is fully persisted (with confirmed_og + og_level at root) before
-    // /api/jes/score reads it. Avoids the 409 race on the classification
-    // gate where the JES read raced the write of og_level.
-    if (step.id === 'og_level') {
+    // JES pipeline trigger — fires after duties are committed so EC scoring
+    // has actual duty content. Chains off wdPromise so og_level + confirmed_og
+    // are already persisted before /api/jes/score reads them.
+    if (step.id === 'duties') {
       const confirmedOg = newRecord.confirmed_og || {};
       const ogCode = typeof confirmedOg === 'string' ? confirmedOg : (confirmedOg.og_code || '');
       const ogLevel = newRecord.og_level || 0;
