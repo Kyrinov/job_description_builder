@@ -465,7 +465,7 @@ function App() {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(href);
+      setTimeout(() => URL.revokeObjectURL(href), 0);
     } catch (_err) {
       setToast('Export failed. Please try again.');
       setTimeout(() => setToast(null), 2600);
