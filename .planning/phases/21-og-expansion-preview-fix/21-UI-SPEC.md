@@ -150,7 +150,7 @@ The class is already used in `components.jsx` lines 330–337 but has no definit
   background: var(--accent-soft);
   border: 1px solid var(--accent-line);
   border-radius: var(--radius-sm);    /* 9px */
-  padding: 12px 16px;
+  padding: 8px 16px;
   margin-bottom: 16px;
 }
 .asec-alert__title {
@@ -158,7 +158,7 @@ The class is already used in `components.jsx` lines 330–337 but has no definit
   font-weight: 700;
   color: var(--ink);
   line-height: 1.4;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .asec-alert__body {
   font-size: 13.5px;
