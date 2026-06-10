@@ -26,6 +26,7 @@ const I = {
 
   // JS copy of OG_LEVELS from v2/backend/app/data/constants.py.
   // Avoids an API round-trip for static reference data used in og_level cfgOverride.
+  // Phase 21 additions: 10 new groups with verified level counts from rates CSVs.
   const OG_LEVELS = {
     EC: [1,2,3,4,5,6,7,8],
     IT: [1,2,3,4,5],
@@ -39,6 +40,17 @@ const I = {
     FS: [1,2,3,4],
     AI: [1,2,3,4,5,6,7],
     AU: [1,2,3,4,5,6],
+    // Phase 21 additions
+    ED: [1,2,3,4],
+    LC: [1,2,3,4],
+    LP: [1,2,3,4,5],
+    MT: [1,2,3,4,5,6,7],
+    NT: [1,2,3,4],
+    NU: [1,2,3,4,5,6,7,8],
+    PO: [1,2,3,4],
+    PS: [1,2,3,4,5],
+    SW: [1,2,3,4,5],
+    WP: [1,2,3,4,5,6],
   };
 
   /* ---- DND Departmental Results Framework (real data) ----------- */
@@ -289,7 +301,8 @@ const I = {
   /* ---- Qualification standard defaults (keyed by OG group) -------- */
   /* Phase 19 QUAL-01: Replaces the hardcoded EC-05 environmental text with
      a per-OG-group map. Source text mirrors v2/backend QUAL_STANDARDS constant
-     in app/data/constants.py (verbatim TBS Qualification Standards reference). */
+     in app/data/constants.py (verbatim TBS Qualification Standards reference).
+     Phase 21 OGX-03: 12 new groups added; parity with backend QUAL_STANDARDS. */
   const QUAL_DEFAULTS = {
     EC: {
       education: 'A degree from a recognized post-secondary institution, with acceptable specialization in economics, sociology or statistics, or a field of study related to the duties of the position (environmental science, public policy, or a natural or social science field).',
@@ -306,6 +319,55 @@ const I = {
     FI: {
       education: "A bachelor's degree from a recognized post-secondary institution with a specialization in accounting, finance or a related field.",
       experience: 'Significant experience in financial management, financial analysis, or accounting relevant to the duties of the position.'
+    },
+    // Phase 21 additions — 12 new OG groups (mirrors QUAL_STANDARDS in constants.py)
+    ED: {
+      education: 'A degree from a recognized university with acceptable specialization in education, educational psychology, or a field related to the teaching or counselling duties of the position.',
+      experience: 'Experience in teaching, educational program development, curriculum design, or educational research relevant to the duties of the position.'
+    },
+    FB: {
+      education: 'Successful completion of a post-secondary program with specialization in criminology, law enforcement, public administration, or a related field relevant to the duties of the position.',
+      experience: 'Experience in border inspection, customs enforcement, immigration control, or related law enforcement activities relevant to the duties of the position.'
+    },
+    FS: {
+      education: 'A degree from a recognized university with acceptable specialization in international relations, political science, economics, law, public administration, or a related field relevant to the position.',
+      experience: 'Experience in diplomatic, consular, international trade, or foreign service work relevant to the duties of the position.'
+    },
+    LC: {
+      education: 'A degree from a recognized university in law, jurisprudence, or a related field, and membership in good standing in a provincial or territorial law society.',
+      experience: 'Significant experience in the practice of law, including managing legal services, providing legal advice on programs or services, or supervising legal staff.'
+    },
+    LP: {
+      education: 'A degree from a recognized university in law, jurisprudence, or a related field, and membership in good standing in a provincial or territorial law society.',
+      experience: 'Experience in the practice of law, including providing legal advice, drafting legislation, conducting litigation, or prosecution.'
+    },
+    MT: {
+      education: 'A degree from a recognized university with acceptable specialization in meteorology, atmospheric science, or a related physical science.',
+      experience: 'Experience in meteorological analysis, weather forecasting, or atmospheric research relevant to the duties of the position.'
+    },
+    NT: {
+      education: 'A degree from a recognized university with acceptable specialization in nutrition, dietetics, food science, or home economics, and membership or eligibility for membership in a relevant professional association.',
+      experience: 'Experience in the application of professional nutrition or dietetic knowledge in clinical, community, public health, or food service settings relevant to the duties of the position.'
+    },
+    NU: {
+      education: 'A degree from a recognized school of nursing, and current registration or eligibility for registration as a Registered Nurse in a province or territory of Canada.',
+      experience: 'Experience in nursing practice, clinical care, community health, or specialized nursing services relevant to the duties of the position.'
+    },
+    PO: {
+      education: 'Successful completion of a post-secondary program with specialization in telecommunications, electronics, information technology, police operations, or a related field relevant to the duties of the position.',
+      experience: 'Experience in telecommunications operations, intercept monitoring, police operations support, or related law enforcement technology work.'
+    },
+    PS: {
+      education: 'A doctoral degree from a recognized university in psychology, or a master\'s degree with registration or eligibility for registration as a psychologist in a province or territory of Canada.',
+      experience: 'Experience in the practice of psychology, including assessment, research, treatment, or consultation services relevant to the duties of the position.'
+    },
+    SW: {
+      education: 'A master\'s degree from a recognized university in social work, and registration or eligibility for registration as a social worker in a province or territory of Canada.',
+      experience: 'Experience in social work practice, counselling, case management, community development, or program delivery relevant to the duties of the position.'
+    },
+    WP: {
+      education: 'Successful completion of a post-secondary program with specialization in social work, social sciences, public administration, or a related field relevant to the duties of the position.',
+      experience: 'Experience in welfare program delivery, social services, settlement and adjustment services, or community development relevant to the duties of the position.'
     },
     default: {
       education: 'A degree or diploma from a recognized post-secondary institution in a field relevant to the duties of the position, or an equivalent combination of education and experience.',
