@@ -12,11 +12,15 @@ Stores the conversational state of an in-progress WD:
 - duties: selected/added duties
 - qualification: edited or default EC-05 qualification
 - drf_id: selected DND core responsibility (if applicable)
+
+confirmed_noc and confirmed_og accept either a string (bare code) or a
+dict/NOCMatch (full candidate). The SPA's noc_confirm step persists a
+bare code; og_confirm persists the full candidate dict.
 """
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -44,8 +48,8 @@ class WorkDescription(BaseModel):
     qualification: Optional[QualificationStandard] = None
     drf_id: Optional[str] = None
     noc_candidates: list[NOCMatch] = Field(default_factory=list)
-    confirmed_noc: Optional[NOCMatch] = None
-    confirmed_og: Optional[dict] = None
+    confirmed_noc: Optional[Union[str, NOCMatch, dict]] = None
+    confirmed_og: Optional[Union[str, dict]] = None
     og_level: Optional[int] = Field(default=None, ge=1)
     reports_to_military: Optional[bool] = None
     jes_scores: list[dict] = Field(default_factory=list)
