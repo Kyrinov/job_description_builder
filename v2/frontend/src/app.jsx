@@ -408,6 +408,11 @@ function App() {
       setTimeout(() => setToast(null), 2600);
       return;
     }
+    if (!record.confirmed_og || !record.og_level) {
+      setToast('Complete the OG group and level steps before exporting.');
+      setTimeout(() => setToast(null), 5000);
+      return;
+    }
     const isPdf = kind === 'PDF';
     const endpoint = isPdf
       ? `/api/wd/${wd_id}/export/pdf`
