@@ -135,19 +135,28 @@ async def export_pdf(wd_id: str) -> Response:
     require_og_confirmed(wd)
 
     # Build HTML representation from WD data — never accept raw HTML from the client
-    og_code = (wd.confirmed_og or {}).get("og_code", "")
+    if isinstance(wd.confirmed_og, dict):
+        og_code = wd.confirmed_og.get("og_code", "")
+    else:
+        og_code = wd.confirmed_og or ""
     og_level_int = wd.og_level or 0
     og_str = f"{og_code}-{int(og_level_int):02d}" if og_code else ""
     title = (wd.record or {}).get("title", "Work Description")
+    # CR-02: html.escape all user-supplied strings before interpolation into
+    # the WeasyPrint HTML string. Duty text and title are untrusted WD data
+    # — without escaping, a duty like "Configure <Network>" breaks the HTML.
+    import html as _html
+    safe_title = _html.escape(title)
+    safe_og_str = _html.escape(og_str)
     duties_html = "".join(
-        f"<li>{d.text}</li>" for d in (wd.duties or [])
+        f"<li>{_html.escape(d.text)}</li>" for d in (wd.duties or [])
     )
     html = f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>{title}</title>
+<html><head><meta charset="utf-8"><title>{safe_title}</title>
 <style>body{{font-family:Arial,sans-serif;margin:2cm;}}h1{{font-size:16pt;}}h2{{font-size:13pt;}}li{{margin-bottom:4pt;}}</style>
 </head><body>
-<h1>{title}</h1>
-<p><strong>Classification:</strong> {og_str}</p>
+<h1>{safe_title}</h1>
+<p><strong>Classification:</strong> {safe_og_str}</p>
 <h2>Summary of Duties</h2><ul>{duties_html}</ul>
 </body></html>"""
 

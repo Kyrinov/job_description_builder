@@ -142,6 +142,19 @@ def _get_amendments(con, wd_id: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 
+def _og_code_from(wd: WorkDescription) -> str:
+    """Extract og_code from confirmed_og, tolerating both string and dict shapes.
+
+    WorkDescription.confirmed_og is Optional[Union[str, dict]] — the SPA's
+    og_confirm step persists a full candidate dict, but earlier sessions may
+    have persisted a bare code string. Every consumer of confirmed_og.og_code
+    must go through this helper to avoid AttributeError on string shape.
+    """
+    if isinstance(wd.confirmed_og, dict):
+        return wd.confirmed_og.get("og_code", "")
+    return wd.confirmed_og or ""
+
+
 def _build_v2_manifest(wd: WorkDescription) -> list[dict]:
     """Return a deduplicated list of every source used in this WD.
 
@@ -178,7 +191,7 @@ def _build_v2_manifest(wd: WorkDescription) -> list[dict]:
 
     # JES standard — depends on the confirmed OG group
     if wd.jes_total_points is not None:
-        og_code = (wd.confirmed_og or {}).get("og_code", "")
+        og_code = _og_code_from(wd)
         if og_code == "EC":
             _add("JES", "EC JES 2017", "EC JES 2017")
         elif og_code:
@@ -236,7 +249,7 @@ def _build_wd_context(wd: WorkDescription, amendments: list[dict]) -> dict:
     {%p for %} loops receive lists of dicts; scalars are strings.
     """
     record = wd.record or {}
-    og_code = (wd.confirmed_og or {}).get("og_code", "")
+    og_code = _og_code_from(wd)
     og_level_int = wd.og_level or 0
     og_level_str = f"{og_code}-{int(og_level_int):02d}" if og_code else ""
 
@@ -299,7 +312,7 @@ def _build_poster_context(wd: WorkDescription) -> dict:
     string) per REQUIREMENTS.md — French translation is out of scope.
     """
     record = wd.record or {}
-    og_code = (wd.confirmed_og or {}).get("og_code", "")
+    og_code = _og_code_from(wd)
     og_level_int = wd.og_level or 0
     og_level_str = f"{og_code}-{int(og_level_int):02d}" if og_code else ""
 
@@ -313,7 +326,7 @@ def _build_poster_context(wd: WorkDescription) -> dict:
     return {
         "position_title": record.get("title", ""),
         "og_level": og_level_str,
-        "og_name": (wd.confirmed_og or {}).get("og_name", ""),
+        "og_name": (wd.confirmed_og.get("og_name", "") if isinstance(wd.confirmed_og, dict) else ""),
         "branch": record.get("branch", ""),
         "education": education_text,
         "experience": experience_text,
