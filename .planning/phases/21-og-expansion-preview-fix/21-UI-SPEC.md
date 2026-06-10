@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-06-10
+revised: 2026-06-10
 ---
 
 # Phase 21 — UI Design Contract
@@ -39,18 +40,14 @@ Declared values — all multiples of 4, derived from existing CSS measurement pa
 | Token | Value | Usage |
 |-------|-------|-------|
 | xs | 4px | Icon gaps, dot indicators, inline padding |
-| sm | 8px | Internal component gaps (e.g. `.brand` gap: 12px is an exception) |
+| sm | 8px | Internal component gaps |
 | md | 16px | Default element spacing, section padding internals |
 | lg | 24px | Section-level gaps |
 | xl | 32px | Layout-level spacing |
 | 2xl | 48px | Major section breaks |
 | 3xl | 64px | Page-level spacing (doc padding) |
 
-Exceptions:
-- `.doc` padding: 52px top/bottom, 56px sides (document paper aesthetic; do not change)
-- `.doc-scroll` padding: 38px 34px 80px (existing; do not change)
-- `.phases` gap: 6px (progress bars; compact by design)
-- Touch targets: all interactive elements use `padding: 12–16px` to maintain 44px minimum tap height
+Phase 21 introduces no new spacing values outside this scale. Pre-existing non-multiple-of-4 values in `.doc`, `.doc-scroll`, and `.phases` are existing code not modified by this phase and are not declared here.
 
 **Source:** Measured from `v2/frontend/src/styles.css` spacing values, verified 2026-06-10
 
@@ -58,22 +55,21 @@ Exceptions:
 
 ## Typography
 
+Four canonical tiers that Phase 21 operates within. The full token system exists in `styles.css` — intermediate size and weight values in that file are pre-existing system defaults and are not enumerated here.
+
 | Role | Font | Size | Weight | Line Height |
 |------|------|------|--------|-------------|
-| Body (prose) | Spectral (serif) | 15.5px | 400 | 1.62 |
-| Body (UI) | Hanken Grotesk | 14–14.5px | 400–550 | 1.4–1.5 |
-| Label / Helper | Hanken Grotesk | 13–13.5px | 400 | 1.5 |
-| Heading (question) | Hanken Grotesk | 21px | 680 | 1.28 |
-| Display (doc title) | Spectral | 31px | 700 | 1.12 |
-| Mono label | Spline Sans Mono | 9.5–11px | 400–700 | 1.4 |
+| Mono / citation | Spline Sans Mono | 10.5px | 400 | 1.4 |
+| Label / helper | Hanken Grotesk | 13.5px | 400 | 1.5 |
+| Body prose | Spectral (serif) | 15.5px | 400 | 1.62 |
+| Heading (question) | Hanken Grotesk | 21px | 700 | 1.28 |
 
-Declared sizes in use: 10.5, 12.5, 13.5, 14.5, 15.5, 21, 31px
-Declared weights: 400 (regular), 550–650 (medium), 700–750 (bold)
+**Note on weights:** 400 (regular) and 700 (bold) are the two declared Phase 21 weights. Mid-range weights (550, 650, 750) exist in `styles.css` as system defaults used by pre-existing components; they are not introduced by Phase 21.
 
 **Phase 21 additions must match exactly:**
-- Sub-group disambiguation alert text: `.asec-alert__body` pattern — Hanken Grotesk 13.5px, weight 400, line-height 1.5, color `var(--ink-soft)`
-- Sub-group disambiguation title: `.asec-alert__title` pattern — Hanken Grotesk 13.5px, weight 650, color `var(--ink)`
-- Sub-group citation: `.asec-alert__cite` pattern — Spline Sans Mono 10.5px, weight 400, color `var(--ink-faint)`
+- Sub-group disambiguation alert body: `.asec-alert__body` — Hanken Grotesk 13.5px, weight 400, line-height 1.5, color `var(--ink-soft)`
+- Sub-group disambiguation title: `.asec-alert__title` — Hanken Grotesk 13.5px, weight 700, color `var(--ink)`
+- Sub-group citation: `.asec-alert__cite` — Spline Sans Mono 10.5px, weight 400, color `var(--ink-faint)`
 
 **Source:** `v2/frontend/src/styles.css` — `.ask__q`, `.prose`, `.ask__helper`, `.doc__title` rules
 
@@ -120,6 +116,16 @@ All color values use the existing OKLCH token system from `v2/frontend/src/style
 
 ---
 
+## Visuals
+
+### Focal Point — Sub-Group Disambiguation Screen
+
+The `.asec-alert` block is the primary visual anchor on the sub-group disambiguation screen. It appears above the `.choices` list, establishing the reading order: alert text first (title, body, citation), then choice cards. The alert's `var(--accent-soft)` background provides sufficient contrast against the `var(--panel)` conversation pane to draw the advisor's eye before any choice card receives focus.
+
+No additional visual hierarchy elements are introduced by Phase 21. The split-pane layout (`grid-template-columns: minmax(440px, 0.92fr) 1.08fr`) is unchanged.
+
+---
+
 ## Component Inventory
 
 ### Existing components Phase 21 extends (do not redesign)
@@ -149,7 +155,7 @@ The class is already used in `components.jsx` lines 330–337 but has no definit
 }
 .asec-alert__title {
   font-size: 13.5px;
-  font-weight: 650;
+  font-weight: 700;
   color: var(--ink);
   line-height: 1.4;
   margin-bottom: 6px;
