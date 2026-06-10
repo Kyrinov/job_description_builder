@@ -33,6 +33,7 @@ from datetime import date
 from docxtpl import DocxTemplate
 
 from app.db import get_connection
+from app.models.draft_duty import DraftDuty
 from app.models.work_description import WorkDescription
 
 logger = logging.getLogger(__name__)
@@ -265,14 +266,7 @@ def _build_wd_context(wd: WorkDescription, amendments: list[dict]) -> dict:
     # Duties — fall back to record.duties when root duties not yet persisted
     root_duties = wd.duties or []
     if not root_duties:
-        root_duties = [
-            type("_D", (), {
-                "text": d.get("text", ""),
-                "provenance_noc_code": d.get("provenance_noc_code", ""),
-                "advisor": d.get("advisor", False),
-            })()
-            for d in (record.get("duties") or [])
-        ]
+        root_duties = [DraftDuty(**d) for d in (record.get("duties") or [])]
 
     return {
         "position_title": record.get("title", ""),
