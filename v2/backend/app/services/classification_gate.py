@@ -24,8 +24,16 @@ def require_og_confirmed(wd: WorkDescription) -> None:
     CLASS-04: JD generation is blocked at the API layer until both
     confirmed_og (the full OGCandidate dict) and og_level (an integer >= 1)
     are set on the WorkDescription.
+
+    Fallback: also check wd.record (the SPA persists classification fields
+    inside the record dict as well). If a SPA PATCH sets confirmed_og only
+    inside record, the gate should still pass.
     """
-    if not wd.confirmed_og or wd.og_level is None:
+    record_og = (wd.record or {}).get("confirmed_og")
+    record_level = (wd.record or {}).get("og_level")
+    confirmed_og = wd.confirmed_og or record_og
+    og_level = wd.og_level if wd.og_level is not None else record_level
+    if not confirmed_og or og_level is None:
         raise HTTPException(
             status_code=409,
             detail={
