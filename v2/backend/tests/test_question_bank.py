@@ -4,17 +4,30 @@ tests/test_question_bank.py — Unit tests for QUESTION_BANK in app/data/constan
 QUES-01 (5 tests): every entry has required keys; OG codes valid; JES hints valid;
     minimum question count; covers EC/AS/IT/FI.
 QUES-02 (1 test): no OG code appears in user-visible text (question, helper, option label).
-QUES-03 (1 test): all entries have phase_slot="work_type"; input_type is a known value.
+QUES-03 (1 test): all entries have a known phase_slot; input_type is a known value.
 
 Wave 0 (Plan 01): All tests are importable; tests 1 and 7 are RED (QUESTION_BANK is []).
     Tests 2-6 pass vacuously (no entries to iterate). Test file itself is GREEN structurally.
 Wave 1 (Plan 02): Full QUESTION_BANK written; all 7 tests GREEN.
+Phase 21 (Plan 05): phase_slot constraint extended to allow sector_gate and
+    cluster phase_slots (sector-gate + 4 cluster questions for the 12 new OG groups).
 """
 from app.data.constants import QUESTION_BANK, OG_LEVELS, KNOWN_JES_FACTORS
 
 REQUIRED_ENTRY_KEYS = {"id", "phase_slot", "question", "helper", "input_type", "options"}
 REQUIRED_SIGNAL_KEYS = {"og_candidates", "jes_factor_hints", "teer_affinity"}
 KNOWN_INPUT_TYPES = {"choices", "scale"}
+# Phase 21 (Plan 05): phase_slot now covers the v2.0 work_type questions plus
+# the v3.0 sector-gate and cluster questions that route signals for the 12
+# new OG groups. New entries must use one of these values.
+KNOWN_PHASE_SLOTS = {
+    "work_type",                  # v2.0 — initial 4 work-type questions
+    "sector_gate",                # v3.0 — sector-level routing (PA/SH/Legal/Technical/Scientific/Education/Programme/Other)
+    "health_social_cluster",      # v3.0 — disambiguate NU vs SW vs PS vs WP
+    "legal_cluster",              # v3.0 — disambiguate LC vs LP
+    "technical_cluster",          # v3.0 — disambiguate FB vs FS vs MT
+    "education_cluster",          # v3.0 — disambiguate ED vs NT
+}
 
 
 def test_question_bank_has_minimum_questions():
@@ -78,9 +91,11 @@ def test_covers_minimum_four_groups():
 
 
 def test_all_entries_have_phase_slot_work_type():
+    # Phase 21 (Plan 05): phase_slot expanded beyond 'work_type' to cover
+    # sector-gate + cluster phase_slots for the 12 new OG groups.
     for entry in QUESTION_BANK:
-        assert entry.get("phase_slot") == "work_type", \
-            f"Entry '{entry.get('id')}' must have phase_slot='work_type', got '{entry.get('phase_slot')}'"
+        assert entry.get("phase_slot") in KNOWN_PHASE_SLOTS, \
+            f"Entry '{entry.get('id')}' has unknown phase_slot '{entry.get('phase_slot')}'; must be one of {sorted(KNOWN_PHASE_SLOTS)}"
 
 
 def test_all_entries_have_known_input_type():

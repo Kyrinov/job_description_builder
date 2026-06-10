@@ -181,6 +181,15 @@ KNOWN_JES_FACTORS: frozenset[str] = frozenset({
     "Physical effort",
     "Sensory effort",
     "Working conditions",
+    # Phase 21 (Plan 05): broader factor names used by the new OG groups
+    # (NU, SW, PS, WP, LC, LP, FB, FS, MT, ED, NT, PO) whose JES structures
+    # differ from the EC 9-factor model. These are advisory hints only — they
+    # drive ranking of OG candidates from the sector-gate and cluster questions.
+    "Human relations",
+    "Physical demands",
+    "Organizational impact",
+    "Knowledge and skills",
+    "Effort",
 })
 
 
@@ -355,6 +364,210 @@ QUESTION_BANK: list[dict] = [
                     "og_candidates": ["AS", "IT"],
                     "jes_factor_hints": ["Leadership & operational mgmt"],
                     "teer_affinity": [2, 3, 4],
+                },
+            },
+        ],
+    },
+    # ---- Phase 21 additions: sector-gate + cluster disambiguation ----
+    # These questions route signals for the 12 new OG groups (NU, SW, PS, WP,
+    # LC, LP, FB, FS, MT, ED, NT, PO). The sector-gate question fires first
+    # to narrow the broad sector, then the matching cluster question dis-
+    # ambiguates within the sector. Signal tally accumulation from these
+    # answers surfaces the dominant new group as the top OG candidate.
+    {
+        "id": "qb_sector_gate",
+        "phase_slot": "sector_gate",
+        "question": "Which sector best describes the primary service domain of this position?",
+        "helper": "Think about the professional or regulatory domain the work is grounded in.",
+        "input_type": "choices",
+        "options": [
+            {
+                "id": "pa_sh_sector",
+                "label": "Health and social services — nursing, social work, psychology, or welfare programs",
+                "signals": {
+                    "og_candidates": ["NU", "SW", "PS", "WP"],
+                    "jes_factor_hints": ["Human relations", "Physical demands"],
+                    "teer_affinity": [2, 3],
+                },
+            },
+            {
+                "id": "legal_sector",
+                "label": "Legal services — providing legal advice, representing the Crown, or managing legal risk",
+                "signals": {
+                    "og_candidates": ["LC", "LP"],
+                    "jes_factor_hints": ["Decision making", "Organizational impact"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+            {
+                "id": "technical_scientific_sector",
+                "label": "Technical or scientific operations — inspection, enforcement, meteorology, or environmental services",
+                "signals": {
+                    "og_candidates": ["FB", "FS", "MT"],
+                    "jes_factor_hints": ["Knowledge and skills", "Effort"],
+                    "teer_affinity": [2, 3],
+                },
+            },
+            {
+                "id": "education_sector",
+                "label": "Education and training — teaching, curriculum design, or educational program delivery",
+                "signals": {
+                    "og_candidates": ["ED", "NT"],
+                    "jes_factor_hints": ["Knowledge and skills", "Human relations"],
+                    "teer_affinity": [2, 3],
+                },
+            },
+            {
+                "id": "programme_admin_sector",
+                "label": "Programme and administrative operations — programme delivery, operational support, or liaison work",
+                "signals": {
+                    "og_candidates": ["PO", "WP"],
+                    "jes_factor_hints": ["Organizational impact", "Effort"],
+                    "teer_affinity": [2, 3],
+                },
+            },
+            {
+                "id": "other_sector",
+                "label": "General professional or administrative work (economics, policy, information technology, or administration)",
+                "signals": {
+                    "og_candidates": ["EC", "AS", "IT", "FI"],
+                    "jes_factor_hints": ["Research & analysis", "Decision making"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+        ],
+    },
+    {
+        "id": "qb_health_social_cluster",
+        "phase_slot": "health_social_cluster",
+        "question": "What is the primary focus of the health or social service work?",
+        "helper": "Select the description that most closely matches the day-to-day responsibilities.",
+        "input_type": "choices",
+        "options": [
+            {
+                "id": "nursing_hospital",
+                "label": "Direct patient care — assessing, treating, and monitoring patients in a clinical setting",
+                "signals": {
+                    "og_candidates": ["NU"],
+                    "jes_factor_hints": ["Human relations", "Physical demands"],
+                    "teer_affinity": [3],
+                },
+            },
+            {
+                "id": "social_work_services",
+                "label": "Social welfare case management — counselling, intervention, and connecting clients to services",
+                "signals": {
+                    "og_candidates": ["SW"],
+                    "jes_factor_hints": ["Human relations", "Decision making"],
+                    "teer_affinity": [2, 3],
+                },
+            },
+            {
+                "id": "psychology_services",
+                "label": "Psychological assessment or therapy — testing, clinical judgment, and treatment planning",
+                "signals": {
+                    "og_candidates": ["PS"],
+                    "jes_factor_hints": ["Knowledge and skills", "Decision making"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+            {
+                "id": "welfare_programs",
+                "label": "Welfare program delivery — administering income support, benefits, or eligibility decisions",
+                "signals": {
+                    "og_candidates": ["WP"],
+                    "jes_factor_hints": ["Organizational impact", "Effort"],
+                    "teer_affinity": [2, 3],
+                },
+            },
+        ],
+    },
+    {
+        "id": "qb_legal_cluster",
+        "phase_slot": "legal_cluster",
+        "question": "What is the primary legal function of this position?",
+        "helper": "Consider whether the work involves direct legal representation or managing legal affairs at an organizational level.",
+        "input_type": "choices",
+        "options": [
+            {
+                "id": "legal_counsel",
+                "label": "Providing legal counsel and representing the Crown in proceedings",
+                "signals": {
+                    "og_candidates": ["LP"],
+                    "jes_factor_hints": ["Decision making", "Organizational impact"],
+                    "teer_affinity": [1],
+                },
+            },
+            {
+                "id": "legal_management",
+                "label": "Managing legal services, contracts, or access to information and privacy matters",
+                "signals": {
+                    "og_candidates": ["LC"],
+                    "jes_factor_hints": ["Organizational impact", "Decision making"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+        ],
+    },
+    {
+        "id": "qb_technical_cluster",
+        "phase_slot": "technical_cluster",
+        "question": "What type of technical or scientific work does this position primarily perform?",
+        "helper": "Select the domain that best matches the specialized knowledge or operational role.",
+        "input_type": "choices",
+        "options": [
+            {
+                "id": "border_enforcement",
+                "label": "Examining travellers, goods, or people at ports of entry and enforcing border legislation",
+                "signals": {
+                    "og_candidates": ["FB"],
+                    "jes_factor_hints": ["Knowledge and skills", "Decision making"],
+                    "teer_affinity": [2, 3],
+                },
+            },
+            {
+                "id": "foreign_service",
+                "label": "Representing Canada abroad, negotiating international agreements, or providing consular services",
+                "signals": {
+                    "og_candidates": ["FS"],
+                    "jes_factor_hints": ["Knowledge and skills", "Organizational impact"],
+                    "teer_affinity": [1, 2],
+                },
+            },
+            {
+                "id": "meteorology_science",
+                "label": "Weather forecasting, atmospheric science, or environmental monitoring",
+                "signals": {
+                    "og_candidates": ["MT"],
+                    "jes_factor_hints": ["Knowledge and skills", "Effort"],
+                    "teer_affinity": [2, 3],
+                },
+            },
+        ],
+    },
+    {
+        "id": "qb_education_cluster",
+        "phase_slot": "education_cluster",
+        "question": "What type of education or training work does this position primarily involve?",
+        "helper": "Consider whether the role is classroom-based, curriculum design, or nutrition and dietetics guidance.",
+        "input_type": "choices",
+        "options": [
+            {
+                "id": "education_teaching",
+                "label": "Teaching language, academic subjects, or specialized courses to government employees or in federal institutions",
+                "signals": {
+                    "og_candidates": ["ED"],
+                    "jes_factor_hints": ["Knowledge and skills", "Human relations"],
+                    "teer_affinity": [2, 3],
+                },
+            },
+            {
+                "id": "nutrition_dietetics",
+                "label": "Providing nutrition counselling, diet therapy, or food service management guidance",
+                "signals": {
+                    "og_candidates": ["NT"],
+                    "jes_factor_hints": ["Knowledge and skills", "Human relations"],
+                    "teer_affinity": [2, 3],
                 },
             },
         ],
