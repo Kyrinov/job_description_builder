@@ -39,7 +39,7 @@ v2.0 ports v1.0's production NOC + OG classification + JES engine into a convers
 - [x] **Phase 17: JES Scoring** (4/4 plans) — EC JES 2017 9-factor scoring with per-factor retry + advisor override; non-EC approximate totals; JES scorecard in live preview; POST `/api/jes/score`. (JES-01, JES-02, JES-03, JES-04, API-07) — completed 2026-06-08; browser UAT pending retest, see `17-HUMAN-UAT.md`
 - [ ] **Phase 18: JD Composition & Live Preview** — Verbatim NOC duty selection with provenance; advisor-added duties; orphan check; live document preview with ghost placeholders, composed overview, section click-to-edit, provenance footer. (JD-01, JD-02, JD-03, JD-04, DOC-01, DOC-02, DOC-03, DOC-04, DOC-05)
 - [x] **Phase 19: Qualifications & Amendments** — OG-matched qual standard defaults; editable textareas with validation; EQ section render; manager amendment notes per section; DOCX appendix for amendments. (QUAL-01, QUAL-02, QUAL-03, AMEND-01, AMEND-02) (completed 2026-06-09)
-- [ ] **Phase 20: Export** — DOCX WD export (docxtpl, provenance citations, version manifest); job poster DOCX; PDF export via WeasyPrint (ARM64 gate); POST `/api/wd/{id}/export/docx` + `/poster`. (EXP-01, EXP-02, EXP-03, API-08, API-09)
+- [x] **Phase 20: Export** — DOCX WD export (docxtpl, provenance citations, version manifest); job poster DOCX; PDF export via WeasyPrint (ARM64 gate); POST `/api/wd/{id}/export/docx` + `/poster`. (EXP-01, EXP-02, EXP-03, API-08, API-09) (completed 2026-06-10)
 
 **Coverage:** 52/52 v2.0 requirements mapped · 11 phases (10–20) · 0 unmapped · 0 orphans
 
@@ -317,12 +317,12 @@ Plans:
 4. `POST /api/wd/{id}/export/pdf` (or equivalent endpoint) renders to PDF via WeasyPrint after confirming ARM64 Pango/Cairo system libs are present on Jane; if libs are absent the endpoint returns 501 Not Implemented with a diagnostic message
 5. The advisor can trigger all three export formats from the review screen in the SPA; each download starts immediately with the correct MIME type and filename
 
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 20-01-PLAN.md — Wave 0: RED test stubs + WeasyPrint install + template build scripts + .docx binary artifacts (2026-06-09)
 - [x] 20-02-PLAN.md — Wave 1: export_service.py + export.py router + api/__init__.py + tests GREEN (2026-06-09)
-- [ ] 20-03-PLAN.md — Wave 2: app.jsx exportAs() wiring + UAT checkpoint
+- [x] 20-03-PLAN.md — Wave 2: app.jsx exportAs() wiring + UAT checkpoint
 
 ---
 
