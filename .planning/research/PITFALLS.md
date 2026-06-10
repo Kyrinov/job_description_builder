@@ -1,467 +1,254 @@
-# Domain Pitfalls: GoC JD Builder
+# Pitfalls Research — v3.0
 
-**Domain:** Government of Canada HR classification tooling + local LLM + RAG
-**Researched:** 2026-05-28
-**Sources:** Prototype CONCERNS.md, NEW-VERSION-FINDINGS.md, TBS directives, Ollama/Jetson issue tracker, LLM reliability research 2025
+**System:** React 18 SPA + FastAPI, ARM64 (Jetson AGX Orin), SQLite, docxtpl, WeasyPrint
+**Researched:** 2026-06-10
+**Scope:** Pitfalls specific to adding v3.0 features to the existing v2.0 production system.
 
----
-
-## Critical Pitfalls
-
-Mistakes that cause rewrites, grievances, or legal invalidation of output.
+This document is additive to `.planning/research/PITFALLS.md` (domain-level pitfalls from v1.0 research). It covers only the integration and implementation risks introduced by v3.0's five feature areas.
 
 ---
 
-### CRITICAL-01: JES Structural Entropy — Array Collapse in Ratings
+## Accessible JD Template — Template Variable Contract Drift
 
-**What goes wrong:** When asking a local model (Qwen/llama) to produce a full JES scoring sheet in a single prompt (8-12 factors, each with a rating and narrative rationale), the model generates accurate early factors and degrades by factor 5-6. Field names shift, numeric ratings appear as strings, factor definitions bleed across entries, and rationales start referencing the wrong factor. The JSON parses but the data is semantically corrupt.
+**Risk:** The new Accessible JD DOCX template (`data/AI Docs/Accessible Job Description Template (1).docx`) will have a different Jinja2 variable surface than the existing `wd_template.docx`. `_build_wd_context()` in `export_service.py` returns a precisely defined 15-key dict. Any variable referenced in the new template that is absent from that dict silently renders as an empty string in docxtpl — no exception is raised, no test fails, the exported document just has blank sections. This failure mode is invisible until a human opens the file.
 
-**Why it happens:** This is "array collapse" — a documented failure mode where complex nested structures degrade as generation progresses. Local models have weaker instruction-following under compounding context load than frontier models. A JES sheet is exactly the structure that triggers this: repetitive schema, similar content per entry, growing context.
+The existing system already has two separate `NON_EC_STANDARD_NAMES` dicts — one in `export_service.py` (lines 50-55) and one in `constants.py` (lines 600-605) — carrying different content. This is the clearest existing proof that contract drift happens in this codebase when two artifacts claim to own the same data.
 
-**Consequences:** An exported JES scoring sheet that looks complete but has ratings and rationales mismatched to factors. An HR advisor or reviewer who doesn't audit each factor line-by-line will not catch it. In a grievance, a mismatched rationale is as bad as a missing one.
+The build scripts (`build_wd_template.py`, `build_poster_template.py`) use `get_undeclared_template_variables()` to self-verify, but only if they are re-run after template changes. If a developer edits the `.docx` binary directly in Word without re-running the build script, the verification is bypassed entirely.
+
+Additionally, the Accessible JD template likely restructures Section 5 (qualifications) and may add accessibility-required fields (plain-language summary, screen-reader-friendly table structure) that have no matching key in `_build_wd_context()`. Adding new keys to the context dict without removing old ones is safe; renaming or removing keys while the old template is still referenced elsewhere will silently break the old template.
 
 **Prevention:**
-- Never generate the full JES sheet in a single LLM call
-- Generate each factor independently: one call per factor, with the full factor definition injected as context each time
-- Use Pydantic schema validation per factor with a 3-attempt retry loop before surfacing to the advisor
-- Temperature = 0 for all JES generation calls
+- Before touching any template file, run `get_undeclared_template_variables()` on both the old and new template and diff the outputs. The diff is the work that must happen in `_build_wd_context()`.
+- After building the new template, add a test that renders it with a known context dict and asserts that every declared variable is non-empty (not just that the render succeeded with non-zero bytes).
+- Consolidate the two `NON_EC_STANDARD_NAMES` dicts as part of this phase. The `export_service.py` copy should import from `constants.py`; it should not define its own version.
+- Gate the template swap with a flag (`USE_ACCESSIBLE_TEMPLATE=true` in env) so the old template can be tested side-by-side during the transition phase.
 
-**Detection:** After generation, run a cross-check: does the rating for Factor X fall within the valid point range for that factor per the applicable JES? This is deterministic logic, not LLM-dependent — implement as a validator.
-
-**Phase:** JES generation phase (JES-01, JES-02). Address in data model design before any generation logic is written.
-
-**Prototype precedent:** JD-Builder-Lite planned JES scoring but never fully built it. This is the most likely reason — the complexity was deferred, not solved.
+**Phase to address:** Accessible JD Template phase (whichever phase implements the template swap). The context dict audit must happen before the `.docx` binary is committed.
 
 ---
 
-### CRITICAL-02: Hallucinated NOC Statements That Sound Authoritative
+## Accessible JD Template — Section Reordering Breaks manifest / amendments Loop Logic
 
-**What goes wrong:** The model generates duty statements that are plausible, professionally worded, and stylistically consistent with real NOC language — but are not present in the source NOC unit group profile. Because they sound right, the advisor accepts them. The export cites a NOC code, but the specific statement doesn't exist in that profile.
+**Risk:** The TBS WD template sections are rendered in a fixed order: identification → context → duties → classification → qualifications → manifest → amendments. The Accessible JD template may reorder these sections (e.g., moving qualifications before classification, or merging the manifest into a footer). The `{%p for entry in manifest %}` and `{%p if amendments|length > 0 %}` loops in docxtpl are paragraph-level: they depend on the template's paragraph ordering, not the context dict. A section reorder that puts `{%p if amendments|length > 0 %}` before `amendments` is populated in the context will silently drop the appendix.
 
-**Why it happens:** The model has seen NOC-style language in training data. When generating duties, it interpolates rather than retrieves. This is especially likely when: (a) the NOC profile has few duty statements for the work described, (b) the model is generating duties 6-10 in a sequence where it started with real statements, or (c) the context includes both the advisor's free-text description and the NOC profile, and the model blends them.
-
-**Consequences:** Export contains citations like "NOC 21232 — Main Duties" that are fabricated. In a classification grievance, the cited source is checked. A statement that doesn't exist in the cited NOC profile undermines the entire traceability claim.
+This is not theoretical: the Phase 20 code review already logged CR-02 (HTML injection in WeasyPrint) as a consequence of the render order assumption in the PDF path.
 
 **Prevention:**
-- Hard constraint: every duty statement in the export must be a verbatim quote from a source document, stored in the database at ingest time, with a row ID
-- The LLM's role is selection and ranking, not generation of duty text
-- If the LLM generates a duty statement that has no matching row in the NOC data table, it must be flagged as "advisor-added / not from authoritative source" and cannot carry a NOC citation
-- Implement semantic similarity check: generated statement vs. closest NOC statement in vector space — if similarity < threshold, flag as likely hallucination
+- After building the new template, add a test that seeds a WD with two amendment notes and one manifest entry, renders the template, and opens the resulting DOCX with `python-docx` to assert that the amendment section is present and the manifest table has at least one row.
+- Do not rely on the "non-zero bytes and file > 5 kB" proxy test that current tests use. Those tests cannot detect a correctly-sized file with silently-empty sections.
 
-**Detection:** At export time, validate every cited statement: does the exact text (or a high-fidelity match) exist in the source document at the cited reference? Log any that fail this check as "provenance validation failures" and surface to advisor.
-
-**Phase:** NOC data ingestion and JD generation phases (JD-01, JD-02). The constraint architecture must be in place before generation logic is built.
+**Phase to address:** Accessible JD Template phase, test-writing step.
 
 ---
 
-### CRITICAL-03: Soft Citations That Don't Survive Grievance Scrutiny
+## QUESTION_BANK Scaling — Signal Contamination Across 12 New Groups
 
-**What goes wrong:** The export says "Based on NOC 21232" or "Aligned with IT collective agreement" without specifying which section, which statement, which version, or which date. This is the "soft citation" — it creates an appearance of traceability without actual traceability. An HR tribunal or grievance adjudicator who requests the source document and asks the advisor to point to the specific clause will find the citation is an assertion, not a reference.
+**Risk:** The current `QUESTION_BANK` has 4 questions covering 4 groups (EC, AS, IT, FI). The 12 new v3.0 groups (ED, FB, FS, LC, LP, MT, NT, NU, PO, PS, SW, WP) are structurally heterogeneous: FB (Border Services) overlaps significantly with EC and PS in policy/enforcement vocabulary; LP and LC are law groups whose JES factors align more with EC than with IT/AS; NU and NT are clinical roles that share no signal vocabulary with any current group. Adding options for all 12 new groups to the existing 4 questions will produce options whose `og_candidates` signals overlap with existing groups, degrading `accumulateSignals()`'s ability to rank candidates.
 
-**Why it happens:** It is much easier to generate soft citations than hard ones. Soft citations emerge naturally from prompts like "cite the source." Hard citations require the system to know the exact section, paragraph, and version of the source at write time.
+The current signal accumulation is a simple tally: `og_candidates` arrays are concatenated and the most-mentioned code wins. Adding 12 new groups with multi-group `og_candidates` entries (e.g., `["LP", "EC"]` for policy-heavy law work) means that a set of answers intended to surface LP will also increment EC, pushing a plausible-but-wrong group into the top-3.
 
-**Consequences:** Classification grievance challenge. TBS Directive on Classification requires that the work description be the basis for classification; if the WD's cited evidence cannot be located in the cited source, the classification is vulnerable. In audit or informal review, a soft-cited JD looks defensible but isn't.
+There is a second structural problem: the QUES-02 constraint forbids showing OG codes in user-visible text, which means question labels for 12 new groups must be worded without naming the group. With 12 groups, distinguishing "Social Work (SW)" from "Psychology (PS)" from "Nursing (NU)" using only abstract work-description language is genuinely hard. If the labels are too similar, users will select based on title similarity to their role, bypassing the Socratic intent.
 
 **Prevention:**
-- Every citation in the system must be a structured object at write time: `{source: "NOC 2021", code: "21232", section: "Main Duties", statement_index: 3, text_hash: "...", retrieved_date: "2026-05-28"}`
-- No citation is written as prose ("based on") — all citations are machine-readable references that render to formatted prose at export time
-- The export layer renders citations from structured objects; if the object is missing, the field renders as "source: unverified / advisor-added" rather than silently omitting it
+- Do not add all 12 groups to the existing 4 questions. Instead, introduce a branching question tree: a root question ("Is this a specialized scientific/clinical/legal role?") gates whether the advisor enters the existing EC/AS/IT/FI path or a new specialized-group path.
+- For the specialized path, keep question sets small and purpose-built per cluster: clinical (NU, NT, PS, SW), legal (LP, LC), enforcement/operations (FB, PO), and scientific/technical (MT, ED, FS, WP).
+- After extending `QUESTION_BANK`, run the existing signal-accumulation test suite against all 4-answer combinations and verify that no new group bleeds into the top-3 for answers clearly intended to surface a different group.
+- Add a `KNOWN_GROUPS` integration test: for each new group, specify the "ideal" answer set and assert that `accumulateSignals()` returns that group as the top candidate.
 
-**Detection:** Any citation that cannot be resolved to a specific source record (by ID or hash) before export should block export or generate a pre-export validation report.
-
-**Phase:** Data architecture phase. This constraint must shape the database schema — not be retrofitted. Address in Sprint 1.
+**Phase to address:** Broader OG Classification phase, before `QUESTION_BANK` entries are written for new groups.
 
 ---
 
-### CRITICAL-04: Work Description Missing Legally Required Elements
+## QUESTION_BANK Scaling — OG_LEVELS, OG_DEFINITIONS, QUAL_STANDARDS, NON_EC_TOTALS Must All Be Extended Together
 
-**What goes wrong:** The system generates a WD that looks complete — it has duties, qualifications, and a title — but is missing elements required by the TBS Directive on Classification (section 4.1.2). The missing elements are not obvious because the document looks well-formatted and professionally written.
+**Risk:** Adding a new group requires coordinated changes across at least 6 constants and data structures:
 
-**Why it happens:** The Directive on Classification requires specific elements in every WD (position information, work to be performed, supervisory responsibilities, contacts, working conditions, position context). A generation system that is not explicitly aware of this checklist will produce output that covers the elements the advisor described, not the required legal elements.
+| Artifact | Must add |
+|----------|----------|
+| `OG_LEVELS` | Level list (verified from rates CSV) |
+| `OG_DEFINITIONS` | Group definition text (from TBS OCHRO or JES standard) |
+| `QUAL_STANDARDS` | Default qualification text |
+| `NON_EC_TOTALS` | Approximate total points per level (from JES standard) |
+| `NON_EC_STANDARD_NAMES` (both copies, or consolidated) | Standard name string |
+| Frontend `QUAL_DEFAULTS` in `data.jsx` | Matching qualification text |
 
-**Common missing elements (from TBS Directive):**
-- Financial authorities / delegated authorities for the position
-- Supervisory / managerial responsibilities explicitly stated (even if zero)
-- Physical and environmental conditions (even if standard office conditions)
-- Position context / reporting structure
-- Freedom to act / decision-making latitude
-- Contacts (internal and external, nature and purpose)
+Of the 12 new v3.0 groups, 10 (ED, LC, LP, MT, NT, NU, PO, PS, SW, WP) have no rates CSV in `data/rates_of_pay/`, meaning `OG_LEVELS` level counts must be derived from the JES standard files directly. Several of those files are scraped HTML with inconsistent formatting (see the `FS Foreigns Service - Job Evauation Standard.txt` typo in the filename — likely a scrape artifact). The FB group already has two JES-related files (`FB Border Services - Job Evaluation Standard 2005.txt` and `FB Border Services - Application Guidelines 2005.txt`), and it is not immediately obvious which file contains the point scales.
 
-**Consequences:** A WD that passes casual advisor review but fails a classification quality audit or serves as a weak foundation for a grievance response. Retroactive correction requires re-classification.
+If any of these 6 artifacts is extended without the others, the export manifests a silent failure: `NON_EC_STANDARD_NAMES.get(og_code, "JES")` in `_build_v2_manifest()` falls back to the literal string `"JES"` for an unknown group, which is not a valid citation in an HR document. The frontend `getQualDefault()` returns the generic default text for an unrecognized OG code, which may not satisfy the applicable TBS Qualification Standard for that group.
 
 **Prevention:**
-- Build a WD completeness checklist as a pre-export validation step: for each required element, assert that the generated content addresses it
-- Each element must be explicitly represented in the data model — not inferred from duty text
-- Surface missing elements to the advisor as required fields, not optional suggestions
-- Export is blocked (or warnings surfaced) until all mandatory elements have content
+- Create a checklist requirement: adding a new OG group is not complete until all 6 artifacts are updated. Gate this with a test: for every key in `OG_LEVELS`, assert that a corresponding entry exists in `OG_DEFINITIONS`, `QUAL_STANDARDS`, and `NON_EC_TOTALS` (or that the group is EC, the only group with per-factor scoring).
+- Consolidate the duplicate `NON_EC_STANDARD_NAMES` before adding 12 new entries to it. Having two sources of truth for standard names with 4 entries will become unmanageable with 16.
+- Add a cross-parity test between backend `QUAL_STANDARDS` and frontend `QUAL_DEFAULTS` (the Phase 19 code review flagged this AS/EC content drift as advisory; it must be a failing test for v3.0 since 12 new groups will all need matching pairs).
+- Before writing new constants, verify `OG_LEVELS` for each new group by parsing the relevant JES standard file — do not guess levels from job titles.
 
-**Detection:** A static checklist validator that checks for presence/non-emptiness of each required WD section. This is deterministic logic.
-
-**Phase:** JD data model design phase. The WD schema must match the Directive's required elements before any generation is built.
+**Phase to address:** Broader OG Classification phase, data-entry step. This is a pre-condition for any classification work on new groups.
 
 ---
 
-### CRITICAL-05: Version Drift — Citations Point to Superseded Sources
+## CBA Clause Matching — False Positive Audit Findings in an HR Legal Context
 
-**What goes wrong:** The system is built against NOC 2021 v1.0, EC collective agreement 2022-2025, and JES version X. A data update occurs (CA renegotiation, NOC revision, JES amendment). The source files are updated on disk. But previously generated JDs retain the old citations — and the export metadata says "NOC 2021 v1.0" when the data file has been silently updated to v1.1.
+**Risk:** A false positive in the Risk Audit — flagging a valid duty statement as a CA violation — is not a minor inconvenience in an HR legal context. It is actively dangerous for two reasons.
 
-**Why it happens:** Source version is not tracked at the record level; it is assumed from the file path or a global config value. When the file changes, all records in the derived table implicitly change version without any record of what changed.
+First, advisor fatigue: if the audit flags obviously-valid duty text, advisors learn to dismiss all audit findings, including true positives. This is the canonical false-positive failure mode in compliance tooling: the signal-to-noise ratio degrades to the point where the tool's findings are treated as noise by default. A tool that advisors learn to ignore provides negative value compared to no tool at all.
 
-**Consequences:** A JD generated 18 months ago that cited "EC CA Article 7.3" may now reference a clause that was renumbered or amended. The citation points to the right article by number but the text has changed. In a grievance, the original text matters.
+Second, documentation risk: if an advisor accepts (clicks "Accept") on an audit finding that incorrectly says "this duty may conflict with Article 7.3 of the EC CA," the audit trail records that the advisor reviewed and accepted a CA concern. If the WD is later challenged and the audit log is produced in discovery, a row saying "Accepted: potential CA conflict" exists even when there was no actual conflict. The audit log becomes a liability rather than protection.
+
+The CBA files in `data/agreements/` are large (`EC_full.txt` is 336 KB, `PA_full.txt` is 534 KB). String-matching duty text against entire CA articles without semantic grounding will produce false positives on shared vocabulary: "provides advice" appears in articles about overtime, leave, and grievance procedures as well as scope clauses.
 
 **Prevention:**
-- Every source document ingested gets a content hash and a version label stored at ingest time
-- Every derived record (NOC statement, CA article, JES factor) stores the source document version hash it was derived from
-- When a source file is updated, re-ingest is explicit (not automatic) and creates a new version, not an overwrite
-- Exports store the full version manifest: which version of each data source was active when the JD was generated
-- Old JDs are never retroactively re-cited against new source versions without advisor action
+- Scope the CBA clause matching to a curated subset of articles, not the full agreement. The relevant articles for a WD audit are: scope/application clauses (which positions are covered), classification-relevant exclusions (what work is excluded from the bargaining unit), and any articles that constrain the content of work descriptions. Do not attempt to match against all 80+ articles in a typical CA.
+- Use a pre-extracted clause index (built once at startup from the JSON versions of the CBA files that already exist in `data/agreements/*/`), not real-time full-text search. The JSON files (`EC_full.json`, etc.) are already present and structured; use them.
+- Require at least two signal types to fire an audit flag: (1) vocabulary match AND (2) the matched article is in the set of classification-relevant articles. Single-signal flags should be silently suppressed.
+- Display the matched CA text verbatim alongside every audit finding so the advisor can immediately see whether the match is plausible. Do not just display the article number.
+- Make the "Skip" option prominent and labeled "Not applicable — no conflict found." Do not label it "Dismiss" or "Ignore" (which imply the advisor is overriding a real concern).
 
-**Detection:** A "stale citation" report: for each JD in the system, compare the stored source version hash against the current active source version. Flag any JDs where citations reference an older version than is currently loaded.
-
-**Phase:** Data ingestion and medallion architecture phase. Version tracking must be built into the Bronze→Gold pipeline before the first source document is ingested.
+**Phase to address:** Risk Audit phase, requirements and UX design step, before any matching logic is written.
 
 ---
 
-## High-Priority Pitfalls
+## CBA Clause Matching — Parsing Large .txt CBA Files at Runtime
 
-Mistakes that cause significant rework, compliance gaps, or degraded output quality.
-
----
-
-### HIGH-01: Context Window Exhaustion With JES Documents
-
-**What goes wrong:** JES documents for some occupational groups are 40-80 pages. Injecting a full JES into a prompt with the WD duties, the advisor's input, and the system instruction exceeds the context window of a 7B-14B parameter model (typically 8k-32k tokens in practice, even if the model claims higher). The model silently truncates the earlier parts of the context — usually the system instructions or the beginning of the JES — and generates ratings as if it received complete context.
-
-**Why it happens:** Models do not error when context is exceeded with recent Ollama versions — they truncate silently. The output looks complete. Research shows hallucination frequency increases monotonically as context fills, particularly dropping information from the middle of long contexts ("lost in the middle" effect).
-
-**Consequences:** JES ratings generated with incomplete factor definitions, system instructions ignored, or duties truncated. Ratings may be internally consistent but wrong because the model was working from partial information.
+**Risk:** The 28 CBA directories each contain both a `.txt` file (336 KB to 534 KB) and a `.json` file. If the Risk Audit parses the `.txt` files at runtime per export/audit request, it will add 1-2 seconds of I/O + text processing to an already compute-bound export pipeline running on a Jetson. More critically, the `.txt` files are scraped HTML with inconsistencies: the FS file has a typo in its filename, the FB directory has two files with different scope, and the scraped text includes navigation headers and "Skip to main content" artifacts that will produce garbage matches.
 
 **Prevention:**
-- Estimate token count before each LLM call; if > 60% of model context window, switch to chunked strategy
-- For JES generation: inject only the specific factor definition for the factor being rated, not the full JES document
-- Use a lightweight context budget tracker: system prompt + factor definition + relevant duties = budget check before call
-- Never rely on the model to handle its own context limits
+- Use the `.json` files, not the `.txt` files, for the Risk Audit. They are already pre-structured.
+- Pre-process the relevant CA clauses into a purpose-built in-memory index at application startup (or first audit request), not on every audit call. Cache keyed by `(og_code, ca_version_hash)`.
+- The audit should only load clauses for the confirmed OG group's CA, not all 28. EC advisor audits only need the EC CA; PA advisor audits only need the PA CA (which covers AS, CR, and PM).
 
-**Detection:** Log token estimates (not just response length) for every LLM call. Alert if any single call exceeds 70% of the context limit.
-
-**Phase:** LLM integration layer. Build the context budget tracker as a utility before writing any JES or generation prompts.
+**Phase to address:** Risk Audit phase, data access layer design.
 
 ---
 
-### HIGH-02: Embedding Model Mismatch Between Index and Query
+## Writing Guide Validation — The False-Positive Annoyance Threshold
 
-**What goes wrong:** The NOC and JES data is indexed at build time using embedding model A (e.g., `nomic-embed-text`). Later, the application is updated or redeployed and embedding model B is used for query-time embeddings. Semantic search silently degrades: the vector space of queries and documents no longer aligns, but the system still returns results (just wrong ones).
+**Risk:** The Job Description Writing Guide describes principles like "use active voice," "start duties with a verb," and "avoid vague language." A validation pass that mechanically checks these principles against every duty entry will flag legitimate professional language as a violation. Specific examples from real GC WDs that a naive validator would flag:
 
-**Why it happens:** Embedding models are rarely versioned or locked in early development. The developer updates Ollama, a new model default is pulled, and the index is never regenerated. This is the most common RAG operational failure in production.
+- "Responsible for the coordination of..." — technically passive construction but standard GC administrative language
+- "Ensures compliance with..." — "Ensures" is a valid active verb but may be flagged as vague by a keyword-based check
+- "Acts as departmental representative..." — "Acts as" is idiomatic and appropriate but may trigger a "weak verb" check
+- Duty statements for senior positions legitimately start with "Leads," "Directs," "Oversees" — a validator trained on EC-04 norms will flag these as vague for an EC-07 role
 
-**Consequences:** NOC matching returns similar-but-wrong unit groups. The advisor selects duties from the wrong occupational profile. The resulting JD has duty statements that are plausible but sourced from the wrong classification context.
+The failure mode is the same as CBA false positives: advisors learn to dismiss all validation flags, including real ones. The writing guide validation must have a precision rate high enough to be trustworthy in daily use. For an internal HR tool used by classification specialists, "trustworthy" means fewer than 1 false flag per 5 duties on a well-written WD — which is a high precision bar.
+
+There is also a role-level dependence problem: what constitutes a "vague" duty at EC-03 level is appropriate at EC-07. A validator that does not account for the confirmed OG and level will consistently over-flag senior positions.
 
 **Prevention:**
-- Store the embedding model name and version in the index metadata
-- At app startup, assert that the configured embedding model matches the model used to build the index
-- If mismatch detected, refuse to run queries and require re-indexing
-- Pin the embedding model in config (`EMBED_MODEL=nomic-embed-text:v1.5`) and treat changes as a breaking change requiring index rebuild
+- Do not implement a keyword blacklist for "vague verbs." Instead, validate structural properties only: does the duty start with a verb (any verb, not just "strong" ones), is it a single sentence (no semicolons concatenating multiple duties), is it within the word count range (8-25 words is a reasonable range for GC WD duties).
+- Make every writing guide flag suppressible per-duty without affecting other duties. The advisor should be able to mark "This flag is not applicable to this duty" and have the system remember that for the session.
+- Surface writing guide tips as suggestions with an inline example of the improvement, not as errors. Reserve the error/blocking style for genuinely invalid content (empty duty field, duplicate duty text).
+- Test the validator against the existing SJD examples in `data/SJD Examples.txt` before shipping. If it flags more than 15% of SJD duty statements as violations, the validator is too aggressive.
 
-**Detection:** Startup assertion: `assert index.embed_model == config.EMBED_MODEL`. Log warning and block search if mismatch.
-
-**Phase:** RAG/data pipeline phase. The assertion and version tracking must be built before any semantic search is used in the application.
+**Phase to address:** Writing Guide integration phase. Establish the structural-only validation rule before any keyword-matching logic is written.
 
 ---
 
-### HIGH-03: Chunking Breaking JES Factor Definitions
+## SJD Library — Template Variable Mismatch When Pre-Populating
 
-**What goes wrong:** JES factors have a logical structure: factor name → definition → sub-factors → point scale → benchmark positions. If the JES document is chunked by fixed token count, a chunk boundary falls mid-definition, separating the point scale from the factor description it belongs to. Retrieval returns a chunk containing the point values without the qualitative definitions, or vice versa.
+**Risk:** An SJD from `data/SJD Examples.txt` carries these fields: Job Title, JobCode, SJD Number, Group Level, NOC/CNP, Salary, Organizational Context. The v2.0 conversation record carries: title, branch, reports, summary, position_number, duties, quals, og_code, og_level. The mapping is not 1:1:
 
-**Why it happens:** Fixed-size chunking is the default in most RAG frameworks and is applied without domain awareness. JES documents are not narrative prose — they are structured reference tables. Fixed chunking destroys the structural relationships.
+| SJD field | Maps to record field | Risk |
+|-----------|---------------------|------|
+| Job Title | record.title | Safe |
+| Group Level (e.g. "AS-01") | og_code + og_level | Must be parsed and split |
+| NOC / CNP | noc confirmation answer | Requires the NOC pipeline to re-run or be bypassed |
+| Organizational Context | record.summary (approximately) | Text is usually a paragraph, not a one-liner |
+| Salary | No field in v2.0 record | Must be dropped or stored as a display-only note |
+| Supervisory (Yes/No) | No direct field | Relevant for QUESTION_BANK answers, not record directly |
+| Competencies | No field in v2.0 | Must be dropped |
+| Streams | No field in v2.0 | Must be dropped |
 
-**Consequences:** The model receives a chunk with the right factor name but incomplete definition, generating ratings that are structurally correct but semantically unanchored.
+The highest-risk mapping is Group Level → og_code + og_level. The SJD format uses "AS-01" (OG code + hyphen + level with leading zero). The v2.0 system stores og_code and og_level separately (`wd.confirmed_og` as a dict with `og_code` key, `wd.og_level` as an integer). An SJD pre-population that writes "AS-01" directly to a field expecting a dict or integer will cause a Pydantic validation error at the next PATCH call — and since the error surfaces at PATCH time (not at pre-population time), the advisor may have already added several answers before the error is discovered.
 
 **Prevention:**
-- Parse JES documents structurally (not as flat text): extract each factor as a discrete object with all its sub-components intact
-- Store factors as structured records in the database, not as vector-indexed text chunks
-- For JES tasks, retrieve by structured lookup (factor name → DB record), not semantic search
-- Only use semantic search for fuzzy tasks (NOC matching, CA validation); use structured lookup for authoritative reference data
+- Write and test a dedicated `parse_sjd_record(sjd_text: str) -> dict` function before any SJD pre-population logic touches the WD data model. The function should return a dict with the same keys as `WDPatchRequest`, not a raw SJD field dict.
+- Specifically: parse "AS-01" → `{"confirmed_og": {"og_code": "AS", "og_name": "Administrative Services"}, "og_level": 1}` using `_og_code_from()` style parsing, and validate the parsed og_code against `OG_LEVELS` before writing.
+- Define explicitly which SJD fields are dropped (Salary, Supervisory, Streams, Competencies) and assert that the pre-population function never writes those fields to the WD record.
+- For Organizational Context: the SJD text is a full paragraph. Pre-populate it into `record.summary`, not `record.branch` or `record.title`. Surface it in the SPA as a pre-filled text that the advisor can edit, not as a locked value.
 
-**Detection:** After JES document ingestion, validate that each factor record contains all required sub-components (definition, point scale, sub-factors). Fail ingestion if any factor is incomplete.
-
-**Phase:** JES data ingestion phase.
+**Phase to address:** SJD Library phase, data mapping design step.
 
 ---
 
-### HIGH-04: NOC 2021 vs NOC 2016 Confusion in Source Data
+## SJD Library — Stale SJD Data and Provenance Integrity
 
-**What goes wrong:** The data layer contains a mix of NOC 2021 (5-digit TEER codes) and NOC 2016 (4-digit skill-level codes) profiles. Classification logic that was written against NOC 2016 structure is invoked with NOC 2021 data, or vice versa. Occupational group mappings from TBS (written against NOC 2016) are applied to NOC 2021 codes that do not have direct equivalents.
+**Risk:** The SJDs in `data/SJD Examples.txt` are a point-in-time snapshot. If an advisor uses an SJD as their starting point, the export must clearly attribute that the WD was seeded from a specific SJD (by SJD Number and date). If the SJD's source level or duties are outdated (e.g., the salary range in the SJD predates the current collective agreement), the export's version manifest must show the SJD as a source with a version date — not silently absorb the SJD content as if it were original advisor input.
 
-**Why it happens:** Canada's NOC transition (November 2022) restructured ~500 occupations. GoC departments were mid-transition as of 2024. The existing data directory contains legacy files from the JD-Builder-Lite prototype era. Some OG-to-NOC mappings may reference NOC 2016 codes that no longer exist in the 2021 taxonomy.
-
-**Consequences:** An IT position described in NOC 2021 TEER terms might match to a NOC 2016 unit group that maps to the wrong OG, or to a 2021 group that has no TBS OG mapping yet. The system suggests the wrong occupational group with misleading confidence.
+The current `_build_v2_manifest()` function walks `wd.duties[*].provenance_noc_code` and root-level fields. It has no path for SJD provenance. If SJD pre-population writes duties to `wd.duties` with `advisor=True` (because they did not come from the live NOC pipeline), the manifest will tag them as advisor-added — which is technically correct but obscures the fact that they came from an authoritative DND SJD.
 
 **Prevention:**
-- At data ingest time, tag every NOC profile with its NOC version (`NOC_VERSION=2021` or `NOC_VERSION=2016`)
-- All application logic operates on NOC 2021 only; any NOC 2016 data is excluded or must be migrated
-- OG-to-NOC mappings must be validated against the NOC 2021 taxonomy before being used
-- Add a data quality gate at startup: assert that all loaded NOC profiles have `NOC_VERSION=2021`
+- Add an `sjd_source` field to `WorkDescription` (or to `record`) that stores `{sjd_number, sjd_date, sjd_title}` when a WD is seeded from an SJD. The field is `None` for WDs started from scratch.
+- Extend `_build_v2_manifest()` to emit an SJD source entry when `wd.sjd_source is not None`.
+- For duties imported from an SJD, use a new provenance tag value (e.g., `source="sjd"`) rather than `advisor=True`. This allows the export to distinguish "advisor wrote this" from "this came from a DND SJD."
 
-**Detection:** Query the loaded data for any profiles without a version tag or with `NOC_VERSION=2016`. Log as data quality errors and exclude from matching.
-
-**Phase:** Data ingestion and Bronze→Gold pipeline phase. Version tagging must be enforced at ingest, not added retroactively.
+**Phase to address:** SJD Library phase, data model step. The `WorkDescription` schema change must happen before any SJD pre-population logic is written.
 
 ---
 
-### HIGH-05: Collective Agreement Version Staleness
+## Broader OG Classification — Disambiguation Alert Scaling
 
-**What goes wrong:** The CA data files in the `data/` directory were collected at a specific point in time. CAs are renegotiated on 3-5 year cycles. The 25+ OG CA files represent a snapshot. When a CA expires and is renegotiated, the article numbers, exclusions, and duty scope definitions may change. The system's CA validation logic continues checking against the old CA version without warning.
+**Risk:** The current AS/EC disambiguation alert fires when both AS and EC appear in the top-3 OG candidates. It is a single hard-coded alert stored in `ASEC_DISAMBIGUATION` in `constants.py`. With 12 new groups, several new ambiguous pairs will exist:
 
-**Why it happens:** There is no CA versioning mechanism. The files are static. Without an explicit refresh process and version tracking, the system silently operates on stale policy data.
+- LP (Law Practitioner) vs. LC (Law Management) — both law groups, very similar work descriptions
+- PS (Psychology) vs. SW (Social Work) vs. NT (Nutrition and Dietetics) — all human services clinical roles
+- EC vs. ED (Education) — both policy/analysis oriented; research and teaching roles overlap
+- FB (Border Services) vs. PO (Police Operations Support) — both enforcement/operations
 
-**Consequences:** CA validation produces false-passes (a duty that now violates the updated CA passes validation) or false-flags (a duty that was clarified as permissible in the new CA is flagged as a violation). Either outcome degrades advisor trust and creates compliance risk.
+If the disambiguation pattern is extended by adding a separate constant for each pair (as was done for ASEC), the constants file will have O(n²) disambiguation entries for n groups. With 12 new groups, that is potentially 66 pairs, most of which will never fire.
 
 **Prevention:**
-- Every CA file must have a version date and expiry date in its metadata
-- The application surfaces a warning if any CA in use is past its expiry date
-- CA validation reports must include the CA version and dates used, so the advisor knows the validation was run against a specific version
-- Build a manual refresh workflow (pull updated CA → re-ingest → update version metadata) even if automated sync is out of scope
+- Refactor the disambiguation pattern before adding new groups. Instead of a dict per pair, use a rule-based structure: `DISAMBIGUATION_RULES = [{groups: {"LP", "LC"}, text: "...", citation: "..."}, ...]`. The classifier checks whether any rule's group set is a subset of the top-3 candidates and fires the appropriate alert.
+- Add disambiguation entries only for pairs that are empirically confused: run `accumulateSignals()` against a set of real position descriptions that are known edge cases and identify which pairs appear together in the top-3 most frequently.
+- Keep the existing `ASEC_DISAMBIGUATION` constant for backward compatibility, but migrate it to the rule-based structure in the same phase.
 
-**Detection:** At app startup, check CA file metadata dates. Warn if any CA has an expiry date in the past.
-
-**Phase:** Data pipeline and CA validation phase (CA-01, CA-02).
+**Phase to address:** Broader OG Classification phase, constants design step, before adding new group entries.
 
 ---
 
-### HIGH-06: Memory Pressure and OOM on Jetson AGX Orin
+## ARM64 Pitfalls for New Dependencies
 
-**What goes wrong:** A JES generation run that makes 10+ sequential LLM calls (one per factor) keeps the model loaded in VRAM. While the model is loaded, the RAG index is also in memory, along with Python process memory for parquet data. Under sustained use, memory pressure causes the Ollama process to OOM-kill, silently dropping in-flight requests and requiring model reload.
+**Risk:** The Jetson AGX Orin (aarch64) already runs the full v2.0 stack cleanly. New v3.0 features may introduce dependencies that are unavailable or broken on ARM64.
 
-**Why it happens:** Jetson AGX Orin has unified memory (CPU and GPU share a pool). Ollama's memory management for Jetson has known issues — specifically, memory may not release cleanly after model unloading (confirmed in Ollama issue tracker, issues #12283 and #12528 as of 2025). Reducing context window from 8192 to 2048 can save 1-2GB per call, but this directly conflicts with long JES documents.
+**Specific risks by feature:**
 
-**Consequences:** Mid-generation failure for a JES scoring sheet. The advisor gets a partial result with no clear error message. Restarting requires reloading the model (cold start: 15-30 seconds for a 7B model on Jetson).
+**Risk Audit (CBA parsing):** The existing `.json` CBA files can be parsed with `json` (stdlib) and matched with `rapidfuzz` (which is already installed and has ARM64 wheels at version 3.14.5). No new dependency risk here if the implementation stays within these tools. Risk arises if an NLP-based approach is chosen: `spacy` is not currently installed and its ARM64 wheels are available but large (200+ MB). `sentence-transformers` is installed (version 5.2.2) and will work but adds latency on every audit call if used for semantic clause matching — this is acceptable only if the clause index is pre-computed at startup, not computed per-audit.
+
+**Writing Guide validation:** A structural validator (verb-first check, word count check) requires only `re` (stdlib) and has no ARM64 risk. Risk arises only if a grammar/NLP library is chosen. `language-tool-python` requires a Java runtime which is not confirmed present on the Jetson. Do not use it.
+
+**SJD Library (PDF parsing of `SJD-guide.pdf`):** `pdfplumber` and `pymupdf` (fitz) both have ARM64 wheels. `PyMuPDF` is the faster choice for text extraction from structured PDFs. Neither is currently in `requirements.txt`. However, `data/SJD Examples.txt` is already a plain-text file — use it directly rather than parsing the PDF for the initial implementation. Defer PDF parsing to a later iteration.
+
+**docxtpl template swap:** No new dependency risk. `docxtpl 0.19.0` and `python-docx 1.1.2` are already installed and ARM64-compatible.
+
+**Broader OG (12 new groups):** The JES scoring for new groups uses the existing `NON_EC_TOTALS` pattern (hardcoded approximate totals, no LLM). No new dependency risk.
 
 **Prevention:**
-- Set an explicit `OLLAMA_NUM_CTX` cap in environment config appropriate to Jetson's available memory
-- Generate JES factors in sequential, independent calls — do not batch multiple factors per call
-- Implement a circuit breaker: if an LLM call fails with OOM or timeout, surface a clear error and offer retry rather than silently returning partial output
-- Lazy-load non-critical in-memory data (parquet tables not needed for current workflow step)
-- Test under sustained multi-step workflows (full JD generation end to end) before declaring the pipeline production-ready
+- Before adding any new `pip` dependency for v3.0, verify ARM64 wheel availability: `pip download --platform manylinux2014_aarch64 --python-version 311 --only-binary :all: <package>` from the Jetson directly.
+- For the Risk Audit, implement the first version using `rapidfuzz` (already installed) against the pre-structured JSON clause index. This avoids any new dependency entirely.
+- Do not introduce `language-tool-python` or any Java-dependent grammar checker.
+- For SJD PDF parsing (if needed): choose `pymupdf` over `pdfplumber`. Add it to `requirements.txt` only when actually needed, not speculatively.
 
-**Detection:** Monitor Ollama process memory between calls during test runs. Log pre-call and post-call memory estimates. Set warning threshold at 80% of Jetson's available unified memory pool.
-
-**Phase:** Infrastructure and LLM integration phase, and integration testing phase.
+**Phase to address:** Each feature phase, in the requirements/dependencies verification step before implementation begins.
 
 ---
 
-## Moderate Pitfalls
-
-Mistakes that degrade quality or increase rework without causing legal/compliance failures.
-
----
-
-### MOD-01: Semantic Retrieval Returning Similar-but-Wrong NOC Profiles
-
-**What goes wrong:** An advisor describes "financial analyst performing budget forecasting and variance analysis for a federal department." The semantic search returns FI (Financial Management) profiles alongside EC (Economics and Social Science) and AS (Administrative Services) profiles with high similarity scores. The top result is FI-02, but the correct classification is EC-04. The advisor, trusting the ranked list, selects FI.
-
-**Why it happens:** Embedding similarity reflects surface vocabulary overlap, not occupational classification logic. Financial analysis language appears in multiple NOC unit groups. Semantic search cannot apply the TBS OG inclusion/exclusion rules (which require domain knowledge, not semantic similarity).
-
-**Prevention:**
-- Treat semantic search as a shortlist tool, not a classifier
-- Layer structured OG exclusion logic on top of semantic results: after retrieval, apply OG definition checks to eliminate candidates that clearly fail inclusion/exclusion criteria
-- Surface the OG inclusion/exclusion rationale alongside each candidate so the advisor can apply policy judgment
-- Show similarity scores — do not hide the fact that multiple candidates are close
-
-**Detection:** Implement a smoke test suite with 10-15 known position descriptions and their correct OG mappings. Run this suite after any change to the embedding model, chunking strategy, or retrieval configuration.
-
-**Phase:** NOC matching and classification phase (INPUT-01, CLASS-01, CLASS-02).
-
----
-
-### MOD-02: Prompt Drift in Duty Statement Generation
-
-**What goes wrong:** The system generates 10 duty statements in sequence for a JD. Statements 1-4 follow the required format: active verb, object, context. By statement 7, the model has shifted to a different style — passive voice, different specificity level, or introducing qualifications that belong in the skills section. The JD is internally inconsistent without the advisor noticing.
-
-**Why it happens:** This is alignment drift in multi-turn or long-sequence generation. System prompts are too brittle for sustained long contexts. The model's attention on early instructions degrades as the generation sequence grows.
-
-**Prevention:**
-- Generate each duty statement independently with the full formatting instruction in each call — do not rely on the model "remembering" format requirements from statement 1 to statement 10
-- Post-process: run a consistency check comparing structural patterns (first word is a verb, no qualification language) across all generated statements
-- Provide 2-3 worked examples in every duty generation prompt (few-shot, not zero-shot)
-
-**Detection:** A lightweight structural validator: check that each duty statement starts with an imperative verb, stays within word count bounds, and contains no language from the "belongs in skills/qualifications" category (maintain a keyword list).
-
-**Phase:** JD generation phase (JD-01).
-
----
-
-### MOD-03: OG Scope Creep Into Another Group's Territory
-
-**What goes wrong:** A DND position classified as EC involves some procurement coordination duties. The generated duty statements include "Coordinates procurement activities and liaises with contracting officers." Under the EC collective agreement, procurement-focused work belongs to PG (Purchasing and Supply). Including a procurement-heavy duty may expose the WD to a CA scope challenge.
-
-**Why it happens:** NOC profiles describe what people do, not which GoC collective agreement they fall under. The model generating duties from NOC has no awareness of CA boundary conditions between OGs. Duty scope overlap is common in real positions, but the JD must be drafted to reflect the dominant work, not inadvertently import duties that belong to another bargaining unit.
-
-**Prevention:**
-- After duty generation, run CA validation (CA-01) with explicit scope-boundary checks: for each OG, load the CA exclusions and cross-reference duties against those exclusion patterns
-- Surface flagged duties as "potential scope conflict with [OG] CA" rather than silently including them
-- Include OG definition exclusions in the classification prompt so the model is aware of boundary conditions when suggesting duties
-
-**Detection:** CA validation step with duty-by-duty scope flags. Pattern matching on known scope-boundary terms (procurement → PG, information technology → CS/IT, legal → LP, etc.).
-
-**Phase:** CA validation phase (CA-01, CA-02). Also feed back into classification phase.
-
----
-
-### MOD-04: Qualification Standard Education Requirements Set Too High
-
-**What goes wrong:** The system pre-populates education requirements from the applicable Qualification Standard (e.g., "Graduation with a degree from a recognized university" for EC). The advisor, not re-reading the standard carefully, raises the requirement to "Master's degree" based on the seniority of the position. This over-specifies the minimum standard in a way that is not supported by the Qualification Standard and may be challenged as an unnecessary barrier in staffing.
-
-**Why it happens:** The qualification standard sets a minimum. Raising it requires documented rationale under the PSEA and Directive on Classification. Advisors frequently conflate "preferred qualifications" with "minimum standard." The tool may contribute to this by not making the distinction visible.
-
-**Prevention:**
-- Clearly distinguish minimum standard (from TBS Qualification Standard) from "asset qualifications" (position-specific enhancements) in the UI and data model
-- If an advisor raises the minimum above the standard, require them to enter a documented rationale (stored as a provenance note)
-- Surface the relevant Qualification Standard text inline so the advisor sees the authorized minimum before modifying
-
-**Detection:** Validation rule: if the education field contains language more restrictive than the standard for the OG (e.g., "master's" where the standard only requires "degree"), flag it with the relevant standard reference.
-
-**Phase:** Qualification standards phase (QUAL-01).
-
----
-
-### MOD-05: Rubber-Stamping — Advisor Accepts AI Output Without Substantive Review
-
-**What goes wrong:** The tool produces a well-formatted, professionally worded JD. The advisor, under time pressure, reviews it in 2 minutes and approves it for export. The JD contains a hallucinated duty statement (CRITICAL-02), a mismatched JES rationale (CRITICAL-01), and a missing required WD element (CRITICAL-04). All of these would have been caught by a 20-minute review but were missed because the quality of the output's appearance reduced the advisor's vigilance.
-
-**Why it happens:** High-quality AI output reduces cognitive engagement. Research (November 2025) specifically identifies this as "maximalist AI use minimizing agency expertise and careful consideration." The more complete the tool's output looks, the less likely the advisor is to interrogate it.
-
-**Prevention:**
-- Design the review flow to require explicit advisor action on each generated element, not a single "approve all" button
-- Highlight which elements are AI-generated vs. sourced verbatim vs. advisor-entered — visual distinction must be persistent, not a one-time warning
-- Include a pre-export checklist that explicitly prompts the advisor to verify: (a) duty statements against source, (b) JES ratings against factor definitions, (c) education requirements against the standard
-- Do not export without the advisor completing the checklist (with timestamps stored for audit)
-
-**Detection:** Track which review steps the advisor completed and how long was spent. If total review time is < 5 minutes for a full JD, log it as a quality concern.
-
-**Phase:** UX design and export phase (EXPORT-01). The review flow architecture must be decided before UI is built.
-
----
-
-## Minor Pitfalls
-
-Issues that cause friction or localized failures without systemic impact.
-
----
-
-### MINOR-01: Ollama Cold Start Latency on First Request
-
-**What goes wrong:** The first LLM call after app startup takes 15-30 seconds while Ollama loads the model into VRAM. The advisor has no feedback during this time and may assume the application has hung.
-
-**Prevention:** Pre-warm the model at app startup with a trivial call (e.g., `"ping"`). Show a loading indicator during warmup. Log the warmup completion time.
-
-**Phase:** Application startup / infrastructure phase. The prototype had this same issue (CONCERNS.md: 30-60 second cold start).
-
----
-
-### MINOR-02: Hardcoded Data Paths Preventing Environment Portability
-
-**What goes wrong:** Data file paths are hardcoded to the development machine, making the app non-runnable on a clean clone.
-
-**Prevention:** All paths via environment variables with explicit startup validation. This is a direct lesson from JD-Builder-Lite (CONCERNS.md: `C:/Users/Administrator/Dropbox/...`).
-
-**Phase:** Project setup / Sprint 1. Non-negotiable — must be in place before any other development.
-
----
-
-### MINOR-03: Circular Provenance — AI Rewrite Severing the Source Chain
-
-**What goes wrong:** The advisor requests that the tool "rewrite" a sourced NOC statement in plain language. The system rewrites it. The result is now stored with the original NOC citation, but the text is the model's paraphrase, not the verbatim source. If the paraphrase diverges significantly, the citation is now fraudulent — it points to a source that says something different from what the WD actually contains.
-
-**Prevention:**
-- Distinguish between "verbatim from source" and "paraphrase / advisor edit" in the data model — these are different provenance types
-- A rewritten statement must be marked as "Advisor-edited (source: NOC 21232)" — the citation becomes a reference, not a verbatim attribution
-- Never allow a rewritten statement to be exported with a "verbatim" citation type
-
-**Detection:** At export time, validate citation type consistency: if `citation_type = "verbatim"`, the stored text must hash-match the source record.
-
-**Phase:** JD generation and export phase. Provenance data model must support this distinction.
-
----
-
-### MINOR-04: Session State Lost Mid-Workflow
-
-**What goes wrong:** An advisor is partway through a JD (duties approved, JES in progress) and the browser is closed or the server restarts. The partial state is lost. The advisor must restart from scratch.
-
-**Prevention:**
-- Persist all workflow state to the database incrementally, not in session memory
-- The application re-loads the in-progress JD from the database on return to the form
-- Explicit autosave after each major step (duties approved, JES factor saved)
-
-**Phase:** Application architecture phase. Session persistence must be designed into the data model — cannot be retrofitted.
-
----
-
-### MINOR-05: Export That Looks Professional but Fails Classifier Review
-
-**What goes wrong:** The DOCX export is well-formatted and visually polished. However, a classification specialist reviewing it cannot locate the JES rationale for a specific factor, cannot find the CA validation results, or finds that provenance metadata is buried in a footer no one reads.
-
-**Prevention:**
-- The export structure must be validated against TBS WD format expectations, not just "looks good as a Word document"
-- JES scoring sheet must be a clearly labeled table with factor names, ratings, and rationale — not embedded in body text
-- Provenance metadata (data sources, versions, generation date) must appear on page 1 or a prominent appendix — not a hidden footer
-
-**Phase:** Export design phase (EXPORT-01, PROV-01).
-
----
-
-## Phase-Specific Warnings
-
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|---------------|------------|
-| Data ingestion | NOC 2021/2016 version confusion | Tag every profile at ingest; reject NOC 2016 records |
-| Data ingestion | JES chunking breaks factor integrity | Parse JES as structured objects, not text chunks |
-| Data ingestion | CA version not tracked | Store version date and expiry in every CA record |
-| NOC matching (INPUT-01) | Embedding model mismatch after update | Assert model version at startup |
-| NOC matching (INPUT-01) | Semantic search returns wrong OG | Layer OG exclusion logic on top of vector results |
-| OG classification (CLASS-01/02) | Hallucinated OG rationale | Each piece of rationale must point to a specific OG definition record |
-| JD generation (JD-01/02) | Prompt drift in duty statements | One call per statement; few-shot; structural validator |
-| JD generation (JD-01/02) | Hallucinated duty statements | Duty text must exist verbatim in source DB; LLM selects, does not generate |
-| JES scoring (JES-01/02) | JES array collapse | One call per factor; Pydantic validation; retry loop |
-| JES scoring (JES-01/02) | Context window exhaustion | Token budget check before every call; inject only the current factor definition |
-| CA validation (CA-01/02) | OG scope creep into another CA | Explicit scope-boundary pattern matching |
-| CA validation (CA-01/02) | Stale CA version | Version expiry check at app startup; version in every CA validation report |
-| Qualification standards (QUAL-01) | Education requirement set too high | Surface standard minimum inline; require rationale for any elevation |
-| Export (EXPORT-01/PROV-01) | Soft citations | All citations are structured objects rendered at export time; no prose citations |
-| Export (EXPORT-01/PROV-01) | Missing required WD elements | Pre-export completeness validator against TBS mandatory WD elements |
-| UX / Review flow | Rubber-stamping | Explicit per-element review actions; pre-export checklist with timestamps |
-| Infrastructure | Ollama OOM on Jetson | Context window cap; memory monitoring; circuit breaker on LLM calls |
-| Infrastructure | Cold start latency | Pre-warm model at startup; loading indicator |
-
----
-
-## Lessons From JD-Builder-Lite
-
-The following pitfalls were directly observed in the prototype and must be explicitly addressed, not just acknowledged:
-
-| Prototype Issue | Root Cause | Fix in New Version |
-|-----------------|-----------|-------------------|
-| OASIS scraping fragility broke the app repeatedly | HTML structure changed; no fallback; no local cache | Local parquet as primary source; no live scraping in production |
-| Hardcoded Windows paths killed portability | Config values embedded in code | All paths via environment variables; validated at startup |
-| 500MB sentence-transformer cold start (30-60s) | Lazy model loading; no pre-warm | Pre-warm at startup; lighter embedding model; loading indicator |
-| No tests → bugs found only in UAT | Test coverage deferred | Test each layer (data ingestion, matching, generation, export) from day 1 |
-| SSL verification disabled | Expedient dev shortcut left in | SSL enabled always; no `verify=False` anywhere |
-| Structured output under token pressure returned null fields | Instructor + OpenAI schema enforcement insufficient | One-call-per-item strategy; Pydantic retry loop; token budget check |
-| Session metadata not versioned → brittle after schema changes | No schema versioning in session | Persist to DB not session; version every schema; migration strategy |
-| JES scoring planned but never shipped | Complexity deferred; no architecture for per-factor generation | Architecture JES as first-class from day 1; per-factor generation pattern established in Sprint 1 |
-
----
-
-## Sources
-
-- `/home/charles/JD-Builder-Lite/.planning/codebase/CONCERNS.md` — Prototype codebase audit
-- `/home/charles/JD-Builder-Lite/.planning/NEW-VERSION-FINDINGS.md` — Prototype architectural lessons
-- [TBS Directive on Classification](https://www.tbs-sct.canada.ca/pol/doc-eng.aspx?id=28700&section=HTML)
-- [TBS Directive on Classification Grievances](https://www.tbs-sct.canada.ca/pol/doc-eng.aspx?id=28698)
-- [Ollama Jetson memory issue #12283](https://github.com/ollama/ollama/issues/12283)
-- [Ollama large context usability issue #9890](https://github.com/ollama/ollama/issues/9890)
-- [Why RAG Systems Fail in Production — DigitalOcean](https://www.digitalocean.com/community/conceptual-articles/why-rag-systems-fail-in-production)
-- [Local LLM JSON Output Failure Patterns — n1n.ai](https://explore.n1n.ai/blog/local-llm-json-output-failure-patterns-fix-2026-04-24)
-- [LLM Hallucination in Long Contexts — Medium/Bootcamp](https://medium.com/design-bootcamp/when-more-becomes-less-why-llms-hallucinate-in-long-contexts-fc903be6f025)
-- [AI Rubber-Stamping Legal Challenges — Governing for Impact, Nov 2025](https://governingforimpact.org/wp-content/uploads/2025/11/Potential-Legal-Challenges-to-AI-Rubber-Stamping-Issue-Brief-11-20-25-templated.pdf)
-- [NOC 2021 Transition — Statistics Canada](https://www.statcan.gc.ca/en/subjects/standard/noc/2021/introductionV1)
-- [RAG Chunking Strategies — Elysiate 2025](https://www.elysiate.com/blog/rag-systems-production-guide-chunking-retrieval-2025)
+## Phase-Specific Warnings Summary
+
+| Feature | Pitfall | Mitigation | Phase |
+|---------|---------|------------|-------|
+| Accessible JD Template | Context dict missing new template variables — silent empty sections | Diff `get_undeclared_template_variables()` before and after; add content-presence test | Template phase |
+| Accessible JD Template | Duplicate `NON_EC_STANDARD_NAMES` dicts diverge further | Consolidate to single source in `constants.py` before template work | Template phase (pre-condition) |
+| Accessible JD Template | Section reorder silently drops amendments appendix | Assert amendment section present in rendered DOCX via `python-docx` inspection | Template phase, tests |
+| Risk Audit | False positives train advisors to dismiss all audit findings | Curated clause subset only; two-signal requirement; verbatim CA text shown inline | Audit phase, requirements |
+| Risk Audit | `.txt` CBA files contain scrape artifacts | Use `.json` CBA files; pre-build index at startup | Audit phase, data layer |
+| Risk Audit | Audit trail becomes liability (accepted false positive recorded) | Label Skip as "Not applicable — no conflict" not "Dismiss" | Audit phase, UX |
+| Writing Guide | Aggressive validation frustrates advisors | Structural checks only (verb-first, word count, no duplicates); no keyword blacklist | Writing Guide phase |
+| Writing Guide | Validation insensitive to OG level | Suppress or downgrade flags for senior-level positions (EC-06, EC-07) | Writing Guide phase |
+| QUESTION_BANK (12 groups) | Signal contamination across new groups | Branching tree, not flat option expansion; per-cluster question sets | OG Classification phase |
+| QUESTION_BANK (12 groups) | Missing entries in 5 dependent constants | Checklist test: every OG_LEVELS key must have OG_DEFINITIONS + QUAL_STANDARDS + NON_EC_TOTALS entries | OG Classification phase |
+| QUESTION_BANK (12 groups) | OG_LEVELS missing for 10 of 12 new groups | Derive from JES standard files; do not guess | OG Classification phase, data entry |
+| QUESTION_BANK (12 groups) | Disambiguation O(n²) pair explosion | Refactor to rule-based structure before adding new pairs | OG Classification phase |
+| SJD Library | "AS-01" pre-population crashes Pydantic validation | Dedicated `parse_sjd_record()` with OG split + validation before any WD writes | SJD phase, data model |
+| SJD Library | SJD provenance absorbed as "advisor-added" | New `source="sjd"` tag; `sjd_source` field on WorkDescription; manifest extension | SJD phase, schema design |
+| ARM64 | Grammar/NLP library without ARM64 wheels | Structural validator uses `re` only; clause matching uses `rapidfuzz`; no Java deps | All phases |
+| ARM64 | `sentence-transformers` per-audit latency | Pre-build clause index at startup if embedding-based; not per-request | Audit phase if embeddings used |

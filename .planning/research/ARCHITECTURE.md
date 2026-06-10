@@ -1,537 +1,384 @@
-# Architecture Patterns
+# Architecture Research — v3.0
 
-**Project:** JD Builder (GoC Job Description Builder)
-**Researched:** 2026-05-28
-**Research mode:** Ecosystem + Feasibility
+**Project:** JD Builder v3.0 — Classification Depth & Document Quality
+**Date:** 2026-06-10
+**Based on:** v2.0 complete codebase at Phase 20
 
 ---
 
-## Recommended Architecture
-
-### Overview
-
-A five-layer pipeline where each layer feeds the next, with provenance injected as a first-class field at every boundary:
+## Existing Architecture (baseline for all six features)
 
 ```
-[Data Layer]          Local parquet/JSON/SQLite — Bronze/Silver/Gold medallion
-       ↓
-[Index Layer]         SQLite-vec (vector) + SQLite FTS5 (keyword) — hybrid search
-       ↓
-[Pipeline Layer]      Stateless service modules — NL→NOC, OG classification, JD gen,
-                      CA validation, JES scoring — all called via FastAPI routes
-       ↓
-[Session/State Layer] SQLite WD session store — the WorkDescription entity as source of truth
-       ↓
-[Export Layer]        DOCX/PDF renderer consuming the WD with embedded provenance
+v2/backend/app/
+├── api/               — FastAPI routers (7 modules: health, wd, noc_mapping,
+│                         og_classification, jes_scoring, amendments, export)
+├── ai/                — LLM wrappers (jes_scoring.py, noc_ranking.py)
+├── data/constants.py  — All authoritative data constants (OG_LEVELS, QUESTION_BANK,
+│                         OG_DEFINITIONS, QUAL_STANDARDS, EC_JES_ELEMENTS, etc.)
+├── models/            — Pydantic v2 models (WorkDescription, DraftDuty, etc.)
+├── services/          — Business logic (export_service, jes_service, noc_mapper,
+│                         classification_gate)
+├── templates/         — docxtpl .docx binaries (wd_template, poster_template)
+└── main.py            — App factory, lifespan schema creation
+
+v2/frontend/src/
+├── app.jsx            — Root component; 8 state slices + commit()/exportAs() flow
+├── data.jsx           — STEPS, PHASES, OG_LEVELS, QUAL_DEFAULTS, accumulateSignals()
+├── conversation.jsx   — Exchange, ActiveQuestion, ReviewState components
+├── document.jsx       — DocumentPane, ClassBlock, Sec, OrphanBadge
+├── components.jsx     — Icon, initialAnswer, answerValid, NocConfirmList, OgConfirmList
+└── styles.css         — Single CSS file; all component styles
+
+SQLite: work_descriptions (id, data JSON), audit_log (id, wd_id, event, detail, created_at)
 ```
 
-The prototype (JD-Builder-Lite) proved the medallion data pattern and Pydantic contracts work well. The main gap was provenance as an afterthought and live scraping brittleness. Both are fixed in this design by making provenance a field on every domain object from the start and eliminating live HTTP calls entirely.
-
 ---
 
-## Component Boundaries
+## New Components
 
-| Component | Responsibility | Communicates With |
-|-----------|---------------|-------------------|
-| `data/ingest/` | One-time scripts to convert raw files → Silver parquet + SQLite FTS5 index | Offline only — no runtime dependency |
-| `data/embed/` | Batch embed Silver records → SQLite-vec | Offline only — no runtime dependency |
-| `services/noc_mapper.py` | Hybrid search: FTS5 shortlist → nomic-embed-text cosine rerank → Qwen3 justify top-5 | Index layer, Ollama |
-| `services/og_classifier.py` | OG suggestion from confirmed NOC: embed duty text → OG definitions → Qwen3 rank + cite | Index layer, Ollama |
-| `services/jd_generator.py` | Compose draft duties + overview from NOC Silver records with source citations baked in | SQLite (WD store), NOC Silver |
-| `services/ca_validator.py` | Check draft duties against pre-extracted CA restriction clauses | SQLite CA restriction index |
-| `services/jes_scorer.py` | Score position duties against JES factor definitions, one factor per call | JES Silver files, Ollama |
-| `services/export_service.py` | Build export payload from WD entity — all provenance already present | WD store |
-| `api/routes.py` | FastAPI routes — validate, dispatch, return | All services |
-| `frontend/` | Vanilla JS SPA — progressive workflow: describe → map → classify → build → score → export | API routes |
+### Backend: `app/services/audit_service.py`
 
----
-
-## 1. NL-to-NOC Mapping Architecture
-
-**Recommendation: Hybrid two-stage pipeline — FTS5 keyword shortlist → semantic rerank → LLM justify**
-
-**Rationale:**
-
-Pure semantic search alone misses NOC-specific vocabulary (e.g., a user who writes "manage money flows" should match "financial management" profiles, but embedding distance alone may rank it below noise). Pure LLM classification with all 900 NOC profiles in context is infeasible at 7-32B model size.
-
-The correct approach given the corpus size (~900 unit groups, each with a lead statement + 5-10 duty statements averaging 40-60 tokens each):
-
-1. **FTS5 keyword shortlist** — full-text search against a SQLite FTS5 index of NOC titles + lead statements + duty keywords. Returns top 30 candidates in <100ms. No model involved. Catches exact and near-exact term matches reliably.
-
-2. **nomic-embed-text cosine rerank** — embed the user's query + each of the 30 candidates. Rerank by cosine similarity to top 10. nomic-embed-text:latest is already running on Jane (274MB, ARM64 compatible via Ollama). Inference time: ~50ms per embed on Orin.
-
-3. **Qwen3 justify** — send the top 10 NOC profiles (title + lead statement + 3-5 key duties each, ~2K tokens total) to Qwen3.6 with the user's description and ask it to rank and justify top 3-5 matches. Use `/nothink` mode for this call — the task is classification, not deep reasoning, and thinking mode adds latency with no accuracy gain for a well-constrained prompt.
-
-**Why this is reliable with Qwen-class models:**
-- The model only sees pre-screened candidates — it cannot hallucinate a NOC code that isn't in the shortlist (enforce this in the prompt with explicit constraint: "select only from the following codes")
-- Structured output via Ollama JSON schema enforces `{noc_code, title, confidence, rationale}[]` format
-- Hybrid BM25+dense pipelines consistently outperform either alone in retrieval benchmarks (MRR@5 ~76% vs ~62% for sparse-only)
-
-**What Qwen struggles with here:**
-- Distinguishing closely related NOC codes (e.g., 10010 vs 10011 when both mention "program management") — mitigated by surfacing top 3-5 with confidence scores and asking the advisor to confirm, not auto-selecting
-- Long NOC profiles with dense jargon — keep the per-profile context tight (title + lead + 3 duties, not full profile)
-
-**Confidence level: HIGH** — based on verified hybrid retrieval architecture patterns and Qwen3 structured output capability
-
----
-
-## 2. RAG Pipeline Design
-
-### Corpus sizes (measured from actual data):
-
-| Dataset | Volume | Nature |
-|---------|--------|--------|
-| NOC 2021 unit groups (~900) | ~450K tokens estimated | Structured: title, lead, duties (short), skills, inclusions/exclusions |
-| Collective agreements (28 OGs) | ~8.9M chars / ~2.2M tokens | Semi-structured: articles + tables |
-| JES documents (15 OGs) | ~442K chars / ~110K tokens | Structured: factors, levels, descriptors |
-| Rates of pay (CSVs) | Tabular | Structured numeric |
-
-### Chunking strategy by corpus:
-
-**NOC profiles — section-as-chunk:**
-Each NOC section (lead statement, duties list, skills, inclusions, exclusions) becomes its own chunk with the NOC code and section type embedded in chunk metadata. Duties are short (1-3 sentences), so no sub-chunking needed — chunk at the duty-item level with parent metadata preserved. This matches the domain: a duty statement is the atomic unit of retrieval.
+Purpose: Risk audit engine. Reads the confirmed WD (duties, OG classification, qualifications) and returns structured findings keyed to source authority.
 
 ```python
-# Chunk shape for NOC duties:
-{
-    "noc_code": "21232",
-    "noc_title": "Software developers and programmers",
-    "section": "main_duties",
-    "item_index": 2,
-    "text": "Write, modify, integrate and test software code for e-commerce, internet or intranet applications.",
-    "version": "NOC 2021",
-    "source_url": "https://noc.esdc.gc.ca/...",
-    "retrieved_date": "2026-05-28"
+# Public API
+def run_risk_audit(wd: WorkDescription, og_code: str) -> list[AuditFinding]
+
+@dataclass
+class AuditFinding:
+    finding_id: str          # deterministic: f"{section}_{rule_id}"
+    section: str             # "duties" | "quals" | "classification" | "overview"
+    severity: str            # "high" | "medium" | "low"
+    rule_id: str             # e.g. "CA-SCOPE-01", "ERR-PRINCIPLE-07"
+    citation: str            # verbatim clause or case name
+    citation_source: str     # "CBA" | "Federal Court" | "TBS Directive"
+    text: str                # human-readable description of the risk
+    status: str              # "open" | "accepted" | "manual_edit" | "skipped"
+```
+
+This service is purely deterministic — no LLM. Rules are encoded as check functions against WD fields. Rule corpus is drawn from:
+- `data/directive_on_classification.txt` (TBS)
+- `data/AI Docs/ERR_Principles_drawn_from_Federal_Court.pdf` (Federal Court principles)
+- `data/AI Docs/Wilkonson v. Canada.pdf` (specific case authority)
+- Collective agreement scope/exclusion clauses already indexed in v1.0 data
+
+Storage: audit findings are persisted in `audit_log` table with `event='risk_audit_finding'` and a JSON `detail` matching the `AuditFinding` shape. Advisor status updates (`accepted`/`skipped`/`manual_edit`) write a new row with `event='risk_audit_status'` — same deduplication-by-max-id pattern used by amendments.
+
+### Backend: `app/api/audit.py`
+
+```python
+POST /api/wd/{id}/audit                     # trigger audit; returns list[AuditFinding]
+PATCH /api/wd/{id}/audit/{finding_id}       # update status for one finding
+GET  /api/wd/{id}/audit                     # retrieve current findings with status
+```
+
+Router pattern mirrors `amendments.py`: thin layer that calls `audit_service`, reads/writes `audit_log`, returns JSON.
+
+### Backend: `app/api/sjd.py`
+
+```python
+GET  /api/sjd                   # list all SJDs (id, job_title, og_level, noc_code)
+GET  /api/sjd/{id}              # full SJD record
+POST /api/wd/{id}/sjd-start     # seed a WD's record fields from an SJD
+```
+
+### Backend: `app/data/sjd_library.py`
+
+A module-level constant `SJD_LIBRARY: list[dict]` parsed at import time from the tab-delimited `data/SJD Examples.txt`. Each entry includes: `sjd_number`, `job_title`, `group_level`, `noc_code`, `supervisory`, `organizational_context`, `og_name`.
+
+**Why a module constant and not a SQLite table:** the SJD file has 9 entries now; the whole dataset fits in ~10KB. A SQLite table adds a migration and a startup seed check with no benefit at this volume. If the dataset grows beyond ~100 entries, the same module can be converted to a seeded SQLite table with no API contract change. The `POST /api/wd/{id}/sjd-start` endpoint is the only consumer — the data access path is trivially replaceable.
+
+### Backend: `app/services/writing_guide_service.py`
+
+Purpose: Validates duty statement text against principles extracted from `data/AI Docs/Job Description Writing Guide.docx`. Returns a list of `DutyViolation` objects.
+
+```python
+@dataclass
+class DutyViolation:
+    duty_index: int     # 0-based index in the duties array
+    rule_id: str        # e.g. "WG-VERB-01", "WG-PASSIVE-02"
+    text: str           # human-readable hint
+    severity: str       # "error" | "warning"
+```
+
+Rules are encoded as regex or string-pattern checks — no LLM. Examples from the Writing Guide pattern:
+- Passive voice detection (`"is responsible for"`, `"will be"`)
+- Missing action verb at sentence start
+- Duty exceeds 25 words (guideline length cap)
+- Vague opener words (`"performs"`, `"assists"`, `"supports"` without specific object)
+
+### Backend: `app/api/writing_guide.py`
+
+```python
+POST /api/wd/{id}/validate-duties   # run writing guide check; returns list[DutyViolation]
+```
+
+### Backend: `scripts/build_accessible_template.py`
+
+Build script for the new Accessible JD DOCX template. Follows the exact pattern of `scripts/build_wd_template.py`: creates a `DocxTemplate`, declares all variables, saves to `app/templates/accessible_wd_template.docx`, and self-verifies via `get_undeclared_template_variables()`. The new template adds accessibility-required structural elements (proper heading levels, alt-text for any non-text elements, bilingual label rows).
+
+### Frontend: `AuditPanel` component (in `components.jsx`)
+
+Renders the risk audit findings inline within the Review phase. Each finding shows:
+- Severity badge (high/medium/low, colour-coded matching existing `.orphan-badge` pattern)
+- Section label
+- Citation source pill (matching `.src` pill pattern in `.sec__h`)
+- Finding text
+- Action buttons: Accept / Manual Edit / Skip (call `PATCH /api/wd/{id}/audit/{finding_id}`)
+
+**Placement:** rendered inside the Review phase's left-pane panel (not in the document preview pane), consistent with how `ReviewState` already presents the completion checklist. The review phase left pane is the right surface because audit is an advisor action, not a document section.
+
+---
+
+## Extended Components
+
+### `app/data/constants.py` — Extended for 12 new OG groups
+
+**What changes:**
+
+1. `OG_LEVELS` already has `FB`, `FS` entries. Extend with the remaining 10 groups from `data/Job_evaluation/`: `ED`, `LC`, `LP`, `MT`, `NT`, `NU`, `PO`, `PS`, `SW`, `WP`. Level ranges are read from the JES standard files already present in that directory.
+
+2. `OG_DEFINITIONS` — Add definition dict entries for each of the 12 new groups, sourced from TBS OCHRO (same sourcing pattern as existing AS/FI entries).
+
+3. `NON_EC_TOTALS` — Add approximate total JES point ranges for each new group at each level. For groups whose published JES standard provides explicit point totals (ED, FB, FS, LC, LP, MT, NT, NU, PO, PS, SW, WP text files are present), use those directly. For groups without numeric point scales in the available data files, use `None` as the level value and the scoring path returns a `best_effort: True` flag — this is preferable to a wrong number.
+
+4. `NON_EC_STANDARD_NAMES` (both the copy in `constants.py` and the module-level copy in `export_service.py`) — Add an entry per new group. These two copies are an acknowledged drift risk (Phase 20 code review advisory open item); a content-parity test should be added.
+
+5. `QUAL_STANDARDS` — Add a qualification standard dict entry per new group (or point to the relevant collective agreement standard).
+
+**QUESTION_BANK extension strategy — keeping it maintainable:**
+
+Do NOT add 12 new answer options to existing questions. The `accumulateSignals()` function already tallies `og_candidates` lists — adding more signal options is additive. Instead:
+
+- Add a fifth question: `"work_type_sector"` — "What sector or specialty domain does this work primarily fall under?" with answer options that each map to a cluster of new OG groups (e.g. "Law and justice" → `["LC", "LP"]`; "Health and social services" → `["NT", "NU", "SW", "WP"]`; "Science and environment" → `["MT", "PS", "PO"]`; "Education and training" → `["ED"]`; "Border and operations" → `["FB"]`; "Foreign affairs" → `["FS"]`; "None of the above" → no signals, falls through to existing EC/AS/IT/FI path).
+- Add a sixth question, `"work_type_disambiguate"`, conditional on the sector answer, that disambiguates within the cluster (e.g. after "Law and justice": "Is this a management/advisory/litigation support role (LC) or a legal practitioner/litigator role (LP)?").
+- New questions use `phase_slot: "work_type"` so they slot into the existing Phase 1 (Work Type) without a STEPS restructure.
+- Practical size: 8 total QUESTION_BANK entries at ~80 lines each = ~640 lines. Remains in one file. If it exceeds ~1000 lines, split into `QUESTION_BANK_CORE` (existing 4) and `QUESTION_BANK_EXTENDED` (new) and merge at import with list concatenation.
+
+### `app/services/export_service.py` — New template function
+
+1. Add `generate_accessible_wd_docx(wd_id, db_path)` — same pattern as `generate_wd_docx` but using `accessible_wd_template.docx`. The `_build_wd_context()` helper is reused without change; only the template path differs.
+2. Extend `NON_EC_STANDARD_NAMES` (module-level dict) to cover all 12 new groups.
+
+### `app/api/export.py` — New route
+
+Add `POST /api/wd/{id}/export/accessible-docx` alongside the existing three export routes. No structural change — same response pattern.
+
+### `app/api/__init__.py` — Three new router imports
+
+```python
+from . import audit, sjd, writing_guide
+api_router.include_router(audit.router)
+api_router.include_router(sjd.router)
+api_router.include_router(writing_guide.router)
+```
+
+### `v2/frontend/src/data.jsx` — Extended STEPS and new constants
+
+1. Extend `QUAL_DEFAULTS` to cover the 12 new OG groups, mirroring backend `QUAL_STANDARDS`.
+2. Add new STEPS entries for the sector-disambiguation questions.
+3. SJD browser is NOT a STEPS entry — it is a collapsible panel in `.convo__head`, so it does not block the main flow.
+
+### `v2/frontend/src/app.jsx` — New state slices
+
+- `auditFindings: []` — populated from `POST /api/wd/{id}/audit` response.
+- `dutyViolations: []` — populated from `POST /api/wd/{id}/validate-duties` response after duties commit.
+- `sjdList: []` — populated once from `GET /api/sjd` on mount (or lazily on panel open).
+
+### `v2/frontend/src/document.jsx` — Audit summary row + writing hints
+
+1. `DocumentPane` receives optional `auditFindings` prop. When present and `reviewing === true`, renders an audit summary above the provenance footer: "N risk findings — N open".
+2. Individual duty items (`doc-duty` li) receive an optional inline `.duty-hint` span rendered when `dutyViolations` has an entry for that duty index and `showWritingHints` is true. Display-only; does not block progression or export.
+
+### `v2/frontend/src/styles.css` — Preview fix + new UI classes
+
+**Preview white-page extension fix:**
+
+The `.doc-scroll` flex container currently has no `align-items` declaration, which defaults to `stretch`. This causes `.doc` to stretch to fill the full scroll container height when content is shorter than the viewport, and it causes the paper to not grow beyond its content because the flex item height is set by the container. The fix:
+
+```css
+/* Add to existing .doc-scroll rule: */
+.doc-scroll {
+  align-items: flex-start;  /* prevents .doc from stretching to container height */
 }
 ```
 
-**Collective agreements — article-as-chunk:**
-The CA JSON already has sections with `id`, `title`, `text` fields. Chunk at the article level (each `### Article X:` heading creates a chunk boundary). Target chunk size: 512-800 tokens. For articles with subsections, split at the subsection boundary and keep parent article as metadata. Tables become their own chunks (rate tables, leave entitlement tables).
+This is a one-line addition to the existing `.doc-scroll` rule block. The paper will now grow with its content and not overflow into the grey background at any document length.
 
-The pre-extracted `collective_agreements_jd.json` in webscrapes already contains JD-relevant sections — this should be the primary index for CA validation, not the full CA text.
-
-**JES documents — factor-level chunks:**
-Each JES factor (Skill/Knowledge, Effort, Responsibility, Working Conditions) plus its level descriptors forms one chunk. This keeps the level descriptions together with the factor definition — exactly what JES scoring needs.
-
-### Vector store strategy: Single SQLite database, multiple tables
-
-**Recommendation: sqlite-vec + SQLite FTS5 in a single `.sqlite` file**
-
-Not ChromaDB. Rationale:
-- The WD session store is already SQLite — keeping everything in one SQLite database dramatically simplifies deployment and backup
-- sqlite-vec is ARM64 native, has a 30MB memory footprint, and supports HNSW via extensions
-- SQLite FTS5 is built-in — no extra process
-- ChromaDB adds a dependency that requires a separate process or embedded mode; sqlite-vec embedded in the same DB file is strictly simpler
-
-Schema sketch:
-```sql
-CREATE VIRTUAL TABLE noc_chunks_fts USING fts5(noc_code, title, text);
-CREATE TABLE noc_chunks_vec (
-    id TEXT PRIMARY KEY,
-    noc_code TEXT,
-    section TEXT,
-    text TEXT,
-    embedding BLOB  -- nomic-embed-text 768-dim float32
-);
-CREATE TABLE ca_restriction_clauses (
-    id TEXT PRIMARY KEY,
-    og_code TEXT,
-    article_id TEXT,
-    article_title TEXT,
-    text TEXT,
-    embedding BLOB,
-    restriction_type TEXT  -- 'scope', 'exclusion', 'work_assignment'
-);
-CREATE TABLE jes_factor_chunks (
-    id TEXT PRIMARY KEY,
-    og_code TEXT,
-    factor TEXT,
-    level INTEGER,
-    text TEXT,
-    embedding BLOB
-);
-```
-
-### When to use RAG vs direct context:
-
-| Scenario | Approach | Reason |
-|----------|----------|--------|
-| NOC shortlisting (900 profiles) | RAG (hybrid) | Too large for context; retrieval selects relevant subset |
-| NOC profile for confirmed match | Direct context | Single profile ~500-800 tokens; fits in prompt easily |
-| OG definitions (28 OGs, ~100 tokens each) | Direct context | ~2.8K tokens total — put all 28 in prompt for classification |
-| CA validation for specific OG | RAG → pre-extracted clauses | Single CA is ~50K-150K chars; pre-extracted restriction clauses fit in context |
-| JES factor scoring | Direct context per factor | Each factor's descriptor set is ~500-1000 tokens |
-| Rates of pay | Direct context lookup | Tabular; query by OG + level, return row |
+Add at end of file in a `/* v3.0 */` block:
+- `.audit-finding`, `.audit-finding--high`, `.audit-finding--medium`, `.audit-finding--low` — severity badge styles (use existing orphan-badge and gold/green/accent palette variables).
+- `.duty-hint` — small italic hint below duty text, accent-line left border.
+- `.sjd-picker`, `.sjd-card` — SJD browser panel and card styles.
 
 ---
 
-## 3. Provenance Tracking Architecture
+## Data Flow Changes
 
-**Core principle: Provenance is a field on the domain object, not a post-processing step.**
+### New API Routes
 
-Every content element in the system carries a `ProvenanceTag` from the moment it is retrieved. The WD entity aggregates these tags. The export renderer reads them directly — no re-derivation.
+| Route | Method | Service | Description |
+|-------|--------|---------|-------------|
+| `GET /api/sjd` | GET | `sjd_library.SJD_LIBRARY` | List SJD index |
+| `GET /api/sjd/{id}` | GET | `sjd_library.SJD_LIBRARY` | Single SJD record |
+| `POST /api/wd/{id}/sjd-start` | POST | `sjd.py` (thin) | Seed WD record fields from SJD |
+| `GET /api/wd/{id}/audit` | GET | `audit_service` | Retrieve findings with status |
+| `POST /api/wd/{id}/audit` | POST | `audit_service` | Trigger fresh audit run |
+| `PATCH /api/wd/{id}/audit/{finding_id}` | PATCH | `audit_service` | Update finding status |
+| `POST /api/wd/{id}/validate-duties` | POST | `writing_guide_service` | Check duties against guide |
+| `POST /api/wd/{id}/export/accessible-docx` | POST | `export_service` | Accessible JD DOCX |
 
+### New Data Models
+
+**`AuditFinding`** (Pydantic model in `app/models/audit_finding.py`):
 ```python
-class ProvenanceTag(BaseModel):
-    source_type: Literal["NOC", "CA", "JES", "TBS_DIRECTIVE", "ADVISOR", "AI_GENERATED"]
-    source_id: str          # NOC code, CA article ID, JES factor+level, or free text
-    source_version: str     # "NOC 2021", "AI CA 2026", "CT JES 2023"
-    source_url: Optional[str]
-    retrieved_date: date
-    model_name: Optional[str]       # if AI_GENERATED
-    prompt_version: Optional[str]   # if AI_GENERATED
-    modified_by_advisor: bool = False
+class AuditFinding(BaseModel):
+    finding_id: str
+    section: str
+    severity: Literal["high", "medium", "low"]
+    rule_id: str
+    citation: str
+    citation_source: str
+    text: str
+    status: Literal["open", "accepted", "manual_edit", "skipped"] = "open"
 ```
 
-Every service function returns a typed object carrying a `provenance` field:
+Stored in `audit_log` as JSON `detail` with `event='risk_audit_finding'`; status updates stored with `event='risk_audit_status'`. No schema migration required.
 
+**`DutyViolation`** (plain dataclass in `writing_guide_service.py`; not persisted):
 ```python
-class DraftDuty(BaseModel):
+@dataclass
+class DutyViolation:
+    duty_index: int
+    rule_id: str
     text: str
-    provenance: ProvenanceTag
+    severity: Literal["error", "warning"]
+```
+
+**`SJDRecord`** (TypedDict in `sjd_library.py`; not persisted):
+```python
+class SJDRecord(TypedDict):
+    id: str                   # sjd_number
+    job_title: str
+    group_level: str          # e.g. "AS-01"
+    og_code: str              # parsed from group_level prefix
     noc_code: str
-    noc_section: str
-
-class OGRecommendation(BaseModel):
-    og_code: str
-    og_name: str
-    confidence: float
-    rationale: str
-    evidence_spans: list[str]
-    provenance: list[ProvenanceTag]  # one per cited article/definition
+    supervisory: bool
+    organizational_context: str
 ```
 
-The WD entity is the accumulator — every field has a provenance tag:
+### State Flow: SJD Pre-fill
 
-```python
-class WorkDescription(BaseModel):
-    id: UUID
-    advisor_input: str                          # raw NL input, no provenance needed
-    noc_matches: list[NOCMatch]                 # with provenance
-    confirmed_noc: Optional[NOCMatch]
-    og_recommendation: Optional[OGRecommendation]
-    confirmed_og: Optional[str]
-    draft_duties: list[DraftDuty]               # each duty has provenance
-    position_overview: Optional[DraftText]      # with provenance
-    jes_scores: list[JESFactorScore]            # each with provenance
-    ca_validation_report: Optional[CAReport]    # with per-clause provenance
-    qualification_standard: Optional[QualStandard]
-    advisor_additions: list[AdvisorAddition]    # source_type=ADVISOR
-    created_at: datetime
-    exported_at: Optional[datetime]
-    export_version: Optional[str]
+```
+User opens SJD panel (frontend, convo__head)
+  → GET /api/sjd  (index, 9 records)
+  → User selects SJD card
+  → POST /api/wd/{id}/sjd-start {sjd_id}
+  → Backend seeds WD record: {title, group_level, noc_code, organizational_context}
+  → Response: patched WorkDescription
+  → Frontend updates record state, triggers flash on affected fields
 ```
 
-**Architecture decision: Persist the WD entity to SQLite as JSON at every state transition.** This makes every intermediate state recoverable and auditable. The export is a render of the final WD state — not a reconstruction.
+### State Flow: Risk Audit
+
+```
+User clicks "Run Risk Audit" in ReviewState (left pane)
+  → POST /api/wd/{id}/audit
+  → audit_service.run_risk_audit(wd, og_code) — deterministic rules, ~milliseconds
+  → Each finding written to audit_log (event='risk_audit_finding')
+  → Response: {findings: [...]}
+  → Frontend stores in auditFindings state slice
+  → AuditPanel renders below ReviewState checklist
+  → User clicks Accept/Skip → PATCH /api/wd/{id}/audit/{finding_id}
+  → New audit_log row (event='risk_audit_status', detail={finding_id, status})
+```
+
+### State Flow: Writing Guide Validation
+
+```
+User completes duties commit
+  → commit() fires normally (WD persisted)
+  → POST /api/wd/{id}/validate-duties fires in parallel
+  → writing_guide_service.check_duties(duties) — regex rules, ~microseconds
+  → Response: {violations: [...]}
+  → Frontend stores in dutyViolations state slice
+  → document.jsx renders .duty-hint below flagged duties (display-only)
+  → No blocking of progression; violations are advisory
+```
+
+### OG Classification Data Flow Change
+
+Adding 12 new OG groups extends but does not change the data flow. `accumulateSignals()` already handles arbitrary `og_candidates` lists; `/api/og/classify` already ranks by signal tally with no group hardcoding; `OgConfirmList` renders the top-3 candidates regardless of which groups they are.
 
 ---
 
-## 4. Collective Agreement Validation Pipeline
+## Suggested Build Order
 
-**Recommendation: Pre-extract restriction clauses at ingest + embed → validate by similarity + rule match**
+### Phase 21: OG Expansion (data foundation)
 
-**Why not full CA long-context:**
-A single CA is 50-150K chars (~15-40K tokens). At 32B model size on Orin with a 32K context window, loading the full CA text for each duty validation round-trip is too slow and consumes the entire context. With 8-10 duties to validate, this approach is unworkable at local inference speed.
+Build first because all other features that touch classification need the new OG data constants populated. Additive change, low risk, existing test patterns apply directly.
 
-**Why not pure embedding similarity:**
-Embedding similarity alone will surface semantically similar clauses but may miss relevant restrictions phrased differently. "Positions in this group include only work of type X" may not score high against a duty description that doesn't mention type X.
+**Deliverables:** 12 new OG groups in `OG_LEVELS`, `OG_DEFINITIONS`, `NON_EC_TOTALS`, `NON_EC_STANDARD_NAMES`, `QUAL_STANDARDS` (backend). New sector-disambiguation questions in `QUESTION_BANK` (entries 5-8). Matching entries in frontend `QUAL_DEFAULTS`. A `test_qual_parity.py` to enforce content alignment between backend `QUAL_STANDARDS` and frontend `QUAL_DEFAULTS`.
 
-**Recommended approach:**
+### Phase 22: SJD Library
 
-**At ingest (offline, one-time):**
-1. Parse each CA JSON into articles
-2. Run Qwen3 over each article in batch with the instruction: "Extract any clauses that restrict, define the scope of, or exclude work assignments for positions in this occupational group. Return structured JSON: `{article_id, article_title, restriction_text, restriction_type}`." Use `/nothink` mode.
-3. Store extracted restriction clauses in `ca_restriction_clauses` SQLite table with embeddings
-4. This is a one-time ingest — re-run when CAs are updated
+Self-contained: new constant module + 3 new routes + frontend panel. Does not depend on Phase 21 data (existing SJD examples are AS/EC/IT groups). Unblocks the Writing Guide phase by giving the advisor a realistic starting duty set to validate.
 
-**At validation time (per JD):**
-1. For each draft duty, embed the duty text
-2. Search `ca_restriction_clauses` filtered by `og_code` using vector similarity (top 5)
-3. Also run FTS5 keyword search for explicit exclusion language
-4. Bundle retrieved restriction clauses with draft duties into a single validation prompt: "For each duty, determine if it conflicts with or is excluded by the listed restrictions. Return structured JSON."
-5. One Qwen3 call handles all duties together — the restriction clause set for a single OG is typically 10-20 clauses, which fits in context comfortably
+**Deliverables:** `sjd_library.py` (parses `SJD Examples.txt` at import), `api/sjd.py`, SJD picker collapsible panel in `conversation.jsx` header, `sjd-start` WD seeding endpoint.
 
-**What Qwen struggles with in CA validation:**
-- Inferring that a duty violates a restriction when the connection is indirect (e.g., the duty mentions "procurement" and the CA defines scope as "administrative services only" without mentioning procurement explicitly). Mitigate by including the OG definition alongside the restriction clauses.
-- Long lists of duties — keep to 10 or fewer per call, batch if needed
+### Phase 23: Writing Guide Integration
 
-**Confidence: MEDIUM** — the ingest-time extraction approach is sound architecturally, but the extraction quality of restriction clauses depends on prompt quality and Qwen3's ability to parse CA legal language. Expect to iterate on the extraction prompt.
+Depends on a populated WD (duties present). Writing guide validation is purely service+API+frontend rendering with no template or data changes. Produces duty hints that are distinct from CBA compliance audit findings (different authority, different signal).
 
----
+**Deliverables:** `writing_guide_service.py`, `api/writing_guide.py`, QUESTION_BANK question-text updates (reshape questions to align with guide verb-first principle), `.duty-hint` CSS + `document.jsx` inline hint rendering, `dutyViolations` state slice in `app.jsx`.
 
-## 5. JES Scoring Architecture
+### Phase 24: Risk Audit
 
-**Recommendation: One call per factor, full factor descriptor set in context**
+Most research-intensive feature — requires reading and encoding rules from ERR Principles PDF and CA clauses. Placed fourth to give maximum time for rule corpus authoring. Depends on a complete WD with confirmed classification, duties, and quals.
 
-**Why one call per factor:**
-JES factors are semantically independent. A single call asking the model to score all factors simultaneously causes interference — the model anchors on early factors and produces inconsistent evidence for later ones. The rubric-based LLM evaluation literature (2025-2026) confirms that analytic rubrics scored criterion-by-criterion outperform holistic scoring for nuanced dimensions.
+**Deliverables:** `audit_service.py`, `app/models/audit_finding.py`, `api/audit.py`, `AuditPanel` component in `components.jsx`, audit CSS classes in `styles.css`, `PATCH` status update flow, `auditFindings` state slice in `app.jsx`.
 
-Each factor call structure:
-```
-[System]: You are a GoC classification specialist scoring a position against the [OG] JES.
-[Factor descriptor block]: Full text for this factor (levels 1-N with descriptors). ~500-800 tokens.
-[Position duties]: The draft duties from the WD entity. ~300-600 tokens.
-[Instruction]: Score this position on [FACTOR]. Return JSON: {level, score, rationale, evidence_quotes[]}
-```
+### Phase 25: Accessible Template + Preview Fix
 
-**Context inclusion strategy:**
-- Include the full factor descriptor set (all levels) — never just the "likely" levels. Qwen needs the comparison ladder to calibrate.
-- Include the full set of draft duties — not a summary. The model needs the actual text to quote from for evidence.
-- Do not include the entire JES document. The irrelevant factors add noise and consume context with no benefit.
-- Include the OG definition and inclusions/exclusions — this prevents the model from scoring as if the position were in a different OG.
+Template work and CSS are independent of all other features. The CSS fix is one line — deliver it in the first commit of this phase regardless of template progress.
 
-**Evidence requirement:**
-The `evidence_quotes` field must be text extracted verbatim from the draft duties. Enforce this with a prompt constraint: "evidence_quotes must be direct quotes from the Position Duties section above, not paraphrases." Validate in code that each quote string appears in the duty text.
+**Deliverables:** `app/templates/accessible_wd_template.docx`, `scripts/build_accessible_template.py`, `POST /api/wd/{id}/export/accessible-docx` route and `generate_accessible_wd_docx` function, `align-items: flex-start` fix on `.doc-scroll`.
 
-**JES scoring reliability with Qwen-class models:**
-- Factor-level scoring at 7B-32B is moderately reliable when the rubric is explicit and the context is tight. Levels within 1 point of the correct answer are expected.
-- The evidence requirement is the fragile part — smaller models tend to paraphrase rather than quote. Use Qwen3.6 (32B effective dense equivalent) for JES scoring, not the smaller models.
-- Thinking mode (`/think`) is worth enabling for JES — this is a task where deliberate reasoning over the level descriptors improves calibration at the cost of ~2x latency. Acceptable given JES is a one-time step per JD.
-
-**Call budget per JD:**
-A typical JES has 4-6 factors per subgroup. At one call per factor = 4-6 Ollama calls. At ~15-30 seconds per call on Orin with Qwen3.6 in thinking mode = 60-180 seconds total. Acceptable — this is a background async operation, not interactive.
-
----
-
-## 6. Component Build Order
-
-Dependencies flow strictly left-to-right. Nothing in a later stage should be started before its dependency is shippable.
+### Dependency graph
 
 ```
-Stage 1: Data Foundation (no LLM involved)
-  ├── Ingest NOC 2021 data → Silver parquet + FTS5 + sqlite-vec embeddings
-  ├── Ingest CA JSONs → article chunks + pre-extracted restriction clauses → FTS5 + sqlite-vec
-  └── Ingest JES TXTs → factor chunks → sqlite-vec
+Phase 21 (OG data)
+  └─► Phase 22 (SJD — independent, but benefits from expanded group coverage)
+        └─► Phase 23 (Writing Guide — needs duties to validate)
+              └─► Phase 24 (Risk Audit — needs complete WD)
 
-Stage 2: Core Models + Search
-  ├── WD data model (Pydantic) with ProvenanceTag — ALL other services depend on this
-  ├── NL→NOC hybrid search (FTS5 + nomic-embed + Qwen3 justify)
-  └── FastAPI skeleton + /map-to-noc endpoint
-
-Stage 3: OG Classification
-  ├── OG definitions data (gap: TBS OCHRO OG definitions needed)
-  ├── og_classifier.py — embed + prompt with OG definitions
-  └── /classify-og endpoint with evidence
-
-Stage 4: JD Generation
-  ├── jd_generator.py — NOC Silver → draft duties with provenance
-  ├── WD session store (SQLite persistence)
-  └── /generate-jd endpoint
-
-Stage 5: CA Validation
-  ├── Depends on: Stage 1 (CA restriction clauses indexed), Stage 4 (draft duties)
-  ├── ca_validator.py
-  └── /validate-ca endpoint
-
-Stage 6: JES Scoring
-  ├── Depends on: Stage 4 (draft duties confirmed), JES Silver data
-  ├── jes_scorer.py — one call per factor
-  └── /score-jes endpoint
-
-Stage 7: Export
-  ├── Depends on: All above — WD entity fully populated
-  ├── export_service.py + DOCX/PDF renderer
-  └── /export endpoint
-
-Stage 8: Frontend SPA
-  ├── Can start in parallel with Stage 3 onward — static shell first
-  └── Progressive workflow: describe → map → classify → build → score → export
-```
-
-**Key dependency constraints:**
-- The WD Pydantic model must be finalized before Stage 2 begins — every service writes to it
-- NOC data ingestion (Stage 1) is gating — nothing else works without it
-- OG classification (Stage 3) requires external data not yet present: TBS OCHRO OG definitions. This is the highest-priority data gap before Stage 3 can start.
-- CA validation (Stage 5) is independent of OG classification — it only needs the draft duties and the OG code (confirmed in Stage 3)
-
----
-
-## 7. Core Data Model
-
-### Central Entity: WorkDescription
-
-The WD is the single source of truth for a session. It is created at first user input, persisted after every state transition, and read by the export renderer unchanged.
-
-```python
-class ProvenanceTag(BaseModel):
-    source_type: Literal["NOC", "CA", "JES", "TBS_OG_DEF", "TBS_DIRECTIVE", "QUAL_STD", "ADVISOR", "AI_GENERATED"]
-    source_id: str                  # NOC code, "AI CA 2026 Article 5.02", "CT JES 2023 Skill L3"
-    source_version: str
-    source_url: Optional[str]
-    retrieved_date: date
-    model_name: Optional[str]
-    prompt_version: Optional[str]
-    modified_by_advisor: bool = False
-
-class NOCMatch(BaseModel):
-    noc_code: str                   # "21232"
-    noc_title: str
-    confidence: float               # 0.0-1.0
-    rationale: str
-    provenance: ProvenanceTag
-
-class DraftDuty(BaseModel):
-    id: UUID
-    text: str
-    provenance: ProvenanceTag       # source NOC code + section + item index
-    advisor_modified: bool = False
-    advisor_modified_text: Optional[str]
-
-class OGRecommendation(BaseModel):
-    og_code: str                    # "EC"
-    og_name: str
-    level: Optional[str]            # "EC-04" if determinable
-    confidence: float
-    rationale: str
-    evidence_quotes: list[str]      # quotes from input that justify
-    cited_articles: list[ProvenanceTag]  # TBS OG def, inclusions, exclusions
-    confirmed_by_advisor: bool = False
-
-class JESFactorScore(BaseModel):
-    factor_name: str                # "Knowledge", "Decision Making", etc.
-    level: int
-    rationale: str
-    evidence_quotes: list[str]      # verbatim from draft duties
-    provenance: ProvenanceTag       # JES document + factor + level
-    advisor_adjusted: bool = False
-    advisor_adjusted_level: Optional[int]
-    advisor_adjustment_rationale: Optional[str]
-
-class CAViolation(BaseModel):
-    duty_id: UUID
-    duty_text: str
-    restriction_clause: str
-    restriction_source: ProvenanceTag
-    severity: Literal["conflict", "unclear", "note"]
-    explanation: str
-
-class CAValidationReport(BaseModel):
-    og_code: str
-    ca_version: str
-    articles_checked: list[ProvenanceTag]
-    violations: list[CAViolation]
-    passed: list[UUID]              # duty IDs that passed
-    validated_at: datetime
-
-class WorkDescription(BaseModel):
-    id: UUID
-    session_id: str
-    advisor_email: Optional[str]
-
-    # Stage 1: Input
-    raw_input: str
-    input_timestamp: datetime
-
-    # Stage 2: NOC mapping
-    noc_candidates: list[NOCMatch]
-    confirmed_noc: Optional[NOCMatch]
-
-    # Stage 3: OG classification
-    og_recommendation: Optional[OGRecommendation]
-    confirmed_og: Optional[str]     # "EC"
-    confirmed_level: Optional[str]  # "EC-04"
-
-    # Stage 4: JD content
-    position_title: Optional[str]
-    position_overview: Optional[DraftText]
-    draft_duties: list[DraftDuty]
-    qualification_standard: Optional[QualStandard]
-    competencies: list[Competency]
-
-    # Stage 5: CA validation
-    ca_validation: Optional[CAValidationReport]
-
-    # Stage 6: JES scoring
-    jes_scores: list[JESFactorScore]
-    jes_total_points: Optional[int]
-
-    # Metadata
-    created_at: datetime
-    last_modified: datetime
-    export_hash: Optional[str]      # hash of exported content for change detection
-    exported_at: Optional[datetime]
-```
-
-### SQLite schema for session persistence:
-
-```sql
-CREATE TABLE work_descriptions (
-    id TEXT PRIMARY KEY,
-    session_id TEXT NOT NULL,
-    stage TEXT NOT NULL,  -- 'input', 'noc_mapped', 'og_classified', 'jd_drafted', 'ca_validated', 'jes_scored', 'exported'
-    data JSON NOT NULL,   -- full WD Pydantic model serialized
-    created_at TEXT NOT NULL,
-    last_modified TEXT NOT NULL
-);
-
-CREATE TABLE wd_audit_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    wd_id TEXT NOT NULL,
-    event TEXT NOT NULL,   -- 'noc_confirmed', 'duty_modified', 'og_confirmed', etc.
-    actor TEXT NOT NULL,   -- 'advisor' or 'system'
-    detail JSON,
-    timestamp TEXT NOT NULL
-);
+Phase 25 (Template + CSS — independent of 22-24, can run in parallel)
 ```
 
 ---
 
-## Anti-Patterns to Avoid
+## Integration Points: New vs Modified
 
-### Anti-Pattern 1: Live scraping in production data path
-**What:** Fetching NOC profiles from OASIS at request time
-**Why bad:** Prototype broke repeatedly; no offline capability; ARM64 SSL quirks caused intermittent failures
-**Instead:** All NOC data ingested locally at Silver tier; Ollama-only at runtime
-
-### Anti-Pattern 2: Provenance as post-processing
-**What:** Generating content first, attaching citations afterward
-**Why bad:** The model cannot reliably re-derive which NOC clause justified which duty statement after the fact; citations become fabricated
-**Instead:** Each retrieval call returns (content, ProvenanceTag) as a unit; provenance flows with data, never added later
-
-### Anti-Pattern 3: Full CA document in LLM context
-**What:** Loading the entire CA (50-150K chars) into the context window for duty validation
-**Why bad:** Saturates context; most content is irrelevant (leave articles, pay tables); degrades model focus; too slow on Orin
-**Instead:** Pre-extract restriction clauses at ingest; validate against the extracted subset only
-
-### Anti-Pattern 4: All JES factors in one call
-**What:** Single prompt asking the model to score all 4-6 factors simultaneously
-**Why bad:** Factors influence each other; model anchors on first factors; evidence gets reused across factors without differentiation
-**Instead:** One call per factor with factor-specific context only
-
-### Anti-Pattern 5: Thinking mode for all LLM calls
-**What:** Enabling Qwen3's `/think` mode for every inference call
-**Why bad:** Adds 2-5x latency; most tasks (NOC shortlist justify, CA validation) do not benefit from chain-of-thought
-**Instead:** `/nothink` for classification and retrieval tasks; `/think` only for JES scoring where deliberate rubric reasoning matters
-
-### Anti-Pattern 6: Single vector index for all corpus types
-**What:** One ChromaDB/sqlite-vec collection for NOC + CA + JES data
-**Why bad:** Retrieval quality degrades when semantically different document types compete in the same index; NOC duties and CA legal clauses have different semantic distributions
-**Instead:** Separate tables/collections per corpus type with typed metadata filters
+| Feature | New files | Modified files |
+|---------|-----------|----------------|
+| SJD Library | `app/data/sjd_library.py`, `app/api/sjd.py` | `app/api/__init__.py`, `app.jsx` (state), `conversation.jsx` (panel) |
+| Accessible Template | `scripts/build_accessible_template.py`, `app/templates/accessible_wd_template.docx` | `export_service.py` (new fn), `app/api/export.py` (new route), `app.jsx` (exportAs case), `app/api/__init__.py` |
+| Writing Guide | `app/services/writing_guide_service.py`, `app/api/writing_guide.py` | `app/api/__init__.py`, `app.jsx` (state), `document.jsx` (hints), `data.jsx` (question text), `styles.css` |
+| Risk Audit | `app/services/audit_service.py`, `app/models/audit_finding.py`, `app/api/audit.py` | `app/api/__init__.py`, `app.jsx` (state), `document.jsx` (summary row), `components.jsx` (AuditPanel), `styles.css` |
+| OG Expansion | — | `app/data/constants.py`, `app/services/export_service.py` (NON_EC_STANDARD_NAMES), `v2/frontend/src/data.jsx` |
+| Preview fix | — | `styles.css` (one line) |
 
 ---
 
-## Scalability Considerations
+## Architectural Invariants to Preserve
 
-| Concern | V1 (single user, local) | V2 target (multi-user) |
-|---------|------------------------|----------------------|
-| LLM throughput | Serial Ollama calls, 1 JD at a time | Queue-based async with priority |
-| Vector index | sqlite-vec in single file | Migrate to dedicated vector DB if >100K chunks |
-| Session state | SQLite WD store, single file | PostgreSQL + row-level WD isolation |
-| Embedding freshness | Re-embed on data update script | Background job triggered by data change |
-| Export generation | Synchronous, <5s | Background job with polling |
+1. **No schema migration required.** All new storage uses the existing `audit_log` table with new event names. `work_descriptions.data` JSON absorbs new WD fields via Pydantic optional fields.
 
----
+2. **Classification gate is not widened.** `require_og_confirmed` in `classification_gate.py` stays as-is. Audit, writing guide, and SJD seeding are advisory layers — they do not gate export.
 
-## Sources
+3. **QUESTION_BANK OG code constraint (QUES-02).** New questions must not surface OG codes in `question`, `helper`, or `options[].label`. All 12 new groups are signalled only via `signals.og_candidates`.
 
-- Hybrid retrieval benchmarks (BM25+dense+rerank MRR@5 76.46%): [Building RAG Update: Hybrid Search, Reranking & Production Hardening](https://aboullaite.me/rag-revisited-2026/)
-- Constrained LLM reranker (hard candidate constraint pattern): [Rationale-Augmented Retrieval with Constrained LLM Re-Ranking](https://arxiv.org/pdf/2510.05131)
-- SQLite-vec for local RAG: [Embedded Intelligence: How SQLite-vec Delivers Fast, Local Vector Search for AI](https://dev.to/aairom/embedded-intelligence-how-sqlite-vec-delivers-fast-local-vector-search-for-ai-3dpb)
-- Qwen3 structured output + Ollama: [Constraining LLMs with Structured Output: Ollama, Qwen3 & Python](https://medium.com/@rosgluk/constraining-llms-with-structured-output-ollama-qwen3-python-or-go-2f56ff41d720)
-- Qwen3 thinking mode ARM64: [Run Qwen 3 Locally with Ollama](https://localaimaster.com/blog/qwen-3-local-setup-guide)
-- Rubric-based analytic scoring criterion-by-criterion: [Rubric-Based Evaluations & LLM-as-a-Judge](https://medium.com/@adnanmasood/rubric-based-evals-llm-as-a-judge-methodologies-and-empirical-validation-in-domain-context-71936b989e80)
-- Legal clause provenance in RAG: [Towards Reliable Retrieval in RAG Systems for Large Legal Datasets](https://arxiv.org/html/2510.06999v1)
-- Qwen2.5/3 technical capability: [Qwen3 Technical Report](https://arxiv.org/pdf/2505.09388)
-- Document chunking for short clauses: [Best Chunking Strategies for RAG (2026)](https://www.firecrawl.dev/blog/best-chunking-strategies-rag)
-- Prior architecture (JD-Builder-Lite): `/home/charles/JD-Builder-Lite/.planning/codebase/ARCHITECTURE.md`
-- Project requirements: `/home/charles/job_description_builder/.planning/PROJECT.md`
+4. **All service functions remain synchronous or use `asyncio.to_thread`.** `audit_service.run_risk_audit` and `writing_guide_service.check_duties` are synchronous rule engines — sub-millisecond, fine to call inline from an async route handler without `to_thread`.
+
+5. **docxtpl template binaries are reproducible.** Every new `.docx` template must have a corresponding `build_*.py` script that recreates it and self-verifies via `get_undeclared_template_variables()`.
+
+6. **Frontend state remains in `app.jsx` local state (no Redux/Zustand).** New state slices (`auditFindings`, `dutyViolations`, `sjdList`) follow the existing `useState` pattern. If any slice exceeds ~3 levels of prop-passing, consider a `useContext` wrapper — but do not introduce a store library.

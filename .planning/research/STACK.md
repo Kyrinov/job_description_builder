@@ -1,429 +1,220 @@
-# Technology Stack Research
+# Stack Research — v3.0
 
-**Project:** JD Builder — Government of Canada Job Description Builder
-**Platform:** Jetson AGX Orin "Jane" — ARM64 (aarch64), Linux, Python 3.10.12
-**Researched:** 2026-05-28
-**Confidence:** HIGH (all packages verified against actual hardware via pip dry-run or existing install)
-
----
-
-## ARM64 Verification Legend
-
-All packages below were checked via `pip install --dry-run` or confirmed installed on the Jetson AGX Orin
-(aarch64, Python 3.10.12). Status codes:
-
-- **CONFIRMED** — installed and working on this machine
-- **VERIFIED** — pip dry-run resolves an aarch64 wheel successfully
-- **CAUTION** — has known ARM64 issues; see notes
-- **AVOID** — does not install cleanly on aarch64 without significant workarounds
+**Project:** JD Builder v3.0 — Classification Depth & Document Quality
+**Researched:** 2026-06-10
+**Platform:** Jetson AGX Orin "Jane" — ARM64 (aarch64), Python 3.10.12
+**Confidence:** HIGH (all findings verified by direct execution on target hardware)
 
 ---
 
-## 1. Python Web Framework
+## Context: What Already Exists
 
-### Recommendation: FastAPI 0.128.x
+The v2.0 stack is locked and working. Do not change or re-research it.
 
-**CONFIRMED** — FastAPI 0.128.8 is already installed on this machine.
-
-**Why FastAPI over Flask for this use case:**
-
-Flask is a WSGI framework. It can run async code, but each request gets its own sync/async loop and
-blocks the process during execution. When the LLM is generating a 2,000-word JD draft over Ollama,
-Flask stalls every other request including UI polling, auto-saves, and live validation. That is
-unacceptable for a multi-step wizard that also streams tokens to the browser.
-
-FastAPI is ASGI-native. One Uvicorn worker can hold hundreds of concurrent connections, yield token
-chunks via async generators, and still serve validation requests between yields. The pattern for
-LLM streaming is exactly `StreamingResponse` + `async for chunk in ollama_client.chat(..., stream=True)`.
-
-Additional factors:
-- Pydantic v2 is a first-class dependency (already installed: 2.12.5). Every JD section, provenance
-  record, and JES rating can be a validated model contract.
-- FastAPI's built-in OpenAPI docs are useful during development and testing.
-- FastAPI + HTMX is a well-documented pattern in 2025/2026 for form-heavy Python apps.
-- Jinja2 3.1.6 is already installed and integrates cleanly with FastAPI for server-side HTML templates.
-
-**Server:** Uvicorn 0.40.0 — CONFIRMED installed. Single-worker is fine for a local single-user app.
-Run with `--reload` in dev.
-
-**Flask as an alternative:** Only appropriate if async streaming were unnecessary. For this project
-it is the wrong choice. Do not use Flask.
+| Component | Version | Status |
+|-----------|---------|--------|
+| FastAPI | 0.128.8 | CONFIRMED installed |
+| Pydantic v2 | 2.12.5 | CONFIRMED installed |
+| python-docx | 1.1.2 | CONFIRMED installed |
+| docxtpl | 0.18.0 | CONFIRMED installed (requirements.txt pins 0.19.0; pip shows 0.18.0 — harmless) |
+| WeasyPrint | 69.0 | CONFIRMED installed |
+| SQLite (stdlib) | — | CONFIRMED |
+| React 18 + Vite | 18.3.1 / 5.4.10 | CONFIRMED |
 
 ---
 
-## 2. Ollama Integration
+## New Dependencies
 
-### Recommendation: `ollama` Python library (official) — direct, no abstraction layer
+| Library | Version | Purpose | ARM64 ok? |
+|---------|---------|---------|-----------|
+| PyMuPDF (`pymupdf`) | 1.27.2.3 | Read PDF reference docs (ERR Principles, Wilkonson case) to extract audit rule text at build time | CONFIRMED installed and running on aarch64 |
+| *(none for DOCX reading)* | — | python-docx 1.1.2 already reads .docx files; no new library needed for Accessible JD Template or Writing Guide parsing | already installed |
+| *(none for SJD storage)* | — | SJD library is a Python constant in `constants.py` (9 records from SJD Examples.txt); no new library needed | N/A |
+| *(none for audit patterns)* | — | Risk Audit uses existing FastAPI route + Pydantic models; no new framework needed | N/A |
+| *(none for CSS fix)* | — | Preview page height is a 2-line CSS fix; no JS library needed | N/A |
 
-**CONFIRMED** — ollama 0.6.1 is installed on this machine.
-
-The official `ollama` Python library (`pip install ollama`) is the correct choice. It provides:
-
-- `AsyncClient` with `async for chunk in client.chat(..., stream=True)` — plugs directly into
-  FastAPI's `StreamingResponse` with no adapter code.
-- `format=MyModel.model_json_schema()` for structured outputs using Pydantic — token-level grammar
-  constraint, not prompt engineering.
-- Synchronous client available for scripts and data pipeline steps that don't need async.
-- Pure Python + httpx dependency; no heavy ML framework required.
-- Version 0.6.1 supports thinking mode (for Qwen3 models), tool calling, and multimodal inputs.
-
-**Models available on this machine relevant to JD Builder:**
-- `qwen3.6:latest` — primary generation model (23 GB, strong instruction following, structured output)
-- `qwen3.6-240k:latest` — long-context variant for large CA / NOC corpora
-- `nomic-embed-text:latest` — embedding model (274 MB, 8192-token context, 768 dimensions)
-- `gemma4:e2b` — lightweight fallback (7.2 GB) for fast classification tasks
-
-**Do not use:**
-- `langchain-ollama` — adds significant abstraction overhead, LangChain chain/callback complexity,
-  and LangChain versioning churn. Direct API control is cleaner for this app's structured output needs.
-- `llama-index` Ollama integration — LlamaIndex is a useful framework but its abstractions fight you
-  when you need per-token provenance tracking, which is a core requirement of this project.
-- Raw HTTP (`requests`/`httpx` directly) — the official library wraps httpx cleanly; don't re-invent it.
+**Net new pip dependencies for v3.0: zero.** All required capabilities are either already installed or pure Python data work.
 
 ---
 
-## 3. Structured LLM Outputs
+## Feature-by-Feature Analysis
 
-### Recommendation: Ollama native `format` parameter with Pydantic schemas
+### Feature 1: SJD Library
 
-**Why:** Since Ollama v0.5, the `format` parameter accepts a full JSON Schema and converts it to a
-GBNF grammar internally. This is token-level constraint: the model physically cannot emit tokens that
-violate the schema structure. It does not rely on the model following instructions — the sampler
-itself is constrained.
+**Storage: Python constant in `constants.py`, not a SQLite table.**
 
-**Pattern:**
+The SJD Examples.txt contains 9 records in a TSV-like format (Job Title, JobCode, SJD Number, Group Level, Supervisory, NOC, Salary, Organizational Context). Parsed once at module load into a list of typed dicts. No query-time search is needed — the advisor browses by OG group and level. A SQLite table adds migration complexity with zero query benefit at this record count.
+
+Data shape per SJD record:
 ```python
-from pydantic import BaseModel
-from ollama import AsyncClient
-
-class NOCMatch(BaseModel):
-    noc_code: str
-    unit_group_title: str
-    confidence_score: float
-    rationale: str
-    matched_duties: list[str]
-
-client = AsyncClient()
-response = await client.chat(
-    model="qwen3.6:latest",
-    messages=[{"role": "user", "content": prompt}],
-    format=NOCMatch.model_json_schema(),
-    options={"temperature": 0},  # deterministic for classification
-)
-result = NOCMatch.model_validate_json(response.message.content)
-```
-
-**Known limitations with this approach:**
-- Grammar constraints ensure structural validity, not factual accuracy. A hallucinated NOC code will
-  still be a valid string that passes schema validation. Downstream validation against the actual
-  NOC corpus is required.
-- Qwen3 + structured output with the `format` parameter has reported issues in some Ollama versions
-  when tool call arguments are large. Use `format` for structured output, not tool calling, in this app.
-- Set `temperature: 0` for all classification and structured extraction tasks. Use higher temperature
-  only for free-text narrative generation.
-
-**`instructor` library (installed: 1.15.1):**
-`instructor` adds retry logic, validation loops, and automatic re-prompting when validation fails.
-It is worth using as a wrapper over the native `format` parameter for critical outputs (NOC mapping,
-JES ratings) where a hallucinated structure should trigger a retry rather than surface as an error.
-The `instructor.from_ollama()` patch integrates with the official client.
-
-**Do not use:**
-- `outlines` — adds a separate inference runtime that conflicts with Ollama; not needed.
-- Prompt-engineering-only approaches (asking the model to "return JSON") — unreliable without
-  grammar constraints, especially for complex nested schemas like JES scoring.
-
----
-
-## 4. RAG / Semantic Search
-
-### Recommendation: `sqlite-vec` + Ollama embeddings (`nomic-embed-text`)
-
-**sqlite-vec:** VERIFIED — `pip install sqlite-vec` resolves `sqlite_vec-0.1.9-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl` cleanly on this machine.
-
-**nomic-embed-text:** CONFIRMED — already pulled on this machine (274 MB, 768 dimensions, 8192-token
-context). Generates embeddings via `ollama.embed(model="nomic-embed-text", input=text)`.
-
-**Why this combination:**
-
-The prototype's 500 MB cold-start problem came from `sentence-transformers`, which loads a PyTorch
-model into system RAM at startup. `nomic-embed-text` via Ollama is always resident in the Ollama
-server process; embedding calls are fast HTTP requests with no cold-start.
-
-`sqlite-vec` stores embeddings as BLOB columns in the existing SQLite database, enabling KNN vector
-search with no separate service. The corpus here is bounded (NOC profiles: ~500 unit groups,
-collective agreements: ~25 OGs, JES standards: ~15 documents) — tens of thousands of chunks at most.
-`sqlite-vec` handles this scale trivially with sub-100ms query times.
-
-**Architecture for RAG:**
-```
-Source text → chunk (512-1024 tokens) → nomic-embed-text → 768-dim vector
-→ store in sqlite-vec table (id, source_file, section, chunk_text, embedding)
-→ query: embed user input → KNN search → retrieve top-K chunks → inject into prompt
-```
-
-**Embedding dimensions:** 768 (nomic-embed-text). Store as float32 BLOB. Index type: flat (no
-HNSW needed at this scale — flat exhaustive search over 50K vectors is <50ms on ARM64).
-
-**Alternatives considered:**
-
-- **ChromaDB 1.5.9** — CONFIRMED installed, aarch64 wheel available. ChromaDB is a valid choice
-  for development convenience (HTTP API, persistent collections, built-in metadata filtering).
-  However: it pulls in grpcio, onnxruntime, kubernetes client, and 15+ other heavy dependencies.
-  For a single-user local app already using SQLite as the data layer, the overhead is unjustified.
-  Use ChromaDB only if you need cross-process embedding access or want its HTTP API for debugging.
-
-- **fastembed 0.8.0** — CONFIRMED installed (available on aarch64). fastembed uses ONNX Runtime
-  for embeddings without PyTorch, solving the cold-start problem differently. However, since
-  `nomic-embed-text` is already resident in Ollama, adding fastembed means running two separate
-  embedding stacks. Prefer the Ollama path. Keep fastembed as a fallback if Ollama embedding
-  latency becomes a bottleneck for batch indexing.
-
-- **qdrant local** — Works on aarch64, but runs as a separate sidecar process. Unnecessary for
-  this data scale.
-
-- **sentence-transformers** — DO NOT USE. 500 MB model load + PyTorch cold start. This is the
-  exact problem the prototype had.
-
----
-
-## 5. Data Layer
-
-### Recommendation: DuckDB for query-heavy analytics; Polars for transform pipelines; SQLite for app state
-
-**DuckDB 1.5.3** — VERIFIED — pip resolves `duckdb-1.5.3-cp310-cp310-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl` on this machine. (Note: versions 1.4.3 and 1.4.4 had missing ARM64 wheels; 1.5.x is clean.)
-
-**Polars 1.41.1** — VERIFIED — pip resolves `polars_runtime_32-1.41.1-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl` on this machine.
-
-**Rationale for each:**
-
-**DuckDB:** Use as the query engine over parquet files (NOC profiles, DRF data, rates of pay, skills taxonomy). DuckDB reads parquet directly without loading the full file into memory. SQL syntax is natural for joins across files (e.g., `JOIN noc_profiles ON noc_code = jes_mappings.noc_code`). Zero-ETL — no separate database server. Memory-safe: DuckDB streams and spills to disk rather than loading entire datasets into RAM.
-
-```python
-import duckdb
-con = duckdb.connect()
-results = con.execute("""
-    SELECT p.noc_code, p.unit_group_title, p.main_duties
-    FROM 'data/gold/noc_profiles.parquet' p
-    WHERE p.broad_occupational_category = 'Management'
-    AND p.noc_code LIKE '0%'
-""").fetchdf()
-```
-
-**Polars:** Use for data pipeline transforms (Bronze → Silver → Gold medallion ingestion), not for
-ad-hoc query. Polars is faster than pandas for SIMD-accelerated column transforms and has a cleaner
-lazy evaluation API. The aarch64 wheel is available and resolves cleanly. For the query patterns in
-this app (filter by OG code, text search, cross-file joins), DuckDB is more ergonomic; use Polars
-when building and updating the data pipeline scripts.
-
-**SQLite:** Use for application state — in-progress JD sessions, user-confirmed classification
-decisions, advisor notes, provenance metadata for exports. sqlite-vec lives in the same SQLite
-file as the app state. This keeps the entire application state in a single portable `.db` file.
-
-**Do not use:**
-- **pandas + pyarrow** — pandas is 2-3x slower than Polars for transform workloads and uses more
-  memory. It remains a valid choice for one-off scripts, but do not build the data pipeline on it.
-- **SQLAlchemy ORM** for parquet queries — use DuckDB SQL directly; an ORM adds layers of
-  abstraction that fight DuckDB's columnar execution model.
-
----
-
-## 6. Frontend
-
-### Recommendation: HTMX 2.x + Alpine.js 3.x + Jinja2 templates (server-rendered)
-
-**Why not vanilla JS for this app:**
-
-The JD Builder is a multi-step wizard with ~8 distinct phases (describe work → NOC mapping →
-OG/level confirmation → duty drafting → JES scoring → qualifications → competencies → CA validation
-→ export). Each step triggers a backend call, receives structured HTML, and updates a portion of
-the page. Vanilla JS requires custom fetch + DOM diffing code for every transition. HTMX handles
-this declaratively.
-
-**HTMX responsibilities:**
-- `hx-post` / `hx-get` for form submissions and step navigation
-- `hx-target` + `hx-swap` for partial page updates (each wizard step is a server-rendered fragment)
-- `hx-trigger="change delay:500ms"` for inline field validation (e.g., validate OG code as advisor types)
-- `text/event-stream` + `hx-ext="sse"` for streaming LLM token output to the browser without
-  custom JavaScript
-- HTMX is ~14 KB with no build step
-
-**Alpine.js responsibilities:**
-- Client-side UI state: accordion open/close, modal show/hide, copy-to-clipboard, tab switching
-- `x-data` / `x-show` / `x-model` for form UI that does not need a round-trip (e.g., toggling
-  a JES factor rating between options, showing/hiding a provenance tooltip)
-- Alpine.js is ~15 KB with no build step
-
-**Together (~29 KB):** HTMX manages server communication; Alpine.js manages browser-local state.
-They are designed to complement each other and do not overlap.
-
-**Jinja2 3.1.6** — CONFIRMED installed. FastAPI's `Jinja2Templates` renders HTML fragments on the
-server. Each HTMX partial is a Jinja2 `{% block %}` or standalone template fragment.
-
-**Do not use:**
-- React / Vue / Svelte — a full SPA framework is architectural overkill for a single-user local app.
-  No build pipeline, no Node.js dependency, no bundle maintenance. The prototype used vanilla JS
-  SPA and it worked but required significant boilerplate. HTMX eliminates that boilerplate.
-- Tailwind CSS (via CDN) — acceptable if the team wants utility CSS, but for a government-style
-  form-heavy app, plain CSS with a simple grid system is easier to maintain. Optional — not blocked.
-
----
-
-## 7. Document Generation
-
-### Recommendation: `python-docx` 1.2.0 + `docxtpl` for DOCX; WeasyPrint for PDF
-
-**python-docx 1.2.0** — CONFIRMED installed. Pure Python, no native dependencies, works on aarch64
-without issue. Use for programmatic DOCX construction (adding paragraphs, tables, styles).
-
-**docxtpl** — VERIFIED installable (pure Python, depends only on python-docx and Jinja2, both
-already installed). Use docxtpl for template-driven generation: create a `.docx` template in Word
-with `{{ variable }}` and `{% for item in duties %}` tags, then render with a context dict.
-This is the correct pattern for government JD output where formatting is fixed (Government of
-Canada standard JD layout) but content varies.
-
-```python
-from docxtpl import DocxTemplate
-
-tpl = DocxTemplate("templates/jd_template.docx")
-context = {
-    "position_title": jd.position_title,
-    "og_code": jd.og_level,
-    "duties": [{"text": d.text, "noc_source": d.provenance.noc_code} for d in jd.duties],
-    "jes_ratings": jd.jes_scores,
-    "export_date": datetime.now().isoformat(),
-    "data_versions": jd.provenance_metadata,
+{
+  "sjd_number": "DND-PA-57047",
+  "job_title": "Compensation Agent",
+  "og_code": "AS",
+  "og_level": 1,
+  "noc_code": "13100",
+  "supervisory": False,
+  "organizational_context": "...",
+  "salary_range": "$61,786 - $69,106"
 }
-tpl.render(context)
-tpl.save("output/jd_draft.docx")
 ```
 
-**WeasyPrint 68.1** — VERIFIED — pip dry-run resolves `weasyprint-68.1-py3-none-any.whl` cleanly.
-WeasyPrint is pure Python (all dependencies are pure Python or system libs via cffi/Pillow which
-are already installed). It converts CSS-styled HTML to PDF. For government PDF output, render an
-HTML template with Jinja2, apply GoC-compliant CSS (Standard on Web Accessibility compliant
-margins, fonts), then pass to WeasyPrint.
+FastAPI route: `GET /api/sjd` with optional `?og_code=AS` filter. Returns list of SJD summaries. `GET /api/sjd/{sjd_number}` returns full record. No new dependency.
+
+### Feature 2: Accessible JD DOCX Template
+
+**Library: python-docx 1.1.2 — already installed. No new library.**
+
+The Accessible JD Template (`data/AI Docs/Accessible Job Description Template (1).docx`) was verified readable by python-docx: 58 paragraphs, 1 table, standard heading styles (Heading 1, Heading 2, Normal). The template uses standard OOXML styles with no custom XML hacks.
+
+Approach: create a new `accessible_jd_template.docx` Jinja2-compatible template using docxtpl, mirroring the structure of the accessible template. The existing `build_wd_template.py` pattern (from Phase 20) handles this cleanly. The template binary is committed as an artifact; the build script is the reproducible source.
+
+No new library. docxtpl + python-docx covers all .docx read and render operations.
+
+### Feature 3: Writing Guide Integration
+
+**Library: python-docx 1.1.2 — already installed. No new library.**
+
+The Writing Guide (`data/AI Docs/Job Description Writing Guide.docx`) is 550 paragraphs across 13 tables. python-docx reads it correctly. The guide's duty-writing rules (strong action verbs, present tense, no gerunds, no passive voice, specificity requirements) are extracted once as a Python constant at build time — not at runtime.
+
+Validation approach: a pure-Python regex + rule-table function `validate_duty_statement(text: str) -> list[DutyWarning]`. No NLP library. The Writing Guide's explicit principles reduce to ~8-12 detectable patterns (starts with gerund, passive construction, missing object, vague verb, etc.). This is testable, auditable, and runs in under 1ms per duty.
+
+Inline tips: a `WRITING_TIPS` dict keyed by `og_code` and step, populated from guide content, returned via `GET /api/writing-tips?og_code=EC&step=duties`. Pure data, no new library.
+
+### Feature 4: Risk Audit
+
+**Library: none new. Pattern: new FastAPI router + Pydantic models.**
+
+The audit checks JD content against:
+- CBA clauses (text already in `data/agreements/` — existing v1.0 ingest, available as plaintext)
+- Federal Court principles from `data/AI Docs/ERR_Principles_drawn_from_Federal_Court.pdf` (8 pages, extracted via PyMuPDF at build time into a constant)
+- Wilkonson v. Canada (29 pages, same approach)
+
+PyMuPDF (`fitz`) is already installed (1.27.2.3, CONFIRMED on aarch64). It is not in `requirements.txt` — add it. It is not a runtime dependency in the hot path; it is used once in a data-prep script to extract audit rule text into a Python constant before committing.
+
+The audit itself is deterministic rule matching, not LLM. Each finding has: `section`, `finding_type` (cba_clause | federal_court_principle), `citation`, `description`, `severity` (high | medium | low), `recommendation`. The advisor responds with `Accept | Manual Edit | Skip`. This is stored in `audit_log` with `event='risk_audit_decision'`.
+
+FastAPI pattern: `POST /api/wd/{id}/audit` triggers the audit, returns `list[AuditFinding]`. `POST /api/wd/{id}/audit/decision` records advisor decision. No streaming needed — the audit runs in <100ms deterministically.
+
+No new Python library. New Pydantic models (`AuditFinding`, `AuditDecision`) and a new router `app/api/audit.py`.
+
+### Feature 5: Broader OG Classification (12 new groups)
+
+**Library: none new. Data work only.**
+
+All 12 JES standards are already present in `data/Job_evaluation/` as plaintext files:
+- ED, FB (has both standard and application guidelines), FS (same), LC, LP, MT, NT, NU, PO, PS, SW, WP
+
+The OG_LEVELS dict already contains FB and FS. The remaining 10 (ED, LC, LP, MT, NT, NU, PO, PS, SW, WP) need level ranges added — sourced from `data/rates_of_pay/` CSV files.
+
+The expansion is pure Python constant work in `constants.py`:
+1. Add level ranges to `OG_LEVELS` for the 10 missing groups
+2. Add `JES_ELEMENTS` dicts for each group (factor names + degree/point tables from the .txt files)
+3. Add `DEGREE_VECTORS` for each group (same structure as `EC_DEGREES`)
+4. Add entries to `NON_EC_STANDARD_NAMES` for groups without full JES tables in data
+5. Extend `QUESTION_BANK` with Socratic signals covering all 12 new groups
+
+The JES scoring service (`app/services/jes_scoring.py`) already has an OG-dispatch pattern. Adding new groups is additive, no structural change.
+
+No new library.
+
+### Feature 6: Document Preview Page Extension
+
+**Library: none. Pure CSS fix.**
+
+Root cause: `.app` is `height: 100vh`. The `.preview` column is a flex child with `min-height: 0`. The `.doc-scroll` container is `flex: 1 1 auto; min-height: 0; overflow-y: auto`. The `.doc` paper div has no explicit `min-height` and grows with content — this part is correct. The bug is that `.doc` is a block inside a scroll container, so it should grow freely. If content overflows into the grey background, the issue is either `overflow: hidden` somewhere in the ancestor chain or a missing `align-self` on `.doc`.
+
+Fix: confirm `.doc-scroll` uses `align-items: flex-start` (or `align-content: flex-start`) so the `.doc` child doesn't stretch to the scroll container's cross-axis height. The scroll container itself scrolls; the paper grows. Two CSS properties, no library.
+
+```css
+.doc-scroll {
+  /* existing */
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  padding: 38px 34px 80px;
+  display: flex; justify-content: center;
+  /* add: */
+  align-items: flex-start;   /* paper starts at top, grows down */
+}
+```
+
+If the paper is already `flex-start` aligned and the bug is content being clipped, the alternative fix is `min-height: max-content` on `.doc`. Diagnose in browser before committing.
+
+---
+
+## Integration Points
+
+### PyMuPDF — where it hooks in
+
+Used exclusively in one-shot data extraction scripts (not runtime). Add to `requirements.txt`. Usage pattern:
 
 ```python
-from weasyprint import HTML
-html = jinja_env.get_template("jd_export.html").render(context)
-pdf_bytes = HTML(string=html).write_pdf()
+import fitz  # PyMuPDF
+doc = fitz.open("data/AI Docs/ERR_Principles_drawn_from_Federal_Court.pdf")
+text = "\n".join(page.get_text() for page in doc)
 ```
 
-**Why WeasyPrint over alternatives:**
-- wkhtmltopdf requires a headless browser binary (ARM64 build is non-trivial on Jetson)
-- Playwright/Pyppeteer require Chromium (massive dependency, known Jetson ARM64 compatibility issues)
-- WeasyPrint has no binary dependency beyond Pango/Cairo (system fonts), which are already present
-  on the Jetson Linux install
-- CSS paged media support (`@page`, page breaks, headers/footers) handles GoC document formatting
+Output is a Python constant `FEDERAL_COURT_PRINCIPLES: list[AuditRule]` in `app/data/audit_rules.py`. The FastAPI audit endpoint reads this constant, never calls fitz at request time.
+
+### SJD constant — where it hooks in
+
+New file: `app/data/sjd_library.py`. Contains `SJD_LIBRARY: list[dict]` parsed from SJD Examples.txt. Imported by a new router `app/api/sjd.py`. The conversation front-end gets a new step type (`sjd_browse`) that calls `GET /api/sjd` and lets the advisor pre-populate the WD record from a selected SJD.
+
+### Writing Guide rules — where they hook in
+
+New file: `app/data/writing_rules.py`. Contains `DUTY_VALIDATION_RULES: list[DutyRule]` (regex + description + fix hint) and `WRITING_TIPS: dict[str, list[str]]`. The existing `app/api/wd.py` PATCH endpoint calls `validate_duty_statement()` and returns warnings in the response alongside the saved record. No separate endpoint needed.
+
+### Audit rules — where they hook in
+
+New file: `app/data/audit_rules.py`. New router `app/api/audit.py`. The audit is triggered explicitly by the advisor in the Review phase (not automatic). The `audit_log` table already exists and can store audit decisions with `event='risk_audit_decision'`.
+
+### OG expansion — where it hooks in
+
+`app/data/constants.py` only. The OG classifier (`app/api/og.py`) and JES scorer (`app/services/jes_scoring.py`) dispatch on `og_code`. Adding new groups to `OG_LEVELS`, `JES_ELEMENTS`, and `QUESTION_BANK` is sufficient — the dispatch logic is already OG-agnostic.
 
 ---
 
-## 8. Validation and Models
+## What NOT to Add
 
-### Recommendation: Pydantic v2 throughout — all data contracts, all LLM outputs, all API requests
-
-**Pydantic 2.12.5** — CONFIRMED installed. This is not optional — it is the architectural spine
-of the project:
-
-- Every NOC profile, JES rating, CA validation result, and export provenance record is a Pydantic model
-- FastAPI request/response validation is Pydantic-native
-- Ollama structured output (`format=Model.model_json_schema()`) uses Pydantic
-- `instructor` uses Pydantic for retry/validation loops
-- The prototype's Pydantic model contracts were identified as "what worked" — keep this pattern
-
----
-
-## Complete Recommended Stack
-
-| Component | Library | Version | ARM64 Status |
-|-----------|---------|---------|--------------|
-| Web framework | FastAPI | 0.128.8 | CONFIRMED |
-| ASGI server | Uvicorn | 0.40.0 | CONFIRMED |
-| Template engine | Jinja2 | 3.1.6 | CONFIRMED |
-| Data validation | Pydantic | 2.12.5 | CONFIRMED |
-| LLM client | ollama (official) | 0.6.1 | CONFIRMED |
-| Structured output retry | instructor | 1.15.1 | CONFIRMED |
-| Vector search | sqlite-vec | 0.1.9 | VERIFIED |
-| Embedding model | nomic-embed-text (Ollama) | latest | CONFIRMED |
-| Parquet query engine | DuckDB | 1.5.3 | VERIFIED |
-| Data pipeline transforms | Polars | 1.41.1 | VERIFIED |
-| App state / KV store | SQLite (stdlib) | — | CONFIRMED |
-| DOCX generation | python-docx | 1.2.0 | CONFIRMED |
-| DOCX templates | docxtpl | latest | VERIFIED |
-| PDF generation | WeasyPrint | 68.1 | VERIFIED |
-| Frontend server-push | HTMX | 2.x (CDN) | N/A |
-| Frontend UI state | Alpine.js | 3.x (CDN) | N/A |
-| Fallback embeddings | fastembed | 0.8.0 | CONFIRMED |
+| Temptation | Why Not |
+|------------|---------|
+| A database table for SJD library | 9 records. A Python constant is simpler, testable, version-controlled, and requires no migration. Add a SQLite table only if the library grows beyond ~200 records or needs full-text search. |
+| An NLP library (spaCy, NLTK) for duty validation | The Writing Guide principles reduce to ~10 regex patterns. spaCy on ARM64 has wheel availability issues for some versions; it pulls in large models; and it's overkill for rule-based validation. Regex + a lookup table is auditable and fast. |
+| A rule-engine library (drools-style) for audit | The audit has ~20-30 rules. A list of dataclasses with a `check(wd: WorkDescription) -> list[AuditFinding]` signature is sufficient. Durable Rules, Pyke, or similar frameworks add complexity for no gain at this scale. |
+| LLM for Writing Guide validation or Risk Audit | The Writing Guide gives explicit, enumerable principles. The Federal Court document gives citable rules. Deterministic matching is auditable; LLM output is not. The audit must be legally defensible. |
+| A new PDF library | PyMuPDF is already installed. WeasyPrint handles export. No gap. |
+| A frontend charting/visualization library | The Risk Audit findings are rendered as an inline list with Accept/Edit/Skip controls. No chart. No new npm package. |
+| React Router or a client-side router | The SJD browser is a new step in the existing STEPS array, not a new page. The existing step-navigation pattern handles it. |
+| A separate microservice for the audit | Single-user local app. One FastAPI process. Splitting into services adds network complexity and a second process to manage on the Jetson. |
 
 ---
 
-## What NOT to Use
+## ARM64 Compatibility Summary
 
-| Package | Reason |
-|---------|--------|
-| **Flask** | WSGI — blocks during LLM inference; streaming requires hacks; FastAPI is already installed and better suited |
-| **sentence-transformers** | Caused 30-60s cold starts in prototype; loads full PyTorch model on import; 500 MB+ RAM; replaced by Ollama nomic-embed-text |
-| **LangChain / langchain-ollama** | Abstraction fighting: provenance-first design requires per-token control that LangChain's chain model obscures; versioning churn; not worth the overhead |
-| **LlamaIndex RAG pipeline** | Similar issue — LlamaIndex's node/index abstractions conflict with the custom provenance data model; use direct Ollama + sqlite-vec instead |
-| **wkhtmltopdf** | ARM64 binary build is non-trivial on Jetson; abandoned upstream; WeasyPrint is a better fit |
-| **Playwright / Pyppeteer for PDF** | Requires Chromium binary; ARM64 Jetson Chromium is problematic; overkill for document generation |
-| **pandas** for data pipeline | 2-3x slower than Polars for column transforms; higher memory use; use Polars for pipelines, DuckDB for queries |
-| **SQLAlchemy ORM** | Unnecessary ORM abstraction over DuckDB's SQL-first model; adds complexity without benefit for parquet-native queries |
-| **qdrant / Weaviate / Milvus** | Separate service processes; overkill for the bounded corpus size in this app; sqlite-vec covers the use case entirely |
-| **outlines** | Separate inference runtime that conflicts with Ollama; grammar-constrained decoding is already provided by Ollama's `format` parameter |
-| **React / Vue / Svelte** | No build pipeline needed; single-user local app; HTMX + Alpine.js covers all UI requirements at ~29 KB |
-| **DuckDB 1.4.3 / 1.4.4** | Missing aarch64 wheels on PyPI; use 1.5.x which has a clean aarch64 wheel |
+All existing packages: CONFIRMED on aarch64 (running on this machine).
+
+PyMuPDF 1.27.2.3: CONFIRMED on aarch64. Already installed at `/home/charles/.local/lib/python3.10/site-packages`. The package bundles libmupdf as a native extension; the aarch64 wheel is published to PyPI and resolves cleanly. No system dependencies beyond what is already present.
+
+No new packages with ARM64 risk.
 
 ---
 
-## Known ARM64 Risks and Mitigations
+## Required requirements.txt Change
 
-| Risk | Severity | Mitigation |
-|------|----------|-----------|
-| `onnxruntime` (pulled by chromadb, fastembed) sometimes needs recompile on Jetson | LOW | Pre-built aarch64 wheels exist; confirmed working for chromadb 1.5.9 and fastembed 0.8.0 |
-| `grpcio` (chromadb dep) has had ARM64 build failures in the past | LOW | chromadb 1.5.9 is already installed and working on this machine |
-| DuckDB aarch64 wheels have appeared and disappeared between minor versions | MEDIUM | Pin to 1.5.3 in requirements.txt; do not auto-upgrade without verifying aarch64 wheel availability |
-| WeasyPrint system font rendering requires Pango/Cairo | LOW | These are standard system libs on Ubuntu/JetPack; should be present; if missing: `apt install libpango-1.0-0 libcairo2` |
-| Qwen3 structured output + `format` parameter has reported edge cases in Ollama | MEDIUM | Add `instructor` retry wrapper for critical classification outputs; validate all structured responses before use |
+Add one line to `v2/backend/requirements.txt`:
 
----
-
-## Installation
-
-```bash
-# Core application
-pip install fastapi uvicorn[standard] pydantic
-
-# LLM
-pip install ollama instructor
-
-# Vector search
-pip install sqlite-vec
-
-# Data layer
-pip install duckdb==1.5.3 polars
-
-# Document generation
-pip install python-docx docxtpl weasyprint
-
-# (Optional) Batch embedding fallback
-pip install fastembed
+```
+pymupdf==1.27.2.3
 ```
 
-HTMX and Alpine.js are loaded from CDN in templates — no npm required.
+This documents an already-installed package that the data-prep scripts depend on. It is not a runtime hot-path dependency, but it should be pinned so a fresh environment can reproduce the audit rule extraction scripts.
 
 ---
 
 ## Sources
 
-- FastAPI streaming docs: https://fastapi.tiangolo.com/advanced/custom-response/#streamingresponse
-- Ollama Python library: https://github.com/ollama/ollama-python
-- Ollama structured outputs: https://docs.ollama.com/capabilities/structured-outputs
-- sqlite-vec: https://github.com/asg017/sqlite-vec
-- DuckDB ARM64 issue tracker: https://github.com/duckdb/duckdb-python/issues/301
-- instructor + Ollama: https://python.useinstructor.com/integrations/ollama/
-- HTMX multi-step forms: https://medium.com/@alexander.heerens/htmx-patterns-01-how-to-build-a-multi-step-form-in-htmx-554d4c2a3f36
-- docxtpl: https://docxtpl.readthedocs.io/
-- Polars vs DuckDB benchmark: https://www.codecentric.de/en/knowledge-hub/blog/duckdb-vs-polars-performance-and-memory-with-massive-parquet-data
-- Ollama embedding models comparison: https://www.morphllm.com/ollama-embedding-models
+- python-docx verified readable on target hardware: direct execution of `docx.Document(...)` on both source files (Accessible JD Template: 58 paragraphs, 1 table; Writing Guide: 550 paragraphs, 13 tables)
+- PyMuPDF ARM64: `pip show pymupdf` → Version 1.27.2.3, confirmed on aarch64 3.10.12 on this machine
+- PyMuPDF PDF read verified: `fitz.open(...)` on ERR_Principles (8 pages) and Wilkonson (29 pages), both readable
+- SJD Examples.txt: 9 records, tab-separated format confirmed by file inspection
+- OG JES standards: 18 files in `data/Job_evaluation/` confirmed present for all 12 new groups
+- CSS fix rationale: styles.css inspected; `.doc-scroll` uses `display: flex; justify-content: center` without `align-items: flex-start` — paper stretches to scroll container height, causing visible overflow for short documents; fix is additive, not a rewrite
