@@ -315,15 +315,61 @@ function NocConfirmList({ value, onChange, cfg }) {
 // cfg.type === 'og_confirm'
 // cfg.candidates: array from POST /api/og/classify response
 // cfg.asec_alert: { disambiguation_text, citation } or null — from API response via ogAlert state in app.jsx
+// cfg.subgroup_alert: { subgroups, descriptions, disambiguation_text, citation } or null
+//                    — OGX-07, fires when confirmed_og is NU/SW/ED; from API response.
 // cfg.loading: boolean — true while /api/og/classify is in flight
+// cfg.wd_id: optional string — when set, sub-group selection persists via
+//            POST /api/wd/{id}/confirm-subgroup (T-21-01 validated server-side).
 // value: selected candidate object or null (stores full candidate, not just og_code)
 // onChange(candidate): stores full OGCandidate object — og_level step reads .og_code from it
 function OgConfirmList({ value, onChange, cfg }) {
   const candidates = cfg.candidates || [];
   const alert = cfg.asec_alert || null;
+  const subGroupAlert = cfg.subgroup_alert || null;
+  // OGX-07 — only NU, SW, ED require sub-group disambiguation.
+  const SUBGROUP_OGS = ['NU', 'SW', 'ED'];
+  const selectedCode = value && value.og_code;
+  const subGroupNeeded = selectedCode && SUBGROUP_OGS.indexOf(selectedCode) !== -1;
+  const [selectedSubGroup, setSelectedSubGroup] = useState(null);
+  // Reset sub-group selection when the user changes the OG pick
+  useEffect(() => {
+    setSelectedSubGroup(null);
+  }, [selectedCode]);
   if (cfg.loading) {
     return <p className="step-loading">Finding occupational group matches...</p>;
   }
+  // OGX-07 — title text per the group-specific copywriting contract in UI-SPEC.
+  // The SUBGROUP_DISAMBIGUATIONS constant only fires for these three groups, so
+  // each block is guarded by a unique sub-group code marker to avoid wrong title
+  // bleeding across groups.
+  const subGroupTitle =
+    subGroupAlert && subGroupAlert.subgroups.indexOf('HOS') !== -1
+      ? 'This position is in the Nursing (NU) group. Which sub-group applies?'
+      : subGroupAlert && subGroupAlert.subgroups.indexOf('SCW') !== -1
+        ? 'Social Work (SW) has two sub-groups with different evaluation methods. Which applies?'
+        : subGroupAlert && subGroupAlert.subgroups.indexOf('EDS') !== -1
+          ? 'Education (ED) has three sub-groups with different evaluation methods. Which applies?'
+          : 'This group has sub-groups with different evaluation methods. Which applies?';
+  // OGX-07 — sub-group selection handler. Fires POST /api/wd/{id}/confirm-subgroup
+  // when cfg.wd_id is set (the API call validates sub_group via T-21-01).
+  // Selection is held in local state regardless so the UI is responsive even
+  // when the network call is delayed.
+  const handleSubGroupSelect = (sg) => {
+    setSelectedSubGroup(sg);
+    if (cfg.wd_id) {
+      fetch(`/api/wd/${cfg.wd_id}/confirm-subgroup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sub_group: sg }),
+      }).catch((err) => {
+        // Log but don't block — UI selection is the source of truth for this step.
+        // The 422 path on invalid sub_group only triggers if SUBGROUP_DISAMBIGUATIONS
+        // is bypassed server-side, which our test suite guards against.
+        // eslint-disable-next-line no-console
+        console.error('confirm-subgroup request failed', err);
+      });
+    }
+  };
   return (
     <div>
       {alert && (
@@ -357,6 +403,36 @@ function OgConfirmList({ value, onChange, cfg }) {
           );
         })}
       </div>
+      {subGroupNeeded && subGroupAlert && (
+        <div className="asec-alert" data-testid="subgroup-picker">
+          <p className="asec-alert__title">{subGroupTitle}</p>
+          <p className="asec-alert__body">{subGroupAlert.disambiguation_text}</p>
+          <div className="choices" style={{ marginTop: 8 }}>
+            {subGroupAlert.subgroups.map(sg => {
+              const desc = subGroupAlert.descriptions[sg] || '';
+              // descriptions[sg] is shaped as "<ShortName> — <long description>"
+              // — split on the first em-dash to extract the short name for title.
+              const shortName = desc.split('—')[0].trim() || sg;
+              const longDesc = desc.split('—').slice(1).join('—').trim() || desc;
+              const sel = selectedSubGroup === sg;
+              return (
+                <button
+                  key={sg}
+                  type="button"
+                  className={'choice' + (sel ? ' is-sel' : '')}
+                  onClick={() => handleSubGroupSelect(sg)}
+                >
+                  <span className="choice__main">
+                    <span className="choice__title">{sg} — {shortName}</span>
+                    <span className="choice__desc">{longDesc}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <span className="asec-alert__cite">{subGroupAlert.citation}</span>
+        </div>
+      )}
     </div>
   );
 }

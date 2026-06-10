@@ -685,6 +685,36 @@ body.no-prov .src { display: none; }
 .cls-block__name { font-size: 14.5px; font-weight: 650; color: var(--ink); }
 .cls-block__why { font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; margin-top: 4px; }
 
+/* OGX-07 / Phase 21 — Disambiguation alert (ASEC pattern + NU/SW/ED sub-group) */
+/* Closes a pre-existing Phase 16 gap — JSX has used this class since Phase 16. */
+.asec-alert {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  margin-bottom: 16px;
+}
+.asec-alert__title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+.asec-alert__body {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.asec-alert__cite {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  letter-spacing: 0.03em;
+  display: block;
+}
+
 /* JES factor mini-table */
 .jes { margin-top: 14px; display: flex; flex-direction: column; gap: 2px; }
 .jes__row {
