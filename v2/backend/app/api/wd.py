@@ -106,6 +106,7 @@ async def get_wd(wd_id: str) -> WorkDescription:
 @router.patch("/wd/{wd_id}")
 async def patch_wd(wd_id: str, body: WDPatchRequest) -> WorkDescription:
     """Merge patch fields onto the stored WorkDescription and update last_modified."""
+    import logging
     settings = get_settings()
     con = get_connection(settings.db_path)
     try:
@@ -117,7 +118,15 @@ async def patch_wd(wd_id: str, body: WDPatchRequest) -> WorkDescription:
         wd = WorkDescription.model_validate_json(row["data"])
         # Separate duties from scalar fields to enable validated merge
         raw_duties = body.duties  # extract before model_dump excludes it
-        for field, val in body.model_dump(exclude_unset=True, exclude={'duties'}).items():
+        body_dump = body.model_dump(exclude_unset=True, exclude={'duties'})
+        # Diagnostic: log classification-related fields if present
+        cls_keys = [k for k in body_dump if k in ('confirmed_og', 'og_level', 'confirmed_noc', 'jes_total_points')]
+        if cls_keys:
+            logging.getLogger(__name__).info(
+                "PATCH wd=%s classification fields: %s",
+                wd_id[:8], {k: body_dump[k] for k in cls_keys},
+            )
+        for field, val in body_dump.items():
             setattr(wd, field, val)
         # Duties: validate each item against DraftDuty; cap at 20 (DoS mitigation)
         if raw_duties is not None:
