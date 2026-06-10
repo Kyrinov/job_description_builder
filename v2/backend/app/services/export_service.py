@@ -240,13 +240,26 @@ def _build_wd_context(wd: WorkDescription, amendments: list[dict]) -> dict:
     og_level_int = wd.og_level or 0
     og_level_str = f"{og_code}-{int(og_level_int):02d}" if og_code else ""
 
-    # Qualification text — handle missing qualification gracefully
+    # Qualification — fall back to record.quals when root qualification not yet persisted
     if wd.qualification is not None:
         education_text = wd.qualification.education
         experience_text = wd.qualification.experience
     else:
-        education_text = ""
-        experience_text = ""
+        record_quals = record.get("quals") or {}
+        education_text = record_quals.get("education", "")
+        experience_text = record_quals.get("experience", "")
+
+    # Duties — fall back to record.duties when root duties not yet persisted
+    root_duties = wd.duties or []
+    if not root_duties:
+        root_duties = [
+            type("_D", (), {
+                "text": d.get("text", ""),
+                "provenance_noc_code": d.get("provenance_noc_code", ""),
+                "advisor": d.get("advisor", False),
+            })()
+            for d in (record.get("duties") or [])
+        ]
 
     return {
         "position_title": record.get("title", ""),
@@ -263,7 +276,7 @@ def _build_wd_context(wd: WorkDescription, amendments: list[dict]) -> dict:
                 "noc_code": d.provenance_noc_code or "",
                 "is_advisor": bool(d.advisor),
             }
-            for d in (wd.duties or [])
+            for d in root_duties
         ],
         "jes_scores": wd.jes_scores or [],
         "jes_total_points": wd.jes_total_points or 0,
