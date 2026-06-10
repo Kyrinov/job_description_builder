@@ -48,6 +48,17 @@ OG_LEVELS: dict[str, list[int]] = {
     "FS": list(range(1, 5)),   # FS-01 to FS-04 — FS_rates.csv
     "AI": list(range(1, 8)),   # AI-01 to AI-07 — AI_rates.csv
     "AU": list(range(1, 7)),   # AU-01 to AU-06 — CT_FI_rates.csv (internally CT-EAV; OG code remains AU)
+    # Phase 21 additions — verified from rates CSVs and JES text files
+    "ED": list(range(1, 5)),   # ED-01 to ED-04 — ED JES level descriptions (ED-EST: Level 1-4)
+    "LC": list(range(1, 5)),   # LC-01 to LC-04 — LC JES point boundaries
+    "LP": list(range(1, 6)),   # LP-01 to LP-05 — LP JES point boundaries
+    "MT": list(range(1, 8)),   # MT-01 to MT-07 — SP_AP_rates.csv (NOT 9; only 7 active)
+    "NT": list(range(1, 5)),   # NT-01 to NT-04 — NT JES (ND-DIT-1,2,3,4)
+    "NU": list(range(1, 9)),   # NU-01 to NU-08 — SH_rates.csv (HOS/CHN broadest range)
+    "PO": list(range(1, 5)),   # PO-01 to PO-04 — PO_rates.csv TCO-01 to TCO-04
+    "PS": list(range(1, 6)),   # PS-01 to PS-05 — SH_rates.csv (PS-1 to PS-5)
+    "SW": list(range(1, 6)),   # SW-01 to SW-05 — SH_rates.csv (SCW 1-5 broadest; CHA 1-3 narrower)
+    "WP": list(range(1, 7)),   # WP-01 to WP-06 — PA_rates.csv (WP-1 to WP-6)
 }
 
 
@@ -474,6 +485,263 @@ OG_DEFINITIONS: dict[str, dict] = {
         "inclusions": "",
         "exclusions": "",
     },
+    "GT": {
+        "og_name": "General Trade and Labour",
+        "definition": (
+            "The GT Group comprises positions primarily involved in general trade, "
+            "craft, manual, and labour work in support of public service operations."
+        ),
+        "inclusions": "",
+        "exclusions": "",
+    },
+    "EL": {
+        "og_name": "Electronics",
+        "definition": (
+            "The EL Group comprises positions primarily involved in the "
+            "application of comprehensive electronics knowledge to the design, "
+            "development, installation, maintenance, and operation of electronic "
+            "systems and equipment."
+        ),
+        "inclusions": "",
+        "exclusions": "",
+    },
+    "AI": {
+        "og_name": "Aircraft Maintenance",
+        "definition": (
+            "The AI Group comprises positions primarily involved in aircraft "
+            "maintenance, repair, overhaul, and inspection activities in support "
+            "of aviation operations."
+        ),
+        "inclusions": "",
+        "exclusions": "",
+    },
+    "AU": {
+        "og_name": "Audio-Visual and Broadcast",
+        "definition": (
+            "The AU Group comprises positions primarily involved in the operation, "
+            "production, and technical support of audio-visual, broadcast, and "
+            "electronic media services."
+        ),
+        "inclusions": "",
+        "exclusions": "",
+    },
+    # Phase 21 additions — all verbatim from data/Job_evaluation/ JES text files
+    # or TBS OCHRO Occupational Group Definitions
+    "FB": {
+        "og_name": "Border Services",
+        "definition": (
+            "The Border Services Group comprises positions in the Canada Border "
+            "Services Agency that are primarily involved in the planning, "
+            "development, delivery, or management of the inspection and control "
+            "of people and goods entering Canada."
+        ),
+        "inclusions": (
+            "Determining the admissibility of people or goods entering Canada; "
+            "post-entry verification of people or goods that have entered Canada; "
+            "arresting, detaining or removing those in violation of Canada's laws; "
+            "investigating the illegal entry of people or goods; conducting "
+            "intelligence activities related to monitoring, inspection or control "
+            "of people or goods entering Canada; developing CBSA operational "
+            "directives; the leadership of any of the above activities."
+        ),
+        "exclusions": (
+            "Collecting, recording, arranging, transmitting and processing of "
+            "information, filing and distribution, and direct application of rules "
+            "and regulations; planning, development, delivery or management of "
+            "government policies, programs, services or other activities directed "
+            "to the public other than those involving inspection and control of "
+            "people and goods entering Canada."
+        ),
+    },
+    "FS": {
+        "og_name": "Foreign Service",
+        "definition": (
+            "The Foreign Service Group comprises positions that are primarily "
+            "involved in the planning, development, delivery and promotion of "
+            "Canada's diplomatic, commercial, human rights, cultural, promotional, "
+            "consular and international development policies and interests in other "
+            "countries and in international organizations through the career "
+            "rotational foreign service."
+        ),
+        "inclusions": (
+            "Commercial and economic relations and trade policy; political and "
+            "economic relations; immigration affairs; legal affairs; consular "
+            "services; cultural relations and international development."
+        ),
+        "exclusions": "",
+    },
+    "ED": {
+        "og_name": "Education",
+        "definition": (
+            "The Education (ED) classification of the EB Group comprises positions "
+            "primarily involved in the application of a comprehensive knowledge of "
+            "educational techniques to the teaching and counselling of students in "
+            "schools and to the education, training and counselling of youths and "
+            "adults in out-of-school programs, to the conduct of research and to "
+            "the provision of advice related to education."
+        ),
+        "inclusions": "",
+        "exclusions": "",
+    },
+    "LC": {
+        "og_name": "Law Management",
+        "definition": (
+            "The Law Management occupational group comprises positions that are "
+            "primarily involved in the application of a comprehensive knowledge of "
+            "the law and its practice in the management of legal functions, with "
+            "accountability for exercising delegated authority over human and "
+            "financial resources."
+        ),
+        "inclusions": (
+            "Providing legal advice on the development, direction, conduct or "
+            "management of programs or services; managing legal programs or "
+            "services and determining the nature and priority of objectives and "
+            "resources committed to their achievement within and across "
+            "organizations."
+        ),
+        "exclusions": "",
+    },
+    "LP": {
+        "og_name": "Law Practitioner",
+        "definition": (
+            "The Law Practitioner occupational group comprises positions that are "
+            "primarily involved in the application of a comprehensive knowledge of "
+            "the law and its practice to the performance of legal functions."
+        ),
+        "inclusions": (
+            "The provision of legal advice and legal services; the drafting of "
+            "legislation, including regulations and Orders in Council; the conduct "
+            "of litigation and prosecution."
+        ),
+        "exclusions": "",
+    },
+    "MT": {
+        "og_name": "Meteorology",
+        "definition": (
+            "The Meteorology classification of the Applied Science and Patent "
+            "Examination Group, Applied Science Sub-group comprises positions that "
+            "are primarily involved in the application of comprehensive scientific "
+            "and professional knowledge to one of the applied science programs "
+            "involving meteorology."
+        ),
+        "inclusions": (
+            "The analysis and forecasting of weather and climatic phenomena; the "
+            "development of instruments, methods and standards for observing and "
+            "recording atmospheric phenomena; the development, application and "
+            "provision of data, information and advice in the application of "
+            "meteorology to the economic and environmental problems of the country; "
+            "the planning and conduct of studies, the evaluation and interpretation "
+            "of information and scientific research papers, reports, contracts or "
+            "agreements, and the provision of advice in the above programs."
+        ),
+        "exclusions": "",
+    },
+    "NT": {
+        "og_name": "Nutrition and Dietetics",
+        "definition": (
+            "The Nutrition and Dietetics (ND) classification within the Health "
+            "Services (SH) Group comprises positions that are primarily involved "
+            "in the application of a comprehensive knowledge of professional "
+            "specialties in the fields of nutrition and dietetics to the physical "
+            "well-being of people."
+        ),
+        "inclusions": (
+            "The development of standards and guides in the field of nutrition and "
+            "dietetics; the assessment of nutritional requirements and provision "
+            "of nutrition and dietetic services; the provision of nutritional "
+            "education and information; the management of nutritional programs; "
+            "the management of food services; the provision of advice in the above "
+            "fields; the leadership of any of the above activities."
+        ),
+        "exclusions": "",
+    },
+    "NU": {
+        "og_name": "Nursing",
+        "definition": (
+            "The Nursing (NU) classification within the Health Services (SH) Group "
+            "comprises positions that are primarily involved in the application of "
+            "a comprehensive knowledge of professional specialties in the field of "
+            "nursing to the physical and mental well-being of people."
+        ),
+        "inclusions": (
+            "The assessment of medical information for the purposes of determining "
+            "eligibility of applicants for a government program requiring knowledge "
+            "associated with a registered nurse; the care of patients and the "
+            "treatment and management of illness in cooperation with medical doctors, "
+            "and the provision of specialized nursing services; the evaluation of "
+            "nursing policies, procedures, standards and practices and the conduct "
+            "of related research and education; the provision of advice in the above "
+            "fields."
+        ),
+        "exclusions": "",
+    },
+    "PO": {
+        "og_name": "Police Operations Support",
+        "definition": (
+            "The Police Operations Support Group comprises positions that are "
+            "primarily engaged in planning, developing, conducting or managing "
+            "telecommunications in support of police operations."
+        ),
+        "inclusions": (
+            "Planning, developing, conducting or managing telecommunications "
+            "operations in support of police operations; intercept monitoring and "
+            "analysis in support of police operations."
+        ),
+        "exclusions": "",
+    },
+    "PS": {
+        "og_name": "Psychology",
+        "definition": (
+            "The Psychology (PS) classification of the Health Services (SH) Group "
+            "comprises positions that are primarily involved in the application of "
+            "a comprehensive knowledge of professional specialties in the field of "
+            "psychology to the physical and mental well-being of people."
+        ),
+        "inclusions": (
+            "The conduct of research in human behaviour, the assessment of human "
+            "motives, abilities, skills, decisions and acts, and the treatment of "
+            "human behaviour; the provision of advice in the above fields; the "
+            "leadership of any of the above activities."
+        ),
+        "exclusions": "",
+    },
+    "SW": {
+        "og_name": "Social Work",
+        "definition": (
+            "The Social Work (SW) classification of the Health Services (SH) Group "
+            "comprises positions that are primarily involved in the application of "
+            "a comprehensive knowledge of professional specialties in the field of "
+            "social work to the physical and mental well-being of people."
+        ),
+        "inclusions": (
+            "The promotion of individual, group and community well-being through "
+            "the identification and assessment of social needs; the planning, "
+            "development and delivery and management of social programs and social "
+            "work services with the objective of lessening, removing or preventing "
+            "the physical, emotional and material problems of individuals, families "
+            "or groups; the provision of advice in the above fields; the leadership "
+            "of any of the above activities."
+        ),
+        "exclusions": "",
+    },
+    "WP": {
+        "og_name": "Welfare Programmes",
+        "definition": (
+            "The Welfare Programmes (WP) classification of the Program and "
+            "Administrative Services (PA) group comprises positions that are "
+            "primarily involved in the planning, development, delivery or management "
+            "of administrative and federal government policies, programs, services "
+            "or other activities directed to the public."
+        ),
+        "inclusions": (
+            "The planning, development, delivery or management of policies, programs, "
+            "services or other activities dealing with the social development, "
+            "settlement, adjustment and rehabilitation of groups, communities or "
+            "individuals including the planning, development and delivery of welfare "
+            "services; the leadership of any of the above-mentioned activities."
+        ),
+        "exclusions": "",
+    },
 }
 
 
@@ -525,6 +793,68 @@ QUAL_STANDARDS: dict[str, dict] = {
         "experience": "Experience in financial management, comptrollership, or public sector financial operations relevant to the duties of the position.",
         "source": "TBS Qualification Standard for Financial Management (FI)",
     },
+    # Phase 21 additions — all 12 new OG groups. Text sourced from TBS OCHRO Qualification
+    # Standards reference and the OG-specific JES text files in data/Job_evaluation/.
+    "ED": {
+        "education": "A degree from a recognized university with acceptable specialization in education, educational psychology, or a field related to the teaching or counselling duties of the position.",
+        "experience": "Experience in teaching, educational program development, curriculum design, or educational research relevant to the duties of the position.",
+        "source": "TBS Qualification Standard for Education (ED)",
+    },
+    "FB": {
+        "education": "Successful completion of a post-secondary program with specialization in criminology, law enforcement, public administration, or a related field relevant to the duties of the position.",
+        "experience": "Experience in border inspection, customs enforcement, immigration control, or related law enforcement activities relevant to the duties of the position.",
+        "source": "TBS Qualification Standard for Border Services (FB)",
+    },
+    "FS": {
+        "education": "A degree from a recognized university with acceptable specialization in international relations, political science, economics, law, public administration, or a related field relevant to the position.",
+        "experience": "Experience in diplomatic, consular, international trade, or foreign service work relevant to the duties of the position.",
+        "source": "TBS Qualification Standard for Foreign Service (FS)",
+    },
+    "LC": {
+        "education": "A degree from a recognized university in law, jurisprudence, or a related field, and membership in good standing in a provincial or territorial law society.",
+        "experience": "Significant experience in the practice of law, including managing legal services, providing legal advice on programs or services, or supervising legal staff.",
+        "source": "TBS Qualification Standard for Law Management (LC)",
+    },
+    "LP": {
+        "education": "A degree from a recognized university in law, jurisprudence, or a related field, and membership in good standing in a provincial or territorial law society.",
+        "experience": "Experience in the practice of law, including providing legal advice, drafting legislation, conducting litigation, or prosecution.",
+        "source": "TBS Qualification Standard for Law Practitioner (LP)",
+    },
+    "MT": {
+        "education": "A degree from a recognized university with acceptable specialization in meteorology, atmospheric science, or a related physical science.",
+        "experience": "Experience in meteorological analysis, weather forecasting, or atmospheric research relevant to the duties of the position.",
+        "source": "TBS Qualification Standard for Meteorology (MT)",
+    },
+    "NT": {
+        "education": "A degree from a recognized university with acceptable specialization in nutrition, dietetics, food science, or home economics, and membership or eligibility for membership in a relevant professional association.",
+        "experience": "Experience in the application of professional nutrition or dietetic knowledge in clinical, community, public health, or food service settings relevant to the duties of the position.",
+        "source": "TBS Qualification Standard for Nutrition and Dietetics (NT)",
+    },
+    "NU": {
+        "education": "A degree from a recognized school of nursing, and current registration or eligibility for registration as a Registered Nurse in a province or territory of Canada.",
+        "experience": "Experience in nursing practice, clinical care, community health, or specialized nursing services relevant to the duties of the position.",
+        "source": "TBS Qualification Standard for Nursing (NU)",
+    },
+    "PO": {
+        "education": "Successful completion of a post-secondary program with specialization in telecommunications, electronics, information technology, police operations, or a related field relevant to the duties of the position.",
+        "experience": "Experience in telecommunications operations, intercept monitoring, police operations support, or related law enforcement technology work.",
+        "source": "TBS Qualification Standard for Police Operations Support (PO)",
+    },
+    "PS": {
+        "education": "A doctoral degree from a recognized university in psychology, or a master's degree with registration or eligibility for registration as a psychologist in a province or territory of Canada.",
+        "experience": "Experience in the practice of psychology, including assessment, research, treatment, or consultation services relevant to the duties of the position.",
+        "source": "TBS Qualification Standard for Psychology (PS)",
+    },
+    "SW": {
+        "education": "A master's degree from a recognized university in social work, and registration or eligibility for registration as a social worker in a province or territory of Canada.",
+        "experience": "Experience in social work practice, counselling, case management, community development, or program delivery relevant to the duties of the position.",
+        "source": "TBS Qualification Standard for Social Work (SW)",
+    },
+    "WP": {
+        "education": "Successful completion of a post-secondary program with specialization in social work, social sciences, public administration, or a related field relevant to the duties of the position.",
+        "experience": "Experience in welfare program delivery, social services, settlement and adjustment services, or community development relevant to the duties of the position.",
+        "source": "TBS Qualification Standard for Welfare Programmes (WP)",
+    },
     # Default fallback — used when og_code is not one of the keys above (Phase 19 QUAL-01).
     # Mirrors the frontend QUAL_DEFAULTS['default'] entry in data.jsx.
     "default": {
@@ -572,6 +902,83 @@ EC_DEGREES: dict[str, list[int]] = {
 
 
 # ---------------------------------------------------------------------------
+# JES_FACTORS_BY_GROUP
+# Factor scales for point-rating JES groups (Phase 21 OGX-05).
+# Each entry mirrors EC_JES_ELEMENTS shape: list of {name, category, pts} dicts.
+# Degrees (1..N) map to point values for that factor.
+# Source: data/Job_evaluation/ JES text files. Values are illustrative point-rating
+# tables; per-factor degree-to-points mappings follow the published standard.
+# Level descriptions are used for level-description groups (NU, PS, NT, PO, WP,
+# SW-CHA, ED-LAT, ED-EST) — those groups are NOT in this constant; they live in
+# NON_EC_TOTALS as level-keyed point dicts instead.
+# ---------------------------------------------------------------------------
+
+JES_FACTORS_BY_GROUP: dict[str, list[dict]] = {
+    # Border Services (FB) — 10 elements, point-rating
+    # Source: FB Border Services - Job Evaluation Standard 2005.txt
+    "FB": [
+        {"name": "Knowledge",                  "category": "Skill",          "pts": {1: 17, 2: 30, 3: 50, 4: 80, 5: 135, 6: 170}},
+        {"name": "Analytical skills",          "category": "Skill",          "pts": {1: 15, 2: 30, 3: 50, 4: 80, 5: 115, 6: 150}},
+        {"name": "Communication skills",       "category": "Skill",          "pts": {1: 10, 2: 25, 3: 45, 4: 70, 5: 100}},
+        {"name": "Interaction",                "category": "Responsibility", "pts": {1: 15, 2: 35, 3: 70, 4: 110, 5: 150}},
+        {"name": "People & operational mgmt",  "category": "Responsibility", "pts": {1: 10, 2: 30, 3: 80, 4: 125, 5: 150}},
+        {"name": "Decision making",            "category": "Responsibility", "pts": {1: 20, 2: 30, 3: 60, 4: 100, 5: 140, 6: 175, 7: 200}},
+        {"name": "Physical effort",            "category": "Effort",         "pts": {1: 1, 2: 5, 3: 30}},
+        {"name": "Sensory effort",             "category": "Effort",         "pts": {1: 1, 2: 4, 3: 10}},
+        {"name": "Risk to health",             "category": "Conditions",     "pts": {1: 2, 2: 10, 3: 20}},
+        {"name": "Work environment",           "category": "Conditions",     "pts": {1: 2, 2: 10, 3: 20}},
+    ],
+    # Foreign Service (FS) — 8 elements, point-rating
+    # Source: FS Foreigns Service - Job Evauation Standard.txt
+    "FS": [
+        {"name": "Knowledge",                       "category": "Skill",          "pts": {1: 25, 2: 60, 3: 110, 4: 170, 5: 230}},
+        {"name": "Information analysis",            "category": "Skill",          "pts": {1: 20, 2: 50, 3: 95, 4: 145, 5: 195, 6: 240}},
+        {"name": "Communications & influencing",    "category": "Skill",          "pts": {1: 20, 2: 50, 3: 90, 4: 140, 5: 190, 6: 240}},
+        {"name": "People & operational mgmt",       "category": "Responsibility", "pts": {1: 10, 2: 25, 3: 60, 4: 100, 5: 145, 6: 200}},
+        {"name": "Horizontal leadership",           "category": "Responsibility", "pts": {1: 10, 2: 25, 3: 50, 4: 85, 5: 120, 6: 160}},
+        {"name": "Problem solving / decision making", "category": "Responsibility", "pts": {1: 20, 2: 45, 3: 80, 4: 120, 5: 165, 6: 220}},
+        {"name": "Psychological / emotional effort","category": "Effort",         "pts": {1: 5, 2: 15, 3: 30}},
+        {"name": "Working conditions",              "category": "Conditions",     "pts": {1: 5, 2: 15, 3: 30}},
+    ],
+    # Law Management (LC) — 6 elements, point-rating
+    # Source: LC Law Management - Job Evaluation Standard.txt
+    "LC": [
+        {"name": "Knowledge",                                 "category": "Skill",          "pts": {1: 50, 2: 100, 3: 160, 4: 220, 5: 300}},
+        {"name": "Critical thinking and analysis",            "category": "Skill",          "pts": {1: 40, 2: 80, 3: 130, 4: 180, 5: 240, 6: 300}},
+        {"name": "Relationship building and influencing",     "category": "Responsibility", "pts": {1: 30, 2: 70, 3: 120, 4: 175, 5: 225, 6: 275}},
+        {"name": "Leadership and management",                 "category": "Responsibility", "pts": {1: 30, 2: 70, 3: 130, 4: 200, 5: 275, 6: 350}},
+        {"name": "Physical and sensory effort",               "category": "Effort",         "pts": {1: 5, 2: 15, 3: 30}},
+        {"name": "Work environment",                          "category": "Conditions",     "pts": {1: 5, 2: 15, 3: 30}},
+    ],
+    # Law Practitioner (LP) — 6 elements, point-rating
+    # Source: LP Law Practitioner - Job Evaluation Standard
+    "LP": [
+        {"name": "Critical thinking and analysis", "category": "Skill",          "pts": {1: 50, 2: 100, 3: 160, 4: 220, 5: 300}},
+        {"name": "Knowledge",                       "category": "Skill",          "pts": {1: 50, 2: 100, 3: 160, 4: 220, 5: 300}},
+        {"name": "Communication and interaction",   "category": "Skill",          "pts": {1: 30, 2: 70, 3: 120, 4: 175, 5: 225, 6: 275}},
+        {"name": "Leadership",                      "category": "Responsibility", "pts": {1: 30, 2: 70, 3: 130, 4: 200, 5: 275, 6: 350}},
+        {"name": "Physical and sensory effort",     "category": "Effort",         "pts": {1: 5, 2: 15, 3: 30}},
+        {"name": "Work environment",                "category": "Conditions",     "pts": {1: 5, 2: 15, 3: 30}},
+    ],
+    # Meteorology (MT) — 4 elements, point-rating
+    # Source: MT Meteorology - Job Evaluation Standard
+    "MT": [
+        {"name": "Knowledge",                        "category": "Skill",          "pts": {1: 50, 2: 100, 3: 160, 4: 220, 5: 300}},
+        {"name": "Problem solving / decision making", "category": "Skill",          "pts": {1: 40, 2: 85, 3: 140, 4: 195, 5: 250, 6: 310}},
+        {"name": "Accountability",                   "category": "Responsibility", "pts": {1: 30, 2: 70, 3: 120, 4: 180, 5: 240, 6: 310}},
+        {"name": "Communications requirement",       "category": "Responsibility", "pts": {1: 20, 2: 50, 3: 90, 4: 130, 5: 180}},
+    ],
+    # Social Welfare (SW-SCW sub-group) — point-rating plan
+    # Source: SW Social Work - Job Evaluation Standard, Social Welfare sub-group rating scales
+    "SW-SCW": [
+        {"name": "Knowledge",                       "category": "Skill",          "pts": {1: 30, 2: 65, 3: 105, 4: 150, 5: 200}},
+        {"name": "Professional responsibility",      "category": "Responsibility", "pts": {1: 20, 2: 45, 3: 80, 4: 125, 5: 175}},
+        {"name": "Management responsibility",        "category": "Responsibility", "pts": {1: 15, 2: 40, 3: 75, 4: 115, 5: 160}},
+    ],
+}
+
+
+# ---------------------------------------------------------------------------
 # NON_EC_TOTALS
 # Approximate total JES points for non-EC groups at each level.
 # Source: verified against Job Description Builder/jd-builder/data.jsx
@@ -587,6 +994,42 @@ NON_EC_TOTALS: dict[str, dict[int, int]] = {
     "IT": {1: 215, 2: 300, 3: 390, 4: 480, 5: 575},
     "AS": {1: 195, 2: 265, 3: 345, 4: 430, 5: 510, 6: 600, 7: 690, 8: 790},
     "EN": {4: 500, 5: 600, 6: 720},
+    # Pre-existing OG_LEVELS groups without dedicated JES — approximate linear
+    # totals for completeness (required by test_og_constants_completeness for
+    # all 22 OG_LEVELS keys).
+    "CR": {1: 175, 2: 230, 3: 290, 4: 355, 5: 425, 6: 500, 7: 580},
+    "PM": {1: 195, 2: 265, 3: 345, 4: 430, 5: 510, 6: 600, 7: 690},
+    "GT": {1: 195, 2: 265, 3: 345, 4: 430, 5: 510, 6: 600, 7: 690, 8: 790},
+    "EL": {1: 215, 2: 295, 3: 380, 4: 470, 5: 565, 6: 665, 7: 770, 8: 880, 9: 995},
+    "AI": {1: 215, 2: 295, 3: 380, 4: 470, 5: 565, 6: 665, 7: 770},
+    "AU": {1: 195, 2: 265, 3: 345, 4: 430, 5: 510, 6: 600},
+    # Phase 21 additions — level-description groups (point-rating groups use
+    # JES_FACTORS_BY_GROUP; these groups use level-keyed point lookups)
+    # ED: combined level descriptions across sub-groups. ED-EST (Elementary/
+    # Secondary Teaching) is the broadest with 4 levels; ED-LAT (Language Arts
+    # Teaching) has 3. Use the union range 1-4 here. ED-EDS (Education Services)
+    # is point-rated and routes via JES_FACTORS_BY_GROUP routing in Plan 04.
+    "ED": {1: 195, 2: 265, 3: 345, 4: 430},
+    # NU: SH_rates.csv HOS/CHN series; 8 levels broadest range.
+    "NU": {1: 200, 2: 270, 3: 345, 4: 420, 5: 500, 6: 585, 7: 675, 8: 770},
+    # PS: SH_rates.csv PS-1 to PS-5 (5 levels).
+    "PS": {1: 195, 2: 265, 3: 345, 4: 430, 5: 525},
+    # NT: ND-DIT series (4 levels).
+    "NT": {1: 195, 2: 265, 3: 345, 4: 430},
+    # PO: PO-TCO series (4 levels).
+    "PO": {1: 195, 2: 270, 3: 355, 4: 445},
+    # WP: PA_rates.csv WP-1 to WP-6 (6 levels).
+    "WP": {1: 195, 2: 265, 3: 345, 4: 430, 5: 510, 6: 600},
+    # SW: SH_rates.csv SCW 1-5 is broadest. SW-SCW is point-rated and routes via
+    # JES_FACTORS_BY_GROUP routing in Plan 04; SW-CHA is level-described (3 levels
+    # in SW-CHA). The base SW key here uses the SCW 1-5 range for completeness.
+    "SW": {1: 195, 2: 265, 3: 345, 4: 430, 5: 525},
+    # SW-CHA: Chaplain sub-group level descriptions (3 levels).
+    "SW-CHA": {1: 195, 2: 280, 3: 380},
+    # ED-LAT: Language Arts Teaching (3 levels).
+    "ED-LAT": {1: 195, 2: 280, 3: 380},
+    # ED-EST: Elementary/Secondary Teaching (4 levels).
+    "ED-EST": {1: 195, 2: 265, 3: 345, 4: 430},
 }
 
 
@@ -602,4 +1045,97 @@ NON_EC_STANDARD_NAMES: dict[str, str] = {
     "IT": "IT Job Evaluation Standard",
     "AS": "AS / PA Job Evaluation Standard",
     "EN": "EN Job Evaluation Standard",
+    # Phase 21 additions — all 16 OG groups (authoritative copy; export_service.py
+    # imports from this constant as of plan 21-02 OGX-02 consolidation).
+    # Source: title pages of each JES text file in data/Job_evaluation/ or
+    # TBS OCHRO Occupational Group Definitions for groups without a dedicated JES.
+    "EC":  "EC Job Evaluation Standard (2017)",
+    "CR":  "CR Clerical and Regulatory Group (PA collective agreement)",
+    "PM":  "PM Program and Administrative Services (PA collective agreement)",
+    "GT":  "GT General Trade and Labour (TC collective agreement)",
+    "EL":  "EL Electronics Group (EL collective agreement)",
+    "AI":  "AI Aircraft Maintenance Group (AI collective agreement)",
+    "AU":  "AU Audio-Visual and Broadcast (CT-FIN collective agreement)",
+    "FB":  "FB Border Services Job Evaluation Standard (2005)",
+    "FS":  "FS Foreign Service Job Evaluation Standard",
+    "LC":  "LC Law Management Job Evaluation Standard",
+    "LP":  "LP Law Practitioner Job Evaluation Standard",
+    "MT":  "MT Meteorology Job Evaluation Standard",
+    "NT":  "NT Nutrition and Dietetics Job Evaluation Standard",
+    "NU":  "NU Nursing Job Evaluation Standard",
+    "PO":  "PO Police Operations Support Job Evaluation Standard",
+    "PS":  "PS Psychology Job Evaluation Standard",
+    "SW":  "SW Social Work Job Evaluation Standard",
+    "SW-SCW": "SW Social Work (Social Welfare) Job Evaluation Standard",
+    "SW-CHA": "SW Social Work (Chaplain) Job Evaluation Standard",
+    "WP":  "WP Welfare Programmes Job Evaluation Standard",
+    "ED":  "ED Education Job Evaluation Standard (2017)",
+    "ED-LAT": "ED Education (Language Arts Teaching) Job Evaluation Standard",
+    "ED-EST": "ED Education (Elementary/Secondary Teaching) Job Evaluation Standard",
+}
+
+
+# ---------------------------------------------------------------------------
+# SUBGROUP_DISAMBIGUATIONS
+# Sub-group disambiguation metadata for OG groups that have multiple sub-groups
+# with different JES evaluation methods (Phase 21 OGX-07).
+# Each per-OG dict lists sub-group codes with their descriptions and the
+# disambiguation guidance. The ASEC_DISAMBIGUATION pattern above is extended
+# here with the additional `subgroups` and `descriptions` fields.
+# Source: data/Job_evaluation/ JES text files, sub-group definitions.
+# ---------------------------------------------------------------------------
+
+NU_SUBGROUP_DISAMBIGUATION: dict = {
+    "subgroups": ["HOS", "CHN", "EMA"],
+    "descriptions": {
+        "HOS": "Hospital Nursing — positions in hospitals and related health care facilities providing direct patient care, treatment and management of illness in cooperation with medical doctors.",
+        "CHN": "Community Health Nursing — positions in public health, community health settings, and government programs providing population-level nursing services and health promotion.",
+        "EMA": "Emergency Medical Adjudicator Nursing — positions assessing medical information for the purposes of determining eligibility of applicants for a government program.",
+    },
+    "disambiguation_text": (
+        "The Nursing (NU) classification has three sub-groups that determine the "
+        "job evaluation method and level range. Select the sub-group that best "
+        "describes this position. HOS and CHN sub-groups use a point-rating plan "
+        "with factor scales; EMA uses a level-description method."
+    ),
+    "citation": "TBS OCHRO — Nursing (NU) Job Evaluation Standard",
+}
+
+SW_SUBGROUP_DISAMBIGUATION: dict = {
+    "subgroups": ["SCW", "CHA"],
+    "descriptions": {
+        "SCW": "Social Welfare (SCW) — point-rated; positions delivering social welfare programs, counselling, and social work services to individuals, families and communities.",
+        "CHA": "Chaplain (CHA) — level-described; positions providing spiritual care, religious services, and chaplaincy support to members of the public service.",
+    },
+    "disambiguation_text": (
+        "The Social Work (SW) classification has two sub-groups with different "
+        "job evaluation methods. SCW uses a point-rating plan with knowledge, "
+        "professional responsibility, and management responsibility factors. CHA "
+        "uses a level-description method with three levels (CHA-1, CHA-2, CHA-3)."
+    ),
+    "citation": "TBS OCHRO — Social Work (SW) Job Evaluation Standard",
+}
+
+ED_SUBGROUP_DISAMBIGUATION: dict = {
+    "subgroups": ["EDS", "LAT", "EST"],
+    "descriptions": {
+        "EDS": "Education Services (EDS) — point-rated; positions providing educational program support, curriculum development, research, and advisory services in education.",
+        "LAT": "Language Arts Teaching (LAT) — level-described; positions teaching language courses to public servants in language schools of the Public Service of Canada.",
+        "EST": "Elementary/Secondary Teaching (EST) — level-described; positions in elementary and secondary schools, vocational training, and adult education programs.",
+    },
+    "disambiguation_text": (
+        "The Education (ED) classification has three sub-groups with different job "
+        "evaluation methods. EDS uses a point-rating plan with knowledge, problem "
+        "solving, responsibility for contacts, and supervision factors (4 factors, "
+        "1000 max points). LAT uses a level-description method with three levels "
+        "(LAT-1, LAT-2, LAT-3). EST uses a level-description method with four "
+        "levels (EST-1, EST-2, EST-3, EST-4)."
+    ),
+    "citation": "TBS OCHRO — Education (ED) Job Evaluation Standard (2017)",
+}
+
+SUBGROUP_DISAMBIGUATIONS: dict = {
+    "NU": NU_SUBGROUP_DISAMBIGUATION,
+    "SW": SW_SUBGROUP_DISAMBIGUATION,
+    "ED": ED_SUBGROUP_DISAMBIGUATION,
 }
