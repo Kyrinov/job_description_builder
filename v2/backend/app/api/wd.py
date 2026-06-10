@@ -50,6 +50,7 @@ class WDPatchRequest(BaseModel):
     editing_return: Optional[bool] = None
     confirmed_noc: Optional[Union[str, dict]] = None
     confirmed_og: Optional[Union[str, dict]] = None
+    confirmed_sub_group: Optional[str] = None  # Phase 21: NU/SW/ED sub-group routing key
     og_level: Optional[int] = None
     reports_to_military: Optional[bool] = None
     jes_scores: Optional[list[dict]] = None

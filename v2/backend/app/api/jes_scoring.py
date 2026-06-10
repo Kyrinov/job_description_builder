@@ -20,6 +20,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.data.constants import (
+    JES_FACTORS_BY_GROUP,
     KNOWN_JES_FACTORS,
     NON_EC_TOTALS,
 )
@@ -101,8 +102,13 @@ async def score_jes(body: JESScorecardRequest) -> JESScorecardResponse:
 
     T-17-01: og_code is validated against {"EC"} | set(NON_EC_TOTALS.keys()).
     """
-    # T-17-01: validate og_code
-    valid_og_codes = {"EC"} | set(NON_EC_TOTALS.keys())
+    # T-17-01: validate og_code (Phase 21: also accept point-rating groups + SW-SCW/ED-EDS sub-group routing codes)
+    valid_og_codes = (
+        {"EC"}
+        | set(NON_EC_TOTALS.keys())
+        | set(JES_FACTORS_BY_GROUP.keys())
+        | {"SW-SCW", "ED-EDS"}
+    )
     if body.og_code not in valid_og_codes:
         raise HTTPException(
             status_code=400,

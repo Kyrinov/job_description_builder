@@ -35,6 +35,7 @@ from app.ai.jes_scoring import (
 from app.config import get_settings
 from app.data.constants import (
     EC_JES_ELEMENTS,
+    JES_FACTORS_BY_GROUP,
     NON_EC_STANDARD_NAMES,
     NON_EC_TOTALS,
 )
@@ -45,6 +46,15 @@ logger = logging.getLogger(__name__)
 
 # EC JES 2017 version label — hardcoded; v2.0 has no source_documents table.
 EC_JES_VERSION_LABEL = "EC JES 2017"
+
+# Phase 21 (OGX-05): point-rating OG groups scored via JES_FACTORS_BY_GROUP
+# factor loop (no LLM call). SW-SCW and ED-EDS are sub-group routing codes.
+# ED-EDS has no factor data yet (Plan 03 didn't author it); calls will raise
+# ValueError pointing operators to the missing data — by design (T-21-02).
+POINT_RATING_GROUPS = frozenset({
+    "FB", "FS", "LP", "MT", "LC",
+    "SW-SCW", "ED-EDS",
+})
 
 
 # ---------------------------------------------------------------------------
@@ -179,20 +189,96 @@ async def score_jes_v2(
             raise ValueError(f"WorkDescription {wd_id!r} not found")
         wd = WorkDescription.model_validate_json(row["data"])
 
-        # 2. Non-EC path: single totals dict, no LLM
+        # 2. Non-EC path: three-way branch (Phase 21 — OGX-05 / OGX-06)
         if og_code != "EC":
-            if og_code not in NON_EC_TOTALS:
-                raise ValueError(f"Unknown og_code {og_code!r}")
-            if og_level not in NON_EC_TOTALS[og_code]:
-                available = sorted(NON_EC_TOTALS[og_code].keys())
+            # --- Resolve effective routing code for sub-group split groups ---
+            # SW and ED have sub-groups with different JES methods:
+            #   SW-SCW (point-rating) vs SW-CHA (level-description)
+            #   ED-EDS (point-rating) vs ED-LAT/ED-EST (level-description)
+            # Other groups (FB/FS/LP/MT/LC/NU/PS/NT/PO/WP) keep og_code as-is.
+            sub_group = getattr(wd, "confirmed_sub_group", None)
+            routing_code = og_code
+
+            if og_code == "SW":
+                if sub_group == "SCW":
+                    routing_code = "SW-SCW"
+                else:
+                    # CHA or unset → level-description path
+                    routing_code = "SW-CHA"
+            elif og_code == "ED":
+                if sub_group == "EDS":
+                    routing_code = "ED-EDS"
+                elif sub_group == "LAT":
+                    routing_code = "ED-LAT"
+                elif sub_group == "EST":
+                    routing_code = "ED-EST"
+                else:
+                    # Default to LAT (level-description) if sub_group unset
+                    routing_code = "ED-LAT"
+
+            # --- Branch on scoring method ---
+            if routing_code in POINT_RATING_GROUPS:
+                # Point-rating path: loop JES_FACTORS_BY_GROUP, no LLM
+                # (Architecture non-negotiable: hardcoded JES tables over LLM scoring)
+                if routing_code not in JES_FACTORS_BY_GROUP:
+                    raise ValueError(
+                        f"Point-rating group {routing_code!r} not in JES_FACTORS_BY_GROUP. "
+                        f"Ensure Plan 03 (Wave 2) has authored factor data for this group."
+                    )
+                factors_def = JES_FACTORS_BY_GROUP[routing_code]
+                factor_scores: list[dict] = []
+                for factor_def in factors_def:
+                    # Deterministic degree assignment: clamp og_level to the
+                    # factor's max degree. No LLM — benchmark position
+                    # rationale: "Benchmark degree assignment for {og_code} level {og_level}"
+                    max_degree = max(factor_def["pts"].keys())
+                    degree = min(og_level, max_degree)
+                    points = factor_def["pts"][degree]
+                    factor_scores.append({
+                        "factor_name": factor_def["name"],
+                        "category": factor_def.get("category", ""),
+                        "degree": degree,
+                        "points": points,
+                        "rationale": (
+                            f"Benchmark degree assignment for {og_code} level {og_level}"
+                        ),
+                        "advisor_adjusted": False,
+                    })
+
+                total_points = _compute_total(factor_scores)
+                standard_name = NON_EC_STANDARD_NAMES.get(
+                    routing_code, NON_EC_STANDARD_NAMES.get(og_code, "")
+                )
+                scorecard = {
+                    "wd_id": wd_id,
+                    "og_code": og_code,
+                    "is_ec": False,
+                    "factors": factor_scores,
+                    "total_points": total_points,
+                    "standard_name": standard_name,
+                    "has_failed_factors": False,
+                }
+                _persist_jes_scorecard(con, wd, scorecard)
+                return scorecard
+
+            # --- Level-description path: NON_EC_TOTALS lookup ---
+            if routing_code not in NON_EC_TOTALS:
+                raise ValueError(
+                    f"Level-description group {routing_code!r} not in NON_EC_TOTALS. "
+                    f"og_code={og_code!r}, confirmed_sub_group={sub_group!r}"
+                )
+            if og_level not in NON_EC_TOTALS[routing_code]:
+                available = sorted(NON_EC_TOTALS[routing_code].keys())
                 clamped = min(available, key=lambda lv: abs(lv - og_level))
                 logger.warning(
                     "No JES totals for og_code=%r at level %r; using nearest level %r",
-                    og_code, og_level, clamped,
+                    routing_code, og_level, clamped,
                 )
                 og_level = clamped
-            total_points = NON_EC_TOTALS[og_code][og_level]
-            standard_name = NON_EC_STANDARD_NAMES[og_code]
+            total_points = NON_EC_TOTALS[routing_code][og_level]
+            standard_name = NON_EC_STANDARD_NAMES.get(
+                routing_code, NON_EC_STANDARD_NAMES.get(og_code, "")
+            )
             scorecard = {
                 "wd_id": wd_id,
                 "og_code": og_code,
