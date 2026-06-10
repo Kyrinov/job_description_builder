@@ -251,3 +251,129 @@ async def test_score_requires_og_confirmed(client, env_with_db):
         assert detail.get("error") == "classification_pending"
     else:
         assert "classification" in detail.lower() or "OG" in detail
+
+
+# ---------------------------------------------------------------------------
+# Phase 21 — OGX-05: point-rating groups (FB, FS, LP, MT, LC, SW-SCW)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_score_fb_returns_per_factor_rows(client, env_with_db):
+    """OGX-05 — POST /api/jes/score for FB returns per-factor rows (no LLM).
+
+    FAILS at Wave 0: FB not in JES_FACTORS_BY_GROUP / routing path missing in jes_service.
+    Goes GREEN after Plan 04 (Wave 3) extends jes_service.py + Plan 03 authors JES_FACTORS_BY_GROUP.
+    """
+    wd_id = await _create_wd_with_og(client, og_code="FB", og_level=4)
+    response = await client.post(
+        "/api/jes/score",
+        json={"wd_id": wd_id, "og_code": "FB", "og_level": 4,
+              "duties": ["Examines travellers at ports of entry", "Enforces customs legislation"]},
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["is_ec"] is False
+    assert len(data["factors"]) > 0, "FB must return per-factor rows, not empty list"
+    assert data["has_failed_factors"] is False
+    assert isinstance(data["total_points"], int) and data["total_points"] > 0
+
+
+@pytest.mark.asyncio
+async def test_score_mt_returns_per_factor_rows(client, env_with_db):
+    """OGX-05 — POST /api/jes/score for MT returns per-factor rows (7 levels, not 9).
+
+    MT OG_LEVELS uses list(range(1,8)) — 7 levels (SP_AP_rates.csv). Level 8 and 9 do not exist.
+    """
+    wd_id = await _create_wd_with_og(client, og_code="MT", og_level=3)
+    response = await client.post(
+        "/api/jes/score",
+        json={"wd_id": wd_id, "og_code": "MT", "og_level": 3,
+              "duties": ["Performs meteorological observations and weather analysis"]},
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["is_ec"] is False
+    assert len(data["factors"]) > 0
+    assert data["has_failed_factors"] is False
+
+
+# ---------------------------------------------------------------------------
+# Phase 21 — OGX-06: level-description groups (NU, PS, NT, PO, WP, SW-CHA)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_score_nu_returns_totals(client, env_with_db):
+    """OGX-06 — POST /api/jes/score for NU returns jes_scores=[] + total from NON_EC_TOTALS.
+
+    FAILS at Wave 0: NU not in NON_EC_TOTALS.
+    Goes GREEN after Plan 04 (Wave 3) extends jes_service + Plan 03 authors NON_EC_TOTALS["NU"].
+    """
+    wd_id = await _create_wd_with_og(client, og_code="NU", og_level=3)
+    response = await client.post(
+        "/api/jes/score",
+        json={"wd_id": wd_id, "og_code": "NU", "og_level": 3,
+              "duties": ["Provides nursing care in a hospital setting"]},
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["is_ec"] is False
+    assert data["factors"] == [], "Level-description groups must have empty factors list"
+    assert isinstance(data["total_points"], int) and data["total_points"] > 0
+
+
+@pytest.mark.asyncio
+async def test_score_ps_returns_totals(client, env_with_db):
+    """OGX-06 — POST /api/jes/score for PS returns single totals line."""
+    wd_id = await _create_wd_with_og(client, og_code="PS", og_level=2)
+    response = await client.post(
+        "/api/jes/score",
+        json={"wd_id": wd_id, "og_code": "PS", "og_level": 2,
+              "duties": ["Conducts psychological assessments and provides therapeutic services"]},
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["is_ec"] is False
+    assert data["factors"] == []
+    assert isinstance(data["total_points"], int)
+
+
+@pytest.mark.asyncio
+async def test_score_sw_cha_returns_totals(client, env_with_db):
+    """OGX-06 — SW with confirmed_sub_group=CHA uses level-description path (NON_EC_TOTALS)."""
+    wd_id = await _create_wd_with_og(client, og_code="SW", og_level=2)
+    # Set confirmed_sub_group on the WD so jes_service routes to CHA path
+    patch_resp = await client.patch(
+        f"/api/wd/{wd_id}",
+        json={"confirmed_sub_group": "CHA"},
+    )
+    assert patch_resp.status_code == 200
+    response = await client.post(
+        "/api/jes/score",
+        json={"wd_id": wd_id, "og_code": "SW", "og_level": 2,
+              "duties": ["Provides chaplaincy services to federal employees"]},
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["is_ec"] is False
+    assert data["factors"] == []
+    assert isinstance(data["total_points"], int)
+
+
+@pytest.mark.asyncio
+async def test_score_sw_scw_returns_per_factor_rows(client, env_with_db):
+    """OGX-05/06 — SW with confirmed_sub_group=SCW uses point-rating path (JES_FACTORS_BY_GROUP)."""
+    wd_id = await _create_wd_with_og(client, og_code="SW", og_level=3)
+    patch_resp = await client.patch(
+        f"/api/wd/{wd_id}",
+        json={"confirmed_sub_group": "SCW"},
+    )
+    assert patch_resp.status_code == 200
+    response = await client.post(
+        "/api/jes/score",
+        json={"wd_id": wd_id, "og_code": "SW", "og_level": 3,
+              "duties": ["Provides social welfare services and case management"]},
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["is_ec"] is False
+    assert len(data["factors"]) > 0, "SW-SCW must return per-factor rows"

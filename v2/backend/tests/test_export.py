@@ -248,3 +248,26 @@ async def test_export_docx_uses_record_duties_fallback(client, env_with_db):
     resp = await client.post(f"/api/wd/{wd_id}/export/docx")
     assert resp.status_code == 200
     assert len(resp.content) > 0
+
+
+# ---------------------------------------------------------------------------
+# Phase 21 — OGX-02: NON_EC_STANDARD_NAMES consolidated into constants.py
+# ---------------------------------------------------------------------------
+
+def test_standard_names_import_from_constants():
+    """OGX-02 — export_service.py must import NON_EC_STANDARD_NAMES from constants.py,
+    not define it locally.
+
+    FAILS at Wave 0: export_service.py lines 50-55 still have local dict.
+    Goes GREEN after Plan 02 (Wave 1) removes the local dict and adds the import.
+    """
+    import inspect
+    import importlib
+    export_service = importlib.import_module("app.services.export_service")
+    source = inspect.getsource(export_service)
+    # Must import from app.data.constants — not define locally
+    assert "from app.data.constants import" in source and "NON_EC_STANDARD_NAMES" in source, \
+        "export_service.py must import NON_EC_STANDARD_NAMES from app.data.constants"
+    # Must NOT define a local copy
+    assert "NON_EC_STANDARD_NAMES: dict" not in source, \
+        "export_service.py must not define a local NON_EC_STANDARD_NAMES dict"

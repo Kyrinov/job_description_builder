@@ -102,3 +102,176 @@ async def test_patch_wd_confirmed_og_persists(client):
     body = patch_resp.json()
     assert body["confirmed_og"]["og_code"] == "EC"
     assert body["og_level"] == 5
+
+
+# ---------------------------------------------------------------------------
+# Phase 21 — OGX-04: per-group signal routing for new OG groups
+# ---------------------------------------------------------------------------
+
+async def test_per_group_signal_routing_nu(client):
+    """OGX-04 — signal_tally dominated by NU returns NU as top candidate.
+
+    FAILS at Wave 0: NU not in OG_DEFINITIONS; _rank_og_candidates silently ignores it.
+    Goes GREEN after Plan 03 (Wave 2) adds NU to OG_DEFINITIONS.
+    """
+    response = await client.post(
+        "/api/og/classify",
+        json={
+            "confirmed_noc_code": "31301",
+            "work_description": "Provides nursing care in a hospital setting, assesses patients, and administers treatments under physician direction",
+            "signal_tally": {"NU": 4},
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["candidates"][0]["og_code"] == "NU"
+
+
+async def test_per_group_signal_routing_sw(client):
+    """OGX-04 — signal_tally dominated by SW returns SW as top candidate.
+
+    FAILS at Wave 0: SW not in OG_DEFINITIONS.
+    """
+    response = await client.post(
+        "/api/og/classify",
+        json={
+            "confirmed_noc_code": "41300",
+            "work_description": "Provides social work services and counselling support to families and vulnerable populations",
+            "signal_tally": {"SW": 4},
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["candidates"][0]["og_code"] == "SW"
+
+
+async def test_per_group_signal_routing_fb(client):
+    """OGX-04 — signal_tally dominated by FB returns FB as top candidate.
+
+    FAILS at Wave 0: FB not in OG_DEFINITIONS.
+    """
+    response = await client.post(
+        "/api/og/classify",
+        json={
+            "confirmed_noc_code": "12200",
+            "work_description": "Examines travellers and goods at ports of entry to enforce customs and immigration legislation",
+            "signal_tally": {"FB": 4},
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["candidates"][0]["og_code"] == "FB"
+
+
+async def test_per_group_signal_routing_ed(client):
+    """OGX-04 — signal_tally dominated by ED returns ED as top candidate."""
+    response = await client.post(
+        "/api/og/classify",
+        json={
+            "confirmed_noc_code": "41221",
+            "work_description": "Teaches language courses and designs educational curricula for federal government employees",
+            "signal_tally": {"ED": 4},
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["candidates"][0]["og_code"] == "ED"
+
+
+# ---------------------------------------------------------------------------
+# Phase 21 — OGX-07: sub-group disambiguation for NU, SW, ED
+# ---------------------------------------------------------------------------
+
+async def test_nu_disambiguation_alert_fires(client):
+    """OGX-07 — confirmed_og=NU returns subgroup_alert with subgroups list.
+
+    FAILS at Wave 0: OGClassifyRequest has no confirmed_og field;
+    OGClassifyResponse has no subgroup_alert field.
+    Goes GREEN after Plan 06 (Wave 4) adds SubGroupAlert + request extension.
+    """
+    response = await client.post(
+        "/api/og/classify",
+        json={
+            "confirmed_noc_code": "31301",
+            "work_description": "Provides nursing care in a hospital setting",
+            "signal_tally": {"NU": 4},
+            "confirmed_og": "NU",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data.get("subgroup_alert") is not None, \
+        "subgroup_alert must be present when confirmed_og=NU"
+    assert "subgroups" in data["subgroup_alert"]
+    assert set(data["subgroup_alert"]["subgroups"]) == {"HOS", "CHN", "EMA"}
+
+
+async def test_sw_disambiguation_alert_fires(client):
+    """OGX-07 — confirmed_og=SW returns subgroup_alert with SCW and CHA."""
+    response = await client.post(
+        "/api/og/classify",
+        json={
+            "confirmed_noc_code": "41300",
+            "work_description": "Provides social work services",
+            "signal_tally": {"SW": 4},
+            "confirmed_og": "SW",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data.get("subgroup_alert") is not None
+    assert set(data["subgroup_alert"]["subgroups"]) == {"SCW", "CHA"}
+
+
+async def test_ed_disambiguation_alert_fires(client):
+    """OGX-07 — confirmed_og=ED returns subgroup_alert with EDS, LAT, EST."""
+    response = await client.post(
+        "/api/og/classify",
+        json={
+            "confirmed_noc_code": "41221",
+            "work_description": "Teaches language courses",
+            "signal_tally": {"ED": 4},
+            "confirmed_og": "ED",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data.get("subgroup_alert") is not None
+    assert set(data["subgroup_alert"]["subgroups"]) == {"EDS", "LAT", "EST"}
+
+
+async def test_confirmed_og_outside_subgroup_set_returns_no_alert(client):
+    """OGX-07 — confirmed_og=EC must NOT fire subgroup_alert."""
+    response = await client.post(
+        "/api/og/classify",
+        json={
+            "confirmed_noc_code": "41402",
+            "work_description": "Develops economic policy",
+            "signal_tally": {"EC": 4},
+            "confirmed_og": "EC",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json().get("subgroup_alert") is None
+
+
+async def test_confirmed_sub_group_invalid_value_returns_422(client):
+    """T-21-01 — POST /api/wd/{id}/confirm-subgroup with invalid sub_group returns 422.
+
+    FAILS at Wave 0: endpoint does not exist.
+    Goes GREEN after Plan 06 (Wave 4) adds the confirm-subgroup endpoint.
+    """
+    create_resp = await client.post(
+        "/api/wd",
+        json={"record": {"title": "Test Role"}, "answers": {}, "step_index": 0},
+    )
+    assert create_resp.status_code == 201
+    wd_id = create_resp.json()["id"]
+    # Set confirmed_og to NU first
+    await client.patch(
+        f"/api/wd/{wd_id}",
+        json={"confirmed_og": {"og_code": "NU", "og_name": "Nursing"}, "og_level": 3},
+    )
+    # Attempt to set an invalid sub_group — not in {"HOS","CHN","EMA"}
+    response = await client.post(
+        f"/api/wd/{wd_id}/confirm-subgroup",
+        json={"sub_group": "INVALID_CODE"},
+    )
+    assert response.status_code == 422, \
+        "Invalid confirmed_sub_group must return 422, not 200"
