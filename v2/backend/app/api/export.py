@@ -18,6 +18,8 @@ from app.db import get_connection
 from app.models.work_description import WorkDescription
 from app.services.classification_gate import require_og_confirmed
 from app.services.export_service import (
+    _og_code_from,
+    _og_level_str,
     _probe_weasyprint,
     generate_poster_docx,
     generate_wd_docx,
@@ -135,12 +137,9 @@ async def export_pdf(wd_id: str) -> Response:
     require_og_confirmed(wd)
 
     # Build HTML representation from WD data — never accept raw HTML from the client
-    if isinstance(wd.confirmed_og, dict):
-        og_code = wd.confirmed_og.get("og_code", "")
-    else:
-        og_code = wd.confirmed_og or ""
+    og_code = _og_code_from(wd)
     og_level_int = wd.og_level or 0
-    og_str = f"{og_code}-{int(og_level_int):02d}" if og_code else ""
+    og_str = _og_level_str(og_code, og_level_int)
     title = (wd.record or {}).get("title", "Work Description")
     # CR-02: html.escape all user-supplied strings before interpolation into
     # the WeasyPrint HTML string. Duty text and title are untrusted WD data

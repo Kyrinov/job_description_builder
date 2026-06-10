@@ -252,7 +252,7 @@ def _build_wd_context(wd: WorkDescription, amendments: list[dict]) -> dict:
     record = wd.record or {}
     og_code = _og_code_from(wd)
     og_level_int = wd.og_level or 0
-    og_level_str = f"{og_code}-{int(og_level_int):02d}" if og_code else ""
+    og_level_str = _og_level_str(og_code, og_level_int)
 
     # Qualification — fall back to record.quals when root qualification not yet persisted
     if wd.qualification is not None:
@@ -308,7 +308,7 @@ def _build_poster_context(wd: WorkDescription) -> dict:
     record = wd.record or {}
     og_code = _og_code_from(wd)
     og_level_int = wd.og_level or 0
-    og_level_str = f"{og_code}-{int(og_level_int):02d}" if og_code else ""
+    og_level_str = _og_level_str(og_code, og_level_int)
 
     if wd.qualification is not None:
         education_text = wd.qualification.education
@@ -354,6 +354,11 @@ async def _render_docx(template_path: str, context: dict) -> bytes:
 # ---------------------------------------------------------------------------
 # Filename helpers
 # ---------------------------------------------------------------------------
+
+
+def _og_level_str(og_code: str, og_level: int) -> str:
+    """Return zero-padded OG level string (e.g. 'EC-04'), or '' when og_code absent."""
+    return f"{og_code}-{int(og_level):02d}" if og_code else ""
 
 
 def _slugify_title(title: str, default: str) -> str:
