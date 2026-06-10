@@ -7,7 +7,7 @@ Each step commit from the SPA calls PATCH; first commit calls POST.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, Union
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException
@@ -32,7 +32,13 @@ class WDCreateRequest(BaseModel):
 
 
 class WDPatchRequest(BaseModel):
-    """Partial update fields. Only provided fields are merged onto the stored WD."""
+    """Partial update fields. Only provided fields are merged onto the stored WD.
+
+    confirmed_noc and confirmed_og accept either a string (just the code) or
+    a dict (full candidate metadata). The SPA's noc_confirm step sends a bare
+    code string; og_confirm sends the full candidate dict. Both are valid
+    shapes for the same conceptual value.
+    """
 
     model_config = ConfigDict(extra="ignore")
 
@@ -42,8 +48,8 @@ class WDPatchRequest(BaseModel):
     draft: Optional[dict] = None
     reviewing: Optional[bool] = None
     editing_return: Optional[bool] = None
-    confirmed_noc: Optional[dict] = None
-    confirmed_og: Optional[dict] = None
+    confirmed_noc: Optional[Union[str, dict]] = None
+    confirmed_og: Optional[Union[str, dict]] = None
     og_level: Optional[int] = None
     reports_to_military: Optional[bool] = None
     jes_scores: Optional[list[dict]] = None

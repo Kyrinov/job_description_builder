@@ -580,9 +580,12 @@ EC_DEGREES: dict[str, list[int]] = {
 # ---------------------------------------------------------------------------
 
 NON_EC_TOTALS: dict[str, dict[int, int]] = {
-    "FI": {4: 470, 5: 560, 6: 660},
-    "IT": {4: 480, 5: 575, 6: 690},
-    "AS": {4: 430, 5: 510, 6: 600},
+    # Levels 4–6 verified against v1 data.jsx GENERIC_TOTALS.
+    # Levels outside that range are approximate linear extrapolations — confirm
+    # against published JES tables before treating them as authoritative.
+    "FI": {1: 220, 2: 300, 3: 385, 4: 470, 5: 560, 6: 660},
+    "IT": {1: 215, 2: 300, 3: 390, 4: 480, 5: 575},
+    "AS": {1: 195, 2: 265, 3: 345, 4: 430, 5: 510, 6: 600, 7: 690, 8: 790},
     "EN": {4: 500, 5: 600, 6: 720},
 }
 

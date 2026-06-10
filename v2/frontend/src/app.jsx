@@ -312,7 +312,10 @@ function App() {
               });
             }
           })
-          .catch(() => {});
+          .catch(() => {
+            setToast('JES scoring could not complete — export may be unavailable. Try re-selecting the OG level.');
+            setTimeout(() => setToast(null), 7000);
+          });
       }
     }
 

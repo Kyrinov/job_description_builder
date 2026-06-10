@@ -184,9 +184,13 @@ async def score_jes_v2(
             if og_code not in NON_EC_TOTALS:
                 raise ValueError(f"Unknown og_code {og_code!r}")
             if og_level not in NON_EC_TOTALS[og_code]:
-                raise ValueError(
-                    f"No JES totals for og_code={og_code!r} at level {og_level}"
+                available = sorted(NON_EC_TOTALS[og_code].keys())
+                clamped = min(available, key=lambda lv: abs(lv - og_level))
+                logger.warning(
+                    "No JES totals for og_code=%r at level %r; using nearest level %r",
+                    og_code, og_level, clamped,
                 )
+                og_level = clamped
             total_points = NON_EC_TOTALS[og_code][og_level]
             standard_name = NON_EC_STANDARD_NAMES[og_code]
             scorecard = {

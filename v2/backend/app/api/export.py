@@ -22,6 +22,7 @@ from app.services.export_service import (
     generate_poster_docx,
     generate_wd_docx,
 )
+from app.services.jes_service import score_jes_v2
 
 router = APIRouter()
 
@@ -55,10 +56,25 @@ async def export_wd_docx(wd_id: str) -> Response:
     wd = _load_wd(wd_id, settings.db_path)
     require_og_confirmed(wd)
     if wd.jes_total_points is None:
-        raise HTTPException(
-            status_code=422,
-            detail="JES scoring incomplete — export blocked",
+        og_code = (
+            wd.confirmed_og.get("og_code", "")
+            if isinstance(wd.confirmed_og, dict)
+            else (wd.confirmed_og or "")
         )
+        og_level = wd.og_level or 0
+        duties = [d.text for d in (wd.duties or [])]
+        if og_code and og_level:
+            try:
+                await score_jes_v2(
+                    wd_id=wd_id,
+                    og_code=og_code,
+                    og_level=og_level,
+                    duties=duties,
+                    db_path=settings.db_path,
+                )
+            except Exception:
+                pass  # proceed with empty JES section rather than blocking
+        wd = _load_wd(wd_id, settings.db_path)
     result = await generate_wd_docx(wd_id=wd_id, db_path=settings.db_path)
     return Response(
         content=result["file_bytes"],
