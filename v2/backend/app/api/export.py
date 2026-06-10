@@ -21,6 +21,7 @@ from app.services.export_service import (
     _og_code_from,
     _og_level_str,
     _probe_weasyprint,
+    _slugify_title,
     generate_poster_docx,
     generate_wd_docx,
 )
@@ -165,9 +166,9 @@ async def export_pdf(wd_id: str) -> Response:
         return _wp.HTML(string=html).write_pdf()
 
     pdf_bytes = await asyncio.to_thread(_render_pdf)
-    safe_title = (title or "work-description").lower().replace(" ", "-")
+    pdf_filename = _slugify_title(title, "work-description")
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{safe_title}.pdf"'},
+        headers={"Content-Disposition": f'attachment; filename="{pdf_filename}.pdf"'},
     )
