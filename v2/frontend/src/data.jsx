@@ -390,6 +390,13 @@ const I = {
     const qbStepIds = [
       'qb_work_output_type', 'qb_work_audience',
       'qb_knowledge_specialization', 'qb_policy_interpretation',
+      // Phase 21 (Plan 05): sector-gate + cluster questions for the 12 new
+      // OG groups (NU, SW, PS, WP, LC, LP, FB, FS, MT, ED, NT, PO).
+      'qb_sector_gate',
+      'qb_health_social_cluster',
+      'qb_legal_cluster',
+      'qb_technical_cluster',
+      'qb_education_cluster',
     ];
     const tally = {};
     for (const stepId of qbStepIds) {
@@ -467,7 +474,65 @@ const I = {
       apply: (r, a) => ({ qb_policy_interpretation: a.id }),
       transcript: a => a.title },
 
-    /* ----- Phase 2: Classification ----- */
+    /* ----- Phase 2: Classification (incl. Phase 21 sector-gate + cluster) ----- */
+    /* Phase 21 (Plan 05): sector-gate + cluster disambiguation questions route
+       signals for the 12 new OG groups (NU, SW, PS, WP, LC, LP, FB, FS, MT,
+       ED, NT, PO) that v2.0's 4-question work_type bank did not cover. They
+       sit at phase 2 alongside the existing NOC/OG/level confirmation steps;
+       accumulateSignals() tallies signals from all qb_* steps in qbStepIds. */
+    { id: 'qb_sector_gate', phase: 2, icon: I.list,
+      q: 'Which sector best describes the primary service domain of this position?',
+      helper: 'Think about the professional or regulatory domain the work is grounded in.',
+      input: { type: 'choices', options: [
+        { id: 'pa_sh_sector', title: 'Health and social services — nursing, social work, psychology, or welfare programs', signals: { og_candidates: ['NU','SW','PS','WP'], jes_factor_hints: ['Human relations','Physical demands'], teer_affinity: [2,3] } },
+        { id: 'legal_sector', title: 'Legal services — providing legal advice, representing the Crown, or managing legal risk', signals: { og_candidates: ['LC','LP'], jes_factor_hints: ['Decision making','Organizational impact'], teer_affinity: [1,2] } },
+        { id: 'technical_scientific_sector', title: 'Technical or scientific operations — inspection, enforcement, meteorology, or environmental services', signals: { og_candidates: ['FB','FS','MT'], jes_factor_hints: ['Knowledge and skills','Effort'], teer_affinity: [2,3] } },
+        { id: 'education_sector', title: 'Education and training — teaching, curriculum design, or educational program delivery', signals: { og_candidates: ['ED','NT'], jes_factor_hints: ['Knowledge and skills','Human relations'], teer_affinity: [2,3] } },
+        { id: 'programme_admin_sector', title: 'Programme and administrative operations — programme delivery, operational support, or liaison work', signals: { og_candidates: ['PO','WP'], jes_factor_hints: ['Organizational impact','Effort'], teer_affinity: [2,3] } },
+        { id: 'other_sector', title: 'General professional or administrative work (economics, policy, information technology, or administration)', signals: { og_candidates: ['EC','AS','IT','FI'], jes_factor_hints: ['Research & analysis','Decision making'], teer_affinity: [1,2] } },
+      ] },
+      apply: (r, a) => ({ qb_sector_gate: a.id }),
+      transcript: a => a.title },
+    { id: 'qb_health_social_cluster', phase: 2, icon: I.user,
+      q: 'What is the primary focus of the health or social service work?',
+      helper: 'Select the description that most closely matches the day-to-day responsibilities.',
+      input: { type: 'choices', options: [
+        { id: 'nursing_hospital', title: 'Direct patient care — assessing, treating, and monitoring patients in a clinical setting', signals: { og_candidates: ['NU'], jes_factor_hints: ['Human relations','Physical demands'], teer_affinity: [3] } },
+        { id: 'social_work_services', title: 'Social welfare case management — counselling, intervention, and connecting clients to services', signals: { og_candidates: ['SW'], jes_factor_hints: ['Human relations','Decision making'], teer_affinity: [2,3] } },
+        { id: 'psychology_services', title: 'Psychological assessment or therapy — testing, clinical judgment, and treatment planning', signals: { og_candidates: ['PS'], jes_factor_hints: ['Knowledge and skills','Decision making'], teer_affinity: [1,2] } },
+        { id: 'welfare_programs', title: 'Welfare program delivery — administering income support, benefits, or eligibility decisions', signals: { og_candidates: ['WP'], jes_factor_hints: ['Organizational impact','Effort'], teer_affinity: [2,3] } },
+      ] },
+      apply: (r, a) => ({ qb_health_social_cluster: a.id }),
+      transcript: a => a.title },
+    { id: 'qb_legal_cluster', phase: 2, icon: I.compass,
+      q: 'What is the primary legal function of this position?',
+      helper: 'Consider whether the work involves direct legal representation or managing legal affairs at an organizational level.',
+      input: { type: 'choices', options: [
+        { id: 'legal_counsel', title: 'Providing legal counsel and representing the Crown in proceedings', signals: { og_candidates: ['LP'], jes_factor_hints: ['Decision making','Organizational impact'], teer_affinity: [1] } },
+        { id: 'legal_management', title: 'Managing legal services, contracts, or access to information and privacy matters', signals: { og_candidates: ['LC'], jes_factor_hints: ['Organizational impact','Decision making'], teer_affinity: [1,2] } },
+      ] },
+      apply: (r, a) => ({ qb_legal_cluster: a.id }),
+      transcript: a => a.title },
+    { id: 'qb_technical_cluster', phase: 2, icon: I.gear,
+      q: 'What type of technical or scientific work does this position primarily perform?',
+      helper: 'Select the domain that best matches the specialized knowledge or operational role.',
+      input: { type: 'choices', options: [
+        { id: 'border_enforcement', title: 'Examining travellers, goods, or people at ports of entry and enforcing border legislation', signals: { og_candidates: ['FB'], jes_factor_hints: ['Knowledge and skills','Decision making'], teer_affinity: [2,3] } },
+        { id: 'foreign_service', title: 'Representing Canada abroad, negotiating international agreements, or providing consular services', signals: { og_candidates: ['FS'], jes_factor_hints: ['Knowledge and skills','Organizational impact'], teer_affinity: [1,2] } },
+        { id: 'meteorology_science', title: 'Weather forecasting, atmospheric science, or environmental monitoring', signals: { og_candidates: ['MT'], jes_factor_hints: ['Knowledge and skills','Effort'], teer_affinity: [2,3] } },
+      ] },
+      apply: (r, a) => ({ qb_technical_cluster: a.id }),
+      transcript: a => a.title },
+    { id: 'qb_education_cluster', phase: 2, icon: I.cap,
+      q: 'What type of education or training work does this position primarily involve?',
+      helper: 'Consider whether the role is classroom-based, curriculum design, or nutrition and dietetics guidance.',
+      input: { type: 'choices', options: [
+        { id: 'education_teaching', title: 'Teaching language, academic subjects, or specialized courses to government employees or in federal institutions', signals: { og_candidates: ['ED'], jes_factor_hints: ['Knowledge and skills','Human relations'], teer_affinity: [2,3] } },
+        { id: 'nutrition_dietetics', title: 'Providing nutrition counselling, diet therapy, or food service management guidance', signals: { og_candidates: ['NT'], jes_factor_hints: ['Knowledge and skills','Human relations'], teer_affinity: [2,3] } },
+      ] },
+      apply: (r, a) => ({ qb_education_cluster: a.id }),
+      transcript: a => a.title },
+
     { id: 'noc_confirm', phase: 2, icon: I.compass,
       q: 'Review the top NOC matches and confirm the best fit for this role.',
       helper: 'Select the NOC code that best describes the work.',
