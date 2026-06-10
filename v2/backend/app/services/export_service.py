@@ -33,6 +33,7 @@ from datetime import date
 from docxtpl import DocxTemplate
 
 from app.db import get_connection
+from app.data.constants import NON_EC_STANDARD_NAMES
 from app.models.draft_duty import DraftDuty
 from app.models.work_description import WorkDescription
 
@@ -42,17 +43,6 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Module-level constants
 # ---------------------------------------------------------------------------
-
-# Mapping of non-EC OG codes to their published JES standard name. Used in
-# the version manifest to credit the correct authoritative source for the
-# classification. "FI" is Financial Institutions (CT JES 2023 is the
-# published standard for that group).
-NON_EC_STANDARD_NAMES: dict[str, str] = {
-    "FI": "CT JES 2023",
-    "IT": "IT JES",
-    "AS": "UCS",
-    "EN": "EN JES",
-}
 
 # Runtime probe cache for WeasyPrint. Set to True or False after the first
 # call to _probe_weasyprint(); None means "not yet probed". See EXP-03.
