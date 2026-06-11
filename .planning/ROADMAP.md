@@ -107,7 +107,7 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 22-01-PLAN.md — Wave 0 test scaffolding (all Phase 22 test stubs, RED baseline)
+- [x] 22-01-PLAN.md — Wave 0 test scaffolding (all Phase 22 test stubs, RED baseline) — 10 test functions in v2/backend/tests/test_sjd.py; 9/10 RED
 - [ ] 22-02-PLAN.md — SJD_LIBRARY constant + GET /api/sjd endpoints + router registration
 - [ ] 22-03-PLAN.md — DraftDuty/WorkDescription model extensions + POST /api/wd/{id}/sjd-start + manifest provenance
 - [ ] 22-04-PLAN.md — Frontend: fetchSjds helpers + Browse SJDs action + SJD browser panel + SJD-03 warning
@@ -199,7 +199,7 @@ Plans:
 | 19. Qualifications & Amendments | v2.0 | 4/4 | Complete | 2026-06-09 |
 | 20. Export | v2.0 | 3/3 | Complete | 2026-06-10 |
 | **21. OG Expansion + Preview Fix** | **v3.0** | **8/8** | **Gaps Found** | — |
-| **22. SJD Library** | **v3.0** | **0/?** | **Not started** | — |
+| **22. SJD Library** | **v3.0** | **1/4** | **Executing** | — |
 | **23. Writing Guide Integration** | **v3.0** | **0/?** | **Not started** | — |
 | **24. Risk Audit** | **v3.0** | **0/?** | **Not started** | — |
 | **25. Accessible Template** | **v3.0** | **0/?** | **Not started** | — |
