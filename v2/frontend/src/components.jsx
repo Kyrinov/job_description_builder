@@ -498,7 +498,12 @@ function OgLevelQuestions({ value, onChange, cfg }) {
     fetch(url)
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(data => { setCriteria(data); setLoading(false); })
-      .catch(() => { setLoading(false); });
+      .catch(() => {
+        setLoading(false);
+        // Emit a sentinel so answerValid returns true and the user can proceed
+        // manually via OgLevelPicker even when criteria are unavailable.
+        onChange({ _criteria_unavailable: true });
+      });
   }, [ogCode, subGroup]);
 
   const questions = criteria?.questions || [];
