@@ -198,7 +198,7 @@ Each task was committed atomically:
 
 ---
 
-**Total deviations:** 5 auto-fixed (2 initial: pre-existing code reuse + RED-state pre-existing; 3 continuation: sub-group picker not rendering + sector/cluster gating missing + screen-blank after cluster commit)
+## Deviations from Plan
 
 ### Auto-fixed Issues (Initial Implementation)
 
