@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Classification Depth & Document Quality
 current_phase: 21
-status: gaps_found
-last_updated: "2026-06-11T13:58:00.000Z"
+status: executing
+last_updated: "2026-06-11T16:43:22.133Z"
 progress:
   total_phases: 5
-  completed_phases: 0
-  total_plans: 8
-  completed_plans: 8
+  completed_phases: 1
+  total_plans: 9
+  completed_plans: 9
   percent: 100
 ---
 
 # Project State
 
-**Status:** Phase 21 execution complete; verification gaps_found
+**Status:** Phase 21 complete (all 9 plans, gaps closed)
 **Current phase:** 21
 **Last updated:** 2026-06-11
-**Next action:** Gap closure for OGX-07 sub_group propagation (5/6 sub-group-bearing OGs broken end-to-end)
+**Next action:** Run full verification for Phase 21 (21-09 gap-closure plan complete; 60/60 frontend tests passing)
 
 ---
 
@@ -26,7 +26,7 @@ progress:
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 21 | OG Expansion + Preview Fix | All 8 plans complete; verification gaps_found (sub_group wiring broken) |
+| 21 | OG Expansion + Preview Fix | All 9 plans complete (incl. 21-09 gap-closure); 60/60 frontend tests; JES-LEV-01 + OGX-07 closed |
 | 22 | SJD Library | Not started |
 | 23 | Writing Guide Integration | Not started |
 | 24 | Risk Audit | Not started |
@@ -94,7 +94,7 @@ See: `.planning/PROJECT.md`
 
 ### Active Blockers
 
-- **Phase 21 gap (21-VERIFICATION.md, status: gaps_found, score 7/9):** `OgConfirmList.handleSubGroupSelect` does not propagate `sub_group` via `onChange`. The `cfgOverride` for `og_level_questions` reads from `answers.og_confirm?.sub_group` and `record.confirmed_og?.sub_group` but neither path is populated. End-to-end impact: 5 of 6 sub-group-bearing OG groups (NU, SW-CHA, ED-LAT/EST, NT, PO-TCO) are blocked on the og_level_questions step. Only PS works (bare key, no sub_group). Fix is small (~2 lines in OgConfirmList) but the user should decide whether to (a) inline-fix and re-verify, (b) run `/gsd-plan-phase 21 --gaps` for a Phase 21.1 plan, or (c) accept the gap and proceed.
+None. Phase 21 gap closed by Plan 21-09 (2026-06-11). Sub_group propagation fixed for all 6 sub-group-bearing OG groups. 60/60 frontend tests passing.
 
 ### Roadmap Evolution
 
@@ -115,6 +115,7 @@ See: `.planning/PROJECT.md`
 | Requirements delivered | 21/21 |
 | Tests passing at ship | 188 |
 | Timeline | 7 days (2026-05-27 → 2026-06-03) |
+| Phase 21 P09 | 5 | 3 tasks | 2 files |
 
 ### v2.0 (complete)
 

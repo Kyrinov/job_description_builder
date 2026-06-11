@@ -15,7 +15,8 @@
 - [ ] **OGX-04** — `QUESTION_BANK` extended with a sector-gate question routing PA/SH/Legal/Technical/Scientific clusters and cluster-specific disambiguation questions; `accumulateSignals()` produces correct top-ranked OG for each new group given its ideal answer set; per-group integration tests assert this
 - [ ] **OGX-05** — Point-rating groups (FB, FS, LP, MT, LC, SW-SCW) get full per-factor JES scoring via `POST /api/jes/score` extending the existing `EC_JES_ELEMENTS` pattern; `JES_FACTORS_BY_GROUP` carries factor definitions for these groups
 - [ ] **OGX-06** — Level-description groups (NU, PS, NT, PO, WP, SW-CHA, ED sub-groups) return `jes_total_points` from a level-keyed `NON_EC_TOTALS` lookup (no LLM); `jes_scores: []` for these groups, matching the v2.0 FI/AS pattern; `ClassBlock` renders correctly for both scoring paths
-- [ ] **OGX-07** — Sub-group disambiguation for NU (HOS/CHN/EMA), SW (SCW/CHA), and ED sub-groups surfaced to the advisor as an alert analogous to the v2.0 AS/EC disambiguation alert; confirmed sub-group stored on `WorkDescription`
+- [x] **OGX-07
+** — Sub-group disambiguation for NU (HOS/CHN/EMA), SW (SCW/CHA), and ED sub-groups surfaced to the advisor as an alert analogous to the v2.0 AS/EC disambiguation alert; confirmed sub-group stored on `WorkDescription`
 
 ---
 
