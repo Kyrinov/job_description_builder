@@ -9,12 +9,12 @@
 
 ## OG Expansion (OGX) — 7 requirements
 
-- [ ] **OGX-01** — `OG_LEVELS`, `OG_DEFINITIONS`, `QUAL_STANDARDS`, `NON_EC_TOTALS`, `NON_EC_STANDARD_NAMES`, and `JES_FACTORS_BY_GROUP` updated atomically for all 16 groups (12 new: ED, FB, FS, LC, LP, MT, NT, NU, PO, PS, SW, WP); a completeness test asserts every key in `OG_LEVELS` is present in all other 5 constants
-- [ ] **OGX-02** — `NON_EC_STANDARD_NAMES` consolidated into `constants.py`; `export_service.py` imports from there (eliminates the v2.0 dual-copy drift)
-- [ ] **OGX-03** — `QUAL_DEFAULTS` (frontend `data.jsx`) content-parity test against `QUAL_STANDARDS` (backend `constants.py`) written as a failing test before any new group qualification text is authored; parity enforced for all 16 groups at phase close
-- [ ] **OGX-04** — `QUESTION_BANK` extended with a sector-gate question routing PA/SH/Legal/Technical/Scientific clusters and cluster-specific disambiguation questions; `accumulateSignals()` produces correct top-ranked OG for each new group given its ideal answer set; per-group integration tests assert this
-- [ ] **OGX-05** — Point-rating groups (FB, FS, LP, MT, LC, SW-SCW) get full per-factor JES scoring via `POST /api/jes/score` extending the existing `EC_JES_ELEMENTS` pattern; `JES_FACTORS_BY_GROUP` carries factor definitions for these groups
-- [ ] **OGX-06** — Level-description groups (NU, PS, NT, PO, WP, SW-CHA, ED sub-groups) return `jes_total_points` from a level-keyed `NON_EC_TOTALS` lookup (no LLM); `jes_scores: []` for these groups, matching the v2.0 FI/AS pattern; `ClassBlock` renders correctly for both scoring paths
+- [x] **OGX-01** — `OG_LEVELS`, `OG_DEFINITIONS`, `QUAL_STANDARDS`, `NON_EC_TOTALS`, `NON_EC_STANDARD_NAMES`, and `JES_FACTORS_BY_GROUP` updated atomically for all 16 groups (12 new: ED, FB, FS, LC, LP, MT, NT, NU, PO, PS, SW, WP); a completeness test asserts every key in `OG_LEVELS` is present in all other 5 constants
+- [x] **OGX-02** — `NON_EC_STANDARD_NAMES` consolidated into `constants.py`; `export_service.py` imports from there (eliminates the v2.0 dual-copy drift)
+- [x] **OGX-03** — `QUAL_DEFAULTS` (frontend `data.jsx`) content-parity test against `QUAL_STANDARDS` (backend `constants.py`) written as a failing test before any new group qualification text is authored; parity enforced for all 16 groups at phase close
+- [x] **OGX-04** — `QUESTION_BANK` extended with a sector-gate question routing PA/SH/Legal/Technical/Scientific clusters and cluster-specific disambiguation questions; `accumulateSignals()` produces correct top-ranked OG for each new group given its ideal answer set; per-group integration tests assert this
+- [x] **OGX-05** — Point-rating groups (FB, FS, LP, MT, LC, SW-SCW) get full per-factor JES scoring via `POST /api/jes/score` extending the existing `EC_JES_ELEMENTS` pattern; `JES_FACTORS_BY_GROUP` carries factor definitions for these groups
+- [x] **OGX-06** — Level-description groups (NU, PS, NT, PO, WP, SW-CHA, ED sub-groups) return `jes_total_points` from a level-keyed `NON_EC_TOTALS` lookup (no LLM); `jes_scores: []` for these groups, matching the v2.0 FI/AS pattern; `ClassBlock` renders correctly for both scoring paths
 - [x] **OGX-07
 ** — Sub-group disambiguation for NU (HOS/CHN/EMA), SW (SCW/CHA), and ED sub-groups surfaced to the advisor as an alert analogous to the v2.0 AS/EC disambiguation alert; confirmed sub-group stored on `WorkDescription`
 
@@ -22,7 +22,7 @@
 
 ## Preview Fix (UI) — 1 requirement
 
-- [ ] **UI-01** — `.doc-scroll` CSS rule in `styles.css` has `align-items: flex-start`; the simulated white `.doc` page grows to contain all preview content at any document length; no content overflows into the grey background; no layout regression in the split conversation/preview pane
+- [x] **UI-01** — `.doc-scroll` CSS rule in `styles.css` has `align-items: flex-start`; the simulated white `.doc` page grows to contain all preview content at any document length; no content overflows into the grey background; no layout regression in the split conversation/preview pane
 
 ---
 
@@ -91,14 +91,14 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| OGX-01 | Phase 21 | Pending |
-| OGX-02 | Phase 21 | Pending |
-| OGX-03 | Phase 21 | Pending |
-| OGX-04 | Phase 21 | Pending |
-| OGX-05 | Phase 21 | Pending |
-| OGX-06 | Phase 21 | Pending |
-| OGX-07 | Phase 21 | Pending |
-| UI-01  | Phase 21 | Pending |
+| OGX-01 | Phase 21 | Complete |
+| OGX-02 | Phase 21 | Complete |
+| OGX-03 | Phase 21 | Complete |
+| OGX-04 | Phase 21 | Complete |
+| OGX-05 | Phase 21 | Complete |
+| OGX-06 | Phase 21 | Complete |
+| OGX-07 | Phase 21 | Complete |
+| UI-01  | Phase 21 | Complete |
 | SJD-01 | Phase 22 | Pending |
 | SJD-02 | Phase 22 | Pending |
 | SJD-03 | Phase 22 | Pending |

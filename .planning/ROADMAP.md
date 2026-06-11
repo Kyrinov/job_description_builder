@@ -76,7 +76,7 @@ v3.0 expands the classification engine to all GC occupational groups with JES st
 4. The document preview white page grows seamlessly with document content at any length; no content overflows into the grey background; existing split-pane layout is unaffected
 5. A completeness test asserts every key in OG_LEVELS is present in OG_DEFINITIONS, QUAL_STANDARDS, NON_EC_TOTALS, NON_EC_STANDARD_NAMES, and JES_FACTORS_BY_GROUP; frontend QUAL_DEFAULTS and backend QUAL_STANDARDS match for all 16 groups
 
-**Plans:** 8 plans
+**Plans:** 9/9 plans complete
 
 Plans:
 - [x] 21-01-PLAN.md — Wave 0 test scaffolding (all Phase 21 test stubs, RED baseline)
