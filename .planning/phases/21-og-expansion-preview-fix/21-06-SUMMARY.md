@@ -53,6 +53,7 @@ key-decisions:
   - "Sub-group alert is fetched inside OgConfirmList (not in app.jsx) so the picker renders during the og_confirm step, not after commit"
   - "Cluster questions are gated on the qb_sector_gate answer — only the cluster matching the selected sector is asked"
   - "activeStepIndex is derived from stepIndex + answers so the user never lands on an invisible step even after editing a prior answer"
+  - "answeredSteps is filtered to only include steps with answers (OGX-04 round 3) — preserves the original STEPS index for jumpToExchange correctness"
 
 patterns-established:
   - "Pattern: API sub-group validation — return 422 with detail={error, message, allowed_values} for invalid sub_group"
@@ -60,14 +61,15 @@ patterns-established:
   - "Pattern: Reset local state on parent state change via useEffect([selectedCode])"
   - "Pattern: Component fetches its own dynamic data when value-derived state changes (subGroupAlert re-fetch in OgConfirmList)"
   - "Pattern: isStepVisible predicate for Socratic question gating — return false when upstream answer makes the step irrelevant"
+  - "Pattern: When gating steps, also filter the answered-exchanges list to drop skipped (unanswered) steps — otherwise their transcripts throw on undefined and unmount the React tree"
 
 requirements-completed:
   - OGX-07
   - OGX-04
 
 # Metrics
-duration: 90min
-completed: 2026-06-10
+duration: 105min
+completed: 2026-06-11
 ---
 # Phase 21 Plan 06: Sub-Group Disambiguation Alert + Confirm Endpoint Summary
 
@@ -120,6 +122,27 @@ The user surfaced two bugs after the automated tests passed:
 - Backend: 103/103 tests pass (no regression)
 - Frontend build clean: 216.05 kB JS / 24.86 kB CSS (gzip 66.40 kB / 5.50 kB) — ~1.2 kB increase from the two extra useEffects + helpers
 
+### Bugfix Round 3 (after round-2 verification surfaced a screen-blank bug)
+
+After the round-2 fixes, the user ran manual verification again and reported a critical regression: "After selection of patient care, the screen goes blank." This was a runtime error that the automated tests had not caught because no test drove the App end-to-end through the cluster step.
+
+3. **Bug 3: Screen went blank after picking a cluster option**
+   - **Symptom:** After picking "Direct patient care" (nursing_hospital) in `qb_health_social_cluster` and clicking Continue, the entire React tree unmounted and the screen went blank
+   - **Root cause:** When the user picks a cluster option, `commit()` advances `stepIndex` from 11 → 15 (skipping 3 invisible cluster steps at indices 12, 13, 14 — `qb_legal_cluster`, `qb_technical_cluster`, `qb_education_cluster`). The previous fix made the gate correctly skip those steps in the navigation flow. **However**, `answeredSteps = STEPS.slice(0, stepIndex)` was still being passed unmodified to the answered-exchanges renderer, so it included those 3 invisible cluster questions. The `<Exchange>` component then called `step.transcript(answer, record)` — and the cluster transcripts are `a => a.title`. With `answer === undefined` (the user never answered them), this threw `TypeError: Cannot read properties of undefined (reading 'title')`. React unmounted the whole tree → blank screen
+   - **Why automated tests missed it:** The 8 OGX-04 gating tests in round 2 only tested `isStepVisible()` and `getVisibleSteps()` as pure functions. They did not drive the App component through the full conversation flow to the cluster step. The bug was an integration bug — the gate logic was correct, but `answeredSteps` was still pulling from the unfiltered `STEPS` array
+   - **Fix:** Filter `answeredSteps` in `app.jsx` to only include steps that were actually answered (`answers[step.id] !== undefined`). Preserve the original `STEPS` index in `originalIndex` so `jumpToExchange(originalIndex)` still navigates to the correct step (the array index in the filtered list would be wrong otherwise)
+   - **Files modified:** `v2/frontend/src/app.jsx`
+   - **Tests added:** 2 new frontend tests in `conversation.test.jsx` — one walks the full App from `title` through `qb_health_social_cluster` (pick "Direct patient care") to `noc_confirm` and asserts the next active question renders; the other is a smoke test that exercises the other 3 sector routes (legal, technical, education) end-to-end, asserting that none of them blank the screen
+   - **Verification:** Tests fail RED before the fix with the exact TypeError (matching the user's report); tests pass GREEN after the fix
+   - **Committed in:** `44153ee`
+
+### Continuation Test Results (after round 3)
+
+- 12 new frontend tests total (8 OGX-04 gating + 2 OGX-07 picker + 2 OGX-04 round-3 regression)
+- Frontend: 43/43 tests pass (was 31/31, then 41/41 after round 2)
+- Backend: 103/103 tests pass (no regression)
+- Frontend build clean: 216.17 kB JS / 24.86 kB CSS (gzip 66.46 kB / 5.50 kB) — +0.12 kB JS from the answeredSteps filter
+
 ## Task Commits
 
 Each task was committed atomically:
@@ -128,6 +151,7 @@ Each task was committed atomically:
 2. **Task 2: Author .asec-alert CSS and extend OgConfirmList with sub-group picker** - `e10917a` (feat)
 3. **Continuation fix 1: Sector/cluster question gating (OGX-04)** - `f6ae8c7` (fix)
 4. **Continuation fix 2: Sub-group picker render during og_confirm step (OGX-07)** - `ca44700` (fix)
+5. **Continuation fix 3: Filter unanswered cluster steps from answered list (OGX-04 round 3)** - `44153ee` (fix)
 
 ## Files Created/Modified
 
@@ -164,7 +188,17 @@ Each task was committed atomically:
 - **Cluster questions are hidden when the sector answer is missing** — the linear flow guarantees the user encounters the sector question first (answerValid blocks Continue without an answer), so cluster questions are never shown in the linear path until the sector matches. This is the gating that prevents the "questions fire on every pass" bug
 - **`activeStepIndex` is derived, not stored** — keeps `stepIndex` as the single source of truth for "where the user is in the linear flow", while `activeStepIndex` is the render-time view that respects visibility. The user can edit a prior answer without their position in the flow being corrupted by stale derived state
 
-## Deviations from Plan
+**5. [Rule 1 - Bug] Screen went blank after picking a cluster option (round 3)**
+- **Found during:** Post-round-2 user verification — user reported "After selection of patient care, the screen goes blank"
+- **Issue:** `answeredSteps = STEPS.slice(0, stepIndex)` included 3 invisible cluster questions (legal/technical/education) that the OGX-04 visibility gate had skipped. The user never answered them, so `answer === undefined`. The `<Exchange>` component called `transcript(undefined, record)` — and the cluster transcripts are `a => a.title`, which throws `TypeError: Cannot read properties of undefined (reading 'title')`. React's error boundary then unmounts the entire tree → blank screen
+- **Fix:** Filter `answeredSteps` in `app.jsx` to only include steps that have an answer (`answers[step.id] !== undefined`). Preserve the original `STEPS` index in `originalIndex` so `jumpToExchange(originalIndex)` still navigates to the right step. The filter is in a `useMemo` keyed on `[stepIndex, answers]` so the rendered list re-computes correctly when the user revisits answers
+- **Files modified:** `v2/frontend/src/app.jsx`
+- **Verification:** 2 new frontend tests cover (a) the full App walkthrough from `title` through `qb_health_social_cluster` (pick "Direct patient care") to `noc_confirm` with screen-blank assertion, (b) smoke test for the other 3 sector routes (legal, technical, education). Both tests fail RED before the fix with the exact TypeError; both pass GREEN after
+- **Committed in:** `44153ee`
+
+---
+
+**Total deviations:** 5 auto-fixed (2 initial: pre-existing code reuse + RED-state pre-existing; 3 continuation: sub-group picker not rendering + sector/cluster gating missing + screen-blank after cluster commit)
 
 ### Auto-fixed Issues (Initial Implementation)
 
@@ -205,8 +239,8 @@ Each task was committed atomically:
 
 ---
 
-**Total deviations:** 4 auto-fixed (2 initial: pre-existing code reuse + RED-state pre-existing; 2 continuation: sub-group picker not rendering + sector/cluster gating missing)
-**Impact on plan:** The 2 initial deviations eliminated redundant work. The 2 continuation fixes are real bugs that the automated tests didn't catch — the tests verified the component contract (picker renders when given the data) but not the integration (app.jsx correctly passes the data). The continuation fixes are minimal and targeted, preserving the original architecture while closing the user-visible gaps.
+**Total deviations:** 5 auto-fixed (2 initial: pre-existing code reuse + RED-state pre-existing; 3 continuation: sub-group picker not rendering + sector/cluster gating missing + screen-blank after cluster commit)
+**Impact on plan:** The 2 initial deviations eliminated redundant work. The 3 continuation fixes are real bugs that the automated tests didn't catch — the tests verified the component contract (picker renders when given the data) but not the integration (app.jsx correctly passes the data, and the answered-exchanges list doesn't include unanswered steps). The continuation fixes are minimal and targeted, preserving the original architecture while closing the user-visible gaps.
 
 ## Issues Encountered
 
@@ -246,21 +280,22 @@ The original plan's Task 3 was a `type="checkpoint:human-verify"` task with `gat
 - `v2/backend/app/api/og_classification.py` exists (modified)
 - `v2/frontend/src/components.jsx` exists (modified — sub-group picker + self-contained fetch)
 - `v2/frontend/src/styles.css` exists (modified — `.asec-alert` CSS block)
-- `v2/frontend/src/app.jsx` exists (modified — `activeStepIndex`, gated navigation, `cfgOverride` updates)
+- `v2/frontend/src/app.jsx` exists (modified — `activeStepIndex`, gated navigation, `cfgOverride` updates, `answeredSteps` filter)
 - `v2/frontend/src/data.jsx` exists (modified — `isStepVisible`, `getVisibleSteps`)
-- `v2/frontend/src/conversation.test.jsx` exists (modified — 10 new tests)
+- `v2/frontend/src/conversation.test.jsx` exists (modified — 12 new tests)
 - Commit `680cf12` (initial Task 1) exists in git log
 - Commit `e10917a` (initial Task 2) exists in git log
 - Commit `f6ae8c7` (continuation: sector/cluster gating) exists in git log
 - Commit `ca44700` (continuation: sub-group picker render) exists in git log
+- Commit `44153ee` (continuation: screen-blank fix — answeredSteps filter) exists in git log
 - All 5 OGX-07 backend tests PASSED
 - All 103 backend tests PASSED (no regressions)
-- All 41 frontend vitest tests PASSED (10 new tests added)
-- Frontend build clean (216.05 kB JS / 24.86 kB CSS, gzip 66.40 kB / 5.50 kB)
+- All 43 frontend vitest tests PASSED (12 new tests added across 3 bugfix rounds)
+- Frontend build clean (216.17 kB JS / 24.86 kB CSS, gzip 66.46 kB / 5.50 kB)
 
 ---
 
 *Phase: 21-og-expansion-preview-fix*
 *Plan: 06*
-*Completed: 2026-06-10 (initial) / 2026-06-11 (continuation)*
-*Status: All tasks complete including continuation bugfixes*
+*Completed: 2026-06-10 (initial) / 2026-06-11 (continuation rounds 1-3)*
+*Status: All tasks complete including continuation bugfixes (3 rounds)*
