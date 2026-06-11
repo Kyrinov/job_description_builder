@@ -473,13 +473,117 @@ function OgConfirmList({ value, onChange, cfg }) {
   );
 }
 
+/* ---- OG LEVEL QUESTIONS -------------------------------------- */
+// cfg.type === 'og_level_questions'
+// cfg.og_code, cfg.sub_group: injected by cfgOverride from answers.og_confirm
+// Fetches criteria from GET /api/jes/level-criteria, renders questions,
+// then calls POST /api/jes/level-suggest on completion.
+// Phase 21 Plan 08 (JES-LEV-01).
+function OgLevelQuestions({ value, onChange, cfg }) {
+  const ogCode = cfg?.og_code || '';
+  const subGroup = cfg?.sub_group || null;
+  const [criteria, setCriteria] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [localAnswers, setLocalAnswers] = useState({});
+  const [suggestion, setSuggestion] = useState(null);
+  const [suggesting, setSuggesting] = useState(false);
+
+  useEffect(() => {
+    if (!ogCode) return;
+    setLoading(true);
+    const url = subGroup
+      ? `/api/jes/level-criteria?og_code=${ogCode}&sub_group=${subGroup}`
+      : `/api/jes/level-criteria?og_code=${ogCode}`;
+    fetch(url)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(data => { setCriteria(data); setLoading(false); })
+      .catch(() => { setLoading(false); });
+  }, [ogCode, subGroup]);
+
+  const questions = criteria?.questions || [];
+
+  function handleAnswer(questionId, optionId) {
+    const updated = { ...localAnswers, [questionId]: optionId };
+    setLocalAnswers(updated);
+    // Check if all questions answered
+    const allAnswered = questions.every(q => updated[q.id] !== undefined);
+    if (allAnswered) {
+      setSuggesting(true);
+      fetch('/api/jes/level-suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ og_code: ogCode, sub_group: subGroup, answers: updated }),
+      })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(data => {
+          setSuggestion(data);
+          setSuggesting(false);
+          // Emit to parent step (enables Continue button)
+          onChange({ ...updated, ...data });
+        })
+        .catch(() => {
+          setSuggesting(false);
+          // Fall back: emit answers without suggestion
+          onChange({ ...updated, suggested_level: null });
+        });
+    } else {
+      // Mid-flow: keep draft alive so answerValid passes
+      onChange({ ...updated, suggested_level: null });
+    }
+  }
+
+  if (!ogCode) return <p className="step-loading">Confirm occupational group first.</p>;
+  if (loading) return <p className="step-loading">Loading level criteria…</p>;
+  if (!criteria) return <p className="step-loading">Level criteria not available for this group.</p>;
+
+  return (
+    <div className="og-level-questions">
+      {questions.map(q => (
+        <div key={q.id} className="og-level-question">
+          <p className="og-level-question__prompt">{q.question}</p>
+          <div className="choices">
+            {q.options.map(opt => {
+              const sel = localAnswers[q.id] === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={'choice' + (sel ? ' is-sel' : '')}
+                  onClick={() => handleAnswer(q.id, opt.id)}
+                >
+                  <span className="choice__main">
+                    <span className="choice__title">{opt.label}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      {suggesting && <p className="step-loading">Computing suggestion…</p>}
+      {suggestion && (
+        <div className="og-level-suggestion">
+          <strong>Suggested: Level {String(suggestion.suggested_level).padStart(2,'0')}</strong>
+          {' ('}{suggestion.confidence} confidence{') '}
+          <span className="og-level-suggestion__rationale">{suggestion.rationale}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---- OG LEVEL PICKER ----------------------------------------- */
 // cfg.type === 'og_level'
 // cfg.levels: array of integers from OG_LEVELS[og_code] — populated by cfgOverride in app.jsx
+// cfg.preselect (Phase 21 Plan 08): suggested level from the prior og_level_questions step;
+//                                    renders the level with 'is-suggested' class + 'rec-pill' label
+//                                    while value is null. Once the user clicks any level,
+//                                    preselect is ignored (user override wins).
 // value: selected level integer or null
 // onChange(level): stores selected integer — PATCH /api/wd/{id} persists og_level
 function OgLevelPicker({ value, onChange, cfg }) {
   const levels = cfg.levels || [];
+  const preselect = cfg.preselect ?? null;
   if (levels.length === 0) {
     return <p className="step-loading">Confirm occupational group first to see level options.</p>;
   }
@@ -487,15 +591,19 @@ function OgLevelPicker({ value, onChange, cfg }) {
     <div className="choices">
       {levels.map(lv => {
         const sel = value === lv;
+        const suggested = preselect === lv && value === null;
         return (
           <button
             key={lv}
             type="button"
-            className={'choice' + (sel ? ' is-sel' : '')}
+            className={'choice' + (sel ? ' is-sel' : '') + (suggested ? ' is-suggested' : '')}
             onClick={() => onChange(lv)}
           >
             <span className="choice__main">
-              <span className="choice__title">Level {lv < 10 ? '0' + lv : lv}</span>
+              <span className="choice__title">
+                Level {lv < 10 ? '0' + lv : lv}
+                {suggested && <span className="rec-pill"> · suggested</span>}
+              </span>
             </span>
           </button>
         );
@@ -588,6 +696,7 @@ function StepInput(props) {
   if (t === 'quals') return <QualEditor {...props} og_code={props.record?.confirmed_og?.og_code} />;
   if (t === 'noc_confirm') return <NocConfirmList {...props} />;
   if (t === 'og_confirm') return <OgConfirmList {...props} />;
+  if (t === 'og_level_questions') return <OgLevelQuestions {...props} />;
   if (t === 'og_level') return <OgLevelPicker {...props} />;
   return null;
 }
@@ -607,8 +716,14 @@ function answerValid(step, value) {
   if (t === 'quals') return !!(value && value.education && value.experience);
   if (t === 'noc_confirm') return typeof value === 'string' && value.length > 0;
   if (t === 'og_confirm') return value !== null && value !== undefined && !!value.og_code;
+  if (t === 'og_level_questions') {
+    // Step is valid once the user has answered at least one question and the
+    // draft is a non-null object (the OgLevelQuestions component emits
+    // { ...answers, suggested_level: null|int } on every change).
+    return !!value && typeof value === 'object' && Object.keys(value).length > 0;
+  }
   if (t === 'og_level') return typeof value === 'number' && value >= 1;
   return !!value;
 }
 
-export { Icon, Check, StepInput, initialAnswer, answerValid };
+export { Icon, Check, StepInput, initialAnswer, answerValid, OgLevelQuestions, OgLevelPicker };

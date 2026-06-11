@@ -447,6 +447,13 @@ const I = {
         return sector === 'education_sector';
       case 'qb_programme_admin_cluster':
         return sector === 'programme_admin_sector';
+      case 'og_level_questions': {
+        // Phase 21 Plan 08 (JES-LEV-01): Socratic mini-interview appears before
+        // the level picker only for OG groups whose JES uses level descriptions
+        // (NU, PS, NT, PO, SW, ED). Point-rated and EC groups skip this step.
+        const LEVEL_DESC_GROUPS = new Set(['NU','PS','NT','PO','SW','ED']);
+        return !!(answers && answers.og_confirm && LEVEL_DESC_GROUPS.has(answers.og_confirm.og_code));
+      }
       default:
         return true;
     }
@@ -604,6 +611,13 @@ const I = {
       input: { type: 'og_confirm', candidates: [] },
       apply: (r, a) => ({ confirmed_og: a }),
       transcript: a => a ? (a.og_code + ' — ' + a.og_name) : 'Pending' },
+
+    { id: 'og_level_questions', phase: 2, icon: I.ladder,
+      q: 'A few quick questions to suggest the right level.',
+      helper: 'Answer based on the position as described. You can override the suggestion on the next screen.',
+      input: { type: 'og_level_questions' },
+      apply: (r, a) => ({ og_level_questions: a }),
+      transcript: a => a?.suggested_level != null ? `Suggested: Level ${String(a.suggested_level).padStart(2,'0')}` : 'Answered' },
 
     { id: 'og_level', phase: 2, icon: I.ladder,
       q: 'Select the level for this position.',

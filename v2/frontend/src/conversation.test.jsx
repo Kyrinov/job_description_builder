@@ -105,6 +105,72 @@ describe('CLASS-03: OgLevelPicker renders level range', () => {
   });
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 21 Plan 08 (JES-LEV-01): OgLevelPicker preselect + isStepVisible gate
+// for the new og_level_questions Socratic mini-interview step.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('JES-LEV-01 (Plan 08): OgLevelPicker preselect renders is-suggested class', () => {
+  it('renders (suggested) pill on the preselected level button', () => {
+    const cfg = { type: 'og_level', levels: [1, 2, 3, 4, 5], preselect: 4 };
+    const { container } = render(
+      <StepInput cfg={cfg} value={null} onChange={() => {}} onSubmit={() => {}} record={{}} />
+    );
+    // 4 of 5 buttons should have the 'is-suggested' class — specifically the
+    // level-4 button (preselect=4, value=null → suggested=true on lv=4).
+    const suggested = container.querySelectorAll('.choice.is-suggested');
+    expect(suggested.length).toBe(1);
+    expect(suggested[0].textContent).toMatch(/Level 04/);
+    expect(suggested[0].textContent).toMatch(/suggested/i);
+  });
+
+  it('does NOT render is-suggested when cfg.preselect is null', () => {
+    const cfg = { type: 'og_level', levels: [1, 2, 3, 4, 5], preselect: null };
+    const { container } = render(
+      <StepInput cfg={cfg} value={null} onChange={() => {}} onSubmit={() => {}} record={{}} />
+    );
+    const suggested = container.querySelectorAll('.choice.is-suggested');
+    expect(suggested.length).toBe(0);
+  });
+
+  it('does NOT render is-suggested after the user clicks a different level', () => {
+    // Once the user has selected any level (value !== null), the suggestion
+    // recedes: preselect only renders is-suggested when value is null.
+    const cfg = { type: 'og_level', levels: [1, 2, 3, 4, 5], preselect: 4 };
+    const { container } = render(
+      <StepInput cfg={cfg} value={5} onChange={() => {}} onSubmit={() => {}} record={{}} />
+    );
+    const suggested = container.querySelectorAll('.choice.is-suggested');
+    expect(suggested.length).toBe(0);
+    // The user's choice is still highlighted
+    const sel = container.querySelectorAll('.choice.is-sel');
+    expect(sel.length).toBe(1);
+    expect(sel[0].textContent).toMatch(/Level 05/);
+  });
+});
+
+describe('JES-LEV-01 (Plan 08): isStepVisible gates og_level_questions to level-description groups', () => {
+  it('shows og_level_questions for NU', () => {
+    const answers = { og_confirm: { og_code: 'NU', og_name: 'Nursing' } };
+    expect(isStepVisible({ id: 'og_level_questions' }, answers)).toBe(true);
+  });
+  it('shows og_level_questions for PS, NT, PO, SW, ED', () => {
+    for (const code of ['PS', 'NT', 'PO', 'SW', 'ED']) {
+      const answers = { og_confirm: { og_code: code, og_name: code } };
+      expect(isStepVisible({ id: 'og_level_questions' }, answers)).toBe(true);
+    }
+  });
+  it('hides og_level_questions for EC, IT, AS, FI (point-rated groups)', () => {
+    for (const code of ['EC', 'IT', 'AS', 'FI']) {
+      const answers = { og_confirm: { og_code: code, og_name: code } };
+      expect(isStepVisible({ id: 'og_level_questions' }, answers)).toBe(false);
+    }
+  });
+  it('hides og_level_questions when og_confirm is unanswered', () => {
+    expect(isStepVisible({ id: 'og_level_questions' }, {})).toBe(false);
+  });
+});
+
 describe('CONVO-05: answerValid returns true for valid choices answer', () => {
   it('choices step with non-null option is valid', () => {
     const step = { input: { type: 'choices', options: [] } };

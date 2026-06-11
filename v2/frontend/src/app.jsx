@@ -19,6 +19,7 @@ const FLASH = {
   qb_education_cluster: 'level', qb_programme_admin_cluster: 'level',
   noc_confirm: 'level',
   og_confirm: 'level',
+  og_level_questions: 'level',
   og_level: 'level',
   duties: 'duties', quals: 'quals',
 };
@@ -638,17 +639,27 @@ function App() {
                 : '',
               wd_id: wd_id,
             }
-          : step.input.type === 'og_level'
-            ? { ...step.input, levels: record.confirmed_og
-                  ? OG_LEVELS[record.confirmed_og.og_code] || []
-                  : [] }
-            : step.id === 'duties'
-              ? { ...step.input, noc_code: record.confirmed_noc
-                    ? (typeof record.confirmed_noc === 'string'
-                        ? record.confirmed_noc
-                        : record.confirmed_noc?.noc_code || null)
-                    : null }
-              : undefined)
+          : step.input.type === 'og_level_questions'
+            ? {
+                ...step.input,
+                og_code: answers.og_confirm?.og_code || record.confirmed_og?.og_code || '',
+                sub_group: answers.og_confirm?.sub_group || record.confirmed_og?.sub_group || null,
+              }
+            : step.input.type === 'og_level'
+              ? {
+                  ...step.input,
+                  levels: record.confirmed_og
+                    ? OG_LEVELS[record.confirmed_og.og_code] || []
+                    : [],
+                  preselect: answers.og_level_questions?.suggested_level ?? null,
+                }
+              : step.id === 'duties'
+                ? { ...step.input, noc_code: record.confirmed_noc
+                      ? (typeof record.confirmed_noc === 'string'
+                          ? record.confirmed_noc
+                          : record.confirmed_noc?.noc_code || null)
+                      : null }
+                : undefined)
     : undefined;
 
   return (
