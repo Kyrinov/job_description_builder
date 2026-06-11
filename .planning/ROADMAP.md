@@ -108,7 +108,7 @@ Plans:
 
 Plans:
 - [x] 22-01-PLAN.md — Wave 0 test scaffolding (all Phase 22 test stubs, RED baseline) — 10 test functions in v2/backend/tests/test_sjd.py; 9/10 RED
-- [ ] 22-02-PLAN.md — SJD_LIBRARY constant + GET /api/sjd endpoints + router registration
+- [x] 22-02-PLAN.md — SJD_LIBRARY constant + GET /api/sjd endpoints + router registration — 7/9 test_sjd.py stubs GREEN; full backend suite 122 passed, 3 failed (the 3 RED tests are 22-03 scope)
 - [ ] 22-03-PLAN.md — DraftDuty/WorkDescription model extensions + POST /api/wd/{id}/sjd-start + manifest provenance
 - [ ] 22-04-PLAN.md — Frontend: fetchSjds helpers + Browse SJDs action + SJD browser panel + SJD-03 warning
 

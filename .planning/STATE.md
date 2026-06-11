@@ -4,13 +4,13 @@ milestone: v3.0
 milestone_name: Classification Depth & Document Quality
 current_phase: 22
 status: executing
-last_updated: "2026-06-11T18:13:25.387Z"
+last_updated: "2026-06-11T18:21:00.000Z"
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 13
-  completed_plans: 10
-  percent: 77
+  completed_plans: 11
+  percent: 85
 ---
 
 # Project State
@@ -18,7 +18,7 @@ progress:
 **Status:** Executing Phase 22
 **Current phase:** 22
 **Last updated:** 2026-06-11
-**Next action:** Plan 22-02 (SJD_LIBRARY constant + GET /api/sjd endpoints) — Wave 0 RED baseline committed (22-01, 10 test functions in v2/backend/tests/test_sjd.py); 9/10 RED, 1 incidentally green (test_get_sjd_404 — FastAPI default 404 matches the negative-test assertion)
+**Next action:** Plan 22-03 (sjd-start endpoint, DraftDuty.source="sjd" extension, manifest SJD provenance) — Plan 22-02 complete: SJD_LIBRARY constant + GET /api/sjd endpoints live; 7/9 test_sjd.py stubs GREEN (3 RED tests are 22-03 scope: sjd-start, seed_duties_provenance, manifest_includes_sjd_source)
 
 ---
 
@@ -27,7 +27,7 @@ progress:
 | Phase | Name | Status |
 |-------|------|--------|
 | 21 | OG Expansion + Preview Fix | All 9 plans complete (incl. 21-09 gap-closure); 60/60 frontend tests; JES-LEV-01 + OGX-07 closed |
-| 22 | SJD Library | Plan 22-01 complete (Wave 0 RED baseline, 10 test stubs in v2/backend/tests/test_sjd.py, 9/10 RED); 1 plan of 4 done |
+| 22 | SJD Library | Plans 22-01 + 22-02 complete (RED baseline + SJD_LIBRARY constant with OG normalization + GET /api/sjd endpoints + router registration); 7/9 test_sjd.py GREEN; 2 plans of 4 done |
 | 23 | Writing Guide Integration | Not started |
 | 24 | Risk Audit | Not started |
 | 25 | Accessible Template | Not started |
@@ -117,6 +117,8 @@ None. Phase 21 gap closed by Plan 21-09 (2026-06-11). Sub_group propagation fixe
 | Timeline | 7 days (2026-05-27 → 2026-06-03) |
 | Phase 21 P09 | 5 | 3 tasks | 2 files |
 | Phase 22 P01 | 180 | 1 tasks | 1 files |
+| Phase 22 P02 | 7 | 2 tasks | 3 files |
+| Phase 22 P02 | 7min | 2 tasks | 3 files |
 
 ### v2.0 (complete)
 
