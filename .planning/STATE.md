@@ -4,13 +4,13 @@ milestone: v3.0
 milestone_name: Classification Depth & Document Quality
 current_phase: 22
 status: executing
-last_updated: "2026-06-11T18:21:00.000Z"
+last_updated: "2026-06-11T18:33:55.789Z"
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 13
-  completed_plans: 11
-  percent: 85
+  completed_plans: 12
+  percent: 92
 ---
 
 # Project State
@@ -18,7 +18,7 @@ progress:
 **Status:** Executing Phase 22
 **Current phase:** 22
 **Last updated:** 2026-06-11
-**Next action:** Plan 22-03 (sjd-start endpoint, DraftDuty.source="sjd" extension, manifest SJD provenance) — Plan 22-02 complete: SJD_LIBRARY constant + GET /api/sjd endpoints live; 7/9 test_sjd.py stubs GREEN (3 RED tests are 22-03 scope: sjd-start, seed_duties_provenance, manifest_includes_sjd_source)
+**Next action:** Plan 22-04 (SJD browse UI + sjd-start frontend call + SJD-03 warning) — Plan 22-03 complete: DraftDuty.source="sjd" extension, WorkDescription.sjd_source field, POST /api/wd/{id}/sjd-start endpoint with _build_sjd_seed_duties helper, _build_v2_manifest SJD provenance entry; 10/10 test_sjd.py tests GREEN; 125/125 backend suite GREEN
 
 ---
 
@@ -27,7 +27,7 @@ progress:
 | Phase | Name | Status |
 |-------|------|--------|
 | 21 | OG Expansion + Preview Fix | All 9 plans complete (incl. 21-09 gap-closure); 60/60 frontend tests; JES-LEV-01 + OGX-07 closed |
-| 22 | SJD Library | Plans 22-01 + 22-02 complete (RED baseline + SJD_LIBRARY constant with OG normalization + GET /api/sjd endpoints + router registration); 7/9 test_sjd.py GREEN; 2 plans of 4 done |
+| 22 | SJD Library | Plans 22-01 + 22-02 + 22-03 complete (RED baseline + SJD_LIBRARY constant with OG normalization + GET /api/sjd endpoints + router registration + DraftDuty.source="sjd" extension + WorkDescription.sjd_source + POST /api/wd/{id}/sjd-start endpoint + _build_sjd_seed_duties helper + _build_v2_manifest SJD provenance); 10/10 test_sjd.py GREEN; 125/125 backend suite GREEN; 3 plans of 4 done |
 | 23 | Writing Guide Integration | Not started |
 | 24 | Risk Audit | Not started |
 | 25 | Accessible Template | Not started |
@@ -91,6 +91,11 @@ See: `.planning/PROJECT.md`
 | Accessible Template replaces TBS WD template entirely (not an optional format) | Single export path simplifies maintenance; Accessible format is the current GoC standard |
 | Sub-group picker fetches its own data inside `OgConfirmList` (Phase 21 Plan 06 fix) | Picker must react to the DRAFT (value.og_code), not the committed `record.confirmed_og`; component-level fetch avoids timing race |
 | Cluster questions gated on `qb_sector_gate` answer (Phase 21 Plan 06 fix) | Socratic intent: manager is only asked questions relevant to their selected sector |
+| DraftDuty.source Literal extended to {noc,advisor,sjd} additively (Phase 22 Plan 03) | Backward compatible via `ConfigDict(extra='ignore')`; existing DB rows deserialize without error |
+| WorkDescription.sjd_source is dict (not nested Pydantic model) (Phase 22 Plan 03) | Minimal schema; readable in raw DB JSON; full SJDEntry dataclass lives only in app/data/sjd_library.py |
+| _SJD_DUTY_SUGGESTIONS constant in wd.py keeps text parity with frontend data.jsx (Phase 22 Plan 03) | Single source of truth pattern: backend's _SJD_DUTY_SUGGESTIONS mirrors frontend's DUTY_SUGGESTIONS; avoids drift |
+| sjd-start endpoint returns updated WorkDescription (not dict) (Phase 22 Plan 03) | One round-trip for SPA to mirror state; matches `patch_wd` return pattern |
+| sjd_number validated by lookup against static SJD_LIBRARY (Phase 22 Plan 03 / T-22-01) | No eval, no path construction, no SQL string interpolation; 404 on miss |
 
 ### Active Blockers
 
@@ -119,6 +124,7 @@ None. Phase 21 gap closed by Plan 21-09 (2026-06-11). Sub_group propagation fixe
 | Phase 22 P01 | 180 | 1 tasks | 1 files |
 | Phase 22 P02 | 7 | 2 tasks | 3 files |
 | Phase 22 P02 | 7min | 2 tasks | 3 files |
+| Phase 22 P03 | 5 | 2 tasks | 4 files |
 
 ### v2.0 (complete)
 
