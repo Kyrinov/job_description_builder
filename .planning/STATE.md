@@ -4,18 +4,18 @@ milestone: v3.0
 milestone_name: Classification Depth & Document Quality
 current_phase: 21
 status: executing
-last_updated: "2026-06-11T09:25:00.000Z"
+last_updated: "2026-06-11T13:52:56.715Z"
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 6
-  completed_plans: 0
-  percent: 0
+  total_plans: 8
+  completed_plans: 6
+  percent: 75
 ---
 
 # Project State
 
-**Status:** Executing Phase 21 (Plan 06 continuation fixes complete; ready for re-verification)
+**Status:** Executing Phase 21
 **Current phase:** 21
 **Last updated:** 2026-06-11
 **Next action:** User to re-verify in browser; on approval, proceed to Phase 22 (SJD Library)
@@ -42,6 +42,7 @@ automated tests didn't catch:
 1. **Sub-group picker did not render** — fixed by making `OgConfirmList`
    self-contained: when the user picks NU/SW/ED in the draft, a local
    `useEffect` re-calls `/api/og/classify` with `confirmed_og` in the body.
+
 2. **Sector/cluster questions fired on every pass** — fixed by adding
    `isStepVisible(step, answers)` predicate that gates the 4 cluster
    questions on the corresponding `qb_sector_gate` answer.
