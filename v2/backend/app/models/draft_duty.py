@@ -19,8 +19,9 @@ class DraftDuty(BaseModel):
     id: str
     text: str
     plain_trigger: Optional[str] = None
-    source: Literal["noc", "advisor"]
+    source: Literal["noc", "advisor", "sjd"]
     source_index: Optional[int] = None  # Index into DUTY_SUGGESTIONS (suggested only)
+    sjd_number: Optional[str] = None  # Phase 22: SJD number when source="sjd", e.g. "DND-PA-57047"
     refined_at: Optional[datetime] = None  # When verb-mapping was applied (advisor only)
     # ProvenanceTag fields — Phase 18 (JD-02, JD-03)
     provenance_noc_code: Optional[str] = None

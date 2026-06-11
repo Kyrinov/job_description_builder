@@ -52,6 +52,7 @@ class WorkDescription(BaseModel):
     confirmed_og: Optional[Union[str, dict]] = None
     confirmed_sub_group: Optional[str] = None  # Phase 21: NU/SW/ED sub-group (e.g. "SCW", "CHA", "EDS")
     og_level: Optional[int] = Field(default=None, ge=1)
+    sjd_source: Optional[dict] = None  # Phase 22: {sjd_number, title, og_code, og_level} — set by sjd-start
     reports_to_military: Optional[bool] = None
     jes_scores: list[dict] = Field(default_factory=list)
     jes_total_points: Optional[int] = None
