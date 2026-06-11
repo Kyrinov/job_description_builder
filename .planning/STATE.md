@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Classification Depth & Document Quality
 current_phase: 21
-status: executing
-last_updated: "2026-06-11T13:52:56.715Z"
+status: verifying
+last_updated: "2026-06-11T13:55:00.000Z"
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 8
-  completed_plans: 6
-  percent: 75
+  completed_plans: 8
+  percent: 100
 ---
 
 # Project State
 
-**Status:** Executing Phase 21
+**Status:** Phase 21 execution complete; verification pending
 **Current phase:** 21
 **Last updated:** 2026-06-11
-**Next action:** User to re-verify in browser; on approval, proceed to Phase 22 (SJD Library)
+**Next action:** Phase 21 verification (code review, regression gate, phase goal check)
 
 ---
 
@@ -26,7 +26,7 @@ progress:
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 21 | OG Expansion + Preview Fix | All 6 plans complete; continuation bugfixes (2) applied |
+| 21 | OG Expansion + Preview Fix | All 8 plans complete (incl. amendment plans 07-08) |
 | 22 | SJD Library | Not started |
 | 23 | Writing Guide Integration | Not started |
 | 24 | Risk Audit | Not started |
@@ -101,7 +101,7 @@ See: `.planning/PROJECT.md`
 - v1.0 closed 2026-06-03: Phases 1–9 (incl. 8.1), 188 tests, 21/21 requirements
 - v2.0 closed 2026-06-10: Phases 10–20, 299 tests (80 backend + 31 frontend + 188 v1), 52/52 requirements
 - v3.0 started 2026-06-10: Phases 21–25, 24 requirements, roadmap defined
-- Phase 21: 5 plans complete (21-01 through 21-05), 21-06 initial + continuation complete (4 commits), 144 tests (103 backend + 41 frontend)
+- Phase 21: 8 plans complete (21-01 through 21-08). 174 tests (115 backend + 59 frontend). OG expansion live for all 16 OG groups; Socratic mini-interview suggests JES level for NU/PS/NT/PO/SW/ED.
 
 ---
 
@@ -131,4 +131,4 @@ See: `.planning/PROJECT.md`
 |--------|-------|
 | Phases total | 5 (21–25) |
 | Requirements total | 24 |
-| Tests passing (after Phase 21) | 309 (103 backend + 41 frontend + 165 v2 backend; 6 v2 frontend tests removed during refactor, replaced by 10 new) |
+| Tests passing (after Phase 21) | 174 (115 backend + 59 frontend); 12 new tests for level-suggest endpoints; 7 new tests for OgLevelQuestions + preselect |

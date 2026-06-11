@@ -49,7 +49,7 @@ Full phase details archived in ROADMAP.md history above.
 
 v3.0 expands the classification engine to all GC occupational groups with JES standards, replaces the export template with the Accessible JD format, wires the Job Description Writing Guide into duty authoring, adds a CBA + jurisprudence compliance audit, and seeds a DND SJD library as a conversation starting point.
 
-- [ ] **Phase 21: OG Expansion + Preview Fix** — Extend all six constants atomically for 16 OG groups (12 new); consolidate NON_EC_STANDARD_NAMES; full JES scoring for point-rating groups; level-lookup for level-description groups; sub-group disambiguation for NU/SW/ED; fix .doc-scroll CSS. (OGX-01, OGX-02, OGX-03, OGX-04, OGX-05, OGX-06, OGX-07, UI-01)
+- [x] **Phase 21: OG Expansion + Preview Fix** — Extend all six constants atomically for 16 OG groups (12 new); consolidate NON_EC_STANDARD_NAMES; full JES scoring for point-rating groups; level-lookup for level-description groups; sub-group disambiguation for NU/SW/ED; fix .doc-scroll CSS. (OGX-01, OGX-02, OGX-03, OGX-04, OGX-05, OGX-06, OGX-07, UI-01)
 - [ ] **Phase 22: SJD Library** — Parse SJD_LIBRARY constant from data/SJD Examples.txt; expose GET /api/sjd endpoints; non-blocking "Browse SJDs" flow at end of Role phase; SJD pre-fill with provenance and OG-change warning. (SJD-01, SJD-02, SJD-03)
 - [ ] **Phase 23: Writing Guide Integration** — Structural duty validation (active-voice, word-count, no-passive, no-duplicate); non-blocking inline .duty-hint warnings via POST /api/wd/{id}/validate-duties; Client Service Results question inserted in QUESTION_BANK; per-step OG-specific duty tips from OG_DEFINITIONS. (WG-01, WG-02, WG-03, WG-04)
 - [ ] **Phase 24: Risk Audit** — "Run compliance audit" button in Review phase; deterministic CBA clause matching (exclusion/scope/application articles) + Federal Court ERR principle rules; per-finding Accept/Manual Edit/Skip decisions written to audit_log; Manual Edit links to existing amendment panel. (AUDIT-01, AUDIT-02, AUDIT-03, AUDIT-04, AUDIT-05)
@@ -76,15 +76,17 @@ v3.0 expands the classification engine to all GC occupational groups with JES st
 4. The document preview white page grows seamlessly with document content at any length; no content overflows into the grey background; existing split-pane layout is unaffected
 5. A completeness test asserts every key in OG_LEVELS is present in OG_DEFINITIONS, QUAL_STANDARDS, NON_EC_TOTALS, NON_EC_STANDARD_NAMES, and JES_FACTORS_BY_GROUP; frontend QUAL_DEFAULTS and backend QUAL_STANDARDS match for all 16 groups
 
-**Plans:** 6 plans
+**Plans:** 8 plans
 
 Plans:
-- [ ] 21-01-PLAN.md — Wave 0 test scaffolding (all Phase 21 test stubs, RED baseline)
-- [ ] 21-02-PLAN.md — CSS preview fix (UI-01) + NON_EC_STANDARD_NAMES consolidation (OGX-02)
-- [ ] 21-03-PLAN.md — Atomic constant extension for all 16 OG groups (OGX-01, OGX-03)
-- [ ] 21-04-PLAN.md — JES service routing: point-rating and level-description paths (OGX-05, OGX-06)
-- [ ] 21-05-PLAN.md — QUESTION_BANK sector-gate + cluster questions (OGX-04)
-- [ ] 21-06-PLAN.md — Sub-group disambiguation: API, model, frontend picker, .asec-alert CSS (OGX-07)
+- [x] 21-01-PLAN.md — Wave 0 test scaffolding (all Phase 21 test stubs, RED baseline)
+- [x] 21-02-PLAN.md — CSS preview fix (UI-01) + NON_EC_STANDARD_NAMES consolidation (OGX-02)
+- [x] 21-03-PLAN.md — Atomic constant extension for all 16 OG groups (OGX-01, OGX-03)
+- [x] 21-04-PLAN.md — JES service routing: point-rating and level-description paths (OGX-05, OGX-06)
+- [x] 21-05-PLAN.md — QUESTION_BANK sector-gate + cluster questions (OGX-04)
+- [x] 21-06-PLAN.md — Sub-group disambiguation: API, model, frontend picker, .asec-alert CSS (OGX-07)
+- [x] 21-07-PLAN.md — Question bank restructure: gate legacy work-type questions + add qb_programme_admin_cluster (OGX-04)
+- [x] 21-08-PLAN.md — JES level determination: Socratic mini-interview + suggested level (JES-LEV-01)
 
 ---
 
@@ -190,7 +192,7 @@ Plans:
 | 18. JD Composition & Live Preview | v2.0 | 4/4 | Complete | — |
 | 19. Qualifications & Amendments | v2.0 | 4/4 | Complete | 2026-06-09 |
 | 20. Export | v2.0 | 3/3 | Complete | 2026-06-10 |
-| **21. OG Expansion + Preview Fix** | **v3.0** | **0/?** | **Not started** | — |
+| **21. OG Expansion + Preview Fix** | **v3.0** | **8/8** | **Complete** | 2026-06-11 |
 | **22. SJD Library** | **v3.0** | **0/?** | **Not started** | — |
 | **23. Writing Guide Integration** | **v3.0** | **0/?** | **Not started** | — |
 | **24. Risk Audit** | **v3.0** | **0/?** | **Not started** | — |
