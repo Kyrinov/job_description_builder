@@ -397,9 +397,16 @@ const I = {
       'qb_legal_cluster',
       'qb_technical_cluster',
       'qb_education_cluster',
+      // Phase 21 (Plan 07): 5th cluster question for the programme_admin
+      // sector (PO, WP). Visibility-filtered below so signals from invisible
+      // steps (e.g. legacy work-type answers from a sector switch) do not
+      // pollute the tally.
+      'qb_programme_admin_cluster',
     ];
     const tally = {};
     for (const stepId of qbStepIds) {
+      const step = STEPS.find(s => s.id === stepId);
+      if (step && !isStepVisible(step, answers)) continue;
       const ans = answers[stepId];
       if (!ans || !ans.signals) continue;
       for (const ogCode of (ans.signals.og_candidates || [])) {
@@ -425,6 +432,11 @@ const I = {
     if (!step || !step.id) return true;
     const sector = answers && answers.qb_sector_gate && answers.qb_sector_gate.id;
     switch (step.id) {
+      case 'qb_work_output_type':
+      case 'qb_work_audience':
+      case 'qb_knowledge_specialization':
+      case 'qb_policy_interpretation':
+        return sector === 'other_sector';
       case 'qb_health_social_cluster':
         return sector === 'pa_sh_sector';
       case 'qb_legal_cluster':
@@ -433,6 +445,8 @@ const I = {
         return sector === 'technical_scientific_sector';
       case 'qb_education_cluster':
         return sector === 'education_sector';
+      case 'qb_programme_admin_cluster':
+        return sector === 'programme_admin_sector';
       default:
         return true;
     }
@@ -566,6 +580,15 @@ const I = {
         { id: 'nutrition_dietetics', title: 'Providing nutrition counselling, diet therapy, or food service management guidance', signals: { og_candidates: ['NT'], jes_factor_hints: ['Knowledge and skills','Human relations'], teer_affinity: [2,3] } },
       ] },
       apply: (r, a) => ({ qb_education_cluster: a.id }),
+      transcript: a => a.title },
+    { id: 'qb_programme_admin_cluster', phase: 2, icon: I.org,
+      q: 'What is the primary focus of the programme or administrative operations work?',
+      helper: 'Consider whether the role is primarily operational communications and police support, or broader programme delivery and social services administration.',
+      input: { type: 'choices', options: [
+        { id: 'police_telecom', title: 'Operating telecommunications systems or monitoring intercepts to support police operations', signals: { og_candidates: ['PO'], jes_factor_hints: ['Organizational impact','Effort'], teer_affinity: [2,3] } },
+        { id: 'welfare_program_delivery', title: 'Delivering income support, benefits eligibility decisions, or welfare case management', signals: { og_candidates: ['WP'], jes_factor_hints: ['Organizational impact','Effort'], teer_affinity: [2,3] } },
+      ] },
+      apply: (r, a) => ({ qb_programme_admin_cluster: a.id }),
       transcript: a => a.title },
 
     { id: 'noc_confirm', phase: 2, icon: I.compass,
