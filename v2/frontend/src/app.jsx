@@ -2,7 +2,7 @@
    JD Builder — main application
    ============================================================ */
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { STEPS, PHASES, I, OG_LEVELS, computeClassification, accumulateSignals, getVisibleSteps, isStepVisible } from './data.jsx';
+import { STEPS, PHASES, I, OG_LEVELS, computeClassification, accumulateSignals, getVisibleSteps, isStepVisible, fetchSjds } from './data.jsx';
 import { Icon, initialAnswer, answerValid } from './components.jsx';
 import { Header, Exchange, ActiveQuestion, ReviewState } from './conversation.jsx';
 import { DocumentPane } from './document.jsx';
@@ -93,6 +93,11 @@ function App() {
   const [orphanFlags, setOrphanFlags] = useState([]);
   const [amendmentNotes, setAmendmentNotes] = useState({});    // { [sectionKey]: string } — saved notes from API
   const [amendmentPanels, setAmendmentPanels] = useState({});  // { [sectionKey]: { open, text, saved } } — UI panel state
+  // Phase 22 SJD-02: non-blocking "Browse SJDs" action surfaced after Role phase
+  const [sjdPanelOpen, setSjdPanelOpen] = useState(false);
+  const [sjdEntries, setSjdEntries] = useState([]);
+  const [sjdOgFilter, setSjdOgFilter] = useState('');
+  const [sjdLoading, setSjdLoading] = useState(false);
   const threadRef = useRef(null);
   const docRef = useRef(null);
 
@@ -199,6 +204,21 @@ function App() {
     const newAnswers = { ...answers, [step.id]: draft };
     setAnswers(newAnswers);
     flash(FLASH[step.id]);
+
+    // SJD-03: warn if confirmed_og changes after an SJD pre-fill. Advisory only —
+    // non-blocking per T-22-06; the user can keep working with the new OG. We
+    // intentionally do NOT fire when only og_level changes (sjdOgCode comparison
+    // is on og_code, so a same-OG level change leaves it inert).
+    if (step.id === 'og_confirm' && record.sjd_source) {
+      const newOgCode = typeof patch.confirmed_og === 'object'
+        ? patch.confirmed_og?.og_code
+        : patch.confirmed_og;
+      const sjdOgCode = record.sjd_source?.og_code;
+      if (newOgCode && sjdOgCode && newOgCode !== sjdOgCode) {
+        setToast('Departing from the SJD classification turns this into a new evaluation — the SJD decision no longer applies');
+        setTimeout(() => setToast(null), 7000);
+      }
+    }
 
     // WD persistence — first commit creates row; subsequent commits patch.
     // The backend WorkDescription model has classification-level fields
@@ -589,6 +609,68 @@ function App() {
       });
   }
 
+  // Phase 22 SJD-02: non-blocking "Browse SJDs" handler. Opens the SJD panel
+  // and fetches the list (optionally pre-filtered by current OG group). The
+  // action is gated to post-Role phase (step.phase >= 1) at the render site.
+  function handleBrowseSjds() {
+    if (!wd_id) {
+      setToast('Complete at least the first Role step before browsing SJDs.');
+      setTimeout(() => setToast(null), 3500);
+      return;
+    }
+    setSjdPanelOpen(true);
+    setSjdLoading(true);
+    setSjdEntries([]);
+    fetchSjds(sjdOgFilter || null)
+      .then(entries => { setSjdEntries(entries); setSjdLoading(false); })
+      .catch(() => {
+        setToast('Could not load SJDs — try again.');
+        setTimeout(() => setToast(null), 3500);
+        setSjdLoading(false);
+      });
+  }
+
+  // Filter change handler — refetch with the chosen OG group. og_code is
+  // URL-encoded inside fetchSjds (T-22-02 mitigation).
+  function handleSjdFilterChange(ogCode) {
+    setSjdOgFilter(ogCode);
+    setSjdLoading(true);
+    fetchSjds(ogCode || null)
+      .then(entries => { setSjdEntries(entries); setSjdLoading(false); })
+      .catch(() => { setSjdLoading(false); });
+  }
+
+  // SJD selection handler — POST /api/wd/{id}/sjd-start mirrors the updated
+  // WorkDescription (sjd_source, confirmed_og, og_level, duties) into SPA
+  // record. Toast is advisory only (4s timeout). On error, an SJD-specific
+  // toast tells the user the apply step failed and the panel stays open
+  // so they can retry.
+  function handleSjdSelect(entry) {
+    if (!wd_id) return;
+    fetch(`/api/wd/${wd_id}/sjd-start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sjd_number: entry.sjd_number }),
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r))
+      .then(updatedWd => {
+        setRecord(prev => ({
+          ...prev,
+          sjd_source: updatedWd.sjd_source,
+          confirmed_og: updatedWd.confirmed_og,
+          og_level: updatedWd.og_level,
+          duties: updatedWd.duties,
+        }));
+        setSjdPanelOpen(false);
+        setToast('SJD applied — OG, level, and seed duties pre-filled.');
+        setTimeout(() => setToast(null), 4000);
+      })
+      .catch(() => {
+        setToast('Could not apply SJD — try again.');
+        setTimeout(() => setToast(null), 3500);
+      });
+  }
+
   const phaseIdx = reviewing ? PHASES.length - 1 : step.phase;
   // Phase 21 OGX-04 (bugfix round 3): answeredSteps is filtered to only
   // include steps that were actually answered. Without this filter, the
@@ -696,6 +778,20 @@ function App() {
                   </button>
                 </div>
               )}
+              {/* Phase 22 SJD-02: non-blocking "Browse SJDs" action. Surfaced
+                  after Role phase (step.phase >= 1) and only when a WD row
+                  exists, so we have a target for /api/wd/{id}/sjd-start. */}
+              {!reviewing && step.phase >= 1 && wd_id && (
+                <div className="sjd-browse-action">
+                  <button
+                    className="btn-secondary"
+                    onClick={handleBrowseSjds}
+                    title="Browse DND Standard Job Descriptions"
+                  >
+                    Browse SJDs
+                  </button>
+                </div>
+              )}
             </div>
           )}
       </div>
@@ -724,6 +820,56 @@ function App() {
         <Icon path={I.check} size={17} />
         <span>{toast || ''}</span>
       </div>
+      {/* ---------- SJD browser panel (Phase 22 SJD-02) ---------- */}
+      {sjdPanelOpen && (
+        <div className="sjd-panel-overlay" onClick={() => setSjdPanelOpen(false)}>
+          <div className="sjd-panel" onClick={e => e.stopPropagation()}>
+            <div className="sjd-panel__header">
+              <h2>Standard Job Descriptions</h2>
+              <button onClick={() => setSjdPanelOpen(false)} aria-label="Close SJD browser">✕</button>
+            </div>
+            <div className="sjd-panel__filter">
+              <label htmlFor="sjd-og-filter">Filter by OG group:</label>
+              <select
+                id="sjd-og-filter"
+                value={sjdOgFilter}
+                onChange={e => handleSjdFilterChange(e.target.value)}
+              >
+                <option value="">All groups</option>
+                <option value="AS">AS</option>
+                <option value="EC">EC</option>
+                <option value="FI">FI</option>
+                <option value="IT">IT</option>
+                <option value="EN">EN</option>
+                <option value="PE">PE</option>
+                <option value="WP">WP</option>
+              </select>
+            </div>
+            <div className="sjd-panel__list">
+              {sjdLoading && <p>Loading…</p>}
+              {!sjdLoading && sjdEntries.length === 0 && <p>No SJDs found for this group.</p>}
+              {!sjdLoading && sjdEntries.map(entry => (
+                <div key={entry.sjd_number} className="sjd-entry">
+                  <div className="sjd-entry__title">{entry.title}</div>
+                  <div className="sjd-entry__meta">
+                    {entry.group_level_str} · {entry.noc_code} · {entry.salary_range}
+                  </div>
+                  {/* T-22-05: organizational_context truncated at 200 chars (UX choice only) */}
+                  <div className="sjd-entry__context">
+                    {entry.organizational_context.slice(0, 200)}{entry.organizational_context.length > 200 ? '…' : ''}
+                  </div>
+                  <button
+                    className="btn-primary btn-sm"
+                    onClick={() => handleSjdSelect(entry)}
+                  >
+                    Use this SJD
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

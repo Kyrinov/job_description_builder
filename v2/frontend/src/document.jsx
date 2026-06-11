@@ -310,6 +310,11 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
           <ul className="doc-duties">
             {r.duties.map(d => (
               <li key={d.id} className={`doc-duty${d.advisor ? ' is-advisor' : ''}`}>
+                {/* Phase 22 SJD-02: SJD provenance badge — distinct visual marker for
+                    duties seeded by sjd-start (source="sjd"). Shows before the duty
+                    text so users see provenance at a glance, parallel to how NOC
+                    duties are already marked by the section's `src` header. */}
+                {d.source === 'sjd' && <span className="tag tag--sjd">SJD</span>}
                 {d.text || d.polished}
                 {d.orphan && reviewing && <OrphanBadge rationale={d.orphan_rationale} />}
               </li>
@@ -456,6 +461,9 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
   if (r.drf) provTags.push('DND DRF');
   if (r.qualsVisited) provTags.push('TBS Qualification Standard');
   if (r.duties && r.duties.some(d => d.advisor)) provTags.push('Advisor-added');
+  // Phase 22 SJD-02: surface the SJD source in the provenance footer when
+  // seeded duties are present. Parallel to the NOC/DRF/Advisor-added tags.
+  if (r.sjd_source) provTags.push('DND SJD Library');
 
   return (
     <div className="doc">
