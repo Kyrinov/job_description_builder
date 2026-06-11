@@ -391,6 +391,7 @@ function OgConfirmList({ value, onChange, cfg }) {
   // Selection is held in local state regardless so the UI is responsive even
   // when the network call is delayed.
   const handleSubGroupSelect = (sg) => {
+    onChange({ ...value, sub_group: sg });
     setSelectedSubGroup(sg);
     if (cfg.wd_id) {
       fetch(`/api/wd/${cfg.wd_id}/confirm-subgroup`, {
