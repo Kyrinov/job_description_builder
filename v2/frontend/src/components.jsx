@@ -315,21 +315,57 @@ function NocConfirmList({ value, onChange, cfg }) {
 // cfg.type === 'og_confirm'
 // cfg.candidates: array from POST /api/og/classify response
 // cfg.asec_alert: { disambiguation_text, citation } or null — from API response via ogAlert state in app.jsx
-// cfg.subgroup_alert: { subgroups, descriptions, disambiguation_text, citation } or null
-//                    — OGX-07, fires when confirmed_og is NU/SW/ED; from API response.
-// cfg.loading: boolean — true while /api/og/classify is in flight
+// cfg.work_description: string — passed into the re-fetch payload so the
+//                      API has enough context to build the response.
+// cfg.confirmed_noc_code: string — same, for the re-fetch payload.
 // cfg.wd_id: optional string — when set, sub-group selection persists via
 //            POST /api/wd/{id}/confirm-subgroup (T-21-01 validated server-side).
+// cfg.loading: boolean — true while /api/og/classify is in flight
 // value: selected candidate object or null (stores full candidate, not just og_code)
 // onChange(candidate): stores full OGCandidate object — og_level step reads .og_code from it
 function OgConfirmList({ value, onChange, cfg }) {
   const candidates = cfg.candidates || [];
   const alert = cfg.asec_alert || null;
-  const subGroupAlert = cfg.subgroup_alert || null;
   // OGX-07 — only NU, SW, ED require sub-group disambiguation.
   const SUBGROUP_OGS = ['NU', 'SW', 'ED'];
   const selectedCode = value && value.og_code;
   const subGroupNeeded = selectedCode && SUBGROUP_OGS.indexOf(selectedCode) !== -1;
+  // Phase 21 OGX-07 (continuation fix): the sub-group alert is fetched
+  // locally inside this component when the user picks a sub-group-bearing
+  // OG. The previous implementation relied on app.jsx to inject the alert,
+  // but that only worked AFTER commit (when record.confirmed_og is set) —
+  // too late, since the picker must appear during the og_confirm step.
+  // The new pattern: re-call /api/og/classify with confirmed_og in the
+  // body the moment the user picks NU/SW/ED in the draft.
+  const [subGroupAlert, setSubGroupAlert] = useState(null);
+  useEffect(() => {
+    if (!subGroupNeeded) {
+      // Reset when the user picks a non-sub-group OG so a stale alert from
+      // a prior pick doesn't bleed into the new pick.
+      setSubGroupAlert(null);
+      return;
+    }
+    const ac = new AbortController();
+    fetch('/api/og/classify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        confirmed_noc_code: cfg.confirmed_noc_code || '',
+        work_description: cfg.work_description || '',
+        signal_tally: {},
+        confirmed_og: selectedCode,
+      }),
+      signal: ac.signal,
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(data => setSubGroupAlert(data.subgroup_alert || null))
+      .catch((err) => {
+        if (err && err.name === 'AbortError') return;
+        // Sub-group picker is non-blocking — silent on failure
+        setSubGroupAlert(null);
+      });
+    return () => ac.abort();
+  }, [selectedCode, subGroupNeeded, cfg.confirmed_noc_code, cfg.work_description]);
   const [selectedSubGroup, setSelectedSubGroup] = useState(null);
   // Reset sub-group selection when the user changes the OG pick
   useEffect(() => {
