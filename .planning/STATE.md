@@ -2,22 +2,23 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Classification Depth & Document Quality
-current_phase: 21 (ready to execute)
-status: planned
-last_updated: "2026-06-10T20:00:00.000Z"
+current_phase: 21
+status: executing
+last_updated: "2026-06-11T09:25:00.000Z"
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 6
   completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
-**Status:** Phase 21 planned — ready to execute (6 plans, 4 waves)
-**Current phase:** 21 (ready to execute)
-**Last updated:** 2026-06-10
-**Next action:** `/gsd-execute-phase 21`
+**Status:** Executing Phase 21 (Plan 06 continuation fixes complete; ready for re-verification)
+**Current phase:** 21
+**Last updated:** 2026-06-11
+**Next action:** User to re-verify in browser; on approval, proceed to Phase 22 (SJD Library)
 
 ---
 
@@ -25,11 +26,28 @@ progress:
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 21 | OG Expansion + Preview Fix | Ready to execute (6 plans) |
+| 21 | OG Expansion + Preview Fix | All 6 plans complete; continuation bugfixes (2) applied |
 | 22 | SJD Library | Not started |
 | 23 | Writing Guide Integration | Not started |
 | 24 | Risk Audit | Not started |
 | 25 | Accessible Template | Not started |
+
+---
+
+## Plan 06 Continuation Notes (2026-06-11)
+
+After the user ran manual UI verification, two bugs were surfaced that the
+automated tests didn't catch:
+
+1. **Sub-group picker did not render** — fixed by making `OgConfirmList`
+   self-contained: when the user picks NU/SW/ED in the draft, a local
+   `useEffect` re-calls `/api/og/classify` with `confirmed_og` in the body.
+2. **Sector/cluster questions fired on every pass** — fixed by adding
+   `isStepVisible(step, answers)` predicate that gates the 4 cluster
+   questions on the corresponding `qb_sector_gate` answer.
+
+10 new frontend tests cover the regressions. 41/41 frontend + 103/103
+backend tests green. Build clean (216.05 kB JS / 24.86 kB CSS).
 
 ---
 
@@ -45,6 +63,7 @@ See: `.planning/PROJECT.md`
 - Every content element in the exported DOCX/PDF must trace to an authoritative source citation
 - Evidence-based classification (NOC pipeline + OG ranker + JES scoring) — deterministic in the main flow
 - Socratic constraint: manager never selects OG directly; OG is derived from accumulated answer signals
+- Socratic intent (extended in Phase 21 Plan 06 fix): manager is only asked questions relevant to their selected sector; cluster questions are gated on the sector-gate answer
 
 ---
 
@@ -69,16 +88,19 @@ See: `.planning/PROJECT.md`
 | QUAL_DEFAULTS/QUAL_STANDARDS parity test written before new group text is authored (OGX-03) | Failing test first prevents the AS content-drift pattern from recurring for 12 new groups |
 | All v3.0 audit and validation rules are deterministic | No LLM in audit, duty validation, or CBA matching — keeps output reproducible and offline |
 | Accessible Template replaces TBS WD template entirely (not an optional format) | Single export path simplifies maintenance; Accessible format is the current GoC standard |
+| Sub-group picker fetches its own data inside `OgConfirmList` (Phase 21 Plan 06 fix) | Picker must react to the DRAFT (value.og_code), not the committed `record.confirmed_og`; component-level fetch avoids timing race |
+| Cluster questions gated on `qb_sector_gate` answer (Phase 21 Plan 06 fix) | Socratic intent: manager is only asked questions relevant to their selected sector |
 
 ### Active Blockers
 
-- (none)
+- (none) — Plan 06 continuation fixes complete; ready for user re-verification
 
 ### Roadmap Evolution
 
 - v1.0 closed 2026-06-03: Phases 1–9 (incl. 8.1), 188 tests, 21/21 requirements
 - v2.0 closed 2026-06-10: Phases 10–20, 299 tests (80 backend + 31 frontend + 188 v1), 52/52 requirements
 - v3.0 started 2026-06-10: Phases 21–25, 24 requirements, roadmap defined
+- Phase 21: 5 plans complete (21-01 through 21-05), 21-06 initial + continuation complete (4 commits), 144 tests (103 backend + 41 frontend)
 
 ---
 
@@ -108,4 +130,4 @@ See: `.planning/PROJECT.md`
 |--------|-------|
 | Phases total | 5 (21–25) |
 | Requirements total | 24 |
-| Tests passing (inherited) | 299 |
+| Tests passing (after Phase 21) | 309 (103 backend + 41 frontend + 165 v2 backend; 6 v2 frontend tests removed during refactor, replaced by 10 new) |
