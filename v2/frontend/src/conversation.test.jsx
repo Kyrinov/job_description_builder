@@ -10,6 +10,32 @@ import { STEPS, PHASES, accumulateSignals, isStepVisible, getVisibleSteps } from
 import { StepInput, answerValid } from './components.jsx';
 import App from './app.jsx';
 
+// Helpers for driving the App through the conversation flow in integration
+// tests. The App is one big state machine, so tests that walk through more
+// than a couple of steps need these to stay readable.
+function clickPrimary(container) {
+  const btn = container.querySelector('.btn.btn--primary');
+  if (!btn) throw new Error('primary button not found');
+  if (btn.disabled) throw new Error('primary button is disabled — fill input first');
+  fireEvent.click(btn);
+}
+function pickOptionByText(container, text) {
+  const choices = Array.from(container.querySelectorAll('.choice'));
+  const match = choices.find(c => c.textContent && c.textContent.includes(text));
+  if (!match) {
+    throw new Error(
+      `choice containing ${JSON.stringify(text)} not found; ` +
+      `available: ${choices.map(c => c.textContent).join(' | ')}`
+    );
+  }
+  fireEvent.click(match);
+}
+function fillInput(container, value) {
+  const input = container.querySelector('input.tf, textarea');
+  if (!input) throw new Error('input not found');
+  fireEvent.change(input, { target: { value } });
+}
+
 // jsdom does not implement Element.prototype.scrollTo; App calls it inside a
 // useEffect on the thread ref. Polyfill with a no-op so render paths don't throw.
 beforeAll(() => {
@@ -339,5 +365,154 @@ describe('OGX-04: sector-gate + cluster questions gated by sector answer', () =>
     expect(visibleIds).not.toContain('qb_legal_cluster');
     expect(visibleIds).not.toContain('qb_technical_cluster');
     expect(visibleIds).not.toContain('qb_education_cluster');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 21 — OGX-04 (bugfix round 3): regression test for the screen-blank bug
+// the user surfaced after Plan 06 round-2 verification. When the user picks
+// "Direct patient care" (nursing_hospital) in the qb_health_social_cluster
+// step, commit() advances stepIndex from 11 → 15 (skipping 3 invisible cluster
+// steps at indices 12, 13, 14). The previous fix rendered the answered
+// exchanges from STEPS.slice(0, stepIndex) — which includes those 3 invisible
+// steps. Their transcripts are `a => a.title`, which throws TypeError when
+// the answer is undefined. React's error boundary then unmounts the tree
+// and the screen goes blank.
+//
+// Fix: filter answeredSteps to only include steps that were actually
+// answered. The 3 skipped cluster questions are excluded because the user
+// never saw them. This test walks through the full flow up to and past
+// the cluster step and verifies the next step (noc_confirm) renders.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('OGX-04 (bugfix round 3): screen does not blank after cluster step commit', () => {
+  beforeEach(() => {
+    // The App fires several fetch calls during the flow (NOC, OG, WD
+    // persistence). Mock all of them to keep the test hermetic.
+    globalThis.fetch = vi.fn().mockImplementation(async (url, init) => {
+      if (typeof url === 'string' && url.includes('/api/og/classify')) {
+        return {
+          ok: true,
+          json: async () => ({ candidates: [], asec_alert: null, subgroup_alert: null }),
+        };
+      }
+      if (typeof url === 'string' && url.includes('/api/noc/map')) {
+        return { ok: true, json: async () => ({ candidates: [] }) };
+      }
+      if (typeof url === 'string' && url.match(/\/api\/wd($|\/)/)) {
+        if (init && init.method === 'POST') {
+          return { ok: true, json: async () => ({ id: 'test-wd-id' }) };
+        }
+        return { ok: true, json: async () => ({}) };
+      }
+      return { ok: true, json: async () => ({}) };
+    });
+  });
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it('advances to noc_confirm without blanking the screen after picking "Direct patient care"', () => {
+    // Walk through the conversation flow:
+    //   title → branch → reports → reports_to_military → supervises
+    //     → summary → qb_work_output_type → qb_work_audience
+    //     → qb_knowledge_specialization → qb_policy_interpretation
+    //     → qb_sector_gate (pick "Health and social services")
+    //     → qb_health_social_cluster (pick "Direct patient care")
+    //   After commit on the cluster step, the user should land on
+    //   noc_confirm (not a blank screen).
+    const { container } = render(<App />);
+
+    // Phase 0 — role
+    fillInput(container, 'Registered Nurse');
+    clickPrimary(container);
+    fillInput(container, 'Health Services');
+    clickPrimary(container);
+    fillInput(container, 'Director of Nursing');
+    clickPrimary(container);
+    pickOptionByText(container, 'No — reports to a civilian supervisor');
+    clickPrimary(container);
+    pickOptionByText(container, 'No — individual contributor');
+    clickPrimary(container);
+
+    // Phase 1 — work type
+    fillInput(container, 'Provides direct patient care in a hospital ward.');
+    clickPrimary(container);
+    pickOptionByText(container, 'Systems, applications, or digital services');
+    clickPrimary(container);
+    pickOptionByText(container, 'Operational teams and staff');
+    clickPrimary(container);
+    pickOptionByText(container, 'General organizational');
+    clickPrimary(container);
+    pickOptionByText(container, 'Administers or implements established procedures');
+    clickPrimary(container);
+
+    // Phase 2 — sector gate
+    pickOptionByText(container, 'Health and social services');
+    clickPrimary(container);
+
+    // We're now on the cluster step (qb_health_social_cluster) — verify
+    expect(container.querySelector('[data-step-id="qb_health_social_cluster"]')).not.toBeNull();
+
+    // Pick the cluster option that triggered the bug report
+    pickOptionByText(container, 'Direct patient care');
+    expect(container.querySelector('[data-step-id="qb_health_social_cluster"]')).not.toBeNull();
+
+    // Commit — the user should advance to noc_confirm. Before the fix,
+    // this threw "Cannot read properties of undefined (reading 'title')"
+    // inside the <Exchange> for qb_legal_cluster (which the user never
+    // answered) and blanked the screen.
+    clickPrimary(container);
+
+    // The next active step is noc_confirm (skipping 3 invisible clusters)
+    expect(container.querySelector('[data-step-id="noc_confirm"]')).not.toBeNull();
+
+    // The screen should still show the question text and the active question.
+    // If the tree was unmounted by an error, these would be missing.
+    const activeQuestion = container.querySelector('.ask');
+    expect(activeQuestion).not.toBeNull();
+    expect(activeQuestion.textContent).toContain('NOC');
+  });
+
+  it('also handles the other 3 sectors without blanking (each skips 3 invisible clusters)', () => {
+    // Smoke test for the other 3 sector routes. Each one has a single
+    // visible cluster that the user answers; commit() then skips the 3
+    // invisible clusters and advances to noc_confirm. The previous bug
+    // would blank the screen for all 4 cases.
+    const sectors = [
+      { sector: 'Legal services', cluster: 'Providing legal counsel' },
+      { sector: 'Technical or scientific operations', cluster: 'Examining travellers' },
+      { sector: 'Education and training', cluster: 'Teaching language' },
+    ];
+    for (const { sector, cluster } of sectors) {
+      const { container, unmount } = render(<App />);
+      // Phase 0 + summary + 4 work-type questions (8 steps total to reach sector)
+      fillInput(container, 'Worker');
+      clickPrimary(container);
+      fillInput(container, 'Branch');
+      clickPrimary(container);
+      fillInput(container, 'Director');
+      clickPrimary(container);
+      pickOptionByText(container, 'No — reports to a civilian supervisor');
+      clickPrimary(container);
+      pickOptionByText(container, 'No — individual contributor');
+      clickPrimary(container);
+      fillInput(container, 'Does work.');
+      clickPrimary(container);
+      pickOptionByText(container, 'Systems, applications, or digital services');
+      clickPrimary(container);
+      pickOptionByText(container, 'Operational teams and staff');
+      clickPrimary(container);
+      pickOptionByText(container, 'General organizational');
+      clickPrimary(container);
+      pickOptionByText(container, 'Administers or implements established procedures');
+      clickPrimary(container);
+      // Sector + cluster
+      pickOptionByText(container, sector);
+      clickPrimary(container);
+      pickOptionByText(container, cluster);
+      clickPrimary(container);
+      // Should land on noc_confirm without blanking
+      expect(container.querySelector('[data-step-id="noc_confirm"]')).not.toBeNull();
+      unmount();
+    }
   });
 });

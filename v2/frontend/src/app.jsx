@@ -586,7 +586,21 @@ function App() {
   }
 
   const phaseIdx = reviewing ? PHASES.length - 1 : step.phase;
-  const answeredSteps = STEPS.slice(0, stepIndex);
+  // Phase 21 OGX-04 (bugfix round 3): answeredSteps is filtered to only
+  // include steps that were actually answered. Without this filter, the
+  // slice includes the 3 invisible cluster questions (legal/technical/
+  // education) that the visibility gate in commit() skipped. Their
+  // transcripts are `a => a.title`, which throws TypeError when called
+  // on `undefined` — React unmounts the tree and the screen goes blank.
+  // We preserve the original STEPS index in `originalIndex` so that
+  // jumpToExchange(originalIndex) still navigates to the right step.
+  const answeredSteps = useMemo(() => {
+    const out = [];
+    for (let i = 0; i < stepIndex; i++) {
+      if (answers[STEPS[i].id] !== undefined) out.push({ s: STEPS[i], originalIndex: i });
+    }
+    return out;
+  }, [stepIndex, answers]);
 
   // cfgOverride injects live NOC candidates into the noc_confirm step input,
   // OG candidates + AS/EC disambiguation alert into og_confirm, OG_LEVELS
@@ -643,7 +657,7 @@ function App() {
           ? <ReviewState record={record} cls={cls} onExport={exportAs} onRestart={restart} amendmentNotes={amendmentNotes} />
           : (
             <div className="thread" ref={threadRef}>
-              {answeredSteps.map((s, i) => (
+              {answeredSteps.map(({ s, originalIndex: i }) => (
                 <Exchange
                   key={s.id} step={s} record={record} answer={answers[s.id]}
                   onEdit={() => jumpToExchange(i)}
