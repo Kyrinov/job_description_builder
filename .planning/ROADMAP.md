@@ -104,7 +104,13 @@ Plans:
 3. When the DOCX is exported after an SJD start, the version manifest includes the SJD number and source as a provenance entry
 4. If the advisor changes confirmed_og after an SJD pre-fill, a warning appears: "Departing from the SJD classification turns this into a new evaluation — the SJD decision no longer applies"
 
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 22-01-PLAN.md — Wave 0 test scaffolding (all Phase 22 test stubs, RED baseline)
+- [ ] 22-02-PLAN.md — SJD_LIBRARY constant + GET /api/sjd endpoints + router registration
+- [ ] 22-03-PLAN.md — DraftDuty/WorkDescription model extensions + POST /api/wd/{id}/sjd-start + manifest provenance
+- [ ] 22-04-PLAN.md — Frontend: fetchSjds helpers + Browse SJDs action + SJD browser panel + SJD-03 warning
 
 ---
 
