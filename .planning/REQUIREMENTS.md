@@ -28,7 +28,7 @@
 
 ## SJD Library (SJD) — 3 requirements
 
-- [ ] **SJD-01** — `SJD_LIBRARY` constant (9 entries parsed from `data/SJD Examples.txt`) in `app/data/sjd_library.py`; `GET /api/sjd` with optional `?og_code=` filter; `GET /api/sjd/{number}` for detail; `POST /api/wd/{id}/sjd-start` pre-fills `confirmed_og`, `og_level`, and seed duties from a selected SJD
+- [ ] **SJD-01** — `SJD_LIBRARY` constant (10 entries parsed from `data/SJD Examples.txt`) in `app/data/sjd_library.py`; `GET /api/sjd` with optional `?og_code=` filter; `GET /api/sjd/{number}` for detail; `POST /api/wd/{id}/sjd-start` pre-fills `confirmed_og`, `og_level`, and seed duties from a selected SJD
 - [ ] **SJD-02** — Non-blocking "Browse SJDs" action surfaced at end of Role phase; selecting an SJD writes a `sjd_source` provenance field on the WD and tags seeded duties with `source="sjd"` + `sjd_number` in their `ProvenanceTag`; SJD source appears in the DOCX export manifest
 - [ ] **SJD-03** — Changing `confirmed_og` after an SJD pre-fill surfaces a warning: "Departing from the SJD classification turns this into a new evaluation — the SJD decision no longer applies"
 

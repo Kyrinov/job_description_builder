@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Classification Depth & Document Quality
-current_phase: 21
-status: ready_to_plan
-last_updated: "2026-06-11T16:43:22.133Z"
+current_phase: 22
+status: ready_to_execute
+last_updated: "2026-06-11T00:00:00.000Z"
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 9
+  total_plans: 13
   completed_plans: 9
   percent: 40
 ---
@@ -27,7 +27,7 @@ progress:
 | Phase | Name | Status |
 |-------|------|--------|
 | 21 | OG Expansion + Preview Fix | All 9 plans complete (incl. 21-09 gap-closure); 60/60 frontend tests; JES-LEV-01 + OGX-07 closed |
-| 22 | SJD Library | Not started |
+| 22 | SJD Library | Ready to execute — 4 plans (waves 0-2) |
 | 23 | Writing Guide Integration | Not started |
 | 24 | Risk Audit | Not started |
 | 25 | Accessible Template | Not started |

@@ -8,9 +8,9 @@
 
 ## Summary
 
-Phase 22 adds a browse-and-seed workflow for DND Standard Job Descriptions (SJDs). An advisor can browse the 9 SJDs in `data/SJD Examples.txt`, optionally filter by OG group, and use one as a starting point for a new conversation. Selecting an SJD pre-fills `confirmed_og`, `og_level`, and a set of seed duties on the WorkDescription; those duties carry a new `source="sjd"` provenance path through to the DOCX version manifest. If the advisor subsequently changes `confirmed_og`, a frontend warning is displayed.
+Phase 22 adds a browse-and-seed workflow for DND Standard Job Descriptions (SJDs). An advisor can browse all 10 SJDs in `data/SJD Examples.txt`, optionally filter by OG group, and use one as a starting point for a new conversation. Selecting an SJD pre-fills `confirmed_og`, `og_level`, and a set of seed duties on the WorkDescription; those duties carry a new `source="sjd"` provenance path through to the DOCX version manifest. If the advisor subsequently changes `confirmed_og`, a frontend warning is displayed.
 
-The SJD file is a flat, tab-delimited record stream: each entry opens with `Job Title\t<value>` and ends with a `Title` line. There are exactly 9 entries covering AS, CT-FIN, EC, EN-ENG, IT, PE, and WP groups. There are no duty lists in the raw file — SJD seed duties must be drawn from the existing `DUTY_SUGGESTIONS` map keyed by OG group.
+The SJD file is a flat, tab-delimited record stream: each entry opens with `Job Title\t<value>` and ends with a `Title` line. There are exactly 10 entries covering AS, CT-FIN (FI), EC, EN-ENG (EN), IT, PE, and WP groups. There are no duty lists in the raw file — SJD seed duties must be drawn from the existing `DUTY_SUGGESTIONS` map keyed by OG group.
 
 The v2 backend (`v2/backend/app/`) is the live active codebase. The old `app/` tree is Phase 1–9 legacy and is not used by the React SPA. All new work goes into `v2/backend/app/`.
 
@@ -532,7 +532,7 @@ No missing dependencies.
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Entry count: 9 or 10?**
    - What we know: The file has 10 entries; the requirement says 9.
