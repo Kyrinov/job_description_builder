@@ -603,6 +603,256 @@ QUESTION_BANK: list[dict] = [
 
 
 # ---------------------------------------------------------------------------
+# JES_LEVEL_CRITERIA
+# Socratic level-determination questions for OG groups that use narrative
+# level descriptions (as opposed to point-rated groups computed by Plan 04).
+# Key: sub-group string as stored in answers.og_confirm.sub_group
+#   (or og_code for single-sub-group groups like PS).
+# method: "level_description" for all entries here.
+# level_resolution:
+#   "majority_hint" = level appearing in the most level_hint lists wins;
+#                     tie → lower level (conservative).
+#   "direct"        = single question, level_hint is length-1 list → direct map.
+# fallback: "pick_list" = if resolution is ambiguous, return null and let
+#           frontend fall back to bare OgLevelPicker.
+# Phase 21 Plan 08 (JES-LEV-01): Socratic mini-interview before the level
+# picker for the 6 OG groups whose JES is level-description-based.
+# ---------------------------------------------------------------------------
+
+JES_LEVEL_CRITERIA: dict[str, dict] = {
+    "NU-HOS": {
+        "method": "level_description",
+        "questions": [
+            {
+                "id": "nu_scope",
+                "question": "What best describes the scope of the nursing responsibility?",
+                "options": [
+                    {"id": "direct_care_assigned", "label": "Provides direct nursing care to an assigned number of patients", "level_hint": [2]},
+                    {"id": "unit_or_community", "label": "Plans and delivers care for a unit or community, adapting interventions to client needs", "level_hint": [3]},
+                    {"id": "unit_mgmt_24hr", "label": "Manages nursing services in a unit or facility on a 24-hour basis", "level_hint": [4, 5]},
+                    {"id": "multi_unit_zone", "label": "Coordinates or evaluates nursing programs across multiple units, a hospital, or a zone", "level_hint": [6, 7]},
+                    {"id": "national_policy", "label": "Develops national nursing policies or advises on programs available to Canadians", "level_hint": [8]},
+                ],
+            },
+            {
+                "id": "nu_autonomy",
+                "question": "What guidance does this person receive?",
+                "options": [
+                    {"id": "detailed_guidance", "label": "Detailed guidance from a senior nurse; decisions reviewed while in progress", "level_hint": [1, 2]},
+                    {"id": "policy_clinical", "label": "Guidance on program policy and clinical issues; resolves most issues independently", "level_hint": [3, 4]},
+                    {"id": "admin_objectives", "label": "Direction on institutional or administrative policy objectives only; independently manages operations", "level_hint": [5, 6]},
+                    {"id": "govt_objectives", "label": "Direction on government policy and program objectives only", "level_hint": [7, 8]},
+                ],
+            },
+        ],
+        "level_resolution": "majority_hint",
+        "fallback": "pick_list",
+    },
+    "NU-CHN": {
+        "method": "level_description",
+        "questions": [
+            {
+                "id": "nu_scope",
+                "question": "What best describes the scope of the nursing responsibility?",
+                "options": [
+                    {"id": "direct_care_assigned", "label": "Provides direct nursing care to an assigned number of patients", "level_hint": [2]},
+                    {"id": "unit_or_community", "label": "Plans and delivers care for a unit or community, adapting interventions to client needs", "level_hint": [3]},
+                    {"id": "unit_mgmt_24hr", "label": "Manages nursing services in a unit or facility on a 24-hour basis", "level_hint": [4, 5]},
+                    {"id": "multi_unit_zone", "label": "Coordinates or evaluates nursing programs across multiple units, a hospital, or a zone", "level_hint": [6, 7]},
+                    {"id": "national_policy", "label": "Develops national nursing policies or advises on programs available to Canadians", "level_hint": [8]},
+                ],
+            },
+            {
+                "id": "nu_autonomy",
+                "question": "What guidance does this person receive?",
+                "options": [
+                    {"id": "detailed_guidance", "label": "Detailed guidance from a senior nurse; decisions reviewed while in progress", "level_hint": [1, 2]},
+                    {"id": "policy_clinical", "label": "Guidance on program policy and clinical issues; resolves most issues independently", "level_hint": [3, 4]},
+                    {"id": "admin_objectives", "label": "Direction on institutional or administrative policy objectives only; independently manages operations", "level_hint": [5, 6]},
+                    {"id": "govt_objectives", "label": "Direction on government policy and program objectives only", "level_hint": [7, 8]},
+                ],
+            },
+        ],
+        "level_resolution": "majority_hint",
+        "fallback": "pick_list",
+    },
+    "NU-EMA": {
+        "method": "level_description",
+        "questions": [
+            {
+                "id": "ema_scope",
+                "question": "What best describes the role?",
+                "options": [
+                    {"id": "individual_adjudication", "label": "Assesses individual applicant files to determine medical eligibility", "level_hint": [1]},
+                    {"id": "expert_direction", "label": "Provides expert advice and functional direction on complex adjudication cases at regional or national level", "level_hint": [2]},
+                ],
+            },
+        ],
+        "level_resolution": "direct",
+        "fallback": "pick_list",
+    },
+    "PS": {
+        "method": "level_description",
+        "questions": [
+            {
+                "id": "ps_independence",
+                "question": "What best describes the level of professional independence?",
+                "options": [
+                    {"id": "work_reviewed", "label": "Work is reviewed by a supervisor who has final responsibility for validity of conclusions", "level_hint": [1, 2]},
+                    {"id": "approach_independent", "label": "Completed work is reviewed for soundness of judgment but this position determines its own approach", "level_hint": [2, 3]},
+                    {"id": "fully_independent", "label": "Professionally independent; guidance restricted to policy matters; assumes final responsibility for all decisions and recommendations", "level_hint": [4, 5]},
+                ],
+            },
+            {
+                "id": "ps_methods",
+                "question": "What best describes the level of method development?",
+                "options": [
+                    {"id": "applies_established", "label": "Applies established psychodiagnostic methods and techniques with some adaptation", "level_hint": [1]},
+                    {"id": "modifies_develops", "label": "Modifies and adapts established methods; develops new techniques for specific clinical problems", "level_hint": [2, 3]},
+                    {"id": "originates_new", "label": "Originates new approaches and complex methodologies; develops procedures for changing program requirements", "level_hint": [4, 5]},
+                ],
+            },
+            {
+                "id": "ps_management",
+                "question": "What best describes the staff and program management scope?",
+                "options": [
+                    {"id": "no_supervision", "label": "No continuous staff supervision; may occasionally guide a research assistant or intern", "level_hint": [1, 2]},
+                    {"id": "supervises_staff", "label": "Supervises technical and junior professional staff; recommends project initiation", "level_hint": [3]},
+                    {"id": "directs_program", "label": "Plans, organizes, and directs a multi-functional psychology program; manages budget and professional staff", "level_hint": [4, 5]},
+                ],
+            },
+        ],
+        "level_resolution": "majority_hint",
+        "fallback": "pick_list",
+    },
+    "NT-ADV": {
+        "method": "level_description",
+        "questions": [
+            {
+                "id": "nt_adv_scope",
+                "question": "What is the geographic or program scope of the nutrition advisory work?",
+                "options": [
+                    {"id": "zone_local", "label": "Provides nutrition advice within a defined zone or locality", "level_hint": [1]},
+                    {"id": "regional", "label": "Coordinates nutrition programs or provides advisory services across a region", "level_hint": [2]},
+                    {"id": "national", "label": "Advises headquarters, regional and zone staff nationally; consults with provincial governments or international organizations", "level_hint": [3]},
+                ],
+            },
+        ],
+        "level_resolution": "direct",
+        "fallback": "pick_list",
+    },
+    "NT-DIT": {
+        "method": "level_description",
+        "questions": [
+            {
+                "id": "nt_dit_scope",
+                "question": "What is the scope of the dietary service management responsibility?",
+                "options": [
+                    {"id": "ward_small_facility", "label": "Plans therapeutic diets or supervises food service for a veterans health centre or a group of wards", "level_hint": [1, 2]},
+                    {"id": "full_federal_hospital", "label": "Manages the complete dietary service for a federal hospital including meals for patients and staff (standard population)", "level_hint": [3]},
+                    {"id": "large_federal_hospital", "label": "Manages the complete dietary service for a large federal hospital with a large patient and staff population", "level_hint": [4]},
+                ],
+            },
+        ],
+        "level_resolution": "direct",
+        "fallback": "pick_list",
+    },
+    "NT-HME": {
+        "method": "level_description",
+        "questions": [
+            {
+                "id": "nt_hme_scope",
+                "question": "What best describes the scope and independence of the home economics work?",
+                "options": [
+                    {"id": "supervised_testing", "label": "Selects, tests and modifies recipes or food materials under supervision", "level_hint": [1]},
+                    {"id": "independent_projects", "label": "Conducts experimental projects independently; responsible for experimental design and sensory evaluation", "level_hint": [2]},
+                    {"id": "supervises_projects", "label": "Supervises experimental or informational projects; supervises professional staff", "level_hint": [3]},
+                    {"id": "directs_program", "label": "Plans, directs and coordinates a program for agricultural or seafood market development", "level_hint": [4]},
+                ],
+            },
+        ],
+        "level_resolution": "direct",
+        "fallback": "pick_list",
+    },
+    "PO-TCO": {
+        "method": "level_description",
+        "questions": [
+            {
+                "id": "po_autonomy",
+                "question": "What best describes the level of supervision and autonomy?",
+                "options": [
+                    {"id": "trainee_supervised", "label": "Works as a trainee or under close technical supervision", "level_hint": [1]},
+                    {"id": "autonomous_general", "label": "Operates systems autonomously under general supervision; minimal coaching role", "level_hint": [2]},
+                    {"id": "independent_supervisor", "label": "Works independently with little technical guidance; may supervise day-to-day operations", "level_hint": [3]},
+                    {"id": "manages_through_supervisors", "label": "Manages operations through subordinate supervisors; holds budget and strategic planning authority", "level_hint": [4]},
+                ],
+            },
+            {
+                "id": "po_policy_scope",
+                "question": "What is the policy and program scope of the work?",
+                "options": [
+                    {"id": "routine_transactions", "label": "Operates communications equipment and responds to public requests; routine transactions", "level_hint": [1, 2]},
+                    {"id": "develops_training_policy", "label": "Develops or maintains training programs; analyzes and provides expert advice on national policies", "level_hint": [3]},
+                    {"id": "organizational_accountability", "label": "Initiates joint activities with partner organizations; accountable for organizational-level operations", "level_hint": [4]},
+                ],
+            },
+        ],
+        "level_resolution": "majority_hint",
+        "fallback": "pick_list",
+    },
+    "SW-CHA": {
+        "method": "level_description",
+        "questions": [
+            {
+                "id": "sw_cha_scope",
+                "question": "What is the primary scope of the chaplaincy work?",
+                "options": [
+                    {"id": "single_institution_patients", "label": "Provides pastoral counselling and support to patients in a single institution", "level_hint": [1]},
+                    {"id": "single_institution_inmates", "label": "Provides or coordinates pastoral counselling to inmates and their families; implements religious rehabilitation programs; communicates with community", "level_hint": [2]},
+                    {"id": "regional_coordination", "label": "Coordinates spiritual programs and chaplaincy services across a region; provides consultation and training", "level_hint": [3]},
+                ],
+            },
+        ],
+        "level_resolution": "direct",
+        "fallback": "pick_list",
+    },
+    "ED-LAT": {
+        "method": "level_description",
+        "questions": [
+            {
+                "id": "ed_lat_role",
+                "question": "What is the primary role in the language teaching program?",
+                "options": [
+                    {"id": "classroom_teacher", "label": "Teaches a language directly to students; develops lesson plans and tests proficiency", "level_hint": [1]},
+                    {"id": "senior_teacher", "label": "Reviews and mentors other language teachers; advises on course content and methodology", "level_hint": [2]},
+                    {"id": "principal", "label": "Directs the school; evaluates and guides senior teachers; allocates facilities and resources", "level_hint": [3]},
+                ],
+            },
+        ],
+        "level_resolution": "direct",
+        "fallback": "pick_list",
+    },
+    "ED-EST": {
+        "method": "level_description",
+        "questions": [
+            {
+                "id": "ed_est_role",
+                "question": "What is the primary role in the school or educational program?",
+                "options": [
+                    {"id": "classroom_teacher", "label": "Teaches academic, technical, vocational, or adult education subjects; or counsels students", "level_hint": [1]},
+                    {"id": "department_head", "label": "Plans and supervises teaching of a particular subject or area; advises teachers on methodology and materials", "level_hint": [2]},
+                    {"id": "assistant_principal", "label": "Assists in school administration; allocates resources; supports the principal", "level_hint": [3]},
+                    {"id": "principal", "label": "Administers the full school program; supervises instruction; evaluates curriculum and student achievement", "level_hint": [4]},
+                ],
+            },
+        ],
+        "level_resolution": "direct",
+        "fallback": "pick_list",
+    },
+}
+
+
+# ---------------------------------------------------------------------------
 # OG_DEFINITIONS
 # Verbatim occupational group definitions for OG classification.
 # Source: data/Job_evaluation/ text files + TBS OCHRO Occupational Group
