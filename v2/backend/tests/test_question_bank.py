@@ -27,6 +27,7 @@ KNOWN_PHASE_SLOTS = {
     "legal_cluster",              # v3.0 — disambiguate LC vs LP
     "technical_cluster",          # v3.0 — disambiguate FB vs FS vs MT
     "education_cluster",          # v3.0 — disambiguate ED vs NT
+    "programme_admin_cluster",    # v3.0 (Plan 07) — disambiguate PO vs WP for the programme_admin sector
 }
 
 

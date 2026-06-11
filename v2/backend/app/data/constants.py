@@ -572,6 +572,33 @@ QUESTION_BANK: list[dict] = [
             },
         ],
     },
+    {
+        "id": "qb_programme_admin_cluster",
+        "phase_slot": "programme_admin_cluster",
+        "question": "What is the primary focus of the programme or administrative operations work?",
+        "helper": "Consider whether the role is primarily operational communications and police support, or broader programme delivery and social services administration.",
+        "input_type": "choices",
+        "options": [
+            {
+                "id": "police_telecom",
+                "label": "Operating telecommunications systems or monitoring intercepts to support police operations",
+                "signals": {
+                    "og_candidates": ["PO"],
+                    "jes_factor_hints": ["Organizational impact", "Effort"],
+                    "teer_affinity": [2, 3],
+                },
+            },
+            {
+                "id": "welfare_program_delivery",
+                "label": "Delivering income support, benefits eligibility decisions, or welfare case management",
+                "signals": {
+                    "og_candidates": ["WP"],
+                    "jes_factor_hints": ["Organizational impact", "Effort"],
+                    "teer_affinity": [2, 3],
+                },
+            },
+        ],
+    },
 ]
 
 
