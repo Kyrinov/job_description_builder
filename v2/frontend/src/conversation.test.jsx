@@ -354,17 +354,126 @@ describe('OGX-04: sector-gate + cluster questions gated by sector answer', () =>
     expect(visibleIds).not.toContain('qb_education_cluster');
   });
 
-  it('getVisibleSteps omits all cluster steps when no sector answer (20 - 4 = 16)', () => {
+  it('getVisibleSteps omits all cluster steps when no sector answer (21 - 9 = 12)', () => {
+    // Phase 21 Plan 07: the 4 legacy work-type questions + the 4 cluster
+    // questions + qb_programme_admin_cluster are all gated on the sector
+    // answer. With no sector answer, all 9 of those are hidden. The 5
+    // role + summary + sector + 4 post-cluster steps (noc/og/level/duties/quals)
+    // remain visible. Total 12 = 21 - 9 gated.
     const visible = getVisibleSteps(STEPS, {});
-    // With no sector answer, all 4 cluster questions are hidden.
-    // The 4 work-type questions + 5 role + summary + sector + noc/og/level + duties + quals
-    // are all visible. Total 16 = 20 - 4 cluster.
-    expect(visible.length).toBe(16);
+    expect(visible.length).toBe(12);
     const visibleIds = visible.map(s => s.id);
+    expect(visibleIds).not.toContain('qb_work_output_type');
+    expect(visibleIds).not.toContain('qb_work_audience');
+    expect(visibleIds).not.toContain('qb_knowledge_specialization');
+    expect(visibleIds).not.toContain('qb_policy_interpretation');
     expect(visibleIds).not.toContain('qb_health_social_cluster');
     expect(visibleIds).not.toContain('qb_legal_cluster');
     expect(visibleIds).not.toContain('qb_technical_cluster');
     expect(visibleIds).not.toContain('qb_education_cluster');
+    expect(visibleIds).not.toContain('qb_programme_admin_cluster');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 21 Plan 07 — OGX-04 (round 2): gate 4 legacy work-type questions to
+// other_sector only, and add the 5th cluster (qb_programme_admin_cluster) for
+// the programme_admin_sector path. The legacy EC/AS/IT/FI questions should
+// only appear for users who chose "General professional or administrative
+// work" (other_sector); the new programme_admin_cluster only appears for
+// users who chose "Programme and administrative operations".
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('OGX-04 (Plan 07): 4 legacy work-type questions gated to other_sector', () => {
+  const legacyIds = [
+    'qb_work_output_type',
+    'qb_work_audience',
+    'qb_knowledge_specialization',
+    'qb_policy_interpretation',
+  ];
+
+  it('hides each legacy question when sector is pa_sh_sector', () => {
+    const answers = {
+      qb_sector_gate: { id: 'pa_sh_sector', signals: { og_candidates: ['NU', 'SW', 'PS', 'WP'] } },
+    };
+    for (const id of legacyIds) {
+      expect(isStepVisible({ id }, answers)).toBe(false);
+    }
+  });
+
+  it('shows each legacy question when sector is other_sector', () => {
+    const answers = {
+      qb_sector_gate: { id: 'other_sector', signals: { og_candidates: ['EC', 'AS', 'IT', 'FI'] } },
+    };
+    for (const id of legacyIds) {
+      expect(isStepVisible({ id }, answers)).toBe(true);
+    }
+  });
+
+  it('hides each legacy question when sector is undefined (user must answer sector gate first)', () => {
+    // When sector is undefined (falsy), `sector === 'other_sector'` is false.
+    // The activeStepIndex logic in app.jsx will skip the invisible steps
+    // forward to qb_sector_gate, forcing the user to pick a sector first.
+    // This is by design — the Socratic intent is to never ask questions
+    // until the sector is known.
+    for (const id of legacyIds) {
+      expect(isStepVisible({ id }, {})).toBe(false);
+    }
+  });
+
+  it('accumulateSignals does NOT include signals from qb_work_output_type when sector is pa_sh_sector', () => {
+    const answers = {
+      qb_sector_gate: { id: 'pa_sh_sector', signals: { og_candidates: ['NU', 'SW', 'PS', 'WP'] } },
+      qb_work_output_type: {
+        id: 'analysis_advice',
+        title: 'Analysis',
+        signals: { og_candidates: ['EC'], jes_factor_hints: [], teer_affinity: [1, 2] },
+      },
+    };
+    const result = accumulateSignals(answers);
+    // EC should not appear in the tally because the step is invisible
+    expect(result === null || (result.tally && result.tally['EC'] === undefined)).toBe(true);
+  });
+
+  it('accumulateSignals DOES include signals from qb_work_output_type when sector is other_sector', () => {
+    const answers = {
+      qb_sector_gate: { id: 'other_sector', signals: { og_candidates: ['EC', 'AS', 'IT', 'FI'] } },
+      qb_work_output_type: {
+        id: 'analysis_advice',
+        title: 'Analysis',
+        signals: { og_candidates: ['EC'], jes_factor_hints: [], teer_affinity: [1, 2] },
+      },
+    };
+    const result = accumulateSignals(answers);
+    expect(result).not.toBeNull();
+    expect(result.tally['EC']).toBe(1);
+  });
+});
+
+describe('OGX-04 (Plan 07): qb_programme_admin_cluster visible only for programme_admin_sector', () => {
+  it('shows qb_programme_admin_cluster when sector is programme_admin_sector', () => {
+    const answers = {
+      qb_sector_gate: { id: 'programme_admin_sector', signals: { og_candidates: ['PO', 'WP'] } },
+    };
+    expect(isStepVisible({ id: 'qb_programme_admin_cluster' }, answers)).toBe(true);
+  });
+
+  it('hides qb_programme_admin_cluster when sector is pa_sh_sector', () => {
+    const answers = {
+      qb_sector_gate: { id: 'pa_sh_sector', signals: { og_candidates: ['NU', 'SW', 'PS', 'WP'] } },
+    };
+    expect(isStepVisible({ id: 'qb_programme_admin_cluster' }, answers)).toBe(false);
+  });
+
+  it('hides qb_programme_admin_cluster when sector is undefined', () => {
+    expect(isStepVisible({ id: 'qb_programme_admin_cluster' }, {})).toBe(false);
+  });
+
+  it('hides qb_programme_admin_cluster when sector is other_sector', () => {
+    const answers = {
+      qb_sector_gate: { id: 'other_sector', signals: { og_candidates: ['EC', 'AS', 'IT', 'FI'] } },
+    };
+    expect(isStepVisible({ id: 'qb_programme_admin_cluster' }, answers)).toBe(false);
   });
 });
 
