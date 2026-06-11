@@ -20,6 +20,95 @@ from app.models.work_description import WorkDescription
 router = APIRouter()
 
 
+# ---------------------------------------------------------------------------
+# SJD seed duties (Phase 22 — SJD-02)
+# Duty text sourced from frontend DUTY_SUGGESTIONS (data.jsx) for parity.
+# Groups present in SJD_LIBRARY: AS, FI, EC, IT, EN, PE, WP.
+# ---------------------------------------------------------------------------
+_SJD_DUTY_SUGGESTIONS: dict[str, list[dict]] = {
+    "AS": [
+        {"plain": "Manage administrative operations",
+         "polished": "Plans, coordinates and manages administrative operations, services and support functions in accordance with departmental policies and priorities."},
+        {"plain": "Provide advice and guidance to management",
+         "polished": "Provides expert advice, options analyses and recommendations to management on administrative programs, policies and procedures."},
+        {"plain": "Prepare reports and correspondence",
+         "polished": "Prepares reports, briefing materials, correspondence and submissions for management review and decision."},
+    ],
+    "FI": [
+        {"plain": "Develop and manage budgets and forecasts",
+         "polished": "Develops, manages and monitors budgets, financial plans and forecasts in accordance with Treasury Board policies and departmental priorities."},
+        {"plain": "Prepare financial reports and analyses",
+         "polished": "Prepares financial reports, costing analyses, variance explanations and recommendations for senior management and central agencies."},
+        {"plain": "Advise on financial management controls",
+         "polished": "Advises management on financial management policies, internal controls, expenditure review and compliance with financial authorities."},
+    ],
+    "EC": [
+        {"plain": "Develop and analyze policy options",
+         "polished": "Develops, analyzes and interprets policy options, program frameworks and strategic guidance, and assesses their implications for departmental operations."},
+        {"plain": "Provide evidence-based advice to management",
+         "polished": "Provides expert advice, options analyses and recommendations to senior management on programs, policies and emerging issues."},
+        {"plain": "Conduct research on economic or social issues",
+         "polished": "Plans, leads and conducts research on economic, social, environmental or policy issues using appropriate qualitative and quantitative methods."},
+    ],
+    "IT": [
+        {"plain": "Design and develop software systems",
+         "polished": "Designs, develops, tests and maintains software systems, applications and digital services in accordance with enterprise architecture and security standards."},
+        {"plain": "Provide technical advice and support",
+         "polished": "Provides technical advice, troubleshooting support and guidance to clients, team members and stakeholders on IT systems and solutions."},
+        {"plain": "Manage IT projects and initiatives",
+         "polished": "Plans, manages and delivers IT projects and initiatives, including requirements, scope, schedule, risk and stakeholder engagement."},
+    ],
+    "EN": [
+        {"plain": "Provide engineering analysis and technical advice",
+         "polished": "Provides engineering analysis, technical assessments and specialist advice on projects, programs and procurement activities."},
+        {"plain": "Review engineering designs and specifications",
+         "polished": "Reviews and evaluates engineering designs, drawings, specifications and technical documentation to ensure compliance with applicable standards."},
+        {"plain": "Lead engineering projects",
+         "polished": "Plans, leads and manages engineering projects, coordinates with contractors and stakeholders, and ensures delivery within scope, schedule and budget."},
+    ],
+    "PE": [
+        {"plain": "Provide HR advice and services",
+         "polished": "Provides expert advice, guidance and services to management and employees on human resources policies, programs and collective agreement provisions."},
+        {"plain": "Manage staffing and classification actions",
+         "polished": "Manages staffing processes, classification actions and organizational reviews in compliance with the Public Service Employment Act and Treasury Board policies."},
+        {"plain": "Develop HR policies and programs",
+         "polished": "Develops, implements and evaluates HR policies, programs and initiatives aligned with departmental priorities and central agency direction."},
+    ],
+    "WP": [
+        {"plain": "Administer welfare programs and benefits",
+         "polished": "Administers welfare programs, processes applications, determines eligibility and delivers income support or benefits in accordance with applicable legislation and policies."},
+        {"plain": "Provide case management support",
+         "polished": "Provides case management support, counselling referrals and follow-up to clients to facilitate access to services and support self-sufficiency."},
+        {"plain": "Liaise with community partners and service providers",
+         "polished": "Liaises with community partners, service providers and other departments to coordinate service delivery and promote awareness of available programs."},
+    ],
+}
+_SJD_DUTY_SUGGESTIONS["default"] = _SJD_DUTY_SUGGESTIONS["EC"]  # fallback
+
+
+def _build_sjd_seed_duties(entry: object) -> list:
+    """Build DraftDuty list seeded from _SJD_DUTY_SUGGESTIONS for the SJD's OG group.
+
+    Each duty has source='sjd' and sjd_number set to the entry's sjd_number.
+    Uses _SJD_DUTY_SUGGESTIONS keyed by og_code; falls back to 'default' (EC).
+    """
+    from app.models.draft_duty import DraftDuty
+    import uuid
+    suggestions = _SJD_DUTY_SUGGESTIONS.get(entry.og_code, _SJD_DUTY_SUGGESTIONS["default"])
+    duties = []
+    for idx, sug in enumerate(suggestions):
+        duties.append(DraftDuty(
+            id=str(uuid.uuid4()),
+            text=sug["polished"],
+            plain_trigger=sug["plain"],
+            source="sjd",
+            sjd_number=entry.sjd_number,
+            provenance_section="Main duties",
+            advisor=False,
+        ))
+    return duties
+
+
 class WDCreateRequest(BaseModel):
     """Mutable fields for creating a new WD. Server generates id and timestamps."""
 
@@ -210,3 +299,50 @@ async def run_orphan_check(wd_id: str) -> dict:
                 ),
             })
     return {"wd_id": wd_id, "flagged": flagged}
+
+
+class SJDStartRequest(BaseModel):
+    """Request body for POST /api/wd/{id}/sjd-start."""
+    sjd_number: str
+
+
+@router.post("/wd/{wd_id}/sjd-start")
+async def sjd_start(wd_id: str, body: SJDStartRequest) -> WorkDescription:
+    """Pre-fill confirmed_og, og_level, seed duties, and sjd_source from a selected SJD.
+
+    Security: sjd_number validated by lookup against static SJD_LIBRARY; 404 on miss (T-22-01).
+    """
+    from app.data.sjd_library import SJD_LIBRARY
+    entry = next((e for e in SJD_LIBRARY if e.sjd_number == body.sjd_number), None)
+    if entry is None:
+        raise HTTPException(status_code=404, detail=f"SJD {body.sjd_number!r} not found")
+
+    settings = get_settings()
+    con = get_connection(settings.db_path)
+    try:
+        row = con.execute(
+            "SELECT data FROM work_descriptions WHERE id = ?", (wd_id,)
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Work description not found")
+        wd = WorkDescription.model_validate_json(row["data"])
+
+        seed_duties = _build_sjd_seed_duties(entry)
+        wd.confirmed_og = {"og_code": entry.og_code, "og_name": entry.title}
+        wd.og_level = entry.og_level
+        wd.duties = seed_duties
+        wd.sjd_source = {
+            "sjd_number": entry.sjd_number,
+            "title": entry.title,
+            "og_code": entry.og_code,
+            "og_level": entry.og_level,
+        }
+        wd.last_modified = datetime.now(timezone.utc)
+        con.execute(
+            "UPDATE work_descriptions SET data = ?, last_modified = ? WHERE id = ?",
+            (wd.model_dump_json(), wd.last_modified.isoformat(), wd_id),
+        )
+        con.commit()
+    finally:
+        con.close()
+    return wd

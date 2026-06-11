@@ -196,6 +196,12 @@ def _build_v2_manifest(wd: WorkDescription) -> list[dict]:
     if wd.qualification:
         _add("QUAL", "TBS Qualification Standard", "TBS Qualification Standard 2024")
 
+    # SJD provenance entry (Phase 22 — SJD-02)
+    if wd.sjd_source:
+        sjd_num = wd.sjd_source.get("sjd_number", "")
+        if sjd_num:
+            _add("SJD", sjd_num, "DND SJD Library")
+
     return manifest
 
 
