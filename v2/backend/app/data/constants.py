@@ -44,7 +44,7 @@ OG_LEVELS: dict[str, list[int]] = {
     "PM": list(range(1, 8)),   # PM-1 to PM-7 — PA_rates.csv
     "GT": list(range(1, 9)),   # GT-1 to GT-8 — TC_rates.csv
     "EL": list(range(1, 10)),  # EL-01 to EL-09 — EL_rates.csv
-    "FB": list(range(1, 9)),   # FB-1 to FB-8 — FB_rates.csv
+    "FB": list(range(1, 8)),   # FB-1 to FB-7 — FB_rates.csv (max JES factor degree is 7)
     "FS": list(range(1, 5)),   # FS-01 to FS-04 — FS_rates.csv
     "AI": list(range(1, 8)),   # AI-01 to AI-07 — AI_rates.csv
     "AU": list(range(1, 7)),   # AU-01 to AU-06 — CT_FI_rates.csv (internally CT-EAV; OG code remains AU)
