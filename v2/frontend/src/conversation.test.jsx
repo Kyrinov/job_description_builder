@@ -697,3 +697,69 @@ describe('OGX-04 (bugfix round 3): screen does not blank after cluster step comm
     }
   });
 });
+
+describe('OGX-07 + JES-LEV-01: clicking a sub-group button propagates sub_group to parent via onChange', () => {
+  let fetchMock;
+  beforeEach(() => {
+    fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        subgroup_alert: {
+          subgroups: ['HOS', 'CHN', 'EMA'],
+          descriptions: {
+            HOS: 'Hospital Nursing — inpatient acute care',
+            CHN: 'Community Health Nursing — public health and home care',
+            EMA: 'Emergency Medical Attendant — pre-hospital emergency response',
+          },
+          disambiguation_text: 'Three sub-groups with different evaluation methods.',
+          citation: 'TBS OCHRO — Nursing (NU) JES',
+        },
+      }),
+    });
+    globalThis.fetch = fetchMock;
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('calls onChange with sub_group when a sub-group picker button is clicked', async () => {
+    // Regression for Gap 1: handleSubGroupSelect previously only updated local
+    // state; it never called onChange. This test ensures the parent draft gets
+    // answers.og_confirm.sub_group set so cfg.sub_group reaches OgLevelQuestions.
+    const cfg = {
+      type: 'og_confirm',
+      candidates: [
+        {
+          og_code: 'NU',
+          og_name: 'Nursing',
+          confidence: 0.85,
+          rank: 1,
+          rationale: '',
+          evidence_quotes: [],
+          definition_excerpt: '',
+          relevant_inclusions: '',
+          relevant_exclusions: '',
+          available_levels: [1, 2, 3, 4, 5, 6, 7, 8],
+        },
+      ],
+      asec_alert: null,
+      work_description: 'Provides nursing care in a hospital setting',
+      confirmed_noc_code: '31301',
+    };
+    const value = { og_code: 'NU', og_name: 'Nursing' };
+    const onChangeMock = vi.fn();
+    const { queryByTestId } = render(
+      <StepInput cfg={cfg} value={value} onChange={onChangeMock} onSubmit={() => {}} record={{}} />
+    );
+    // Wait for the fetch to complete and the sub-group picker to appear
+    await waitFor(() => {
+      expect(queryByTestId('subgroup-picker')).not.toBeNull();
+    });
+    // Click the HOS sub-group button
+    pickOptionByText(queryByTestId('subgroup-picker'), 'HOS');
+    // onChange MUST have been called with sub_group: 'HOS' merged into the value
+    expect(onChangeMock).toHaveBeenCalledWith(
+      expect.objectContaining({ og_code: 'NU', sub_group: 'HOS' })
+    );
+  });
+});
