@@ -4,23 +4,31 @@ app/api/jes_scoring.py — JES scoring routes (v2.0).
 Routes:
     POST /api/jes/score — score a WD against JES; requires OG confirmed (CLASS-04 gate)
     POST /api/jes/override/{wd_id}/{factor_name} — advisor manual degree override
+    POST /api/jes/level-suggest — Socratic level-determination for level-description groups (Phase 21 Plan 08)
+    GET  /api/jes/level-criteria — fetch level-determination question structure (Phase 21 Plan 08)
+    GET  /api/jes/level-criteria-groups — list OG codes that have level-description criteria (Phase 21 Plan 08)
 
-Security (per threat model T-17-01 to T-17-04):
+Security (per threat model T-17-01 to T-17-04, T-21-08-01 to T-21-08-03):
     T-17-01: og_code validated against {"EC"} | set(NON_EC_TOTALS.keys())
     T-17-02: duties list truncated to [:10] in _build_factor_user_prompt + per-duty [:200]
     T-17-03: factor_name validated against KNOWN_JES_FACTORS; 400 if not found
     T-17-04: work description summary truncated to [:300] in _build_factor_user_prompt
+    T-21-08-01: POST /api/jes/level-suggest — og_code validated against KNOWN_OG_CODES (422 on unknown)
+    T-21-08-02: POST /api/jes/level-suggest — unknown answer IDs silently skip (no security risk)
+    T-21-08-03: GET /api/jes/level-criteria returns public JES data (no PII / proprietary data)
 """
 from __future__ import annotations
 
 import json
 import sqlite3
+from collections import Counter
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.data.constants import (
     JES_FACTORS_BY_GROUP,
+    JES_LEVEL_CRITERIA,
     KNOWN_JES_FACTORS,
     NON_EC_TOTALS,
 )
@@ -30,6 +38,19 @@ from app.services.classification_gate import require_og_confirmed
 from app.services.jes_service import override_jes_factor, score_jes_v2
 
 router = APIRouter()
+
+
+# ---------------------------------------------------------------------------
+# Phase 21 Plan 08 (JES-LEV-01): known OG codes + level-suggest request model.
+# Mirrors the 22 OG codes in OG_LEVELS + SW-SCW / ED-EDS sub-group routing
+# codes (point-rating path; not in JES_LEVEL_CRITERIA but the level-suggest
+# endpoint rejects them with 404, same as EC).
+# ---------------------------------------------------------------------------
+
+KNOWN_OG_CODES: frozenset[str] = frozenset({
+    "EC", "IT", "AS", "FI", "CR", "PM", "GT", "EL", "FB", "FS", "AI", "AU",
+    "ED", "LC", "LP", "MT", "NT", "NU", "PO", "PS", "SW", "WP",
+})
 
 
 # ---------------------------------------------------------------------------
@@ -185,3 +206,165 @@ async def override_jes(
         points=result["points"],
         jes_total_points=result["jes_total_points"],
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 21 Plan 08 (JES-LEV-01) — Socratic level-determination endpoints
+# ---------------------------------------------------------------------------
+
+
+class LevelSuggestRequest(BaseModel):
+    """Request body for POST /api/jes/level-suggest.
+
+    T-21-08-01: og_code is whitelisted in the route handler (422 on unknown).
+    T-21-08-02: unknown answer IDs are silently skipped (no level_hint added).
+    """
+
+    og_code: str = Field(min_length=1)
+    sub_group: str | None = None
+    answers: dict[str, str] = Field(default_factory=dict)
+
+
+def _resolve_level_suggestion(
+    criteria: dict, answers: dict[str, str]
+) -> dict:
+    """Compute suggested_level, confidence, level_range, and rationale.
+
+    Pure helper (no I/O) — used by POST /api/jes/level-suggest route.
+
+    level_resolution semantics:
+      - "direct": single question, level_hint is length-1 list → direct map.
+      - "majority_hint": level appearing in the most hint_lists wins;
+                          tie → lower level (conservative).
+
+    Confidence: 'high' when all questions answered AND the winning level
+    appears in every answered list; 'medium' when winning level appears in
+    >= 2 hint lists; 'low' otherwise (or when no answers provided).
+    """
+    questions = criteria["questions"]
+    resolution = criteria["level_resolution"]
+
+    # Collect level_hint lists for answered questions
+    hint_lists: list[list[int]] = []
+    for q in questions:
+        ans_id = answers.get(q["id"])
+        if ans_id is None:
+            continue
+        opt = next((o for o in q["options"] if o["id"] == ans_id), None)
+        if opt:
+            hint_lists.append(opt["level_hint"])
+
+    if not hint_lists:
+        return {
+            "suggested_level": None,
+            "confidence": "low",
+            "level_range": [],
+            "rationale": "No answers provided.",
+        }
+
+    if resolution == "direct":
+        # Single question — return first hint directly
+        suggested = hint_lists[0][0]
+        level_range = hint_lists[0]
+        return {
+            "suggested_level": suggested,
+            "confidence": "high",
+            "level_range": level_range,
+            "rationale": f"Your answer directly maps to Level {suggested:02d}.",
+        }
+
+    # majority_hint: find level appearing in the most hint_lists
+    counts: Counter[int] = Counter()
+    for hl in hint_lists:
+        for lv in hl:
+            counts[lv] += 1
+    if not counts:
+        return {
+            "suggested_level": None,
+            "confidence": "low",
+            "level_range": [],
+            "rationale": "Could not determine level.",
+        }
+    max_count = max(counts.values())
+    # All levels at max_count; conservative: lowest
+    candidates = sorted(k for k, v in counts.items() if v == max_count)
+    suggested = candidates[0]
+    total_q = len(questions)
+    answered = len(hint_lists)
+    if max_count == answered and answered == total_q:
+        confidence = "high"
+    elif max_count >= 2:
+        confidence = "medium"
+    else:
+        confidence = "low"
+    # level_range = sorted union of all hinted levels
+    all_hinted = sorted(set(lv for hl in hint_lists for lv in hl))
+    return {
+        "suggested_level": suggested,
+        "confidence": confidence,
+        "level_range": all_hinted,
+        "rationale": (
+            f"Your answers suggest Level {suggested:02d} based on "
+            f"{answered} of {total_q} factors."
+        ),
+    }
+
+
+@router.post("/jes/level-suggest")
+def level_suggest(req: LevelSuggestRequest) -> dict:
+    """Socratic level-determination for level-description OG groups (Plan 08 JES-LEV-01).
+
+    T-21-08-01: og_code is validated against KNOWN_OG_CODES (422 on unknown).
+    T-21-08-02: unknown answer IDs are silently skipped (no level_hint added).
+    Returns { suggested_level, confidence, level_range, rationale }.
+    """
+    # T-21-08-01: validate og_code
+    if req.og_code not in KNOWN_OG_CODES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unknown og_code: {req.og_code}",
+        )
+    # Build lookup key: "OG-SUBGROUP" or bare "OG"
+    key = f"{req.og_code}-{req.sub_group}" if req.sub_group else req.og_code
+    if key not in JES_LEVEL_CRITERIA:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No level criteria for {key}",
+        )
+    criteria = JES_LEVEL_CRITERIA[key]
+    return _resolve_level_suggestion(criteria, req.answers)
+
+
+@router.get("/jes/level-criteria")
+def level_criteria(og_code: str, sub_group: str | None = None) -> dict:
+    """Return the JES level-determination question structure for one OG/sub-group.
+
+    T-21-08-01: og_code is whitelisted (422 on unknown).
+    T-21-08-03: returns public JES data only (no PII / proprietary data).
+    """
+    if og_code not in KNOWN_OG_CODES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unknown og_code: {og_code}",
+        )
+    key = f"{og_code}-{sub_group}" if sub_group else og_code
+    if key not in JES_LEVEL_CRITERIA:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No level criteria for {key}",
+        )
+    return JES_LEVEL_CRITERIA[key]
+
+
+@router.get("/jes/level-criteria-groups")
+def level_criteria_groups() -> list[str]:
+    """Return the sorted list of distinct og_codes that have JES level-description criteria.
+
+    The OG codes that have at least one sub-group entry in JES_LEVEL_CRITERIA.
+    Point-rating groups (EC, IT, AS, FI, etc.) are excluded — they do not
+    have level-determination questions, only point totals.
+    """
+    og_codes: set[str] = set()
+    for key in JES_LEVEL_CRITERIA.keys():
+        og_codes.add(key.split("-")[0])
+    return sorted(og_codes)
