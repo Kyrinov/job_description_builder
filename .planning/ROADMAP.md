@@ -192,7 +192,7 @@ Plans:
 | 18. JD Composition & Live Preview | v2.0 | 4/4 | Complete | — |
 | 19. Qualifications & Amendments | v2.0 | 4/4 | Complete | 2026-06-09 |
 | 20. Export | v2.0 | 3/3 | Complete | 2026-06-10 |
-| **21. OG Expansion + Preview Fix** | **v3.0** | **8/8** | **Complete** | 2026-06-11 |
+| **21. OG Expansion + Preview Fix** | **v3.0** | **8/8** | **Gaps Found** | — |
 | **22. SJD Library** | **v3.0** | **0/?** | **Not started** | — |
 | **23. Writing Guide Integration** | **v3.0** | **0/?** | **Not started** | — |
 | **24. Risk Audit** | **v3.0** | **0/?** | **Not started** | — |
