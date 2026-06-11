@@ -2,7 +2,7 @@
    JD Builder — main application
    ============================================================ */
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { STEPS, PHASES, I, OG_LEVELS, computeClassification, accumulateSignals } from './data.jsx';
+import { STEPS, PHASES, I, OG_LEVELS, computeClassification, accumulateSignals, getVisibleSteps, isStepVisible } from './data.jsx';
 import { Icon, initialAnswer, answerValid } from './components.jsx';
 import { Header, Exchange, ActiveQuestion, ReviewState } from './conversation.jsx';
 import { DocumentPane } from './document.jsx';
@@ -92,7 +92,20 @@ function App() {
   const threadRef = useRef(null);
   const docRef = useRef(null);
 
-  const step = STEPS[stepIndex];
+  // Phase 21 OGX-04 (continuation fix): the active step is derived from
+  // stepIndex + answers so the user never lands on an invisible cluster
+  // step. If the persisted stepIndex points to a step that's no longer
+  // visible (e.g., the user changed the sector in a revisit), we snap
+  // forward to the first visible step from that position. When no
+  // forward step is visible (all remaining steps filtered out), the
+  // user is sent to review.
+  const activeStepIndex = useMemo(() => {
+    if (isStepVisible(STEPS[stepIndex], answers)) return stepIndex;
+    let i = stepIndex;
+    while (i < STEPS.length && !isStepVisible(STEPS[i], answers)) i++;
+    return i;
+  }, [stepIndex, answers]);
+  const step = STEPS[activeStepIndex];
 
   // Persist record to localStorage on every change (FE-05).
   // flashes is a Set — not JSON-serializable, deliberately excluded.
@@ -372,7 +385,16 @@ function App() {
       setReviewing(true);
       return;
     }
-    const next = stepIndex + 1;
+    // Phase 21 OGX-04 (continuation fix): skip cluster questions whose sector
+    // was not selected. computeNextVisible walks forward from `start` to the
+    // first visible step, falling through to STEPS.length if all remaining
+    // steps are invisible (drives the user to review).
+    const computeNextVisible = (start) => {
+      let i = start;
+      while (i < STEPS.length && !isStepVisible(STEPS[i], newAnswers)) i++;
+      return i;
+    };
+    const next = computeNextVisible(stepIndex + 1);
     if (next >= STEPS.length) {
       setReviewing(true);
     } else {
@@ -384,7 +406,9 @@ function App() {
 
   function goBack() {
     if (stepIndex === 0) return;
-    const prev = stepIndex - 1;
+    // Phase 21 OGX-04: skip invisible cluster questions when going back too.
+    let prev = stepIndex - 1;
+    while (prev > 0 && !isStepVisible(STEPS[prev], answers)) prev--;
     setStepIndex(prev);
     const ps = STEPS[prev];
     setDraft(answers[ps.id] !== undefined ? answers[ps.id] : initialAnswer(ps, record));
@@ -568,11 +592,35 @@ function App() {
   // OG candidates + AS/EC disambiguation alert into og_confirm, OG_LEVELS
   // range into og_level, and confirmed NOC code into the duties step so
   // DutyBuilder can fetch verbatim duties from /api/noc/{noc_code}/duties.
+  //
+  // Phase 21 OGX-07 (continuation fix): OgConfirmList now fetches its own
+  // subgroup_alert when the user selects NU/SW/ED in the draft (see the
+  // useEffect inside that component). This is necessary because the picker
+  // must appear DURING the og_confirm step — after the user picks NU in the
+  // draft but before they click Continue. The previous app-level useEffect
+  // only fired on record.confirmed_og changes, which is too late.
+  //
+  // The remaining cfg fields we still need to inject are: candidates,
+  // loading, asec_alert (from the initial /api/og/classify call), work
+  // description (for the re-fetch payload), confirmed_noc (for the re-fetch
+  // payload), and wd_id (so the picker can persist selections).
   const stepCfgOverride = !reviewing && step
     ? (step.input.type === 'noc_confirm'
         ? { ...step.input, candidates: nocCandidates, loading: nocLoading }
         : step.input.type === 'og_confirm'
-          ? { ...step.input, candidates: ogCandidates, loading: ogLoading, asec_alert: ogAlert }
+          ? {
+              ...step.input,
+              candidates: ogCandidates,
+              loading: ogLoading,
+              asec_alert: ogAlert,
+              work_description: record.summary || '',
+              confirmed_noc_code: record.confirmed_noc
+                ? (typeof record.confirmed_noc === 'string'
+                    ? record.confirmed_noc
+                    : record.confirmed_noc.noc_code || '')
+                : '',
+              wd_id: wd_id,
+            }
           : step.input.type === 'og_level'
             ? { ...step.input, levels: record.confirmed_og
                   ? OG_LEVELS[record.confirmed_og.og_code] || []
