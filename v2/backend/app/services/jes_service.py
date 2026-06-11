@@ -267,15 +267,15 @@ async def score_jes_v2(
                     f"Level-description group {routing_code!r} not in NON_EC_TOTALS. "
                     f"og_code={og_code!r}, confirmed_sub_group={sub_group!r}"
                 )
+            effective_level = og_level
             if og_level not in NON_EC_TOTALS[routing_code]:
                 available = sorted(NON_EC_TOTALS[routing_code].keys())
-                clamped = min(available, key=lambda lv: abs(lv - og_level))
+                effective_level = min(available, key=lambda lv: abs(lv - og_level))
                 logger.warning(
                     "No JES totals for og_code=%r at level %r; using nearest level %r",
-                    routing_code, og_level, clamped,
+                    routing_code, og_level, effective_level,
                 )
-                og_level = clamped
-            total_points = NON_EC_TOTALS[routing_code][og_level]
+            total_points = NON_EC_TOTALS[routing_code][effective_level]
             standard_name = NON_EC_STANDARD_NAMES.get(
                 routing_code, NON_EC_STANDARD_NAMES.get(og_code, "")
             )
