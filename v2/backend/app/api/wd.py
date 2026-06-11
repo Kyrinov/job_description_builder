@@ -194,7 +194,7 @@ async def run_orphan_check(wd_id: str) -> dict:
     og_code = (
         wd.confirmed_og.get("og_code")
         if isinstance(wd.confirmed_og, dict)
-        else wd.confirmed_og.og_code
+        else wd.confirmed_og or ""
     )
     defn = OG_DEFINITIONS.get(og_code, {})
     exclusions_text = defn.get("exclusions", "")
