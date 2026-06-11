@@ -32,7 +32,7 @@
 ** — `SJD_LIBRARY` constant (10 entries parsed from `data/SJD Examples.txt`) in `app/data/sjd_library.py`; `GET /api/sjd` with optional `?og_code=` filter; `GET /api/sjd/{number}` for detail; `POST /api/wd/{id}/sjd-start` pre-fills `confirmed_og`, `og_level`, and seed duties from a selected SJD
 - [x] **SJD-02
 ** — Non-blocking "Browse SJDs" action surfaced at end of Role phase; selecting an SJD writes a `sjd_source` provenance field on the WD and tags seeded duties with `source="sjd"` + `sjd_number` in their `ProvenanceTag`; SJD source appears in the DOCX export manifest
-- [ ] **SJD-03** — Changing `confirmed_og` after an SJD pre-fill surfaces a warning: "Departing from the SJD classification turns this into a new evaluation — the SJD decision no longer applies"
+- [x] **SJD-03** — Changing `confirmed_og` after an SJD pre-fill surfaces a warning: "Departing from the SJD classification turns this into a new evaluation — the SJD decision no longer applies"
 
 ---
 
@@ -102,8 +102,8 @@
 | OGX-07 | Phase 21 | Complete |
 | UI-01  | Phase 21 | Complete |
 | SJD-01 | Phase 22 | Validated (22-03) |
-| SJD-02 | Phase 22 | Validated (22-03) |
-| SJD-03 | Phase 22 | Pending (22-04) |
+| SJD-02 | Phase 22 | Validated (22-04) |
+| SJD-03 | Phase 22 | Validated (22-04) |
 | WG-01  | Phase 23 | Pending |
 | WG-02  | Phase 23 | Pending |
 | WG-03  | Phase 23 | Pending |

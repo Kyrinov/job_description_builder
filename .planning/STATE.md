@@ -4,13 +4,13 @@ milestone: v3.0
 milestone_name: Classification Depth & Document Quality
 current_phase: 22
 status: executing
-last_updated: "2026-06-11T18:33:55.789Z"
+last_updated: "2026-06-11T18:43:12Z"
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 13
-  completed_plans: 12
-  percent: 92
+  completed_plans: 13
+  percent: 100
 ---
 
 # Project State
@@ -18,7 +18,7 @@ progress:
 **Status:** Executing Phase 22
 **Current phase:** 22
 **Last updated:** 2026-06-11
-**Next action:** Plan 22-04 (SJD browse UI + sjd-start frontend call + SJD-03 warning) — Plan 22-03 complete: DraftDuty.source="sjd" extension, WorkDescription.sjd_source field, POST /api/wd/{id}/sjd-start endpoint with _build_sjd_seed_duties helper, _build_v2_manifest SJD provenance entry; 10/10 test_sjd.py tests GREEN; 125/125 backend suite GREEN
+**Next action:** Phase 22 complete (4/4 plans) — pending human UAT for 22-04 SJD browse UI. Plan 22-04 complete: fetchSjds/fetchSjdDetail helpers in data.jsx, Browse SJDs non-blocking button after Role phase, SJD browser panel with OG-group filter, sjd-start integration mirroring sjd_source/confirmed_og/og_level/duties into record, SJD-03 og_confirm OG-change advisory toast, SJD provenance badge in document.jsx; 224.07 kB JS / 68.62 kB gzip build; 60/60 frontend + 125/125 backend tests GREEN
 
 ---
 
@@ -27,7 +27,7 @@ progress:
 | Phase | Name | Status |
 |-------|------|--------|
 | 21 | OG Expansion + Preview Fix | All 9 plans complete (incl. 21-09 gap-closure); 60/60 frontend tests; JES-LEV-01 + OGX-07 closed |
-| 22 | SJD Library | Plans 22-01 + 22-02 + 22-03 complete (RED baseline + SJD_LIBRARY constant with OG normalization + GET /api/sjd endpoints + router registration + DraftDuty.source="sjd" extension + WorkDescription.sjd_source + POST /api/wd/{id}/sjd-start endpoint + _build_sjd_seed_duties helper + _build_v2_manifest SJD provenance); 10/10 test_sjd.py GREEN; 125/125 backend suite GREEN; 3 plans of 4 done |
+| 22 | SJD Library | Plans 22-01 + 22-02 + 22-03 + 22-04 complete (RED baseline + SJD_LIBRARY constant with OG normalization + GET /api/sjd endpoints + router registration + DraftDuty.source="sjd" extension + WorkDescription.sjd_source + POST /api/wd/{id}/sjd-start endpoint + _build_sjd_seed_duties helper + _build_v2_manifest SJD provenance + fetchSjds/fetchSjdDetail helpers + Browse SJDs panel + sjd-start frontend call + SJD-03 warning); 10/10 test_sjd.py GREEN; 125/125 backend suite GREEN; 60/60 frontend tests GREEN; 4 plans of 4 done; pending 9-step human UAT |
 | 23 | Writing Guide Integration | Not started |
 | 24 | Risk Audit | Not started |
 | 25 | Accessible Template | Not started |
@@ -96,6 +96,9 @@ See: `.planning/PROJECT.md`
 | _SJD_DUTY_SUGGESTIONS constant in wd.py keeps text parity with frontend data.jsx (Phase 22 Plan 03) | Single source of truth pattern: backend's _SJD_DUTY_SUGGESTIONS mirrors frontend's DUTY_SUGGESTIONS; avoids drift |
 | sjd-start endpoint returns updated WorkDescription (not dict) (Phase 22 Plan 03) | One round-trip for SPA to mirror state; matches `patch_wd` return pattern |
 | sjd_number validated by lookup against static SJD_LIBRARY (Phase 22 Plan 03 / T-22-01) | No eval, no path construction, no SQL string interpolation; 404 on miss |
+| SJD-03 toast comparison: `og_code` only, not `og_level` (Phase 22 Plan 04) | A same-OG level change leaves the warning inert; matches the "departing from the SJD classification" semantics (classification = og_code, not level) |
+| SJD browser panel rendered as modal overlay (Phase 22 Plan 04) | Non-blocking surface that doesn't disrupt the conversation flow; clicking outside or ✕ dismisses |
+| fetchSjds / fetchSjdDetail co-located with data layer (Phase 22 Plan 04) | Keeps fetch logic next to other data utilities (matches v2 pattern of data.jsx owning backend data shape) |
 
 ### Active Blockers
 
@@ -125,6 +128,7 @@ None. Phase 21 gap closed by Plan 21-09 (2026-06-11). Sub_group propagation fixe
 | Phase 22 P02 | 7 | 2 tasks | 3 files |
 | Phase 22 P02 | 7min | 2 tasks | 3 files |
 | Phase 22 P03 | 5 | 2 tasks | 4 files |
+| Phase 22 P04 | 6min | 2 tasks | 4 files |
 
 ### v2.0 (complete)
 

@@ -50,7 +50,7 @@ Full phase details archived in ROADMAP.md history above.
 v3.0 expands the classification engine to all GC occupational groups with JES standards, replaces the export template with the Accessible JD format, wires the Job Description Writing Guide into duty authoring, adds a CBA + jurisprudence compliance audit, and seeds a DND SJD library as a conversation starting point.
 
 - [x] **Phase 21: OG Expansion + Preview Fix** — Extend all six constants atomically for 16 OG groups (12 new); consolidate NON_EC_STANDARD_NAMES; full JES scoring for point-rating groups; level-lookup for level-description groups; sub-group disambiguation for NU/SW/ED; fix .doc-scroll CSS. (OGX-01, OGX-02, OGX-03, OGX-04, OGX-05, OGX-06, OGX-07, UI-01)
-- [ ] **Phase 22: SJD Library** — Parse SJD_LIBRARY constant from data/SJD Examples.txt; expose GET /api/sjd endpoints; non-blocking "Browse SJDs" flow at end of Role phase; SJD pre-fill with provenance and OG-change warning. (SJD-01, SJD-02, SJD-03)
+- [x] **Phase 22: SJD Library** — Parse SJD_LIBRARY constant from data/SJD Examples.txt; expose GET /api/sjd endpoints; non-blocking "Browse SJDs" flow at end of Role phase; SJD pre-fill with provenance and OG-change warning. (SJD-01, SJD-02, SJD-03)
 - [ ] **Phase 23: Writing Guide Integration** — Structural duty validation (active-voice, word-count, no-passive, no-duplicate); non-blocking inline .duty-hint warnings via POST /api/wd/{id}/validate-duties; Client Service Results question inserted in QUESTION_BANK; per-step OG-specific duty tips from OG_DEFINITIONS. (WG-01, WG-02, WG-03, WG-04)
 - [ ] **Phase 24: Risk Audit** — "Run compliance audit" button in Review phase; deterministic CBA clause matching (exclusion/scope/application articles) + Federal Court ERR principle rules; per-finding Accept/Manual Edit/Skip decisions written to audit_log; Manual Edit links to existing amendment panel. (AUDIT-01, AUDIT-02, AUDIT-03, AUDIT-04, AUDIT-05)
 - [ ] **Phase 25: Accessible Template** — Build and self-verify wd_accessible_template.docx (Part 1: position ID + signatures; Part 2: 6 subsections); populate Effort/Working Conditions from JES factor scores; retire TBS WD template; content-presence test against fully-completed WD. (ACC-01, ACC-02, ACC-03, ACC-04)
@@ -110,7 +110,7 @@ Plans:
 - [x] 22-01-PLAN.md — Wave 0 test scaffolding (all Phase 22 test stubs, RED baseline) — 10 test functions in v2/backend/tests/test_sjd.py; 9/10 RED
 - [x] 22-02-PLAN.md — SJD_LIBRARY constant + GET /api/sjd endpoints + router registration — 7/9 test_sjd.py stubs GREEN; full backend suite 122 passed, 3 failed (the 3 RED tests are 22-03 scope)
 - [x] 22-03-PLAN.md — DraftDuty/WorkDescription model extensions + POST /api/wd/{id}/sjd-start + manifest provenance — 10/10 test_sjd.py GREEN; 125/125 backend suite GREEN
-- [ ] 22-04-PLAN.md — Frontend: fetchSjds helpers + Browse SJDs action + SJD browser panel + SJD-03 warning
+- [x] 22-04-PLAN.md — Frontend: fetchSjds helpers + Browse SJDs action + SJD browser panel + SJD-03 warning — 224.07 kB JS / 68.62 kB gzip; 60/60 frontend tests GREEN; 125/125 backend tests GREEN; awaiting human UAT of 9-step browser verification
 
 ---
 
@@ -199,7 +199,7 @@ Plans:
 | 19. Qualifications & Amendments | v2.0 | 4/4 | Complete | 2026-06-09 |
 | 20. Export | v2.0 | 3/3 | Complete | 2026-06-10 |
 | **21. OG Expansion + Preview Fix** | **v3.0** | **8/8** | **Gaps Found** | — |
-| **22. SJD Library** | **v3.0** | **1/4** | **Executing** | — |
+| **22. SJD Library** | **v3.0** | **4/4** | **Complete (pending UAT)** | **2026-06-11** |
 | **23. Writing Guide Integration** | **v3.0** | **0/?** | **Not started** | — |
 | **24. Risk Audit** | **v3.0** | **0/?** | **Not started** | — |
 | **25. Accessible Template** | **v3.0** | **0/?** | **Not started** | — |
