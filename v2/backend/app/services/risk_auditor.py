@@ -18,7 +18,10 @@ from typing import Literal
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
-DATA_DIR = Path(__file__).parents[3] / "data" / "agreements"
+# Repo-root resolved: v2/backend/app/services/risk_auditor.py -> 4 levels up to repo root,
+# then into data/agreements/. The .parents[3] used in the stub would resolve to v2/
+# (one level too shallow); .parents[4] lands at the repo root where data/ lives.
+DATA_DIR = Path(__file__).parents[4] / "data" / "agreements"
 
 OG_AGREEMENT_DIR: dict[str, str] = {
     "EC": "EC",
@@ -70,8 +73,14 @@ def load_cba_data(og_code: str) -> dict | None:
     Returns None if no agreement directory mapping exists for this OG code
     (e.g. NT, ED) or if the JSON file is absent. Never raises.
     """
-    # STUB: always returns None until Plan 02 implementation
-    return None
+    dir_name = OG_AGREEMENT_DIR.get(og_code)
+    if not dir_name:
+        return None
+    json_path = DATA_DIR / dir_name / f"{dir_name}_full.json"
+    if not json_path.exists():
+        return None
+    with open(json_path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 # ── Public entry point ───────────────────────────────────────────────────────
