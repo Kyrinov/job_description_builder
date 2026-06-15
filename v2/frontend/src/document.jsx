@@ -360,21 +360,11 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
         amendmentNote={amendmentNotes?.cls} amendmentPanel={amendmentPanels?.cls}
         onAmendToggle={onAmendToggle} onAmendSave={onAmendSave}
       >
-        <div className="cls-block">
-          <div className="cls-block__badge">
-            <div className="cls-block__code">{resolvedCode}</div>
-          </div>
-          <div className="cls-block__body">
-            <div className="cls-block__name">{r.confirmed_og.og_name}</div>
-            <div className="cls-block__why">
-              Occupational group <b>{r.confirmed_og.og_code}</b> at level <b>{r.og_level < 10 ? '0' + r.og_level : r.og_level}</b>, confirmed by the Socratic question bank signals and the confirmed NOC code.
-            </div>
-          </div>
-        </div>
         {/* JES scorecard — renders once jes_total_points is set (JES-04).
             Gate on jes_total_points (not jes_scores.length) so non-EC groups
-            (which return factors:[] from the backend) also render the scorecard. */}
-        {r.jes_total_points != null && (
+            (which return factors:[] from the backend) also render the scorecard.
+            When JES is not yet scored, show the plain classification block. */}
+        {r.jes_total_points != null ? (
           <ClassBlock
             cls={{
               code: resolvedCode,
@@ -387,9 +377,22 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
                 degree: f.degree,
                 points: f.points,
               })) : null,
+              rationale: `Occupational group ${r.confirmed_og.og_code} at level ${r.og_level < 10 ? '0' + r.og_level : r.og_level}, confirmed by the Socratic question bank signals and the confirmed NOC code.`,
             }}
             onOverride={onJesOverride}
           />
+        ) : (
+          <div className="cls-block">
+            <div className="cls-block__badge">
+              <div className="cls-block__code">{resolvedCode}</div>
+            </div>
+            <div className="cls-block__body">
+              <div className="cls-block__name">{r.confirmed_og.og_name}</div>
+              <div className="cls-block__why">
+                Occupational group <b>{r.confirmed_og.og_code}</b> at level <b>{r.og_level < 10 ? '0' + r.og_level : r.og_level}</b>, confirmed by the Socratic question bank signals and the confirmed NOC code.
+              </div>
+            </div>
+          </div>
         )}
       </Sec>
     );

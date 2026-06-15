@@ -61,21 +61,24 @@ def test_passive_opener():
 
 
 def test_non_verb_opener():
-    """WG-01 — duties whose first word is not a recognised verb form are flagged VERB_FIRST."""
+    """WG-01 — VERB_FIRST rule removed; base-form NOC verbs (Design, Collect) must not be flagged."""
     from app.services.duty_validator import validate_duties
 
     class D:
         def __init__(self, id_, text): self.id = id_; self.text = text
 
-    non_verb = D("v1", "Administrative support for the executive team and senior management.")
-    compound = D("v2", "Plans, coordinates and manages administrative operations for the section.")
-    ok       = D("v3", "Coordinates administrative support services for the directorate and its branches.")
+    # Base-form verbs from NOC duties — must NOT trigger any flag
+    design  = D("v1", "Design, develop, test, implement and oversee IT systems for the department.")
+    collect = D("v2", "Collect and analyze data to identify areas for improvement within an organization.")
+    review  = D("v3", "Review existing IT systems and internal processes to ensure alignment with standards.")
+    perform = D("v4", "Perform preventive maintenance tasks on computer systems and related infrastructure.")
 
-    findings = validate_duties([non_verb, compound, ok])
+    findings = validate_duties([design, collect, review, perform])
     ids = {f["duty_id"] for f in findings}
-    assert "v1" in ids, "Non-verb opener should be flagged"
-    assert "v2" not in ids, "Compound verb opener ('Plans,') should NOT be flagged after stripping comma"
-    assert "v3" not in ids
+    assert "v1" not in ids, "Base-form 'Design' opener must NOT be flagged"
+    assert "v2" not in ids, "Base-form 'Collect' opener must NOT be flagged"
+    assert "v3" not in ids, "Base-form 'Review' opener must NOT be flagged"
+    assert "v4" not in ids, "Base-form 'Perform' opener must NOT be flagged"
 
 
 def test_duplicate_duty():

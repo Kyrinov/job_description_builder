@@ -1,15 +1,17 @@
 """
 app/services/duty_validator.py — WG-01 structural duty validation.
 
-Four deterministic text rules. No LLM. Called only from POST /api/wd/{id}/validate-duties.
+Three deterministic text rules. No LLM. Called only from POST /api/wd/{id}/validate-duties.
 
 Rules:
-  WORD_COUNT  — duty must contain 8–25 words (split on whitespace)
-  NO_PASSIVE  — duty must not open with a passive auxiliary (is/are/was/were/been/being)
-                or a definite/indefinite article (the/a/an)
-  VERB_FIRST  — duty must open with a capitalised word (third-person singular verb form);
-                trailing comma/semicolon on the first word is stripped before checking
+  WORD_COUNT   — duty must contain 8–25 words (split on whitespace)
+  NO_PASSIVE   — duty must not open with a passive auxiliary (is/are/was/were/been/being)
+                 or a definite/indefinite article (the/a/an)
   NO_DUPLICATE — duty text must be unique within the list (case-insensitive exact match)
+
+Note: VERB_FIRST was removed. NOC duties use base-form verbs (Design, Collect, Review)
+which cannot be reliably distinguished from noun/adjective openers without NLP.
+NO_PASSIVE already catches the most common malformed patterns.
 
 Calibration: All 21 polished duties in _SJD_DUTY_SUGGESTIONS (wd.py) pass at 0%.
 """
@@ -23,14 +25,6 @@ import re
 _PASSIVE_OPENERS = re.compile(
     r'^(is|are|was|were|been|being|the|a|an)$',
     re.IGNORECASE,
-)
-
-# Matches a capitalised word ending in 's' (3rd-person singular verb form:
-# Plans, Coordinates, Develops, Manages, Provides, Prepares, Designs, Conducts).
-# The trailing 's' requirement distinguishes verbs from adjectives/nouns that
-# happen to be capitalised ("Administrative", "Senior", "Federal", "Areas").
-_VERB_FIRST = re.compile(
-    r'^[A-Z][a-zA-Z]*s$',
 )
 
 
@@ -65,18 +59,11 @@ def validate_duties(duties: list) -> list[dict]:
         # compound verb openers like "Plans, coordinates and manages..."
         first = words[0].rstrip(',;:.') if words else ''
 
-        # Rule: NO_PASSIVE (checked before VERB_FIRST — passive also fails verb-first,
-        # but NO_PASSIVE is the more specific and actionable diagnostic)
+        # Rule: NO_PASSIVE
         if first and _PASSIVE_OPENERS.match(first):
             rules_failed.append({
                 "rule": "NO_PASSIVE",
-                "detail": f"Opener ‘{first}’ is a passive auxiliary or article",
-            })
-        elif first and not _VERB_FIRST.match(first):
-            # Rule: VERB_FIRST — only checked when NOT a passive opener
-            rules_failed.append({
-                "rule": "VERB_FIRST",
-                "detail": f"Opener ‘{first}’ is not a recognised verb form",
+                "detail": f"Opener '{first}' is a passive auxiliary or article",
             })
 
         # Rule: NO_DUPLICATE

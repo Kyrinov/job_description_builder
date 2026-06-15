@@ -295,7 +295,7 @@ async def run_orphan_check(wd_id: str) -> dict:
                 "duty_id": duty.id,
                 "orphan_rationale": (
                     f"This duty may fall outside the {og_code} functional authority: "
-                    f"{exclusions_text[:200]}"
+                    f"{exclusions_text}"
                 ),
             })
     return {"wd_id": wd_id, "flagged": flagged}

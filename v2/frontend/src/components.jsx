@@ -194,13 +194,7 @@ function DutyBuilder({ value, onChange, cfg }) {
 
   return (
     <div className="duties">
-      {/* Phase 23 (WG-04): per-OG duty tip box drawn from OG_DUTY_TIPS. */}
-      {/* Suppressed when cfg.og_tip is null (no confirmed_og, or thin group). */}
-      {cfg && cfg.og_tip && (
-        <div className="og-duty-tip">
-          <span>{cfg.og_tip.slice(0, 200)}</span>
-        </div>
-      )}
+      {/* WG-04 og-duty-tip suppressed — legalistic OG definition text confuses advisors. */}
       {/* NOC duties fetched from backend (Phase 18) */}
       {noc_code && (
         nocDuties === null

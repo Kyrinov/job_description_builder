@@ -74,7 +74,13 @@ async def get_noc_duties(noc_code: str) -> dict:
         ).fetchall()
     finally:
         con.close()
-    if not rows:
+    # Filter out the NOC group header row — it is structural text, not a selectable duty.
+    _HEADER_PREFIX = "this group performs"
+    duty_rows = [
+        r for r in rows
+        if not r["element_text"].lower().startswith(_HEADER_PREFIX)
+    ]
+    if not duty_rows:
         raise HTTPException(status_code=404, detail=f"No Main duties found for NOC {noc_code!r}")
     return {
         "noc_code": noc_code,
@@ -84,6 +90,6 @@ async def get_noc_duties(noc_code: str) -> dict:
                 "text": row["element_text"],
                 "source_hash": row["source_hash"] or None,
             }
-            for row in rows
+            for row in duty_rows
         ],
     }
