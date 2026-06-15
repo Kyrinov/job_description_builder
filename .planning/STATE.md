@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Classification Depth & Document Quality
-current_phase: 23
-status: ready_to_plan
-last_updated: "2026-06-15T12:55:00.000Z"
+current_phase: 24
+status: ready_to_execute
+last_updated: "2026-06-15T00:00:00.000Z"
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 17
+  total_plans: 21
   completed_plans: 17
   percent: 80
 ---
@@ -29,7 +29,7 @@ progress:
 | 21 | OG Expansion + Preview Fix | All 9 plans complete (incl. 21-09 gap-closure); 60/60 frontend tests; JES-LEV-01 + OGX-07 closed |
 | 22 | SJD Library | Plans 22-01 + 22-02 + 22-03 + 22-04 complete (RED baseline + SJD_LIBRARY constant with OG normalization + GET /api/sjd endpoints + router registration + DraftDuty.source="sjd" extension + WorkDescription.sjd_source + POST /api/wd/{id}/sjd-start endpoint + _build_sjd_seed_duties helper + _build_v2_manifest SJD provenance + fetchSjds/fetchSjdDetail helpers + Browse SJDs panel + sjd-start frontend call + SJD-03 warning); 10/10 test_sjd.py GREEN; 125/125 backend suite GREEN; 60/60 frontend tests GREEN; 4 plans of 4 done; pending 9-step human UAT |
 | 23 | Writing Guide Integration | Plans 23-01 + 23-02 + 23-03 + 23-04 complete (RED baseline + duty_validator.py 4-rule implementation + POST /api/wd/{id}/validate-duties endpoint + dutyHints state + OG_DUTY_TIPS constant + client_service_results step + .duty-hint + .og-duty-tip CSS); 9/9 test_writing_guide.py GREEN; 134/134 backend suite GREEN; 60/60 frontend tests GREEN; 4 plans of 4 done; pending 4-step human UAT |
-| 24 | Risk Audit | Not started |
+| 24 | Risk Audit | Ready to execute — 4 plans planned (24-01 through 24-04) |
 | 25 | Accessible Template | Not started |
 
 ---
