@@ -447,3 +447,45 @@ async def run_compliance_audit(wd_id: str) -> dict:
         con.close()
 
     return {"wd_id": wd_id, "findings": findings}
+
+
+@router.post("/wd/{wd_id}/audit/decide", status_code=201)
+async def audit_decide(wd_id: str, body: AuditDecideRequest) -> dict:
+    """AUDIT-04: Log advisor Accept / Manual Edit / Skip decision for an audit finding.
+
+    Writes one risk_audit_decision row to audit_log per call.
+    The frontend also handles Manual Edit client-side by opening the amendment panel.
+    """
+    import json as _json
+
+    settings = get_settings()
+    con = get_connection(settings.db_path)
+    try:
+        # Verify WD exists (404 guard — T-24-07)
+        row = con.execute(
+            "SELECT id FROM work_descriptions WHERE id = ?", (wd_id,)
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Work description not found")
+
+        now = datetime.now(timezone.utc)
+        con.execute(
+            "INSERT INTO audit_log (wd_id, event, actor, detail, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (
+                wd_id,
+                "risk_audit_decision",
+                "advisor",
+                _json.dumps({
+                    "rule_id": body.rule_id,
+                    "section": body.section,
+                    "decision": body.decision,
+                }),
+                now.isoformat(),
+            ),
+        )
+        con.commit()
+    finally:
+        con.close()
+
+    return {"wd_id": wd_id, "rule_id": body.rule_id, "decision": body.decision}
