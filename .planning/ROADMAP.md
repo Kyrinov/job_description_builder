@@ -128,7 +128,13 @@ Plans:
 3. The QUESTION_BANK includes a "Client Service Results" question inserted before the Key Activities duties step, matching the Writing Guide's document structure; the conversation pane renders it in the correct position
 4. During duty entry, the advisor sees a per-step tip drawn verbatim from OG_DEFINITIONS for the confirmed OG group — not a hardcoded string
 
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 23-01-PLAN.md — Wave 0: RED baseline test stubs + duty_validator.py stub
+- [ ] 23-02-PLAN.md — duty_validator.py: four WG-01 deterministic rules
+- [ ] 23-03-PLAN.md — POST /api/wd/{id}/validate-duties endpoint
+- [ ] 23-04-PLAN.md — Frontend: client_service_results step, OG_DUTY_TIPS, dutyHints rendering
 
 **UI hint**: yes
 
