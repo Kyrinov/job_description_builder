@@ -38,10 +38,10 @@
 
 ## Writing Guide (WG) — 4 requirements
 
-- [ ] **WG-01** — Structural duty validation covering: active-voice opener (verb-first), word count 8–25, no passive-voice opener, no duplicate duty text; calibrated against `data/SJD Examples.txt` — fewer than 15% of SJD duties may be flagged (a higher rate indicates miscalibration)
-- [ ] **WG-02** — Non-blocking inline `.duty-hint` warnings rendered during duty entry; advisor can submit with hints visible; no hard gate; `POST /api/wd/{id}/validate-duties` returns per-duty validation findings; frontend calls after duty-phase commit
-- [ ] **WG-03** — `QUESTION_BANK` updated with a "Client Service Results" question inserted before the Key Activities duties step, per the Writing Guide's document structure
-- [ ] **WG-04** — Inline per-step OG/group-specific duty tips shown during duty entry sourced from `OG_DEFINITIONS` excerpts (not hardcoded strings)
+- [x] **WG-01** — Structural duty validation covering: active-voice opener (verb-first), word count 8–25, no passive-voice opener, no duplicate duty text; calibrated against `data/SJD Examples.txt` — fewer than 15% of SJD duties may be flagged (a higher rate indicates miscalibration)
+- [x] **WG-02** — Non-blocking inline `.duty-hint` warnings rendered during duty entry; advisor can submit with hints visible; no hard gate; `POST /api/wd/{id}/validate-duties` returns per-duty validation findings; frontend calls after duty-phase commit
+- [x] **WG-03** — `QUESTION_BANK` updated with a "Client Service Results" question inserted before the Key Activities duties step, per the Writing Guide's document structure
+- [x] **WG-04** — Inline per-step OG/group-specific duty tips shown during duty entry sourced from `OG_DEFINITIONS` excerpts (not hardcoded strings)
 
 ---
 
@@ -104,10 +104,10 @@
 | SJD-01 | Phase 22 | Validated (22-03) |
 | SJD-02 | Phase 22 | Validated (22-04) |
 | SJD-03 | Phase 22 | Validated (22-04) |
-| WG-01  | Phase 23 | Pending |
-| WG-02  | Phase 23 | Pending |
-| WG-03  | Phase 23 | Pending |
-| WG-04  | Phase 23 | Pending |
+| WG-01  | Phase 23 | Complete |
+| WG-02  | Phase 23 | Complete |
+| WG-03  | Phase 23 | Complete |
+| WG-04  | Phase 23 | Complete |
 | AUDIT-01 | Phase 24 | Pending |
 | AUDIT-02 | Phase 24 | Pending |
 | AUDIT-03 | Phase 24 | Pending |

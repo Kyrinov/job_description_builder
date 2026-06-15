@@ -3,20 +3,20 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Classification Depth & Document Quality
 current_phase: 23
-status: complete
+status: ready_to_plan
 last_updated: "2026-06-15T12:55:00.000Z"
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 17
   completed_plans: 17
-  percent: 100
+  percent: 80
 ---
 
 # Project State
 
-**Status:** Phase 23 complete
-**Current phase:** 23
+**Status:** Ready to plan
+**Current phase:** 24
 **Last updated:** 2026-06-15
 **Next action:** Phase 23 complete (4/4 plans) — pending human UAT for 23-04 frontend duty hints + OG tips. Plan 23-04 complete: dutyHints state, validate-duties POST trigger, editingReturn clear, og_tip + duty_hints cfgOverride, .duty-hint + .og-duty-tip CSS; client_service_results step in STEPS; OG_DUTY_TIPS constant for 22 OG groups; conversation.test.jsx visible-step count 12 → 13. 231.58 kB JS / 70.63 kB gzip build; 60/60 frontend + 134/134 backend tests GREEN.
 
