@@ -427,14 +427,15 @@ describe('OGX-04: sector-gate + cluster questions gated by sector answer', () =>
     expect(visibleIds).not.toContain('qb_education_cluster');
   });
 
-  it('getVisibleSteps omits all cluster steps when no sector answer (21 - 9 = 12)', () => {
+  it('getVisibleSteps omits all cluster steps when no sector answer (22 - 9 = 13)', () => {
     // Phase 21 Plan 07: the 4 legacy work-type questions + the 4 cluster
     // questions + qb_programme_admin_cluster are all gated on the sector
     // answer. With no sector answer, all 9 of those are hidden. The 5
     // role + summary + sector + 4 post-cluster steps (noc/og/level/duties/quals)
-    // remain visible. Total 12 = 21 - 9 gated.
+    // remain visible. Plus the Phase 23 client_service_results step (unconditional).
+    // Total 13 = 22 - 9 gated.
     const visible = getVisibleSteps(STEPS, {});
-    expect(visible.length).toBe(12);
+    expect(visible.length).toBe(13);
     const visibleIds = visible.map(s => s.id);
     expect(visibleIds).not.toContain('qb_work_output_type');
     expect(visibleIds).not.toContain('qb_work_audience');

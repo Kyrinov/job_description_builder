@@ -53,6 +53,34 @@ const I = {
     WP: [1,2,3,4,5,6],
   };
 
+  // JS copy of OG_DEFINITIONS tip text from v2/backend/app/data/constants.py.
+  // Source: inclusions if non-empty, else definition. Capped at 200 chars at render time.
+  // Groups where tip text is under 80 chars: CR, PM, GT, AI, AU, ED — tip suppressed.
+  const OG_DUTY_TIPS = {
+    EC: "The EC Group comprises positions primarily involved in the conduct of surveys, studies and projects in the social sciences; the identification, description and organization of archival, library, museum and gallery materials; the editing of legislation or the provision of advice on legal problems in specific fields; and the application of a comprehensive knowledge of economics, sociology or statistics to the conduct of economic, socio-economic and sociological research, studies, forecasts and surveys.",
+    AS: "The Administrative Services (AS) Group comprises positions primarily involved in the planning, development, delivery, evaluation and management of programs, services and operations in support of the strategic and operational objectives of the federal public service, including the application of knowledge of administrative practices, procedures, policies, financial administration, human resources management, procurement, information management and reporting requirements to the delivery of public service programs and services.",
+    IT: "Notwithstanding the generality of the foregoing, for greater certainty, it includes positions that have, as their primary purpose, responsibility for one or more of the following activities: designing, developing, integrating, deploying, and/or maintaining software, hardware, or network systems; providing technical support, service and control for software, hardware, and network infrastructure; providing technical analysis, advice and recommendations on IT systems, products and services; researching, developing, implementing, or evaluating information technology policies, directives, standards, and frameworks; or leading, managing, or supervising any of the above activities.",
+    FI: "The Financial Management (FI) Group comprises positions primarily involved in the application of professional accounting, auditing and financial management knowledge to the planning, organization, direction and control of the financial operations of the federal public service, including financial planning, budgeting, comptrollership, financial reporting, internal audit, performance measurement and the provision of advice and recommendations on financial and accounting matters.",
+    CR: "",
+    PM: "",
+    GT: "",
+    EL: "The EL Group comprises positions primarily involved in the application of comprehensive electronics knowledge to the design, development, installation, maintenance, and operation of electronic systems and equipment.",
+    AI: "",
+    AU: "",
+    FB: "Determining the admissibility of people or goods entering Canada; post-entry verification of people or goods that have entered Canada; arresting, detaining or removing those in violation of Canada's laws; investigating the illegal entry of people or goods; conducting intelligence activities related to monitoring, inspection or control of people or goods entering Canada; developing CBSA operational directives; the leadership of any of the above activities.",
+    FS: "Commercial and economic relations and trade policy; political and economic relations; immigration affairs; legal affairs; consular services; cultural relations and international development.",
+    ED: "",
+    LC: "Providing legal advice on the development, direction, conduct or management of programs or services; managing legal programs or services and determining the nature and priority of objectives and resources committed to their achievement within and across organizations.",
+    LP: "The provision of legal advice and legal services; the drafting of legislation, including regulations and Orders in Council; the conduct of litigation and prosecution.",
+    MT: "The analysis and forecasting of weather and climatic phenomena; the development of instruments, methods and standards for observing and recording atmospheric phenomena; the development, application and provision of data, information and advice in the application of meteorology to the economic and environmental problems of the country; the planning and conduct of studies, the evaluation and interpretation of information and scientific research papers, reports, contracts or agreements, and the provision of advice in the above programs.",
+    NT: "The development of standards and guides in the field of nutrition and dietetics; the assessment of nutritional requirements and provision of nutrition and dietetic services; the provision of nutritional education and information; the management of nutritional programs; the management of food services; the provision of advice in the above fields; the leadership of any of the above activities.",
+    NU: "The assessment of medical information for the purposes of determining eligibility of applicants for a government program requiring knowledge associated with a registered nurse; the care of patients and the treatment and management of illness in cooperation with medical doctors, and the provision of specialized nursing services; the evaluation of nursing policies, procedures, standards and practices and the conduct of related research and education; the provision of advice in the above fields.",
+    PO: "Planning, developing, conducting or managing telecommunications operations in support of police operations; intercept monitoring and analysis in support of police operations.",
+    PS: "The conduct of research in human behaviour, the assessment of human motives, abilities, skills, decisions and acts, and the treatment of human behaviour; the provision of advice in the above fields; the leadership of any of the above activities.",
+    SW: "The promotion of individual, group and community well-being through the identification and assessment of social needs; the planning, development and delivery and management of social programs and social work services with the objective of lessening, removing or preventing the physical, emotional and material problems of individuals, families or groups; the provision of advice in the above fields; the leadership of any of the above activities.",
+    WP: "The planning, development, delivery or management of policies, programs, services or other activities dealing with the social development, settlement, adjustment and rehabilitation of groups, communities or individuals including the planning, development and delivery of welfare services; the leadership of any of the above-mentioned activities.",
+  };
+
   /* ---- DND Departmental Results Framework (real data) ----------- */
   const DRF = [
     { id: 'ops', icon: I.shield, cr: 'Operations',
@@ -626,6 +654,13 @@ const I = {
       apply: (r, a) => ({ og_level: a }),
       transcript: a => a !== null && a !== undefined ? String(a) : 'Pending' },
 
+    { id: 'client_service_results', phase: 3, icon: I.flag,
+      q: 'What client service results does this position deliver?',
+      helper: 'Describe the outcomes this role produces for clients or stakeholders. This will appear in the work description context section.',
+      input: { type: 'textarea', placeholder: 'e.g. Clients receive timely, accurate advice on...' },
+      apply: (r, a) => ({ client_service_results: a }),
+      transcript: a => a ? a.slice(0, 60) + (a.length > 60 ? '...' : '') : 'Pending' },
+
     /* ----- Phase 3: Duties ----- */
     { id: 'duties', phase: 3, icon: I.list,
       q: 'Here are the responsibilities managers usually pick for a role like this.',
@@ -671,7 +706,7 @@ const PHASES = ['Role', 'Work Type', 'Classification', 'Duties', 'Qualifications
   }
 
 export {
-  I, STEPS, PHASES, OG_LEVELS, DRF, WORK_TYPES, DUTY_SUGGESTIONS,
+  I, STEPS, PHASES, OG_LEVELS, OG_DUTY_TIPS, DRF, WORK_TYPES, DUTY_SUGGESTIONS,
   QUAL_DEFAULT, QUAL_DEFAULTS, getQualDefault,
   EC_ELEMENTS, computeClassification, refineDuty, ecFactors,
   accumulateSignals, getDutySuggestions,

@@ -2,7 +2,7 @@
    JD Builder — main application
    ============================================================ */
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { STEPS, PHASES, I, OG_LEVELS, computeClassification, accumulateSignals, getVisibleSteps, isStepVisible, fetchSjds } from './data.jsx';
+import { STEPS, PHASES, I, OG_LEVELS, OG_DUTY_TIPS, computeClassification, accumulateSignals, getVisibleSteps, isStepVisible, fetchSjds } from './data.jsx';
 import { Icon, initialAnswer, answerValid } from './components.jsx';
 import { Header, Exchange, ActiveQuestion, ReviewState } from './conversation.jsx';
 import { DocumentPane } from './document.jsx';
@@ -91,6 +91,8 @@ function App() {
   const [ogLoading, setOgLoading] = useState(false);
   const [ogAlert, setOgAlert] = useState(null);
   const [orphanFlags, setOrphanFlags] = useState([]);
+  // Phase 23 (WG-02): structural duty validation findings, populated after duties commit
+  const [dutyHints, setDutyHints] = useState([]);
   const [amendmentNotes, setAmendmentNotes] = useState({});    // { [sectionKey]: string } — saved notes from API
   const [amendmentPanels, setAmendmentPanels] = useState({});  // { [sectionKey]: { open, text, saved } } — UI panel state
   // Phase 22 SJD-02: non-blocking "Browse SJDs" action surfaced after Role phase
@@ -360,6 +362,14 @@ function App() {
             setToast('JES scoring could not complete — export may be unavailable. Try re-selecting the OG level.');
             setTimeout(() => setToast(null), 7000);
           });
+
+        // Phase 23 (WG-02): non-blocking duty validation — chains off wdPromise so
+        // duties are persisted before the POST fires. setDutyHints on success, silent on failure.
+        wdPromise
+          .then(id => fetch(`/api/wd/${id}/validate-duties`, { method: 'POST' }))
+          .then(r => r.ok ? r.json() : Promise.reject(r.status))
+          .then(data => setDutyHints(data.findings || []))
+          .catch(() => {}); // non-blocking; silent on failure
       }
     }
 
@@ -404,6 +414,10 @@ function App() {
           delete updated.jes_is_ec;
           return updated;
         });
+      }
+      // Phase 23 (WG-02): clear stale duty hints when advisor re-enters duties step in editing mode
+      if (step.id === 'duties') {
+        setDutyHints([]);
       }
       setEditingReturn(false);
       setReviewing(true);
@@ -736,11 +750,25 @@ function App() {
                   preselect: answers.og_level_questions?.suggested_level ?? null,
                 }
               : step.id === 'duties'
-                ? { ...step.input, noc_code: record.confirmed_noc
+                ? {
+                    ...step.input,
+                    noc_code: record.confirmed_noc
                       ? (typeof record.confirmed_noc === 'string'
                           ? record.confirmed_noc
                           : record.confirmed_noc?.noc_code || null)
-                      : null }
+                      : null,
+                    // Phase 23 (WG-04): per-OG duty tip drawn from OG_DUTY_TIPS.
+                    // Suppressed (null) when tip text is under 80 chars or no confirmed_og.
+                    og_tip: (() => {
+                      const ogCode = typeof record.confirmed_og === 'object'
+                        ? (record.confirmed_og?.og_code || '')
+                        : (record.confirmed_og || '');
+                      const tip = OG_DUTY_TIPS[ogCode] || '';
+                      return tip.length >= 80 ? tip : null;
+                    })(),
+                    // Phase 23 (WG-02): structural duty validation findings.
+                    duty_hints: dutyHints,
+                  }
                 : undefined)
     : undefined;
 

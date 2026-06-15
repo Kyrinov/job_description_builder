@@ -140,6 +140,20 @@ function DutyBuilder({ value, onChange, cfg }) {
   // Used only when noc_code is not present (e.g. pre-NOC-confirm flow / tests).
   const suggestions = (cfg && cfg.suggestions) || DUTY_SUGGESTIONS.default;
 
+  // Phase 23 (WG-02): render the structural validation hint badge for a duty.
+  // Returns null if no hint, the hint is empty, or cfg.duty_hints is undefined
+  // (always guard — duty_hints is populated only after the first duties commit).
+  function dutyHint(dutyId) {
+    if (!cfg || !cfg.duty_hints) return null;
+    const hint = cfg.duty_hints.find(h => h.duty_id === dutyId);
+    if (!hint || !hint.rules_failed || hint.rules_failed.length === 0) return null;
+    return (
+      <span className="duty-hint">
+        {hint.rules_failed.map(r => r.detail).join('; ')}
+      </span>
+    );
+  }
+
   function isOn(dutyId) { return list.some(d => d.id === dutyId); }
   function toggleNoc(d) {
     const dutyId = `noc-${d.id}`;
@@ -180,6 +194,13 @@ function DutyBuilder({ value, onChange, cfg }) {
 
   return (
     <div className="duties">
+      {/* Phase 23 (WG-04): per-OG duty tip box drawn from OG_DUTY_TIPS. */}
+      {/* Suppressed when cfg.og_tip is null (no confirmed_og, or thin group). */}
+      {cfg && cfg.og_tip && (
+        <div className="og-duty-tip">
+          <span>{cfg.og_tip.slice(0, 200)}</span>
+        </div>
+      )}
       {/* NOC duties fetched from backend (Phase 18) */}
       {noc_code && (
         nocDuties === null
@@ -203,6 +224,7 @@ function DutyBuilder({ value, onChange, cfg }) {
                           NOC 2021 · {noc_code}
                         </span>
                       )}
+                      {on && dutyHint(`noc-${d.id}`)}
                     </span>
                   </button>
                 );
@@ -227,6 +249,7 @@ function DutyBuilder({ value, onChange, cfg }) {
                   <Icon path={I.spark} size={11} />refined for the description
                 </span>
               )}
+              {on && dutyHint(`sug-${s.plain}`)}
             </span>
           </button>
         );
@@ -241,6 +264,7 @@ function DutyBuilder({ value, onChange, cfg }) {
             <span className="duty-sug__tag">
               <Icon path={I.spark} size={11} />advisor-added
             </span>
+            {dutyHint(d.id)}
           </span>
           <span
             className="duty-sug__x"

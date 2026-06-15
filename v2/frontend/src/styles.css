@@ -779,6 +779,35 @@ body.no-prov .prov { display: none; }
   color: oklch(0.50 0.10 35);
 }
 
+/* Phase 23 — Duty structural validation hint (WG-02) */
+.duty-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: oklch(0.58 0.14 35);
+  background: oklch(0.97 0.035 50);
+  border: 1px solid oklch(0.88 0.07 42);
+  border-radius: var(--radius-sm);
+  padding: 3px 7px;
+  font-family: var(--mono);
+}
+
+/* Phase 23 — Per-OG duty tip box (WG-04) */
+.og-duty-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: oklch(0.42 0.10 240);
+  background: oklch(0.96 0.025 240);
+  border: 1px solid oklch(0.84 0.055 240);
+  border-radius: var(--radius-sm);
+}
+
 /* ============================================================
    Review / completion overlay state
    ============================================================ */
