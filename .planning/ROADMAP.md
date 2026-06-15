@@ -155,7 +155,13 @@ Plans:
 4. Manual Edit opens the existing amendment panel for the flagged section; the amendment note and the audit finding share the same section key and co-appear when the section is inspected
 5. The audit produces zero findings for a minimal well-formed WD that has no CA conflicts and no ERR principle violations — confirming the two-signal rule suppresses false positives
 
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 24-01-PLAN.md — Wave 0: RED baseline test stubs + risk_auditor.py stub
+- [ ] 24-02-PLAN.md — risk_auditor.py: CBA loader + ERR rules + two-signal CBA matching
+- [ ] 24-03-PLAN.md — POST /api/wd/{id}/audit + POST /api/wd/{id}/audit/decide endpoints
+- [ ] 24-04-PLAN.md — Frontend: auditFindings state + handleRunAudit + ReviewState audit panel
 
 **UI hint**: yes
 
