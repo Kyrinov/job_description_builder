@@ -301,6 +301,33 @@ async def run_orphan_check(wd_id: str) -> dict:
     return {"wd_id": wd_id, "flagged": flagged}
 
 
+@router.post("/wd/{wd_id}/validate-duties")
+async def validate_duties_endpoint(wd_id: str) -> dict:
+    """WG-01/WG-02: Structural duty validation. Non-blocking advisory check.
+
+    Loads the WorkDescription from DB, runs validate_duties() from the duty_validator
+    service, and returns per-duty findings. Findings are advisory — the endpoint
+    never raises an error for failing duties, only for a missing WD (404).
+
+    Returns:
+        {"wd_id": str, "findings": [{"duty_id": str, "rules_failed": [...]}]}
+    """
+    from app.services.duty_validator import validate_duties as _validate_duties
+    settings = get_settings()
+    con = get_connection(settings.db_path)
+    try:
+        row = con.execute(
+            "SELECT data FROM work_descriptions WHERE id = ?", (wd_id,)
+        ).fetchone()
+    finally:
+        con.close()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Work description not found")
+    wd = WorkDescription.model_validate_json(row["data"])
+    findings = _validate_duties(wd.duties)
+    return {"wd_id": wd_id, "findings": findings}
+
+
 class SJDStartRequest(BaseModel):
     """Request body for POST /api/wd/{id}/sjd-start."""
     sjd_number: str
