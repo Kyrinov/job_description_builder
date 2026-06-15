@@ -362,15 +362,17 @@ function App() {
             setToast('JES scoring could not complete — export may be unavailable. Try re-selecting the OG level.');
             setTimeout(() => setToast(null), 7000);
           });
-
-        // Phase 23 (WG-02): non-blocking duty validation — chains off wdPromise so
-        // duties are persisted before the POST fires. setDutyHints on success, silent on failure.
-        wdPromise
-          .then(id => fetch(`/api/wd/${id}/validate-duties`, { method: 'POST' }))
-          .then(r => r.ok ? r.json() : Promise.reject(r.status))
-          .then(data => setDutyHints(data.findings || []))
-          .catch(() => {}); // non-blocking; silent on failure
       }
+
+      // Phase 23 (WG-02): non-blocking duty validation — chains off wdPromise so
+      // duties are persisted before the POST fires. setDutyHints on success, silent on failure.
+      // Fires on EVERY duties commit regardless of OG/level state — advisors can
+      // enter and commit duties before confirming classification.
+      wdPromise
+        .then(id => fetch(`/api/wd/${id}/validate-duties`, { method: 'POST' }))
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(data => setDutyHints(data.findings || []))
+        .catch(() => {}); // non-blocking; silent on failure
     }
 
     if (editingReturn) {
