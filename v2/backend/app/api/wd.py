@@ -7,7 +7,7 @@ Each step commit from the SPA calls PATCH; first commit calls POST.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException
@@ -373,3 +373,77 @@ async def sjd_start(wd_id: str, body: SJDStartRequest) -> WorkDescription:
     finally:
         con.close()
     return wd
+
+
+class AuditDecideRequest(BaseModel):
+    """Request body for POST /api/wd/{id}/audit/decide (AUDIT-04).
+
+    rule_id is a free-form string identifier for the audit finding the
+    decision applies to (capped to limit injection surface — T-24-04).
+    section must be one of the six amendment-panel keys; decision must be
+    one of the three documented advisor actions (T-24-05, T-24-06).
+    """
+
+    rule_id: str = Field(min_length=1, max_length=100)
+    section: Literal['id', 'ov', 'du', 'cls', 'q', 'drf']
+    decision: Literal['accept', 'manual_edit', 'skip']
+
+
+@router.post("/wd/{wd_id}/audit")
+async def run_compliance_audit(wd_id: str) -> dict:
+    """AUDIT-01: Deterministic CBA + ERR compliance audit. Manual trigger only.
+
+    Deletes previous risk_audit_finding rows for this WD, then runs the audit
+    and inserts one row per finding. Returns findings to frontend for UI rendering.
+
+    Re-running replaces previous findings (DELETE-then-INSERT pattern).
+    """
+    from app.services.risk_auditor import run_audit, load_cba_data
+    import json as _json
+
+    settings = get_settings()
+    con = get_connection(settings.db_path)
+    try:
+        row = con.execute(
+            "SELECT data FROM work_descriptions WHERE id = ?", (wd_id,)
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Work description not found")
+        wd = WorkDescription.model_validate_json(row["data"])
+
+        # Extract OG code (may be stored as dict or plain string — match orphan_check pattern)
+        og_code = (
+            wd.confirmed_og.get("og_code")
+            if isinstance(wd.confirmed_og, dict)
+            else wd.confirmed_og or ""
+        )
+
+        cba_data = load_cba_data(og_code)
+        findings = run_audit(wd, cba_data)
+
+        now = datetime.now(timezone.utc)
+
+        # Delete previous findings for this WD (deduplication on re-run)
+        con.execute(
+            "DELETE FROM audit_log WHERE wd_id = ? AND event = 'risk_audit_finding'",
+            (wd_id,),
+        )
+
+        # Insert one row per finding
+        for finding in findings:
+            con.execute(
+                "INSERT INTO audit_log (wd_id, event, actor, detail, created_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (
+                    wd_id,
+                    "risk_audit_finding",
+                    "system",
+                    _json.dumps(finding),
+                    now.isoformat(),
+                ),
+            )
+        con.commit()
+    finally:
+        con.close()
+
+    return {"wd_id": wd_id, "findings": findings}
