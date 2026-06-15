@@ -2,23 +2,23 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Classification Depth & Document Quality
-current_phase: 22
-status: ready_to_plan
-last_updated: "2026-06-11T18:43:12Z"
+current_phase: 23
+status: complete
+last_updated: "2026-06-15T12:55:00.000Z"
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 13
-  completed_plans: 13
-  percent: 60
+  total_plans: 17
+  completed_plans: 17
+  percent: 100
 ---
 
 # Project State
 
-**Status:** Ready to plan
+**Status:** Phase 23 complete
 **Current phase:** 23
-**Last updated:** 2026-06-11
-**Next action:** Phase 22 complete (4/4 plans) — pending human UAT for 22-04 SJD browse UI. Plan 22-04 complete: fetchSjds/fetchSjdDetail helpers in data.jsx, Browse SJDs non-blocking button after Role phase, SJD browser panel with OG-group filter, sjd-start integration mirroring sjd_source/confirmed_og/og_level/duties into record, SJD-03 og_confirm OG-change advisory toast, SJD provenance badge in document.jsx; 224.07 kB JS / 68.62 kB gzip build; 60/60 frontend + 125/125 backend tests GREEN
+**Last updated:** 2026-06-15
+**Next action:** Phase 23 complete (4/4 plans) — pending human UAT for 23-04 frontend duty hints + OG tips. Plan 23-04 complete: dutyHints state, validate-duties POST trigger, editingReturn clear, og_tip + duty_hints cfgOverride, .duty-hint + .og-duty-tip CSS; client_service_results step in STEPS; OG_DUTY_TIPS constant for 22 OG groups; conversation.test.jsx visible-step count 12 → 13. 231.58 kB JS / 70.63 kB gzip build; 60/60 frontend + 134/134 backend tests GREEN.
 
 ---
 
@@ -28,7 +28,7 @@ progress:
 |-------|------|--------|
 | 21 | OG Expansion + Preview Fix | All 9 plans complete (incl. 21-09 gap-closure); 60/60 frontend tests; JES-LEV-01 + OGX-07 closed |
 | 22 | SJD Library | Plans 22-01 + 22-02 + 22-03 + 22-04 complete (RED baseline + SJD_LIBRARY constant with OG normalization + GET /api/sjd endpoints + router registration + DraftDuty.source="sjd" extension + WorkDescription.sjd_source + POST /api/wd/{id}/sjd-start endpoint + _build_sjd_seed_duties helper + _build_v2_manifest SJD provenance + fetchSjds/fetchSjdDetail helpers + Browse SJDs panel + sjd-start frontend call + SJD-03 warning); 10/10 test_sjd.py GREEN; 125/125 backend suite GREEN; 60/60 frontend tests GREEN; 4 plans of 4 done; pending 9-step human UAT |
-| 23 | Writing Guide Integration | Not started |
+| 23 | Writing Guide Integration | Plans 23-01 + 23-02 + 23-03 + 23-04 complete (RED baseline + duty_validator.py 4-rule implementation + POST /api/wd/{id}/validate-duties endpoint + dutyHints state + OG_DUTY_TIPS constant + client_service_results step + .duty-hint + .og-duty-tip CSS); 9/9 test_writing_guide.py GREEN; 134/134 backend suite GREEN; 60/60 frontend tests GREEN; 4 plans of 4 done; pending 4-step human UAT |
 | 24 | Risk Audit | Not started |
 | 25 | Accessible Template | Not started |
 

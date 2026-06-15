@@ -51,7 +51,7 @@ v3.0 expands the classification engine to all GC occupational groups with JES st
 
 - [x] **Phase 21: OG Expansion + Preview Fix** — Extend all six constants atomically for 16 OG groups (12 new); consolidate NON_EC_STANDARD_NAMES; full JES scoring for point-rating groups; level-lookup for level-description groups; sub-group disambiguation for NU/SW/ED; fix .doc-scroll CSS. (OGX-01, OGX-02, OGX-03, OGX-04, OGX-05, OGX-06, OGX-07, UI-01)
 - [x] **Phase 22: SJD Library** — Parse SJD_LIBRARY constant from data/SJD Examples.txt; expose GET /api/sjd endpoints; non-blocking "Browse SJDs" flow at end of Role phase; SJD pre-fill with provenance and OG-change warning. (SJD-01, SJD-02, SJD-03)
-- [ ] **Phase 23: Writing Guide Integration** — Structural duty validation (active-voice, word-count, no-passive, no-duplicate); non-blocking inline .duty-hint warnings via POST /api/wd/{id}/validate-duties; Client Service Results question inserted in QUESTION_BANK; per-step OG-specific duty tips from OG_DEFINITIONS. (WG-01, WG-02, WG-03, WG-04)
+- [x] **Phase 23: Writing Guide Integration** — Structural duty validation (active-voice, word-count, no-passive, no-duplicate); non-blocking inline .duty-hint warnings via POST /api/wd/{id}/validate-duties; Client Service Results question inserted in QUESTION_BANK; per-step OG-specific duty tips from OG_DEFINITIONS. (WG-01, WG-02, WG-03, WG-04)
 - [ ] **Phase 24: Risk Audit** — "Run compliance audit" button in Review phase; deterministic CBA clause matching (exclusion/scope/application articles) + Federal Court ERR principle rules; per-finding Accept/Manual Edit/Skip decisions written to audit_log; Manual Edit links to existing amendment panel. (AUDIT-01, AUDIT-02, AUDIT-03, AUDIT-04, AUDIT-05)
 - [ ] **Phase 25: Accessible Template** — Build and self-verify wd_accessible_template.docx (Part 1: position ID + signatures; Part 2: 6 subsections); populate Effort/Working Conditions from JES factor scores; retire TBS WD template; content-presence test against fully-completed WD. (ACC-01, ACC-02, ACC-03, ACC-04)
 
@@ -131,10 +131,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 23-01-PLAN.md — Wave 0: RED baseline test stubs + duty_validator.py stub
-- [ ] 23-02-PLAN.md — duty_validator.py: four WG-01 deterministic rules
-- [ ] 23-03-PLAN.md — POST /api/wd/{id}/validate-duties endpoint
-- [ ] 23-04-PLAN.md — Frontend: client_service_results step, OG_DUTY_TIPS, dutyHints rendering
+- [x] 23-01-PLAN.md — Wave 0: RED baseline test stubs + duty_validator.py stub
+- [x] 23-02-PLAN.md — duty_validator.py: four WG-01 deterministic rules
+- [x] 23-03-PLAN.md — POST /api/wd/{id}/validate-duties endpoint
+- [x] 23-04-PLAN.md — Frontend: client_service_results step, OG_DUTY_TIPS, dutyHints rendering
 
 **UI hint**: yes
 
@@ -206,6 +206,6 @@ Plans:
 | 20. Export | v2.0 | 3/3 | Complete | 2026-06-10 |
 | **21. OG Expansion + Preview Fix** | **v3.0** | **8/8** | **Gaps Found** | — |
 | **22. SJD Library** | **v3.0** | **4/4** | **Complete (pending UAT)** | **2026-06-11** |
-| **23. Writing Guide Integration** | **v3.0** | **0/?** | **Not started** | — |
+| **23. Writing Guide Integration** | **v3.0** | **4/4** | **Complete (pending UAT)** | **2026-06-15** |
 | **24. Risk Audit** | **v3.0** | **0/?** | **Not started** | — |
 | **25. Accessible Template** | **v3.0** | **0/?** | **Not started** | — |
