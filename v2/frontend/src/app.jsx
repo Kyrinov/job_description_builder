@@ -100,6 +100,9 @@ function App() {
   const [sjdEntries, setSjdEntries] = useState([]);
   const [sjdOgFilter, setSjdOgFilter] = useState('');
   const [sjdLoading, setSjdLoading] = useState(false);
+  // Phase 24 (AUDIT-01): compliance audit findings — populated only by button click, never automatically
+  const [auditFindings, setAuditFindings] = useState([]);
+  const [auditRunning, setAuditRunning] = useState(false);
   const threadRef = useRef(null);
   const docRef = useRef(null);
 
@@ -625,6 +628,35 @@ function App() {
       });
   }
 
+  // Phase 24 (AUDIT-01): Manually-triggered compliance audit — button click only.
+  // T-24-09 mitigation: never invoked from a useEffect; fires only on Run-audit click.
+  function handleRunAudit() {
+    if (!wd_id) return;
+    setAuditRunning(true);
+    fetch(`/api/wd/${wd_id}/audit`, { method: 'POST' })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(data => {
+        setAuditFindings(data.findings || []);
+        setAuditRunning(false);
+      })
+      .catch(() => { setAuditRunning(false); });
+  }
+
+  // Phase 24 (AUDIT-04): Log advisor Accept / Manual Edit / Skip decision.
+  // Fire-and-forget POST; failure is silent. Manual Edit additionally opens the
+  // existing Phase 19 amendment panel for the flagged section (AUDIT-05).
+  function handleAuditDecide(ruleId, section, decision) {
+    if (!wd_id) return;
+    fetch(`/api/wd/${wd_id}/audit/decide`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rule_id: ruleId, section, decision }),
+    }).catch(() => {}); // fire-and-forget; non-blocking
+    if (decision === 'manual_edit') {
+      handleAmendToggle(section);
+    }
+  }
+
   // Phase 22 SJD-02: non-blocking "Browse SJDs" handler. Opens the SJD panel
   // and fetches the list (optionally pre-filtered by current OG group). The
   // action is gated to post-Role phase (step.phase >= 1) at the render site.
@@ -780,7 +812,17 @@ function App() {
       <div className="convo">
         <Header phaseIdx={phaseIdx} />
         {reviewing
-          ? <ReviewState record={record} cls={cls} onExport={exportAs} onRestart={restart} amendmentNotes={amendmentNotes} />
+          ? <ReviewState
+              record={record}
+              cls={cls}
+              onExport={exportAs}
+              onRestart={restart}
+              amendmentNotes={amendmentNotes}
+              auditFindings={auditFindings}
+              auditRunning={auditRunning}
+              onRunAudit={handleRunAudit}
+              onAuditDecide={handleAuditDecide}
+            />
           : (
             <div className="thread" ref={threadRef}>
               {answeredSteps.map(({ s, originalIndex: i }) => (
