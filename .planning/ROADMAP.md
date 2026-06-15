@@ -104,7 +104,7 @@ Plans:
 3. When the DOCX is exported after an SJD start, the version manifest includes the SJD number and source as a provenance entry
 4. If the advisor changes confirmed_og after an SJD pre-fill, a warning appears: "Departing from the SJD classification turns this into a new evaluation — the SJD decision no longer applies"
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 22-01-PLAN.md — Wave 0 test scaffolding (all Phase 22 test stubs, RED baseline) — 10 test functions in v2/backend/tests/test_sjd.py; 9/10 RED

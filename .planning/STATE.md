@@ -3,20 +3,20 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Classification Depth & Document Quality
 current_phase: 22
-status: executing
+status: ready_to_plan
 last_updated: "2026-06-11T18:43:12Z"
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 13
   completed_plans: 13
-  percent: 100
+  percent: 60
 ---
 
 # Project State
 
-**Status:** Executing Phase 22
-**Current phase:** 22
+**Status:** Ready to plan
+**Current phase:** 23
 **Last updated:** 2026-06-11
 **Next action:** Phase 22 complete (4/4 plans) — pending human UAT for 22-04 SJD browse UI. Plan 22-04 complete: fetchSjds/fetchSjdDetail helpers in data.jsx, Browse SJDs non-blocking button after Role phase, SJD browser panel with OG-group filter, sjd-start integration mirroring sjd_source/confirmed_og/og_level/duties into record, SJD-03 og_confirm OG-change advisory toast, SJD provenance badge in document.jsx; 224.07 kB JS / 68.62 kB gzip build; 60/60 frontend + 125/125 backend tests GREEN
 
