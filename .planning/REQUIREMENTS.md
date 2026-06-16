@@ -47,11 +47,11 @@
 
 ## Risk Audit (AUDIT) — 5 requirements
 
-- [ ] **AUDIT-01** — "Run compliance audit" button in the Review phase (never runs automatically); `POST /api/wd/{id}/audit` executes deterministic rule matching; findings stored in `audit_log` with `event='risk_audit_finding'`; audit is re-runnable and replaces previous findings in the UI (deduplication by max-id per section)
-- [ ] **AUDIT-02** — Audit matches against the confirmed OG's CBA JSON file (`data/agreements/{OG}/`) — exclusion, scope, and application articles only; two-signal requirement before any finding fires (verbatim term match + section relevance); false negatives preferred over false positives in this legal domain
-- [ ] **AUDIT-03** — Audit evaluates a curated subset of Federal Court ERR principles (completeness of duty coverage, generic vs. specific duty adequacy) sourced from `data/AI Docs/ERR_Principles_drawn_from_Federal_Court.pdf` and `data/AI Docs/Wilkonson v. Canada.pdf`; principles encoded as deterministic rules, not LLM inference
-- [ ] **AUDIT-04** — Each finding displays: section, severity (advisory/warning), verbatim CBA clause or court citation, plain-language recommendation; advisor chooses Accept / Manual Edit / Skip; Skip label is "Not applicable — no conflict found"; every decision written to `audit_log` with `event='risk_audit_decision'`
-- [ ] **AUDIT-05** — Manual Edit action opens the existing Phase 19 amendment panel for the flagged section; amendment note and audit finding share the same section key so they co-appear in the DOCX amendment appendix
+- [x] **AUDIT-01** — "Run compliance audit" button in the Review phase (never runs automatically); `POST /api/wd/{id}/audit` executes deterministic rule matching; findings stored in `audit_log` with `event='risk_audit_finding'`; audit is re-runnable and replaces previous findings in the UI (deduplication by max-id per section)
+- [x] **AUDIT-02** — Audit matches against the confirmed OG's CBA JSON file (`data/agreements/{OG}/`) — exclusion, scope, and application articles only; two-signal requirement before any finding fires (verbatim term match + section relevance); false negatives preferred over false positives in this legal domain
+- [x] **AUDIT-03** — Audit evaluates a curated subset of Federal Court ERR principles (completeness of duty coverage, generic vs. specific duty adequacy) sourced from `data/AI Docs/ERR_Principles_drawn_from_Federal_Court.pdf` and `data/AI Docs/Wilkonson v. Canada.pdf`; principles encoded as deterministic rules, not LLM inference
+- [x] **AUDIT-04** — Each finding displays: section, severity (advisory/warning), verbatim CBA clause or court citation, plain-language recommendation; advisor chooses Accept / Manual Edit / Skip; Skip label is "Not applicable — no conflict found"; every decision written to `audit_log` with `event='risk_audit_decision'`
+- [x] **AUDIT-05** — Manual Edit action opens the existing Phase 19 amendment panel for the flagged section; amendment note and audit finding share the same section key so they co-appear in the DOCX amendment appendix
 
 ---
 
@@ -108,11 +108,11 @@
 | WG-02  | Phase 23 | Complete |
 | WG-03  | Phase 23 | Complete |
 | WG-04  | Phase 23 | Complete |
-| AUDIT-01 | Phase 24 | Pending |
-| AUDIT-02 | Phase 24 | Pending |
-| AUDIT-03 | Phase 24 | Pending |
-| AUDIT-04 | Phase 24 | Pending |
-| AUDIT-05 | Phase 24 | Pending |
+| AUDIT-01 | Phase 24 | Complete |
+| AUDIT-02 | Phase 24 | Complete |
+| AUDIT-03 | Phase 24 | Complete |
+| AUDIT-04 | Phase 24 | Complete |
+| AUDIT-05 | Phase 24 | Complete |
 | ACC-01 | Phase 25 | Pending |
 | ACC-02 | Phase 25 | Pending |
 | ACC-03 | Phase 25 | Pending |

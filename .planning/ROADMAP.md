@@ -52,7 +52,7 @@ v3.0 expands the classification engine to all GC occupational groups with JES st
 - [x] **Phase 21: OG Expansion + Preview Fix** — Extend all six constants atomically for 16 OG groups (12 new); consolidate NON_EC_STANDARD_NAMES; full JES scoring for point-rating groups; level-lookup for level-description groups; sub-group disambiguation for NU/SW/ED; fix .doc-scroll CSS. (OGX-01, OGX-02, OGX-03, OGX-04, OGX-05, OGX-06, OGX-07, UI-01)
 - [x] **Phase 22: SJD Library** — Parse SJD_LIBRARY constant from data/SJD Examples.txt; expose GET /api/sjd endpoints; non-blocking "Browse SJDs" flow at end of Role phase; SJD pre-fill with provenance and OG-change warning. (SJD-01, SJD-02, SJD-03)
 - [x] **Phase 23: Writing Guide Integration** — Structural duty validation (active-voice, word-count, no-passive, no-duplicate); non-blocking inline .duty-hint warnings via POST /api/wd/{id}/validate-duties; Client Service Results question inserted in QUESTION_BANK; per-step OG-specific duty tips from OG_DEFINITIONS. (WG-01, WG-02, WG-03, WG-04)
-- [ ] **Phase 24: Risk Audit** — "Run compliance audit" button in Review phase; deterministic CBA clause matching (exclusion/scope/application articles) + Federal Court ERR principle rules; per-finding Accept/Manual Edit/Skip decisions written to audit_log; Manual Edit links to existing amendment panel. (AUDIT-01, AUDIT-02, AUDIT-03, AUDIT-04, AUDIT-05)
+- [x] **Phase 24: Risk Audit** — "Run compliance audit" button in Review phase; deterministic CBA clause matching (exclusion/scope/application articles) + Federal Court ERR principle rules; per-finding Accept/Manual Edit/Skip decisions written to audit_log; Manual Edit links to existing amendment panel. (AUDIT-01, AUDIT-02, AUDIT-03, AUDIT-04, AUDIT-05) (completed 2026-06-16)
 - [ ] **Phase 25: Accessible Template** — Build and self-verify wd_accessible_template.docx (Part 1: position ID + signatures; Part 2: 6 subsections); populate Effort/Working Conditions from JES factor scores; retire TBS WD template; content-presence test against fully-completed WD. (ACC-01, ACC-02, ACC-03, ACC-04)
 
 **Coverage:** 24/24 v3.0 requirements mapped · 5 phases (21–25) · 0 unmapped · 0 orphans
@@ -155,13 +155,13 @@ Plans:
 4. Manual Edit opens the existing amendment panel for the flagged section; the amendment note and the audit finding share the same section key and co-appear when the section is inspected
 5. The audit produces zero findings for a minimal well-formed WD that has no CA conflicts and no ERR principle violations — confirming the two-signal rule suppresses false positives
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 24-01-PLAN.md — Wave 0: RED baseline test stubs + risk_auditor.py stub
-- [ ] 24-02-PLAN.md — risk_auditor.py: CBA loader + ERR rules + two-signal CBA matching
-- [ ] 24-03-PLAN.md — POST /api/wd/{id}/audit + POST /api/wd/{id}/audit/decide endpoints
-- [ ] 24-04-PLAN.md — Frontend: auditFindings state + handleRunAudit + ReviewState audit panel
+- [x] 24-01-PLAN.md — Wave 0: RED baseline test stubs + risk_auditor.py stub
+- [x] 24-02-PLAN.md — risk_auditor.py: CBA loader + ERR rules + two-signal CBA matching
+- [x] 24-03-PLAN.md — POST /api/wd/{id}/audit + POST /api/wd/{id}/audit/decide endpoints
+- [x] 24-04-PLAN.md — Frontend: auditFindings state + handleRunAudit + ReviewState audit panel
 
 **UI hint**: yes
 
