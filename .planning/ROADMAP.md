@@ -53,7 +53,7 @@ v3.0 expands the classification engine to all GC occupational groups with JES st
 - [x] **Phase 22: SJD Library** — Parse SJD_LIBRARY constant from data/SJD Examples.txt; expose GET /api/sjd endpoints; non-blocking "Browse SJDs" flow at end of Role phase; SJD pre-fill with provenance and OG-change warning. (SJD-01, SJD-02, SJD-03)
 - [x] **Phase 23: Writing Guide Integration** — Structural duty validation (active-voice, word-count, no-passive, no-duplicate); non-blocking inline .duty-hint warnings via POST /api/wd/{id}/validate-duties; Client Service Results question inserted in QUESTION_BANK; per-step OG-specific duty tips from OG_DEFINITIONS. (WG-01, WG-02, WG-03, WG-04)
 - [x] **Phase 24: Risk Audit** — "Run compliance audit" button in Review phase; deterministic CBA clause matching (exclusion/scope/application articles) + Federal Court ERR principle rules; per-finding Accept/Manual Edit/Skip decisions written to audit_log; Manual Edit links to existing amendment panel. (AUDIT-01, AUDIT-02, AUDIT-03, AUDIT-04, AUDIT-05) (completed 2026-06-16)
-- [ ] **Phase 25: Accessible Template** — Build and self-verify wd_accessible_template.docx (Part 1: position ID + signatures; Part 2: 6 subsections); populate Effort/Working Conditions from JES factor scores; retire TBS WD template; content-presence test against fully-completed WD. (ACC-01, ACC-02, ACC-03, ACC-04)
+- [ ] **Phase 25: Accessible Template** — Build and self-verify wd_accessible_template.docx (Part 1: position ID + signatures; Part 2: 7 subsections); populate Effort/Working Conditions from JES factor scores; retire TBS WD template; content-presence test against fully-completed WD. (ACC-01, ACC-02, ACC-03, ACC-04)
 
 **Coverage:** 24/24 v3.0 requirements mapped · 5 phases (21–25) · 0 unmapped · 0 orphans
 
@@ -181,7 +181,12 @@ Plans:
 3. A content-presence test opens the rendered DOCX via python-docx and confirms every non-placeholder template variable resolves to a non-empty string for a fully-completed WD
 4. The previous TBS WD template is retired; all existing export tests pass with assertions updated to the Accessible format structure; the poster DOCX template is unchanged
 
-**Plans:** TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 25-01-PLAN.md — Wave 0: RED baseline — 4 JES-shape fixture helpers + ACC-02/ACC-04 tests in test_export.py
+- [ ] 25-02-PLAN.md — build_accessible_template.py + self-verifying wd_accessible_template.docx (Part 1 17-field table + 3 static signature blocks; Part 2 7 subsections) (ACC-01)
+- [ ] 25-03-PLAN.md — _factor_category_map + rewritten _build_wd_context + Accessible template path swap + retire TBS template (ACC-02, ACC-03, ACC-04)
 
 ---
 
@@ -213,5 +218,5 @@ Plans:
 | **21. OG Expansion + Preview Fix** | **v3.0** | **8/8** | **Gaps Found** | — |
 | **22. SJD Library** | **v3.0** | **4/4** | **Complete (pending UAT)** | **2026-06-11** |
 | **23. Writing Guide Integration** | **v3.0** | **4/4** | **Complete (pending UAT)** | **2026-06-15** |
-| **24. Risk Audit** | **v3.0** | **0/?** | **Not started** | — |
-| **25. Accessible Template** | **v3.0** | **0/?** | **Not started** | — |
+| **24. Risk Audit** | **v3.0** | **4/4** | **Complete** | **2026-06-16** |
+| **25. Accessible Template** | **v3.0** | **0/3** | **Planned** | — |
