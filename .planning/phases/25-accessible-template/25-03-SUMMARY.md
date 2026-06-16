@@ -181,3 +181,23 @@ The test also asserts `"NON_EC_STANDARD_NAMES: dict"` is NOT in the source (i.e.
 - Phase 25 is now structurally complete (all 3 plans done). Pending: human UAT of the Accessible-format DOCX (9-step verification per Phase 25's plan-summary success criteria).
 - The 6 RED tests from Plan 25-01 are now GREEN; the 150/150 backend suite is green. The export endpoint at `POST /api/wd/{id}/export/docx` now renders the GoC Accessible JD format exclusively.
 - No follow-on plan required for Phase 25. The next phase is the v3.0 milestone close (Phase 25 was the last phase in the v3.0 roadmap).
+
+## Self-Check: PASSED
+
+All claims verified:
+- [x] `.planning/phases/25-accessible-template/25-03-SUMMARY.md` exists
+- [x] Commit `9de26fd` (Task 1 — _factor_category_map + _build_wd_context rewrite) exists in git log
+- [x] Commit `baa0440` (Task 2 — template path swap + TBS retirement) exists in git log
+- [x] Commit `eef3bf5` (docs — final SUMMARY + STATE/ROADMAP update) exists in git log
+- [x] `python -m pytest tests/test_export.py -q` → 19 passed, 0 failed
+- [x] `python -m pytest -q` → 150 passed, 0 failed
+- [x] `v2/backend/app/templates/wd_template.docx` deleted
+- [x] `v2/backend/scripts/build_wd_template.py` deleted
+- [x] `v2/backend/app/templates/wd_accessible_template.docx` exists (committed in Plan 25-02)
+- [x] `v2/backend/app/templates/poster_template.docx` exists, untouched
+- [x] `v2/backend/scripts/build_poster_template.py` exists, untouched
+- [x] `grep -rn 'wd_template.docx' v2/backend --include='*.py'` → 0 hits
+- [x] `_factor_category_map` defined (line 220) and used for category bucketing (lines 343-345)
+- [x] `_ADVISOR_PLACEHOLDER` defined (line 60) and applied via `or _ADVISOR_PLACEHOLDER` idiom throughout
+- [x] All 4 JES-shape fixtures render correctly: EC factors in Effort table, FB factors in Effort+WC tables, MT/AS show placeholder
+- [x] `client_service_results` from record surfaces in new "Client service results" Part 2 subsection
