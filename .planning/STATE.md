@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Classification Depth & Document Quality
 current_phase: 25
-current_plan: 03 (_factor_category_map + _build_wd_context rewrite + template path swap + TBS retirement complete)
-status: executing
-last_updated: "2026-06-16T19:21:43.581Z"
+current_plan: null
+status: complete
+last_updated: "2026-06-16T19:35:00Z"
 progress:
   total_phases: 5
   completed_phases: 5
@@ -16,11 +16,10 @@ progress:
 
 # Project State
 
-**Status:** Executing Phase 25 Plan 03 (Accessible template export path + TBS retirement complete)
+**Status:** Phase 25 Accessible Template complete (pending 9-step human UAT)
 **Current phase:** 25
-**Current plan:** 03 (_factor_category_map + _build_wd_context rewrite + template path swap + TBS retirement complete)
 **Last updated:** 2026-06-16
-**Next action:** Plan 25-03 complete (_factor_category_map + rewritten _build_wd_context + wd_accessible_template.docx path swap + wd_template.docx/build_wd_template.py retired; 6 RED tests from Plan 25-01 now GREEN; 19/19 test_export.py passing; 150/150 full backend suite green; ACC-02/03/04 closed). Phase 25 structurally complete. Pending: 9-step human UAT of the Accessible-format DOCX.
+**Next action:** All 5 phases of v3.0 complete (24/24 plans, 24/24 requirements). Phase 25 Accessible Template ships: 19/19 test_export.py + 150/150 full backend suite green; _factor_category_map helper + rewritten _build_wd_context produces all 29 Accessible Jinja2 vars; wd_accessible_template.docx live (37,872 bytes, 3 tables, 14 headings, 7 Part 2 subsections, self-verified); TBS template + build script retired; poster_template.docx unchanged. Pending: 9-step human UAT of the Accessible-format DOCX (see `.planning/phases/25-accessible-template/25-HUMAN-UAT.md`).
 
 ---
 
@@ -28,11 +27,11 @@ progress:
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 21 | OG Expansion + Preview Fix | All 9 plans complete (incl. 21-09 gap-closure); 60/60 frontend tests; JES-LEV-01 + OGX-07 closed |
-| 22 | SJD Library | Plans 22-01 + 22-02 + 22-03 + 22-04 complete (RED baseline + SJD_LIBRARY constant with OG normalization + GET /api/sjd endpoints + router registration + DraftDuty.source="sjd" extension + WorkDescription.sjd_source + POST /api/wd/{id}/sjd-start endpoint + _build_sjd_seed_duties helper + _build_v2_manifest SJD provenance + fetchSjds/fetchSjdDetail helpers + Browse SJDs panel + sjd-start frontend call + SJD-03 warning); 10/10 test_sjd.py GREEN; 125/125 backend suite GREEN; 60/60 frontend tests GREEN; 4 plans of 4 done; pending 9-step human UAT |
-| 23 | Writing Guide Integration | Plans 23-01 + 23-02 + 23-03 + 23-04 complete (RED baseline + duty_validator.py 4-rule implementation + POST /api/wd/{id}/validate-duties endpoint + dutyHints state + OG_DUTY_TIPS constant + client_service_results step + .duty-hint + .og-duty-tip CSS); 9/9 test_writing_guide.py GREEN; 134/134 backend suite GREEN; 60/60 frontend tests GREEN; 4 plans of 4 done; pending 4-step human UAT |
-| 24 | Risk Audit | Ready to execute — 4 plans planned (24-01 through 24-04) |
-| 25 | Accessible Template | Plans 25-01 + 25-02 + 25-03 complete (RED baseline + build_accessible_template.py + wd_accessible_template.docx with 29/29 vars self-verified + _factor_category_map helper + rewritten _build_wd_context producing all 29 Accessible Jinja2 vars + template path swap + wd_template.docx/build_wd_template.py retired; 6 RED tests now GREEN; 19/19 test_export.py passing; 150/150 full backend suite green; ACC-01/02/03/04 closed). Pending: 9-step human UAT |
+| 21 | OG Expansion + Preview Fix | Complete (9 plans incl. 21-09 gap-closure); 60/60 frontend tests; JES-LEV-01 + OGX-07 closed |
+| 22 | SJD Library | Complete (4 plans); 10/10 test_sjd.py GREEN; 125/125 backend suite GREEN; 60/60 frontend tests GREEN; pending 9-step human UAT |
+| 23 | Writing Guide Integration | Complete (4 plans); 9/9 test_writing_guide.py GREEN; 134/134 backend suite GREEN; 60/60 frontend tests GREEN; pending 4-step human UAT |
+| 24 | Risk Audit | Complete (4 plans) |
+| 25 | Accessible Template | Complete (3 plans); 19/19 test_export.py + 150/150 full backend suite green; wd_accessible_template.docx live (37,872 bytes, 3 tables, 14 headings, 7 Part 2 subsections); TBS template + build script retired; poster unchanged; ACC-01/02/03/04 closed; pending 9-step human UAT |
 
 ---
 
