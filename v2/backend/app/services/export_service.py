@@ -33,7 +33,11 @@ from datetime import date
 from docxtpl import DocxTemplate
 
 from app.db import get_connection
-from app.data.constants import NON_EC_STANDARD_NAMES
+from app.data.constants import (
+    EC_JES_ELEMENTS,
+    JES_FACTORS_BY_GROUP,
+    NON_EC_STANDARD_NAMES,
+)
 from app.models.draft_duty import DraftDuty
 from app.models.work_description import WorkDescription
 
@@ -47,6 +51,14 @@ logger = logging.getLogger(__name__)
 # Runtime probe cache for WeasyPrint. Set to True or False after the first
 # call to _probe_weasyprint(); None means "not yet probed". See EXP-03.
 _weasyprint_available: bool | None = None
+
+# Accessible-template placeholder (Phase 25, ACC-02 fallback). Used for any
+# Part 1 / Part 2 scalar that has no authoritative source on the WD, and for
+# the Effort / Working-Conditions sections when the OG group has no factors
+# in that category. Locked decision 2 (RESEARCH.md): all 17 Part 1 fields
+# render even when the WD does not yet carry a value, so the advisor can
+# hand-fill them after print.
+_ADVISOR_PLACEHOLDER = "[To be completed by advisor]"
 
 
 # ---------------------------------------------------------------------------
@@ -205,6 +217,33 @@ def _build_v2_manifest(wd: WorkDescription) -> list[dict]:
     return manifest
 
 
+def _factor_category_map() -> dict[str, str]:
+    """Merge EC_JES_ELEMENTS + every JES_FACTORS_BY_GROUP entry into factor_name -> category.
+
+    Source of truth for factor categories is constants.py. Never trust
+    wd.jes_scores[i]["category"] directly — the EC scoring path
+    (_build_factor_score in jes_service.py) does NOT copy the category key
+    onto the persisted score dict; only the non-EC point-rating path does.
+    Reading wd.jes_scores[i].get("category") on an EC WD would return
+    None/empty and silently mis-bucket every EC factor.
+
+    Category values are exactly: "Effort", "Conditions", "Skill",
+    "Responsibility". Keys are the canonical factor names from
+    EC_JES_ELEMENTS and JES_FACTORS_BY_GROUP (e.g. "Physical effort",
+    "Working conditions", "Risk to health"). The dict is built fresh on
+    every call — this is module-cost-cheap (two short list comprehensions)
+    and avoids any cross-test cache invalidation when the test suite
+    monkeypatches constants.
+    """
+    mapping: dict[str, str] = {}
+    for el in EC_JES_ELEMENTS:
+        mapping[el["name"]] = el["category"]
+    for group_factors in JES_FACTORS_BY_GROUP.values():
+        for f in group_factors:
+            mapping[f["name"]] = f.get("category", "")
+    return mapping
+
+
 # ---------------------------------------------------------------------------
 # WD context builder (D-04 / D-05 — v2.0 flat-field translation)
 # ---------------------------------------------------------------------------
@@ -240,15 +279,47 @@ def _build_organizational_context_text(wd: WorkDescription) -> str:
 
 
 def _build_wd_context(wd: WorkDescription, amendments: list[dict]) -> dict:
-    """Build the docxtpl context dict for the TBS Work Description template.
+    """Build the docxtpl context dict for the Accessible Work Description template.
 
-    Keys are exactly the variables declared in wd_template.docx. The
-    {%p for %} loops receive lists of dicts; scalars are strings.
+    Phase 25 (ACC-01..04): keys are exactly the 29 variables declared in
+    wd_accessible_template.docx. The {%p for %} / {%tr for %} loops receive
+    lists of dicts; scalars are strings.
+
+    Effort and Working-Conditions factors are bucketed via _factor_category_map()
+    — never via score.get("category") on the persisted dict, because the EC
+    scoring path does not copy the category key. Groups with no factors in a
+    category (e.g. MT — Skill/Responsibility only; AS, NU, PS, … — level
+    description with empty jes_scores) fall back to the _ADVISOR_PLACEHOLDER
+    string for the corresponding placeholder variable.
+
+    Per LOCKED DECISION 2, all 17 Part 1 fields render even when the WD does
+    not yet carry a value; the 6 with no authoritative source (job_code,
+    office_code, language/linguistic/communications/security requirements) are
+    bound to _ADVISOR_PLACEHOLDER directly. supervisor_classification has no
+    WD source and follows the same convention.
     """
     record = wd.record or {}
     og_code = _og_code_from(wd)
     og_level_int = wd.og_level or 0
     og_level_str = _og_level_str(og_code, og_level_int)
+
+    # SW/ED routing-code resolution — replicate jes_service.py score_jes_v2
+    # (lines 192-217). The dict keys in JES_FACTORS_BY_GROUP are routing codes
+    # (e.g. "SW-SCW", "ED-LAT"), not raw og_codes, so a naive og_code lookup
+    # would KeyError or silently mis-classify.
+    sub_group = getattr(wd, "confirmed_sub_group", None)
+    routing_code = og_code
+    if og_code == "SW":
+        routing_code = "SW-SCW" if sub_group == "SCW" else "SW-CHA"
+    elif og_code == "ED":
+        if sub_group == "EDS":
+            routing_code = "ED-EDS"
+        elif sub_group == "LAT":
+            routing_code = "ED-LAT"
+        elif sub_group == "EST":
+            routing_code = "ED-EST"
+        else:
+            routing_code = "ED-LAT"
 
     # Qualification — fall back to record.quals when root qualification not yet persisted
     if wd.qualification is not None:
@@ -264,15 +335,62 @@ def _build_wd_context(wd: WorkDescription, amendments: list[dict]) -> dict:
     if not root_duties:
         root_duties = [DraftDuty(**d) for d in (record.get("duties") or [])]
 
+    # JES factor bucketing (ACC-02). Derive category from _factor_category_map()
+    # — the persisted wd.jes_scores dict may lack a 'category' key (EC path)
+    # or have one (point-rating path); the source of truth is constants.py.
+    cat_map = _factor_category_map()
+    scores = wd.jes_scores or []
+    effort_factors = [s for s in scores if cat_map.get(s.get("factor_name", "")) == "Effort"]
+    working_conditions_factors = [s for s in scores if cat_map.get(s.get("factor_name", "")) == "Conditions"]
+    responsibility_factors = [s for s in scores if cat_map.get(s.get("factor_name", "")) == "Responsibility"]
+
+    # Placeholder convention: when a category has no factors, set the
+    # corresponding placeholder to _ADVISOR_PLACEHOLDER; when factors are
+    # present, set the placeholder to "" so the rendered paragraph is empty
+    # and the table fills the section visually.
+    effort_placeholder = "" if effort_factors else _ADVISOR_PLACEHOLDER
+    wc_placeholder = "" if working_conditions_factors else _ADVISOR_PLACEHOLDER
+
+    if responsibility_factors:
+        responsibilities_text = "\n".join(
+            f"{s.get('factor_name')}: {s.get('rationale', '')}".rstrip(": ")
+            for s in responsibility_factors
+        )
+    else:
+        responsibilities_text = _ADVISOR_PLACEHOLDER
+
+    # Client service results — sourced from record.client_service_results
+    # (captured by the conversation flow via the Writing Guide question
+    # inserted in Phase 23 / WG-03). Falls back to placeholder when blank.
+    client_service_results_text = (
+        (record.get("client_service_results") or "").strip() or _ADVISOR_PLACEHOLDER
+    )
+
     return {
-        "position_title": record.get("title", ""),
-        "position_number": record.get("position_number", ""),
-        "og_level": og_level_str,
-        "supervisor_title": record.get("reports", ""),
-        "supervisor_position_number": "",
+        # Part 1 — 17-field position-identification table.
+        # All scalars use the `or _ADVISOR_PLACEHOLDER` idiom so a blank WD
+        # never renders "" or None in the table (docxtpl emits "None" for
+        # None and an empty cell for "" — neither is acceptable per ACC-04).
+        "position_number": record.get("position_number") or _ADVISOR_PLACEHOLDER,
+        "position_title": record.get("title") or _ADVISOR_PLACEHOLDER,
+        "og_level": og_level_str or _ADVISOR_PLACEHOLDER,
         "review_date": str(date.today()),
+        "job_code": _ADVISOR_PLACEHOLDER,
+        "noc_code": record.get("noc_code") or _ADVISOR_PLACEHOLDER,
+        "department_name": record.get("department_name") or _ADVISOR_PLACEHOLDER,
+        "geographic_location": record.get("location") or _ADVISOR_PLACEHOLDER,
+        "org_component": record.get("branch") or _ADVISOR_PLACEHOLDER,
+        "office_code": _ADVISOR_PLACEHOLDER,
+        "language_requirements": _ADVISOR_PLACEHOLDER,
+        "linguistic_profile": _ADVISOR_PLACEHOLDER,
+        "communications_requirements": _ADVISOR_PLACEHOLDER,
+        "security_requirements": _ADVISOR_PLACEHOLDER,
+        "supervisor_position_number": record.get("supervisor_position_number") or _ADVISOR_PLACEHOLDER,
+        "supervisor_title": record.get("reports") or _ADVISOR_PLACEHOLDER,
+        "supervisor_classification": _ADVISOR_PLACEHOLDER,
+        # Part 2 — 7 subsections.
         "organizational_context_text": _build_organizational_context_text(wd),
-        "organizational_context_source": "Drafted from answers",
+        "client_service_results_text": client_service_results_text,
         "duties": [
             {
                 "text": d.text,
@@ -281,12 +399,17 @@ def _build_wd_context(wd: WorkDescription, amendments: list[dict]) -> dict:
             }
             for d in root_duties
         ],
-        "jes_scores": wd.jes_scores or [],
-        "jes_total_points": wd.jes_total_points or 0,
+        "education_text": education_text or _ADVISOR_PLACEHOLDER,
+        "experience_text": experience_text or _ADVISOR_PLACEHOLDER,
+        "effort_factors": effort_factors,
+        "effort_placeholder": effort_placeholder,
+        "responsibilities_text": responsibilities_text,
+        "working_conditions_factors": working_conditions_factors,
+        "wc_placeholder": wc_placeholder,
+        # Version manifest + amendments (same shape as TBS template;
+        # _build_v2_manifest is reused verbatim).
         "manifest": _build_v2_manifest(wd),
         "amendments": amendments,
-        "education_text": education_text,
-        "experience_text": experience_text,
     }
 
 
