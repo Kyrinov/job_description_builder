@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Classification Depth & Document Quality
 current_phase: 25
-current_plan: 02 (build_accessible_template.py + wd_accessible_template.docx complete)
+current_plan: 03 (_factor_category_map + _build_wd_context rewrite + template path swap + TBS retirement complete)
 status: executing
-last_updated: "2026-06-16T19:07:08.761Z"
+last_updated: "2026-06-16T19:21:43.581Z"
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 24
-  completed_plans: 23
-  percent: 96
+  completed_plans: 24
+  percent: 100
 ---
 
 # Project State
 
-**Status:** Executing Phase 25 Plan 02
+**Status:** Executing Phase 25 Plan 03 (Accessible template export path + TBS retirement complete)
 **Current phase:** 25
-**Current plan:** 02 (build_accessible_template.py + wd_accessible_template.docx complete)
+**Current plan:** 03 (_factor_category_map + _build_wd_context rewrite + template path swap + TBS retirement complete)
 **Last updated:** 2026-06-16
-**Next action:** Plan 25-02 complete (self-verifying build script + committed .docx artifact; 29/29 required Jinja2 vars declared, 6 RED tests from Plan 25-01 still RED as expected). Execute Plan 25-03 (_factor_category_map + _build_wd_context rewrite + template path swap + retire wd_template.docx) to turn the 6 RED tests GREEN.
+**Next action:** Plan 25-03 complete (_factor_category_map + rewritten _build_wd_context + wd_accessible_template.docx path swap + wd_template.docx/build_wd_template.py retired; 6 RED tests from Plan 25-01 now GREEN; 19/19 test_export.py passing; 150/150 full backend suite green; ACC-02/03/04 closed). Phase 25 structurally complete. Pending: 9-step human UAT of the Accessible-format DOCX.
 
 ---
 
@@ -32,7 +32,7 @@ progress:
 | 22 | SJD Library | Plans 22-01 + 22-02 + 22-03 + 22-04 complete (RED baseline + SJD_LIBRARY constant with OG normalization + GET /api/sjd endpoints + router registration + DraftDuty.source="sjd" extension + WorkDescription.sjd_source + POST /api/wd/{id}/sjd-start endpoint + _build_sjd_seed_duties helper + _build_v2_manifest SJD provenance + fetchSjds/fetchSjdDetail helpers + Browse SJDs panel + sjd-start frontend call + SJD-03 warning); 10/10 test_sjd.py GREEN; 125/125 backend suite GREEN; 60/60 frontend tests GREEN; 4 plans of 4 done; pending 9-step human UAT |
 | 23 | Writing Guide Integration | Plans 23-01 + 23-02 + 23-03 + 23-04 complete (RED baseline + duty_validator.py 4-rule implementation + POST /api/wd/{id}/validate-duties endpoint + dutyHints state + OG_DUTY_TIPS constant + client_service_results step + .duty-hint + .og-duty-tip CSS); 9/9 test_writing_guide.py GREEN; 134/134 backend suite GREEN; 60/60 frontend tests GREEN; 4 plans of 4 done; pending 4-step human UAT |
 | 24 | Risk Audit | Ready to execute — 4 plans planned (24-01 through 24-04) |
-| 25 | Accessible Template | Plans 25-01 + 25-02 complete (RED baseline + build_accessible_template.py + wd_accessible_template.docx with 29/29 vars self-verified, 4 tables / 14 headings / 43 paragraphs; 6 RED tests still RED as expected — export path not yet rewired). Plan 25-03 pending |
+| 25 | Accessible Template | Plans 25-01 + 25-02 + 25-03 complete (RED baseline + build_accessible_template.py + wd_accessible_template.docx with 29/29 vars self-verified + _factor_category_map helper + rewritten _build_wd_context producing all 29 Accessible Jinja2 vars + template path swap + wd_template.docx/build_wd_template.py retired; 6 RED tests now GREEN; 19/19 test_export.py passing; 150/150 full backend suite green; ACC-01/02/03/04 closed). Pending: 9-step human UAT |
 
 ---
 
@@ -141,6 +141,7 @@ None. Phase 21 gap closed by Plan 21-09 (2026-06-11). Sub_group propagation fixe
 | Phase 25 P01 | 7 | 2 tasks | 1 files |
 | Phase 25 P02 | 7min | 2 tasks | 2 files |
 | Phase 25 P02 | 7min | 2 tasks | 2 files |
+| Phase 25 P03 | 12 | 2 tasks | 3 files |
 
 ### v2.0 (complete)
 
@@ -157,9 +158,21 @@ None. Phase 21 gap closed by Plan 21-09 (2026-06-11). Sub_group propagation fixe
 |--------|-------|
 | Phases total | 5 (21–25) |
 | Requirements total | 24 |
-| Tests passing (after Phase 24) | 134 backend + 60 frontend (19 in test_export.py: 13 prior + 6 new RED); 19 total export tests with 6 RED awaiting Plans 25-02/03 |
+| Tests passing (after Phase 25) | 150 backend + 60 frontend (19 in test_export.py: 13 prior + 6 newly GREEN); 19 total export tests all GREEN |
 
-**Completed Phase:** 25 Plan 02 (Accessible build script + .docx artifact) — 2026-06-16T19:06Z
+**Completed Phase:** 25 Plan 03 (Accessible template export path + TBS retirement) — 2026-06-16T19:19Z
+
+- export_service.py: import line extended to (EC_JES_ELEMENTS, JES_FACTORS_BY_GROUP, NON_EC_STANDARD_NAMES); _ADVISOR_PLACEHOLDER constant added; _factor_category_map() helper added (merges EC_JES_ELEMENTS + JES_FACTORS_BY_GROUP into {factor_name: category}); _build_wd_context rewritten to produce all 29 Accessible-template Jinja2 vars; generate_wd_docx template path swapped from wd_template.docx to wd_accessible_template.docx
+- wd_template.docx (37,616 bytes TBS binary) + build_wd_template.py (249 lines TBS build script) retired via git rm
+- SW/ED routing-code resolution replicated from jes_service.score_jes_v2 (lines 192-217) — routing_code is the key into JES_FACTORS_BY_GROUP
+- 6 RED tests from Plan 25-01 now GREEN: test_accessible_effort_ec_populated, test_accessible_effort_fb_populated, test_accessible_effort_no_factor_group_placeholder, test_accessible_effort_level_description_placeholder, test_accessible_content_presence, test_accessible_structure_headings
+- 19/19 test_export.py tests passing (13 original + 6 newly GREEN); 150/150 full backend suite green
+- poster_template.docx + build_poster_template.py UNTOUCHED
+- Commits: 9de26fd (Task 1: helper + rewrite), baa0440 (Task 2: path swap + retirement)
+- Deviations: `grep -c 's.get("category")\|score.get("category")\|s["category"]' == 0` plan check returned 1 hit, but it's a docstring substring explaining WHY the code doesn't trust runtime category key (not actual code). The runtime code uses cat_map.get(s.get("factor_name", "")) exclusively.
+- ACC-02/03/04 closed. Phase 25 is structurally complete (all 3 plans done); pending: 9-step human UAT of the Accessible-format DOCX.
+
+**Previous Phase:** 25 Plan 02 (Accessible build script + .docx artifact) — 2026-06-16T19:06Z
 
 - 306-line build_accessible_template.py (replicates build_wd_template.py idioms verbatim; 29/29 required Jinja2 vars self-declared)
 - 37,872-byte wd_accessible_template.docx committed binary (4 tables, 14 headings, 43 paragraphs, 17-row position table in correct order, 7 Part 2 subsections)
