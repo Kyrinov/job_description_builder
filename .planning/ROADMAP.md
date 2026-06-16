@@ -54,6 +54,9 @@ v3.0 expands the classification engine to all GC occupational groups with JES st
 - [x] **Phase 23: Writing Guide Integration** — Structural duty validation (active-voice, word-count, no-passive, no-duplicate); non-blocking inline .duty-hint warnings via POST /api/wd/{id}/validate-duties; Client Service Results question inserted in QUESTION_BANK; per-step OG-specific duty tips from OG_DEFINITIONS. (WG-01, WG-02, WG-03, WG-04)
 - [x] **Phase 24: Risk Audit** — "Run compliance audit" button in Review phase; deterministic CBA clause matching (exclusion/scope/application articles) + Federal Court ERR principle rules; per-finding Accept/Manual Edit/Skip decisions written to audit_log; Manual Edit links to existing amendment panel. (AUDIT-01, AUDIT-02, AUDIT-03, AUDIT-04, AUDIT-05) (completed 2026-06-16)
 - [ ] **Phase 25: Accessible Template** — Build and self-verify wd_accessible_template.docx (Part 1: position ID + signatures; Part 2: 7 subsections); populate Effort/Working Conditions from JES factor scores; retire TBS WD template; content-presence test against fully-completed WD. (ACC-01, ACC-02, ACC-03, ACC-04)
+  - [x] Plan 25-01: RED baseline — 4 JES-shape fixture helpers + 6 RED tests in v2/backend/tests/test_export.py (6 failed, 13 passed against current TBS template). Pins ACC-01 structure, ACC-02 effort/WC bucketing (4 branches), ACC-04 content-presence. **Completed 2026-06-16.**
+  - [x] Plan 25-02: build_accessible_template.py + wd_accessible_template.docx (Part 1 + 7 Part 2 subsections, self-verified via get_undeclared_template_variables)
+  - [x] Plan 25-03: _factor_category_map helper + _build_wd_context rewrite + template path swap + retire wd_template.docx/build_wd_template.py
 
 **Coverage:** 24/24 v3.0 requirements mapped · 5 phases (21–25) · 0 unmapped · 0 orphans
 

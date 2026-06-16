@@ -3,22 +3,24 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Classification Depth & Document Quality
 current_phase: 25
+current_plan: 01 (RED baseline complete)
 status: executing
-last_updated: "2026-06-16T18:41:55.723Z"
+last_updated: "2026-06-16T18:56:02.819Z"
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 24
-  completed_plans: 21
-  percent: 88
+  completed_plans: 22
+  percent: 92
 ---
 
 # Project State
 
-**Status:** Executing Phase 25
+**Status:** Executing Phase 25 Plan 01
 **Current phase:** 25
-**Last updated:** 2026-06-15
-**Next action:** Phase 23 complete (4/4 plans) — pending human UAT for 23-04 frontend duty hints + OG tips. Plan 23-04 complete: dutyHints state, validate-duties POST trigger, editingReturn clear, og_tip + duty_hints cfgOverride, .duty-hint + .og-duty-tip CSS; client_service_results step in STEPS; OG_DUTY_TIPS constant for 22 OG groups; conversation.test.jsx visible-step count 12 → 13. 231.58 kB JS / 70.63 kB gzip build; 60/60 frontend + 134/134 backend tests GREEN.
+**Current plan:** 01 (RED baseline complete)
+**Last updated:** 2026-06-16
+**Next action:** Plan 25-01 RED baseline complete (4 fixture helpers + 6 RED tests, 6 failed/13 passed). Execute Plan 25-02 (build_accessible_template.py + wd_accessible_template.docx) and Plan 25-03 (_factor_category_map + _build_wd_context rewrite + template path swap + retire wd_template.docx) to turn the 6 RED tests GREEN.
 
 ---
 
@@ -30,7 +32,7 @@ progress:
 | 22 | SJD Library | Plans 22-01 + 22-02 + 22-03 + 22-04 complete (RED baseline + SJD_LIBRARY constant with OG normalization + GET /api/sjd endpoints + router registration + DraftDuty.source="sjd" extension + WorkDescription.sjd_source + POST /api/wd/{id}/sjd-start endpoint + _build_sjd_seed_duties helper + _build_v2_manifest SJD provenance + fetchSjds/fetchSjdDetail helpers + Browse SJDs panel + sjd-start frontend call + SJD-03 warning); 10/10 test_sjd.py GREEN; 125/125 backend suite GREEN; 60/60 frontend tests GREEN; 4 plans of 4 done; pending 9-step human UAT |
 | 23 | Writing Guide Integration | Plans 23-01 + 23-02 + 23-03 + 23-04 complete (RED baseline + duty_validator.py 4-rule implementation + POST /api/wd/{id}/validate-duties endpoint + dutyHints state + OG_DUTY_TIPS constant + client_service_results step + .duty-hint + .og-duty-tip CSS); 9/9 test_writing_guide.py GREEN; 134/134 backend suite GREEN; 60/60 frontend tests GREEN; 4 plans of 4 done; pending 4-step human UAT |
 | 24 | Risk Audit | Ready to execute — 4 plans planned (24-01 through 24-04) |
-| 25 | Accessible Template | Not started |
+| 25 | Accessible Template | Plan 25-01 complete (RED baseline: 4 fixture helpers + 6 RED tests in v2/backend/tests/test_export.py; "6 failed, 13 passed" against current TBS template). Plans 25-02 + 25-03 pending |
 
 ---
 
@@ -99,6 +101,10 @@ See: `.planning/PROJECT.md`
 | SJD-03 toast comparison: `og_code` only, not `og_level` (Phase 22 Plan 04) | A same-OG level change leaves the warning inert; matches the "departing from the SJD classification" semantics (classification = og_code, not level) |
 | SJD browser panel rendered as modal overlay (Phase 22 Plan 04) | Non-blocking surface that doesn't disrupt the conversation flow; clicking outside or ✕ dismisses |
 | fetchSjds / fetchSjdDetail co-located with data layer (Phase 22 Plan 04) | Keeps fetch logic next to other data utilities (matches v2 pattern of data.jsx owning backend data shape) |
+| Accessible RED baseline uses 4 JES-shape fixtures (Phase 25 Plan 01) | EC + point-rating-with-Effort + point-rating-without-Effort + level-description exhausts the effort/conditions bucketing branches in _factor_category_map |
+| _QUAL_SEED must include 'source' and 'last_modified' for QualificationStandard (Phase 25 Plan 01) | Pydantic model requires these; without them, PATCH /api/wd/{id} returns 500 — plan's default _QUAL_SEED omitted both |
+| Capital-letter disambiguation: 'Effort' (heading) vs 'effort' (factor_name) (Phase 25 Plan 01) | Stable signal to distinguish Accessible section heading from TBS Factor column without parsing XML/heading styles |
+| Strengthened 3 of 6 RED tests beyond plan-specified minimum to achieve 6/6 RED state (Phase 25 Plan 01) | Plan-specified test bodies (e.g., 'assert "Physical effort" in text') all PASS against current TBS template because JES Factor column already renders factor names. Added 1 extra assertion per test to make them meaningful RED gates |
 
 ### Active Blockers
 
@@ -129,6 +135,7 @@ None. Phase 21 gap closed by Plan 21-09 (2026-06-11). Sub_group propagation fixe
 | Phase 22 P02 | 7min | 2 tasks | 3 files |
 | Phase 22 P03 | 5 | 2 tasks | 4 files |
 | Phase 22 P04 | 6min | 2 tasks | 4 files |
+| Phase 25 P01 | 7 | 2 tasks | 1 files |
 
 ### v2.0 (complete)
 
@@ -145,6 +152,12 @@ None. Phase 21 gap closed by Plan 21-09 (2026-06-11). Sub_group propagation fixe
 |--------|-------|
 | Phases total | 5 (21–25) |
 | Requirements total | 24 |
-| Tests passing (after Phase 21) | 174 (115 backend + 59 frontend); 12 new tests for level-suggest endpoints; 7 new tests for OgLevelQuestions + preselect |
+| Tests passing (after Phase 24) | 134 backend + 60 frontend (19 in test_export.py: 13 prior + 6 new RED); 19 total export tests with 6 RED awaiting Plans 25-02/03 |
 
-**Planned Phase:** 25 (Accessible Template) — 3 plans — 2026-06-16T17:58:25.123Z
+**Completed Phase:** 25 Plan 01 (Accessible RED baseline) — 2026-06-16T18:54Z
+
+- 4 fixture helpers (EC, FB-with-effort, MT-no-effort, AS-level-description)
+- 6 RED tests (4 ACC-02 bucketing + 1 ACC-04 content-presence + 1 ACC-01 structure)
+- Result: "6 failed, 13 passed" against current TBS template
+- Commits: 9d1b007 (helpers), ab8ed77 (RED tests)
+- Deviations: _QUAL_SEED needs source+last_modified (Pydantic); 3 tests strengthened beyond plan minimum for 6/6 RED state

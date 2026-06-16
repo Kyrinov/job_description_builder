@@ -58,9 +58,11 @@
 ## Accessible Template (ACC) — 4 requirements
 
 - [ ] **ACC-01** — `build_accessible_template.py` script builds and self-verifies `app/templates/wd_accessible_template.docx`; Part 1: position identification + 3 signature blocks; Part 2: 6 subsections (Org Context, Client Service Results, Key Activities, Skills, Effort, Responsibilities, Working Conditions); `get_undeclared_template_variables()` confirms all template variables are declared
-- [ ] **ACC-02** — `_build_wd_context()` in `export_service.py` populates all Part 2 fields; Effort and Working Conditions sections map from JES factor scores where the confirmed OG's JES standard defines those factors; `[To be completed by advisor]` placeholder where the JES does not define them
+- [ ] **ACC-02
+** — `_build_wd_context()` in `export_service.py` populates all Part 2 fields; Effort and Working Conditions sections map from JES factor scores where the confirmed OG's JES standard defines those factors; `[To be completed by advisor]` placeholder where the JES does not define them
 - [ ] **ACC-03** — `POST /api/wd/{id}/export/docx` produces the Accessible format; previous TBS WD template retired; poster DOCX template unchanged; all existing export tests updated to assert Accessible format structure
-- [ ] **ACC-04** — Content-presence test opens the rendered DOCX via `python-docx` and asserts every non-placeholder template variable resolves to a non-empty string for a fully-completed WD
+- [ ] **ACC-04
+** — Content-presence test opens the rendered DOCX via `python-docx` and asserts every non-placeholder template variable resolves to a non-empty string for a fully-completed WD
 
 ---
 
