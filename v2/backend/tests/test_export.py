@@ -11,6 +11,9 @@ into api/__init__.py. Remove @pytest.mark.skip when the router is live.
 """
 from __future__ import annotations
 
+import io
+
+import docx
 import pytest
 
 pytestmark = pytest.mark.asyncio
@@ -83,6 +86,8 @@ _RECORD_SEED = {
 _QUAL_SEED = {
     "education": "Degree in economics.",
     "experience": "5 years policy analysis.",
+    "source": "EC-05 default",
+    "last_modified": "2026-06-16T00:00:00Z",
 }
 
 
@@ -410,3 +415,182 @@ def test_standard_names_import_from_constants():
     # Must NOT define a local copy
     assert "NON_EC_STANDARD_NAMES: dict" not in source, \
         "export_service.py must not define a local NON_EC_STANDARD_NAMES dict"
+
+
+# ---------------------------------------------------------------------------
+# Phase 25 — Accessible Template: ACC-02 / ACC-04 RED baseline (Plan 25-01)
+# These 6 tests pin the contract for the new GoC Accessible JD format.
+# They are EXPECTED TO FAIL at Wave 0 (current implementation is the
+# legacy TBS Work Description format) — Plans 02 and 03 turn them GREEN
+# by rewriting _build_wd_context and rendering through the new
+# wd_accessible_template.docx (ACC-01..04).
+# ---------------------------------------------------------------------------
+
+# 7 Part 2 subsection headings from the reference document
+# (data/AI Docs/Accessible Job Description Template (1).docx).
+ACCESSIBLE_PART2_HEADINGS = [
+    "Organizational context",
+    "Client service results",
+    "Key activities",
+    "Skills",
+    "Effort",
+    "Responsibilities",
+    "Working conditions",
+]
+
+ADVISOR_PLACEHOLDER = "[To be completed by advisor]"
+
+
+def _docx_text(content: bytes) -> str:
+    """Read back a rendered DOCX and concatenate paragraph + table-cell text.
+
+    Used by the content-presence and structure tests to inspect what the
+    export endpoint actually produced, since raw .docx bytes are zipped
+    XML and can't be grepped directly.
+    """
+    d = docx.Document(io.BytesIO(content))
+    parts = [p.text for p in d.paragraphs]
+    for t in d.tables:
+        for row in t.rows:
+            parts.extend(c.text for c in row.cells)
+    return "\n".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# ACC-02: Effort / Working Conditions section content (4 fallback branches)
+# ---------------------------------------------------------------------------
+
+async def test_accessible_effort_ec_populated(client, env_with_db):
+    """ACC-02 — EC export must show Effort and Working-Conditions factors populated
+    despite the EC scoring path persisting jes_scores WITHOUT a `category` key.
+
+    The new Accessible format must look up category via factor_name -> category
+    map (EC_JES_ELEMENTS / JES_FACTORS_BY_GROUP), NOT trust wd.jes_scores[*].category.
+
+    Asserts both the factor name strings (which appear in the current TBS
+    template's JES Factor column) AND the 'Effort' section heading (capital E),
+    which only appears in the new Accessible format — the factor names
+    'Physical effort' / 'Sensory effort' use lowercase 'e' so they don't match.
+    This combination distinguishes a dedicated 'Effort' section from a stray
+    factor_name cell in a JES table.
+    """
+    wd_id = await _create_wd_ec(client)
+    resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert resp.status_code == 200
+    text = _docx_text(resp.content)
+    assert "Physical effort" in text, "EC Effort factor 'Physical effort' not present in rendered DOCX"
+    assert "Sensory effort" in text, "EC Effort factor 'Sensory effort' not present in rendered DOCX"
+    assert "Working conditions" in text, "EC Working Conditions factor not present in rendered DOCX"
+    # Heading-style 'Effort' (capital E) — distinguishes Accessible section
+    # from the lowercase 'effort' in factor_name values.
+    assert "Effort" in text, (
+        "Expected 'Effort' section heading (capital E) in rendered DOCX — "
+        "EC effort factors must appear under a dedicated Effort section."
+    )
+
+
+async def test_accessible_effort_fb_populated(client, env_with_db):
+    """ACC-02 — FB (point-rating with Effort + Conditions) export must show
+    both Conditions factors ('Risk to health', 'Work environment') and Effort
+    factors ('Physical effort', 'Sensory effort') in the rendered DOCX.
+
+    Asserts factor names AND the 'Effort' heading (capital E) so the test
+    fails in the current TBS template (which has no 'Effort' section) and
+    passes once the Accessible template lands in Plan 25-02/03.
+    """
+    wd_id = await _create_wd_point_rating_with_effort(client)
+    resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert resp.status_code == 200
+    text = _docx_text(resp.content)
+    assert "Risk to health" in text, "FB Conditions factor 'Risk to health' not present"
+    assert "Work environment" in text, "FB Conditions factor 'Work environment' not present"
+    assert "Physical effort" in text, "FB Effort factor 'Physical effort' not present"
+    assert "Sensory effort" in text, "FB Effort factor 'Sensory effort' not present"
+    assert "Effort" in text, (
+        "Expected 'Effort' section heading in FB export — Effort factors "
+        "must appear under a dedicated Effort section, not just in the JES table."
+    )
+
+
+async def test_accessible_effort_no_factor_group_placeholder(client, env_with_db):
+    """ACC-02 — Point-rating group with NO Effort/Conditions categories (MT)
+    must render the '[To be completed by advisor]' placeholder string in the
+    Effort and Working-Conditions sections.
+    """
+    wd_id = await _create_wd_point_rating_no_effort(client)
+    resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert resp.status_code == 200
+    text = _docx_text(resp.content)
+    assert ADVISOR_PLACEHOLDER in text, (
+        "Expected '[To be completed by advisor]' placeholder for MT group with no Effort/WC factors"
+    )
+
+
+async def test_accessible_effort_level_description_placeholder(client, env_with_db):
+    """ACC-02 — Level-description group (AS, jes_scores: []) must render
+    the '[To be completed by advisor]' placeholder in Effort and
+    Working-Conditions sections.
+    """
+    wd_id = await _create_wd_level_description(client)
+    resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert resp.status_code == 200
+    text = _docx_text(resp.content)
+    assert ADVISOR_PLACEHOLDER in text, (
+        "Expected '[To be completed by advisor]' placeholder for level-description group (AS)"
+    )
+
+
+# ---------------------------------------------------------------------------
+# ACC-04: Content-presence (no literal Jinja2 / None leaks in rendered DOCX)
+# ---------------------------------------------------------------------------
+
+async def test_accessible_content_presence(client, env_with_db):
+    """ACC-04 — Rendered DOCX for a fully-completed EC WD must have NO:
+      * unrendered Jinja2 tag (literal '{{')
+      * bare 'None' token (str(None) leak)
+      * unrendered Jinja2 block tag (literal '%}')
+
+    Together these three guards catch every common template-rendering bug
+    the Accessible-template rewrite is at risk of introducing.
+
+    Also asserts that `record.client_service_results` text (seeded via
+    _RECORD_SEED) is actually rendered in the new 'Client service results'
+    Part 2 subsection — fails against the current TBS template which has
+    no such field/section.
+    """
+    wd_id = await _create_wd_ec(client)
+    resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert resp.status_code == 200
+    text = _docx_text(resp.content)
+    assert "{{" not in text, "Unrendered Jinja2 expression tag leaked into output"
+    # Wrap with newlines so the assertion matches a bare 'None' line, not a
+    # substring like 'Nonetax' or 'NoneType'.
+    assert "\nNone\n" not in ("\n" + text + "\n"), "str(None) leaked into rendered output"
+    assert "%}" not in text, "Unrendered Jinja2 block tag leaked into output"
+    # The new 'Client service results' Part 2 subsection must surface
+    # record.client_service_results (seeded by _create_wd_ec). Fails in the
+    # current TBS template (no such field/render) — locks the new data path.
+    assert "Citizens receive timely" in text, (
+        "client_service_results from record was not rendered — Part 2 "
+        "'Client service results' section must surface record.client_service_results"
+    )
+
+
+# ---------------------------------------------------------------------------
+# ACC-01: Structure — all 7 Part 2 subsection headings + Part 1/2 markers
+# ---------------------------------------------------------------------------
+
+async def test_accessible_structure_headings(client, env_with_db):
+    """ACC-01 — Rendered Accessible DOCX must contain all 7 Part 2 subsection
+    headings (Organizational context, Client service results, Key activities,
+    Skills, Effort, Responsibilities, Working conditions) and the Part 1 /
+    Part 2 markers from the reference document.
+    """
+    wd_id = await _create_wd_ec(client)
+    resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert resp.status_code == 200
+    text = _docx_text(resp.content)
+    for heading in ACCESSIBLE_PART2_HEADINGS:
+        assert heading in text, f"Missing Part 2 subsection heading: {heading!r}"
+    assert "Part 1" in text, "Missing 'Part 1' marker (Position information and signatures)"
+    assert "Part 2" in text, "Missing 'Part 2' marker (Job description)"
