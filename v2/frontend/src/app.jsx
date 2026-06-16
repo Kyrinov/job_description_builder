@@ -103,6 +103,10 @@ function App() {
   // Phase 24 (AUDIT-01): compliance audit findings — populated only by button click, never automatically
   const [auditFindings, setAuditFindings] = useState([]);
   const [auditRunning, setAuditRunning] = useState(false);
+  // True once the audit has returned at least one response — distinguishes
+  // "not run yet" from "ran clean, zero findings" so a clean run isn't
+  // silently indistinguishable from a broken button (no panel either way).
+  const [auditRan, setAuditRan] = useState(false);
   const threadRef = useRef(null);
   const docRef = useRef(null);
 
@@ -637,6 +641,7 @@ function App() {
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(data => {
         setAuditFindings(data.findings || []);
+        setAuditRan(true);
         setAuditRunning(false);
       })
       .catch(() => { setAuditRunning(false); });
@@ -827,6 +832,7 @@ function App() {
               amendmentNotes={amendmentNotes}
               auditFindings={auditFindings}
               auditRunning={auditRunning}
+              auditRan={auditRan}
               onRunAudit={handleRunAudit}
               onAuditDecide={handleAuditDecide}
             />

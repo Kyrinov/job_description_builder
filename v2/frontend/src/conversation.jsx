@@ -185,7 +185,7 @@ function FindingCard({ finding, onAuditDecide }) {
 
 /* completion / review state */
 function ReviewState({ record, cls, onExport, onRestart, amendmentNotes = {},
-                       auditFindings = [], auditRunning = false,
+                       auditFindings = [], auditRunning = false, auditRan = false,
                        onRunAudit, onAuditDecide }) {
   const dutyCount = (record.duties || []).length;
   const checks = [
@@ -252,6 +252,14 @@ function ReviewState({ record, cls, onExport, onRestart, amendmentNotes = {},
             Each finding shows severity, citation excerpt, recommendation, and
             3 decision buttons. Manual Edit opens the existing Phase 19
             amendment panel (AUDIT-05) via the onAuditDecide callback. */}
+        {auditRan && auditFindings.length === 0 && (
+          <div className="audit-findings audit-findings--clean" style={{ marginTop: '1rem' }}>
+            <h4 style={{ marginBottom: '0.5rem' }}>Compliance Findings</h4>
+            <p style={{ fontSize: '0.9rem', color: '#555' }}>
+              No outstanding compliance findings.
+            </p>
+          </div>
+        )}
         {auditFindings.length > 0 && (
           <div className="audit-findings" style={{ marginTop: '1rem' }}>
             <h4 style={{ marginBottom: '0.5rem' }}>Compliance Findings</h4>
