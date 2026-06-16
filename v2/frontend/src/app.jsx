@@ -645,6 +645,8 @@ function App() {
   // Phase 24 (AUDIT-04): Log advisor Accept / Manual Edit / Skip decision.
   // Fire-and-forget POST; failure is silent. Manual Edit additionally opens the
   // existing Phase 19 amendment panel for the flagged section (AUDIT-05).
+  // Accept / Skip (not-applicable) dismiss the finding from the panel so the
+  // advisor sees a clear visual confirmation that the decision was recorded.
   function handleAuditDecide(ruleId, section, decision) {
     if (!wd_id) return;
     fetch(`/api/wd/${wd_id}/audit/decide`, {
@@ -654,6 +656,11 @@ function App() {
     }).catch(() => {}); // fire-and-forget; non-blocking
     if (decision === 'manual_edit') {
       handleAmendToggle(section);
+    } else if (decision === 'accept' || decision === 'skip') {
+      // Remove the addressed finding so the panel reflects the decision.
+      setAuditFindings((prev) =>
+        prev.filter((f) => !(f.rule_id === ruleId && f.section === section))
+      );
     }
   }
 

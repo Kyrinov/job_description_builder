@@ -1,7 +1,7 @@
 /* ============================================================
    JD Builder — conversation pane (left)
    ============================================================ */
-import React from 'react';
+import React, { useState } from 'react';
 import { PHASES, I } from './data.jsx';
 import { Icon, Check, StepInput, answerValid } from './components.jsx';
 
@@ -107,6 +107,82 @@ function ActiveQuestion({ step, record, draft, setDraft, onCommit, onBack, canBa
   );
 }
 
+/* Phase 24 (AUDIT-01/04/05): one finding card. Long citations (>240 chars) are
+   shown truncated by default with a "Show more" toggle so the full CBA clause
+   or court citation is reachable without re-running the audit. */
+function FindingCard({ finding, onAuditDecide }) {
+  const [expanded, setExpanded] = useState(false);
+  const citation = finding.citation || '';
+  const long = citation.length > 240;
+  const visible = !long || expanded ? citation : citation.slice(0, 240) + '\u2026';
+  return (
+    <div
+      className={`audit-finding audit-finding--${finding.severity}`}
+      style={{
+        border: '1px solid #ccc',
+        borderRadius: '4px',
+        padding: '0.75rem',
+        marginBottom: '0.5rem',
+        overflowWrap: 'anywhere',
+      }}
+    >
+      <div className="finding-meta" style={{ marginBottom: '0.25rem' }}>
+        <span className={`finding-severity finding-severity--${finding.severity}`}
+              style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.75rem' }}>
+          {finding.severity}
+        </span>
+        {' \u2014 '}
+        <span className="finding-section" style={{ fontSize: '0.85rem', color: '#555' }}>
+          Section: {finding.section}
+        </span>
+      </div>
+      <blockquote
+        className="finding-citation"
+        style={{ margin: '0.25rem 0', fontSize: '0.85rem', fontStyle: 'italic', color: '#333' }}
+      >
+        {visible}
+      </blockquote>
+      {long && (
+        <button
+          type="button"
+          className="btn btn--ghost finding-toggle"
+          style={{ fontSize: '0.8rem', padding: '0.1rem 0.4rem', marginBottom: '0.25rem' }}
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+        >
+          {expanded ? 'Show less' : 'Show more'}
+        </button>
+      )}
+      <p className="finding-recommendation" style={{ margin: '0.25rem 0', fontSize: '0.9rem' }}>
+        {finding.recommendation}
+      </p>
+      <div className="finding-actions" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+        <button
+          className="btn btn--ghost"
+          style={{ fontSize: '0.85rem' }}
+          onClick={() => onAuditDecide && onAuditDecide(finding.rule_id, finding.section, 'accept')}
+        >
+          Accept
+        </button>
+        <button
+          className="btn btn--ghost"
+          style={{ fontSize: '0.85rem' }}
+          onClick={() => onAuditDecide && onAuditDecide(finding.rule_id, finding.section, 'manual_edit')}
+        >
+          Manual Edit
+        </button>
+        <button
+          className="btn btn--ghost"
+          style={{ fontSize: '0.85rem' }}
+          onClick={() => onAuditDecide && onAuditDecide(finding.rule_id, finding.section, 'skip')}
+        >
+          Not applicable — no conflict found
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* completion / review state */
 function ReviewState({ record, cls, onExport, onRestart, amendmentNotes = {},
                        auditFindings = [], auditRunning = false,
@@ -180,61 +256,11 @@ function ReviewState({ record, cls, onExport, onRestart, amendmentNotes = {},
           <div className="audit-findings" style={{ marginTop: '1rem' }}>
             <h4 style={{ marginBottom: '0.5rem' }}>Compliance Findings</h4>
             {auditFindings.map((finding, idx) => (
-              <div
+              <FindingCard
                 key={finding.rule_id || idx}
-                className={`audit-finding audit-finding--${finding.severity}`}
-                style={{
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  padding: '0.75rem',
-                  marginBottom: '0.5rem',
-                }}
-              >
-                <div className="finding-meta" style={{ marginBottom: '0.25rem' }}>
-                  <span className={`finding-severity finding-severity--${finding.severity}`}
-                        style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.75rem' }}>
-                    {finding.severity}
-                  </span>
-                  {' \u2014 '}
-                  <span className="finding-section" style={{ fontSize: '0.85rem', color: '#555' }}>
-                    Section: {finding.section}
-                  </span>
-                </div>
-                <blockquote
-                  className="finding-citation"
-                  style={{ margin: '0.25rem 0', fontSize: '0.85rem', fontStyle: 'italic', color: '#333' }}
-                >
-                  {finding.citation && finding.citation.length > 200
-                    ? finding.citation.slice(0, 200) + '\u2026'
-                    : finding.citation}
-                </blockquote>
-                <p className="finding-recommendation" style={{ margin: '0.25rem 0', fontSize: '0.9rem' }}>
-                  {finding.recommendation}
-                </p>
-                <div className="finding-actions" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                  <button
-                    className="btn btn--ghost"
-                    style={{ fontSize: '0.85rem' }}
-                    onClick={() => onAuditDecide && onAuditDecide(finding.rule_id, finding.section, 'accept')}
-                  >
-                    Accept
-                  </button>
-                  <button
-                    className="btn btn--ghost"
-                    style={{ fontSize: '0.85rem' }}
-                    onClick={() => onAuditDecide && onAuditDecide(finding.rule_id, finding.section, 'manual_edit')}
-                  >
-                    Manual Edit
-                  </button>
-                  <button
-                    className="btn btn--ghost"
-                    style={{ fontSize: '0.85rem' }}
-                    onClick={() => onAuditDecide && onAuditDecide(finding.rule_id, finding.section, 'skip')}
-                  >
-                    Not applicable — no conflict found
-                  </button>
-                </div>
-              </div>
+                finding={finding}
+                onAuditDecide={onAuditDecide}
+              />
             ))}
           </div>
         )}
@@ -245,4 +271,4 @@ function ReviewState({ record, cls, onExport, onRestart, amendmentNotes = {},
   );
 }
 
-export { Header, Exchange, ActiveQuestion, ReviewState };
+export { Header, Exchange, ActiveQuestion, ReviewState, FindingCard };
