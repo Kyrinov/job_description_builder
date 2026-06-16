@@ -168,7 +168,7 @@ def _build_v2_manifest(wd: WorkDescription) -> list[dict]:
         - wd.qualification                   -> TBS Qualification Standard entry
 
     First-seen order is preserved. Each entry has the same shape that the
-    wd_template.docx {%p for entry in manifest %} loop expects.
+    wd_accessible_template.docx {%p for entry in manifest %} loop expects.
     """
     seen: set[tuple] = set()
     manifest: list[dict] = []
@@ -521,7 +521,7 @@ async def generate_wd_docx(wd_id: str, db_path: str) -> dict:
 
         amendments = _get_amendments(con, wd_id)
         context = _build_wd_context(wd, amendments)
-        template_path = _resolve_template_path("wd_template.docx")
+        template_path = _resolve_template_path("wd_accessible_template.docx")
         file_bytes = await _render_docx(template_path, context)
     finally:
         con.close()
