@@ -3,24 +3,24 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Classification Depth & Document Quality
 current_phase: 25
-current_plan: 01 (RED baseline complete)
+current_plan: 02 (build_accessible_template.py + wd_accessible_template.docx complete)
 status: executing
-last_updated: "2026-06-16T18:56:02.819Z"
+last_updated: "2026-06-16T19:07:08.761Z"
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 24
-  completed_plans: 22
-  percent: 92
+  completed_plans: 23
+  percent: 96
 ---
 
 # Project State
 
-**Status:** Executing Phase 25 Plan 01
+**Status:** Executing Phase 25 Plan 02
 **Current phase:** 25
-**Current plan:** 01 (RED baseline complete)
+**Current plan:** 02 (build_accessible_template.py + wd_accessible_template.docx complete)
 **Last updated:** 2026-06-16
-**Next action:** Plan 25-01 RED baseline complete (4 fixture helpers + 6 RED tests, 6 failed/13 passed). Execute Plan 25-02 (build_accessible_template.py + wd_accessible_template.docx) and Plan 25-03 (_factor_category_map + _build_wd_context rewrite + template path swap + retire wd_template.docx) to turn the 6 RED tests GREEN.
+**Next action:** Plan 25-02 complete (self-verifying build script + committed .docx artifact; 29/29 required Jinja2 vars declared, 6 RED tests from Plan 25-01 still RED as expected). Execute Plan 25-03 (_factor_category_map + _build_wd_context rewrite + template path swap + retire wd_template.docx) to turn the 6 RED tests GREEN.
 
 ---
 
@@ -32,7 +32,7 @@ progress:
 | 22 | SJD Library | Plans 22-01 + 22-02 + 22-03 + 22-04 complete (RED baseline + SJD_LIBRARY constant with OG normalization + GET /api/sjd endpoints + router registration + DraftDuty.source="sjd" extension + WorkDescription.sjd_source + POST /api/wd/{id}/sjd-start endpoint + _build_sjd_seed_duties helper + _build_v2_manifest SJD provenance + fetchSjds/fetchSjdDetail helpers + Browse SJDs panel + sjd-start frontend call + SJD-03 warning); 10/10 test_sjd.py GREEN; 125/125 backend suite GREEN; 60/60 frontend tests GREEN; 4 plans of 4 done; pending 9-step human UAT |
 | 23 | Writing Guide Integration | Plans 23-01 + 23-02 + 23-03 + 23-04 complete (RED baseline + duty_validator.py 4-rule implementation + POST /api/wd/{id}/validate-duties endpoint + dutyHints state + OG_DUTY_TIPS constant + client_service_results step + .duty-hint + .og-duty-tip CSS); 9/9 test_writing_guide.py GREEN; 134/134 backend suite GREEN; 60/60 frontend tests GREEN; 4 plans of 4 done; pending 4-step human UAT |
 | 24 | Risk Audit | Ready to execute — 4 plans planned (24-01 through 24-04) |
-| 25 | Accessible Template | Plan 25-01 complete (RED baseline: 4 fixture helpers + 6 RED tests in v2/backend/tests/test_export.py; "6 failed, 13 passed" against current TBS template). Plans 25-02 + 25-03 pending |
+| 25 | Accessible Template | Plans 25-01 + 25-02 complete (RED baseline + build_accessible_template.py + wd_accessible_template.docx with 29/29 vars self-verified, 4 tables / 14 headings / 43 paragraphs; 6 RED tests still RED as expected — export path not yet rewired). Plan 25-03 pending |
 
 ---
 
@@ -105,6 +105,9 @@ See: `.planning/PROJECT.md`
 | _QUAL_SEED must include 'source' and 'last_modified' for QualificationStandard (Phase 25 Plan 01) | Pydantic model requires these; without them, PATCH /api/wd/{id} returns 500 — plan's default _QUAL_SEED omitted both |
 | Capital-letter disambiguation: 'Effort' (heading) vs 'effort' (factor_name) (Phase 25 Plan 01) | Stable signal to distinguish Accessible section heading from TBS Factor column without parsing XML/heading styles |
 | Strengthened 3 of 6 RED tests beyond plan-specified minimum to achieve 6/6 RED state (Phase 25 Plan 01) | Plan-specified test bodies (e.g., 'assert "Physical effort" in text') all PASS against current TBS template because JES Factor column already renders factor names. Added 1 extra assertion per test to make them meaningful RED gates |
+| Accessible manifest uses {%p for entry in manifest %} paragraph loop, not build_wd_template.py's {%tr for m in manifest %} table loop (Phase 25 Plan 02) | The GoC Accessible reference document has no numbered manifest table; prose format matches reference. Plan 25-03 binds manifest via the existing _build_v2_manifest helper unchanged |
+| Accessible build script duplicates _set_cell_text rather than refactoring to shared helper (Phase 25 Plan 02) | Followed established project convention (build_wd_template.py + build_poster_template.py also duplicate this 12-line helper). PATTERNS.md guidance: 'duplicating it a third time is the established convention, not an anti-pattern here' |
+| wd_template.docx + build_wd_template.py retirement deferred to Plan 25-03 (Phase 25 Plan 02) | Avoids leaving the export route pointing at a deleted file mid-wave. Plan 25-03 swaps the path in _resolve_template_path call site FIRST, then deletes the old template after the 6 RED tests turn GREEN |
 
 ### Active Blockers
 
@@ -136,6 +139,8 @@ None. Phase 21 gap closed by Plan 21-09 (2026-06-11). Sub_group propagation fixe
 | Phase 22 P03 | 5 | 2 tasks | 4 files |
 | Phase 22 P04 | 6min | 2 tasks | 4 files |
 | Phase 25 P01 | 7 | 2 tasks | 1 files |
+| Phase 25 P02 | 7min | 2 tasks | 2 files |
+| Phase 25 P02 | 7min | 2 tasks | 2 files |
 
 ### v2.0 (complete)
 
@@ -154,7 +159,16 @@ None. Phase 21 gap closed by Plan 21-09 (2026-06-11). Sub_group propagation fixe
 | Requirements total | 24 |
 | Tests passing (after Phase 24) | 134 backend + 60 frontend (19 in test_export.py: 13 prior + 6 new RED); 19 total export tests with 6 RED awaiting Plans 25-02/03 |
 
-**Completed Phase:** 25 Plan 01 (Accessible RED baseline) — 2026-06-16T18:54Z
+**Completed Phase:** 25 Plan 02 (Accessible build script + .docx artifact) — 2026-06-16T19:06Z
+
+- 306-line build_accessible_template.py (replicates build_wd_template.py idioms verbatim; 29/29 required Jinja2 vars self-declared)
+- 37,872-byte wd_accessible_template.docx committed binary (4 tables, 14 headings, 43 paragraphs, 17-row position table in correct order, 7 Part 2 subsections)
+- Self-verify tail: `python v2/backend/scripts/build_accessible_template.py` exits 0 with "Accessible template OK"
+- 6 RED tests from Plan 25-01 still RED ("6 failed, 13 passed" — expected, export path not yet rewired)
+- Commits: 5d60638 (Task 1: build script), 38630a9 (Task 2: .docx artifact)
+- Deviations: none (plan acceptance check `grep -c '%tr for' == 2` was a miscount — 3 actual Jinja2 tags because plan's own amendments-verbatim instruction adds a 3rd; documented in SUMMARY)
+
+**Previous Phase:** 25 Plan 01 (Accessible RED baseline) — 2026-06-16T18:54Z
 
 - 4 fixture helpers (EC, FB-with-effort, MT-no-effort, AS-level-description)
 - 6 RED tests (4 ACC-02 bucketing + 1 ACC-04 content-presence + 1 ACC-01 structure)

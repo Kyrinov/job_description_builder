@@ -55,8 +55,8 @@ v3.0 expands the classification engine to all GC occupational groups with JES st
 - [x] **Phase 24: Risk Audit** — "Run compliance audit" button in Review phase; deterministic CBA clause matching (exclusion/scope/application articles) + Federal Court ERR principle rules; per-finding Accept/Manual Edit/Skip decisions written to audit_log; Manual Edit links to existing amendment panel. (AUDIT-01, AUDIT-02, AUDIT-03, AUDIT-04, AUDIT-05) (completed 2026-06-16)
 - [ ] **Phase 25: Accessible Template** — Build and self-verify wd_accessible_template.docx (Part 1: position ID + signatures; Part 2: 7 subsections); populate Effort/Working Conditions from JES factor scores; retire TBS WD template; content-presence test against fully-completed WD. (ACC-01, ACC-02, ACC-03, ACC-04)
   - [x] Plan 25-01: RED baseline — 4 JES-shape fixture helpers + 6 RED tests in v2/backend/tests/test_export.py (6 failed, 13 passed against current TBS template). Pins ACC-01 structure, ACC-02 effort/WC bucketing (4 branches), ACC-04 content-presence. **Completed 2026-06-16.**
-  - [x] Plan 25-02: build_accessible_template.py + wd_accessible_template.docx (Part 1 + 7 Part 2 subsections, self-verified via get_undeclared_template_variables)
-  - [x] Plan 25-03: _factor_category_map helper + _build_wd_context rewrite + template path swap + retire wd_template.docx/build_wd_template.py
+  - [x] Plan 25-02: build_accessible_template.py + wd_accessible_template.docx (Part 1 + 7 Part 2 subsections, self-verified via get_undeclared_template_variables; 29/29 required Jinja2 vars declared, 4 tables / 14 headings / 43 paragraphs in committed binary; 6 RED tests still RED as expected). **Completed 2026-06-16.**
+  - [ ] Plan 25-03: _factor_category_map helper + _build_wd_context rewrite + template path swap + retire wd_template.docx/build_wd_template.py
 
 **Coverage:** 24/24 v3.0 requirements mapped · 5 phases (21–25) · 0 unmapped · 0 orphans
 
@@ -187,8 +187,8 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 25-01-PLAN.md — Wave 0: RED baseline — 4 JES-shape fixture helpers + ACC-02/ACC-04 tests in test_export.py
-- [ ] 25-02-PLAN.md — build_accessible_template.py + self-verifying wd_accessible_template.docx (Part 1 17-field table + 3 static signature blocks; Part 2 7 subsections) (ACC-01)
+- [x] 25-01-PLAN.md — Wave 0: RED baseline — 4 JES-shape fixture helpers + ACC-02/ACC-04 tests in test_export.py
+- [x] 25-02-PLAN.md — build_accessible_template.py + self-verifying wd_accessible_template.docx (Part 1 17-field table + 3 static signature blocks; Part 2 7 subsections) (ACC-01)
 - [ ] 25-03-PLAN.md — _factor_category_map + rewritten _build_wd_context + Accessible template path swap + retire TBS template (ACC-02, ACC-03, ACC-04)
 
 ---
@@ -222,4 +222,4 @@ Plans:
 | **22. SJD Library** | **v3.0** | **4/4** | **Complete (pending UAT)** | **2026-06-11** |
 | **23. Writing Guide Integration** | **v3.0** | **4/4** | **Complete (pending UAT)** | **2026-06-15** |
 | **24. Risk Audit** | **v3.0** | **4/4** | **Complete** | **2026-06-16** |
-| **25. Accessible Template** | **v3.0** | **0/3** | **Planned** | — |
+| **25. Accessible Template** | **v3.0** | **2/3** | **In Progress** | — |

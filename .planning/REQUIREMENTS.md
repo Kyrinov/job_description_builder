@@ -57,7 +57,8 @@
 
 ## Accessible Template (ACC) — 4 requirements
 
-- [ ] **ACC-01** — `build_accessible_template.py` script builds and self-verifies `app/templates/wd_accessible_template.docx`; Part 1: position identification + 3 signature blocks; Part 2: 6 subsections (Org Context, Client Service Results, Key Activities, Skills, Effort, Responsibilities, Working Conditions); `get_undeclared_template_variables()` confirms all template variables are declared
+- [x] **ACC-01
+** — `build_accessible_template.py` script builds and self-verifies `app/templates/wd_accessible_template.docx`; Part 1: position identification + 3 signature blocks; Part 2: 6 subsections (Org Context, Client Service Results, Key Activities, Skills, Effort, Responsibilities, Working Conditions); `get_undeclared_template_variables()` confirms all template variables are declared
 - [ ] **ACC-02
 ** — `_build_wd_context()` in `export_service.py` populates all Part 2 fields; Effort and Working Conditions sections map from JES factor scores where the confirmed OG's JES standard defines those factors; `[To be completed by advisor]` placeholder where the JES does not define them
 - [ ] **ACC-03** — `POST /api/wd/{id}/export/docx` produces the Accessible format; previous TBS WD template retired; poster DOCX template unchanged; all existing export tests updated to assert Accessible format structure
@@ -115,7 +116,7 @@
 | AUDIT-03 | Phase 24 | Complete |
 | AUDIT-04 | Phase 24 | Complete |
 | AUDIT-05 | Phase 24 | Complete |
-| ACC-01 | Phase 25 | Pending |
+| ACC-01 | Phase 25 | Complete |
 | ACC-02 | Phase 25 | Pending |
 | ACC-03 | Phase 25 | Pending |
 | ACC-04 | Phase 25 | Pending |
