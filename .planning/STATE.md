@@ -2,20 +2,20 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Classification Depth & Document Quality
-current_phase: --phase=24
-status: ready_to_plan
-last_updated: "2026-06-15T18:30:02.022Z"
+current_phase: 25
+status: executing
+last_updated: "2026-06-16T18:41:55.723Z"
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 21
-  completed_plans: 17
-  percent: 80
+  total_plans: 24
+  completed_plans: 21
+  percent: 88
 ---
 
 # Project State
 
-**Status:** Ready to plan
+**Status:** Executing Phase 25
 **Current phase:** 25
 **Last updated:** 2026-06-15
 **Next action:** Phase 23 complete (4/4 plans) — pending human UAT for 23-04 frontend duty hints + OG tips. Plan 23-04 complete: dutyHints state, validate-duties POST trigger, editingReturn clear, og_tip + duty_hints cfgOverride, .duty-hint + .og-duty-tip CSS; client_service_results step in STEPS; OG_DUTY_TIPS constant for 22 OG groups; conversation.test.jsx visible-step count 12 → 13. 231.58 kB JS / 70.63 kB gzip build; 60/60 frontend + 134/134 backend tests GREEN.
@@ -146,3 +146,5 @@ None. Phase 21 gap closed by Plan 21-09 (2026-06-11). Sub_group propagation fixe
 | Phases total | 5 (21–25) |
 | Requirements total | 24 |
 | Tests passing (after Phase 21) | 174 (115 backend + 59 frontend); 12 new tests for level-suggest endpoints; 7 new tests for OgLevelQuestions + preselect |
+
+**Planned Phase:** 25 (Accessible Template) — 3 plans — 2026-06-16T17:58:25.123Z
