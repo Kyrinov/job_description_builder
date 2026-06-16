@@ -54,6 +54,145 @@ async def _create_wd_with_jes_scores(client) -> str:
     return wd_id
 
 
+# ---------------------------------------------------------------------------
+# Phase 25 — Accessible Template fixture helpers (ACC-02 RED baseline)
+# 4 JES-shape variants needed to exercise the new Effort/Working-Conditions
+# bucketing logic: EC (LLM-style, no category key on persisted dict),
+# point-rating-with-Effort (FB), point-rating-without-Effort (MT),
+# level-description (AS, jes_scores: []).
+# ---------------------------------------------------------------------------
+
+_DUTY_SEED = {
+    "id": "d1",
+    "text": "Provides advice on policy matters.",
+    "source": "noc",
+    "provenance_noc_code": "4163",
+    "provenance_hash": "abc123",
+    "advisor": False,
+}
+
+_RECORD_SEED = {
+    "title": "Test Role",
+    "client_service_results": "Citizens receive timely, accurate policy guidance.",
+    "quals": {
+        "education": "Degree in economics.",
+        "experience": "5 years policy analysis.",
+    },
+}
+
+_QUAL_SEED = {
+    "education": "Degree in economics.",
+    "experience": "5 years policy analysis.",
+}
+
+
+async def _create_wd_ec(client) -> str:
+    """EC: jes_scores carry Effort + Conditions factors but NO `category` key.
+
+    The EC LLM-scoring path (_build_factor_score in jes_service.py) omits the
+    category field from the persisted dict, so export_service must look up
+    category via a factor_name -> category map (ACC-02 pitfall 2).
+    """
+    wd_id = await _create_wd(client)
+    resp = await client.patch(
+        f"/api/wd/{wd_id}",
+        json={
+            "confirmed_og": {"og_code": "EC", "og_name": "Economics and Social Science Services"},
+            "og_level": 4,
+            "jes_total_points": 43,
+            "jes_scores": [
+                {"factor_name": "Physical effort", "degree": 2, "points": 4},
+                {"factor_name": "Sensory effort", "degree": 1, "points": 2},
+                {"factor_name": "Working conditions", "degree": 3, "points": 12},
+                {"factor_name": "Communication", "degree": 2, "points": 25},
+            ],
+            "duties": [_DUTY_SEED],
+            "record": _RECORD_SEED,
+            "qualification": _QUAL_SEED,
+        },
+    )
+    assert resp.status_code == 200
+    return wd_id
+
+
+async def _create_wd_point_rating_with_effort(client) -> str:
+    """FB (point-rating): jes_scores carry Effort + Conditions factors WITH category key.
+
+    Exercises the point-rating path where category IS on the persisted dict
+    (per JES_FACTORS_BY_GROUP['FB'] in constants.py).
+    """
+    wd_id = await _create_wd(client)
+    resp = await client.patch(
+        f"/api/wd/{wd_id}",
+        json={
+            "confirmed_og": {"og_code": "FB", "og_name": "Border Services"},
+            "og_level": 4,
+            "jes_total_points": 71,
+            "jes_scores": [
+                {"factor_name": "Physical effort", "degree": 2, "points": 5},
+                {"factor_name": "Sensory effort", "degree": 2, "points": 4},
+                {"factor_name": "Risk to health", "degree": 2, "points": 10},
+                {"factor_name": "Work environment", "degree": 1, "points": 2},
+                {"factor_name": "Knowledge", "degree": 3, "points": 50},
+            ],
+            "duties": [_DUTY_SEED],
+            "record": _RECORD_SEED,
+            "qualification": _QUAL_SEED,
+        },
+    )
+    assert resp.status_code == 200
+    return wd_id
+
+
+async def _create_wd_point_rating_no_effort(client) -> str:
+    """MT (point-rating): jes_scores carry ONLY Skill/Responsibility factors.
+
+    No Effort or Working Conditions category at all — must fall back to
+    '[To be completed by advisor]' placeholder (ACC-02).
+    """
+    wd_id = await _create_wd(client)
+    resp = await client.patch(
+        f"/api/wd/{wd_id}",
+        json={
+            "confirmed_og": {"og_code": "MT", "og_name": "Meteorology"},
+            "og_level": 4,
+            "jes_total_points": 110,
+            "jes_scores": [
+                {"factor_name": "Knowledge", "degree": 3, "points": 50},
+                {"factor_name": "Decision making", "degree": 3, "points": 60},
+            ],
+            "duties": [_DUTY_SEED],
+            "record": _RECORD_SEED,
+            "qualification": _QUAL_SEED,
+        },
+    )
+    assert resp.status_code == 200
+    return wd_id
+
+
+async def _create_wd_level_description(client) -> str:
+    """AS (level-description): jes_total_points set, jes_scores is [].
+
+    No factor data at all for level-description groups — must fall back to
+    '[To be completed by advisor]' placeholder (ACC-02).
+    """
+    wd_id = await _create_wd(client)
+    resp = await client.patch(
+        f"/api/wd/{wd_id}",
+        json={
+            "confirmed_og": {"og_code": "AS", "og_name": "Administrative Services"},
+            "og_level": 4,
+            "jes_total_points": 500,
+            "jes_scores": [],
+            "duties": [_DUTY_SEED],
+            "record": _RECORD_SEED,
+            "qualification": _QUAL_SEED,
+        },
+    )
+    assert resp.status_code == 200
+    return wd_id
+
+
 async def test_export_wd_docx_returns_bytes(client, env_with_db):
     """EXP-01 / API-08 — POST /api/wd/{id}/export/docx returns .docx bytes with correct MIME type."""
     wd_id = await _create_wd_with_jes_scores(client)
