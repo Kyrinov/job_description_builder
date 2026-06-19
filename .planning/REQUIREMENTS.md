@@ -1,66 +1,55 @@
-# Requirements — v3.0 Classification Depth & Document Quality
+# Requirements — v4.0 Seven-Elements Conversational Architecture
 
-**Milestone:** v3.0
+**Milestone:** v4.0
 **Status:** Active
-**Total:** 24 requirements across 6 categories
+**Total:** 16 requirements across 6 categories
 **Core Value:** An HR advisor can describe work in plain language and receive a legally defensible, fully traceable job description — grounded in NOC, collective agreement, and TBS classification policy — in minutes instead of hours.
 
 ---
 
-## OG Expansion (OGX) — 7 requirements
+## Organizational Context (ORG) — 3 requirements
 
-- [x] **OGX-01** — `OG_LEVELS`, `OG_DEFINITIONS`, `QUAL_STANDARDS`, `NON_EC_TOTALS`, `NON_EC_STANDARD_NAMES`, and `JES_FACTORS_BY_GROUP` updated atomically for all 16 groups (12 new: ED, FB, FS, LC, LP, MT, NT, NU, PO, PS, SW, WP); a completeness test asserts every key in `OG_LEVELS` is present in all other 5 constants
-- [x] **OGX-02** — `NON_EC_STANDARD_NAMES` consolidated into `constants.py`; `export_service.py` imports from there (eliminates the v2.0 dual-copy drift)
-- [x] **OGX-03** — `QUAL_DEFAULTS` (frontend `data.jsx`) content-parity test against `QUAL_STANDARDS` (backend `constants.py`) written as a failing test before any new group qualification text is authored; parity enforced for all 16 groups at phase close
-- [x] **OGX-04** — `QUESTION_BANK` extended with a sector-gate question routing PA/SH/Legal/Technical/Scientific clusters and cluster-specific disambiguation questions; `accumulateSignals()` produces correct top-ranked OG for each new group given its ideal answer set; per-group integration tests assert this
-- [x] **OGX-05** — Point-rating groups (FB, FS, LP, MT, LC, SW-SCW) get full per-factor JES scoring via `POST /api/jes/score` extending the existing `EC_JES_ELEMENTS` pattern; `JES_FACTORS_BY_GROUP` carries factor definitions for these groups
-- [x] **OGX-06** — Level-description groups (NU, PS, NT, PO, WP, SW-CHA, ED sub-groups) return `jes_total_points` from a level-keyed `NON_EC_TOTALS` lookup (no LLM); `jes_scores: []` for these groups, matching the v2.0 FI/AS pattern; `ClassBlock` renders correctly for both scoring paths
-- [x] **OGX-07
-** — Sub-group disambiguation for NU (HOS/CHN/EMA), SW (SCW/CHA), and ED sub-groups surfaced to the advisor as an alert analogous to the v2.0 AS/EC disambiguation alert; confirmed sub-group stored on `WorkDescription`
+- [ ] **ORG-01** — User can provide organizational context through a 4-part Socratic step (work stream, organizational placement, reporting relationship, additional context); responses are assembled into `org_context: Optional[str]` on WorkDescription; `WDPatchRequest` updated in the same commit
+- [ ] **ORG-02** — Organizational context renders in the document live preview above the Client Service Results section
+- [ ] **ORG-03** — Organizational context populates the Part 2 Organizational Context section of the Accessible JD DOCX export
 
 ---
 
-## Preview Fix (UI) — 1 requirement
+## Responsibilities Narrative (RESP) — 3 requirements
 
-- [x] **UI-01** — `.doc-scroll` CSS rule in `styles.css` has `align-items: flex-start`; the simulated white `.doc` page grows to contain all preview content at any document length; no content overflows into the grey background; no layout regression in the split conversation/preview pane
-
----
-
-## SJD Library (SJD) — 3 requirements
-
-- [x] **SJD-01
-** — `SJD_LIBRARY` constant (10 entries parsed from `data/SJD Examples.txt`) in `app/data/sjd_library.py`; `GET /api/sjd` with optional `?og_code=` filter; `GET /api/sjd/{number}` for detail; `POST /api/wd/{id}/sjd-start` pre-fills `confirmed_og`, `og_level`, and seed duties from a selected SJD
-- [x] **SJD-02
-** — Non-blocking "Browse SJDs" action surfaced at end of Role phase; selecting an SJD writes a `sjd_source` provenance field on the WD and tags seeded duties with `source="sjd"` + `sjd_number` in their `ProvenanceTag`; SJD source appears in the DOCX export manifest
-- [x] **SJD-03** — Changing `confirmed_og` after an SJD pre-fill surfaces a warning: "Departing from the SJD classification turns this into a new evaluation — the SJD decision no longer applies"
+- [ ] **RESP-01** — User can enter a free-text responsibilities narrative (available on all positions, not gated on supervisory flag); stored as `responsibilities_narrative: Optional[str]` on WorkDescription; `WDPatchRequest` updated in the same commit
+- [ ] **RESP-02** — Responsibilities narrative renders as its own section in the document live preview
+- [ ] **RESP-03** — Responsibilities narrative populates the Part 2 Responsibilities section of the Accessible JD DOCX export
 
 ---
 
-## Writing Guide (WG) — 4 requirements
+## Seven-Elements Completeness Audit (ELEM) — 3 requirements
 
-- [x] **WG-01** — Structural duty validation covering: active-voice opener (verb-first), word count 8–25, no passive-voice opener, no duplicate duty text; calibrated against `data/SJD Examples.txt` — fewer than 15% of SJD duties may be flagged (a higher rate indicates miscalibration)
-- [x] **WG-02** — Non-blocking inline `.duty-hint` warnings rendered during duty entry; advisor can submit with hints visible; no hard gate; `POST /api/wd/{id}/validate-duties` returns per-duty validation findings; frontend calls after duty-phase commit
-- [x] **WG-03** — `QUESTION_BANK` updated with a "Client Service Results" question inserted before the Key Activities duties step, per the Writing Guide's document structure
-- [x] **WG-04** — Inline per-step OG/group-specific duty tips shown during duty entry sourced from `OG_DEFINITIONS` excerpts (not hardcoded strings)
-
----
-
-## Risk Audit (AUDIT) — 5 requirements
-
-- [x] **AUDIT-01** — "Run compliance audit" button in the Review phase (never runs automatically); `POST /api/wd/{id}/audit` executes deterministic rule matching; findings stored in `audit_log` with `event='risk_audit_finding'`; audit is re-runnable and replaces previous findings in the UI (deduplication by max-id per section)
-- [x] **AUDIT-02** — Audit matches against the confirmed OG's CBA JSON file (`data/agreements/{OG}/`) — exclusion, scope, and application articles only; two-signal requirement before any finding fires (verbatim term match + section relevance); false negatives preferred over false positives in this legal domain
-- [x] **AUDIT-03** — Audit evaluates a curated subset of Federal Court ERR principles (completeness of duty coverage, generic vs. specific duty adequacy) sourced from `data/AI Docs/ERR_Principles_drawn_from_Federal_Court.pdf` and `data/AI Docs/Wilkonson v. Canada.pdf`; principles encoded as deterministic rules, not LLM inference
-- [x] **AUDIT-04** — Each finding displays: section, severity (advisory/warning), verbatim CBA clause or court citation, plain-language recommendation; advisor chooses Accept / Manual Edit / Skip; Skip label is "Not applicable — no conflict found"; every decision written to `audit_log` with `event='risk_audit_decision'`
-- [x] **AUDIT-05** — Manual Edit action opens the existing Phase 19 amendment panel for the flagged section; amendment note and audit finding share the same section key so they co-appear in the DOCX amendment appendix
+- [ ] **ELEM-01** — `POST /api/wd/{id}/validate-elements` returns per-element status (populated / derived / missing) for all 7 Part 2 elements; JES-derived Effort and Working Conditions show as "derived" not "missing"; Responsibilities shows as "not_applicable" only when no text is provided (field is open to all positions)
+- [ ] **ELEM-02** — Review phase displays a completeness badge showing how many of the 7 elements are populated or derived (soft gate — advisor must acknowledge, not blocked from export)
+- [ ] **ELEM-03** — Structured data export (JSON and CSV) includes per-element completeness status alongside element values
 
 ---
 
-## Accessible Template (ACC) — 4 requirements
+## Manager-Track UX (MGR) — 3 requirements
 
-- [x] **ACC-01** — `build_accessible_template.py` script builds and self-verifies `app/templates/wd_accessible_template.docx`; Part 1: position identification + 3 signature blocks; Part 2: 7 subsections (Org Context, Client Service Results, Key Activities, Skills, Effort, Responsibilities, Working Conditions); `get_undeclared_template_variables()` confirms all template variables are declared
-- [x] **ACC-02** — `_build_wd_context()` in `export_service.py` populates all Part 2 fields; Effort and Working Conditions sections map from JES factor scores where the confirmed OG's JES standard defines those factors (via `_factor_category_map()` helper deriving categories from `EC_JES_ELEMENTS` + `JES_FACTORS_BY_GROUP`); `[To be completed by advisor]` placeholder where the JES does not define them
-- [x] **ACC-03** — `POST /api/wd/{id}/export/docx` produces the Accessible format; previous TBS WD template (`wd_template.docx` + `build_wd_template.py`) retired; poster DOCX template unchanged; all existing export tests updated to assert Accessible format structure (19/19 test_export.py green)
-- [x] **ACC-04** — Content-presence test opens the rendered DOCX via `python-docx` and asserts every non-placeholder template variable resolves to a non-empty string for a fully-completed WD (no `{{`, no `\nNone\n`, no `%}` Jinja2 leaks; `Citizens receive timely` positive content check)
+- [ ] **MGR-01** — A role selector screen precedes the conversation: "I am a classification advisor" / "I am a hiring manager"; selection is persisted to localStorage and does not modify the WD data model
+- [ ] **MGR-02** — Manager mode renders no OG codes, JES factor names, or CBA clause references in any user-visible text or UI label
+- [ ] **MGR-03** — Manager-track STEPS variant skips classification-internal steps (og_confirm, og_level, JES override); the manager's output is a draft JD for the classification team
+
+---
+
+## Structured Data Export (SEXP) — 3 requirements
+
+- [ ] **SEXP-01** — `POST /api/wd/{id}/export/json` returns all 7 Part 2 elements (Organizational Context, Client Service Results, Key Activities, Skills, Effort, Responsibility, Working Conditions) plus classification metadata and provenance as JSON; uses a shared `build_seven_elements(wd)` helper in `export_service.py`
+- [ ] **SEXP-02** — `POST /api/wd/{id}/export/csv` returns the same 7-element schema as UTF-8-with-BOM CSV (Excel-compatible); uses `csv.DictWriter` with `io.StringIO`; per-element completeness status included
+- [ ] **SEXP-03** — SPA Review phase displays JSON and CSV download buttons alongside existing DOCX/PDF buttons; uses the same `exportAs()` async fetch + Blob + `URL.createObjectURL` pattern
+
+---
+
+## Enhanced Job Poster (POST) — 1 requirement
+
+- [ ] **POST-01** — Job poster DOCX gains an "About the organization" section populated from `org_context`; Key Activities and Skills sections sourced from the 7-element structured data; `build_poster_template.py` script updated and self-verifying
 
 ---
 
@@ -68,13 +57,10 @@
 
 | Requirement | Reason for deferral |
 |-------------|---------------------|
-| Bilingual section toggle in Accessible Template | French content generation is out of scope |
-| Effort/Working Conditions as dedicated Socratic steps | Derivable from JES in v3.0; dedicated questions are v4 |
-| Audit findings appendix in DOCX export | Phase 24 ships the audit UI; DOCX integration is v3.1 |
-| Larger DND SJD dataset | 9 entries sufficient for v3.0 workflow architecture |
-| SJD similarity ranking | Keyword/OG browse sufficient at launch |
-| Verb suggestion lookup in Writing Guide | Structural rules sufficient; vocabulary enhancement is v4 |
-| Hard gate on audit completion before export | Advisory-only in v3.0; gate is v3.1 if adoption proves it useful |
+| SJD pre-fill for org_context | SJD_LIBRARY `organizational_context` field could auto-fill ORG-01; deferred until SJD dataset is richer |
+| DND org unit dropdown for org placement | `DND_Org_26-Feb-2026-L3-FINAL_v2.xlsx` not yet parsed; v5 |
+| NOC→OaSIS crosswalk in JSON export | `data/OASIS-2025-Taxonomy.json` may contain crosswalk; verify before committing to scope |
+| Effort / Working Conditions as dedicated Socratic steps | JES-derived values sufficient for v4.0; dedicated advisor questions are v5 |
 
 ---
 
@@ -83,9 +69,9 @@
 | Feature | Reason |
 |---------|--------|
 | Multi-user / auth | Single-user local app |
-| LLM in audit or duty validation | All v3.0 features are deterministic |
-| Real-time CBA update sync | Static curated dataset |
-| Full-article CBA scope matching | Scope/exclusion/application articles only; full-article too broad for conservative audit |
+| Manager WD separate DOCX template or watermarked format | Manager-track uses same Accessible JD template; separate template is v5 |
+| Real-time analytics pipeline integration | JSON/CSV export is the handoff point; downstream ingestion is Julian's team's concern |
+| Bilingual export of 7-element data | French content generation is out of scope |
 
 ---
 
@@ -93,27 +79,19 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| OGX-01 | Phase 21 | Complete |
-| OGX-02 | Phase 21 | Complete |
-| OGX-03 | Phase 21 | Complete |
-| OGX-04 | Phase 21 | Complete |
-| OGX-05 | Phase 21 | Complete |
-| OGX-06 | Phase 21 | Complete |
-| OGX-07 | Phase 21 | Complete |
-| UI-01  | Phase 21 | Complete |
-| SJD-01 | Phase 22 | Validated (22-03) |
-| SJD-02 | Phase 22 | Validated (22-04) |
-| SJD-03 | Phase 22 | Validated (22-04) |
-| WG-01  | Phase 23 | Complete |
-| WG-02  | Phase 23 | Complete |
-| WG-03  | Phase 23 | Complete |
-| WG-04  | Phase 23 | Complete |
-| AUDIT-01 | Phase 24 | Complete |
-| AUDIT-02 | Phase 24 | Complete |
-| AUDIT-03 | Phase 24 | Complete |
-| AUDIT-04 | Phase 24 | Complete |
-| AUDIT-05 | Phase 24 | Complete |
-| ACC-01 | Phase 25 | Complete |
-| ACC-02 | Phase 25 | Complete |
-| ACC-03 | Phase 25 | Complete |
-| ACC-04 | Phase 25 | Complete |
+| ORG-01 | — | Pending |
+| ORG-02 | — | Pending |
+| ORG-03 | — | Pending |
+| RESP-01 | — | Pending |
+| RESP-02 | — | Pending |
+| RESP-03 | — | Pending |
+| ELEM-01 | — | Pending |
+| ELEM-02 | — | Pending |
+| ELEM-03 | — | Pending |
+| MGR-01 | — | Pending |
+| MGR-02 | — | Pending |
+| MGR-03 | — | Pending |
+| SEXP-01 | — | Pending |
+| SEXP-02 | — | Pending |
+| SEXP-03 | — | Pending |
+| POST-01 | — | Pending |
