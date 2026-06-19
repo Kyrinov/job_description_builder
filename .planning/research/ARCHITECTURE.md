@@ -1,358 +1,524 @@
-# Architecture Research — v3.0
+# Architecture Research — v4.0 Seven-Elements Conversational Architecture
 
-**Project:** JD Builder v3.0 — Classification Depth & Document Quality
-**Date:** 2026-06-10
-**Based on:** v2.0 complete codebase at Phase 20
+**Project:** JD Builder v4.0
+**Date:** 2026-06-19
+**Based on:** v3.0 complete codebase at Phase 25
+**Confidence:** HIGH — based on direct codebase read, not WebSearch inference
 
 ---
 
-## Existing Architecture (baseline for all six features)
+## Existing Architecture Baseline (Phase 25 state)
 
 ```
 v2/backend/app/
-├── api/               — FastAPI routers (7 modules: health, wd, noc_mapping,
-│                         og_classification, jes_scoring, amendments, export)
-├── ai/                — LLM wrappers (jes_scoring.py, noc_ranking.py)
-├── data/constants.py  — All authoritative data constants (OG_LEVELS, QUESTION_BANK,
-│                         OG_DEFINITIONS, QUAL_STANDARDS, EC_JES_ELEMENTS, etc.)
-├── models/            — Pydantic v2 models (WorkDescription, DraftDuty, etc.)
-├── services/          — Business logic (export_service, jes_service, noc_mapper,
-│                         classification_gate)
-├── templates/         — docxtpl .docx binaries (wd_template, poster_template)
-└── main.py            — App factory, lifespan schema creation
+├── api/               — 8 routers: health, wd, noc_mapping, og_classification,
+│                         jes_scoring, amendments, export, sjd
+├── ai/                — jes_scoring.py, noc_ranking.py
+├── data/constants.py  — OG_LEVELS (22 groups), QUESTION_BANK, OG_DEFINITIONS,
+│                         QUAL_STANDARDS, EC_JES_ELEMENTS, JES_FACTORS_BY_GROUP
+├── models/            — WorkDescription, DraftDuty, Classification, JESFactor,
+│                         NOCMatch, QualificationStandard
+├── services/          — export_service.py, jes_service.py, noc_mapper.py,
+│                         classification_gate.py, duty_validator.py, risk_auditor.py
+├── templates/         — wd_accessible_template.docx, poster_template.docx
+└── main.py            — App factory with lifespan schema creation
 
 v2/frontend/src/
-├── app.jsx            — Root component; 8 state slices + commit()/exportAs() flow
-├── data.jsx           — STEPS, PHASES, OG_LEVELS, QUAL_DEFAULTS, accumulateSignals()
+├── app.jsx            — Root; ~15 state slices; commit()/exportAs() flow
+├── data.jsx           — STEPS (28 entries), PHASES, OG_LEVELS, QUAL_DEFAULTS,
+│                         accumulateSignals(), isStepVisible(), getVisibleSteps()
 ├── conversation.jsx   — Exchange, ActiveQuestion, ReviewState components
-├── document.jsx       — DocumentPane, ClassBlock, Sec, OrphanBadge
+├── document.jsx       — DocumentPane, ClassBlock, Sec, OrphanBadge, buildOverview()
 ├── components.jsx     — Icon, initialAnswer, answerValid, NocConfirmList, OgConfirmList
-└── styles.css         — Single CSS file; all component styles
+└── styles.css
 
-SQLite: work_descriptions (id, data JSON), audit_log (id, wd_id, event, detail, created_at)
+SQLite: work_descriptions (id, title, data JSON, schema_version, created_at, last_modified)
+        audit_log (id, wd_id, event, actor, detail, created_at)
 ```
+
+WorkDescription fields as of Phase 25:
+- id, title, schema_version, created_at, last_modified
+- record: dict (committed answers blob)
+- answers: dict (per-step answer history)
+- step_index: int, draft: Optional[dict], reviewing: bool, editing_return: bool
+- classification: Optional[Classification]
+- duties: list[DraftDuty]
+- qualification: Optional[QualificationStandard]
+- drf_id: Optional[str]
+- noc_candidates: list[NOCMatch], confirmed_noc: Optional[Union[str, NOCMatch, dict]]
+- confirmed_og: Optional[Union[str, dict]], confirmed_sub_group: Optional[str]
+- og_level: Optional[int]
+- sjd_source: Optional[dict]
+- reports_to_military: Optional[bool]
+- jes_scores: list[dict], jes_total_points: Optional[int]
+
+model_config = ConfigDict(extra="ignore") — unknown fields silently discarded on load.
+
+---
+
+## Question 1: Where does user_role live?
+
+**Decision: React state in app.jsx, persisted to localStorage.**
+
+### Rationale
+
+`user_role` is a session-level UX preference, not a WorkDescription property. Three options:
+
+**Option A: WorkDescription field (backend)**
+- Con: WD is a document artifact, not a session preference. A single WD could be started by an advisor and amended by a manager — encoding role into the WD conflates session and document concerns.
+- Con: Requires a PATCH on every session start before any work begins.
+- Con: The 7-element structured data export must work regardless of which role created the WD; role should not gate data availability.
+
+**Option B: React state only (ephemeral)**
+- Con: A page refresh clears the role selection, dropping the user back to the role picker on every reload.
+
+**Option C: React state + localStorage (recommended)**
+- Matches the existing pattern for `record` (localStorage key `jd-builder-v2-record`) and `wd_id` (`jd-builder-v2-wd-id`).
+- Add a third key: `jd-builder-v2-role` storing `"advisor"` or `"manager"`.
+- On app boot, lazy-initialize `userRole` from localStorage via the same `useState(() => { try { return localStorage.getItem(...) } catch { return null } })` pattern.
+- Clearing the localStorage key (new session button) resets both role and WD.
+
+**Implementation:**
+```jsx
+// app.jsx — new state slice
+const [userRole, setUserRole] = useState(() => {
+  try { return localStorage.getItem('jd-builder-v2-role') || null; } catch { return null; }
+});
+
+// Persist on change
+useEffect(() => {
+  try { if (userRole) localStorage.setItem('jd-builder-v2-role', userRole); } catch {}
+}, [userRole]);
+```
+
+**Role selector gate:** when `userRole === null`, render a role-selection screen before the STEPS flow. This is a single conditional render on `<App>` body, not a new STEPS entry — role selection precedes WD creation and should not be in the conversation transcript.
+
+**STEPS conditionality:** pass `userRole` as a prop to `<ReviewState>`, `<DocumentPane>`, and the classification components. Manager mode suppresses OG/JES/CBA panels in the review pane. This is a display filter on existing components — no new routing.
+
+---
+
+## Question 2: Adding org_context and responsibilities to WorkDescription
+
+**Decision: New Optional fields on WorkDescription model; captured in record dict; no DB migration.**
+
+### Backward compatibility
+
+`model_config = ConfigDict(extra="ignore")` means existing rows with no `org_context` or `responsibilities_narrative` field will simply load without those fields present — they default to `None`. No migration script, no schema version bump required. New fields only appear in the `data` JSON blob when a new-flow WD is saved.
+
+### Field placement strategy
+
+Two fields need to be added. The key question is whether they live at the **WorkDescription root** or only inside **record dict**.
+
+Existing precedent in the codebase:
+- Fields the export pipeline reads directly → stored at WD root (e.g. `confirmed_og`, `og_level`, `duties`, `qualification`, `jes_scores`)
+- Fields only the live preview reads → stored in `record` dict (e.g. `branch`, `reports`, `title`, `summary`, `client_service_results`)
+
+`org_context` and `responsibilities_narrative` are needed by:
+1. The export pipeline (`_build_wd_context` in `export_service.py`) — for the seven-elements structured export and for the Enhanced Job Poster
+2. The `POST /api/wd/{id}/validate-elements` completeness audit
+3. The document preview (`document.jsx`)
+
+Because they are consumed by the backend export pipeline AND the completeness audit endpoint, they must be readable from the stored `WorkDescription` object without parsing the `record` dict. Store them at the WD root.
+
+**WorkDescription additions:**
+```python
+# app/models/work_description.py
+org_context: Optional[str] = None          # Phase 26: Organizational Context step
+responsibilities_narrative: Optional[str] = None  # Phase 27: Responsibilities Narrative step
+```
+
+**WDPatchRequest additions:**
+```python
+# app/api/wd.py — WDPatchRequest
+org_context: Optional[str] = None
+responsibilities_narrative: Optional[str] = None
+```
+
+**STEPS additions:**
+```js
+// data.jsx — two new entries
+{ id: 'org_context', phase: 0, icon: I.org,
+  q: 'Describe the organizational context for this position.',
+  helper: 'Where does this position fit in the organization? What is its mandate?',
+  input: { type: 'textarea', placeholder: 'e.g. The position is located in the ...' },
+  apply: (r, a) => ({ org_context: a }),
+  transcript: a => a ? a.slice(0, 60) + '...' : 'Pending' },
+
+{ id: 'responsibilities_narrative', phase: 3, icon: I.ladder,
+  q: 'Describe the decision-making authority and delegation scope.',
+  helper: 'Applicable to supervisory or senior individual-contributor positions.',
+  input: { type: 'textarea', placeholder: 'e.g. The incumbent has authority to...' },
+  // Gate: only show for supervisory/senior roles
+  visible: (answers) => ['few','team','many'].includes(answers.supervises?.id),
+  apply: (r, a) => ({ responsibilities_narrative: a }),
+  transcript: a => a ? a.slice(0, 60) + '...' : 'Pending' },
+```
+
+**commit() mirroring:** following the existing pattern where `confirmed_og`, `og_level`, etc. are mirrored from `record` up to the PATCH root:
+```js
+// app.jsx commit() — extend the mirror list
+['confirmed_noc', 'confirmed_og', 'og_level', 'reports_to_military',
+ 'jes_scores', 'jes_total_points',
+ 'org_context', 'responsibilities_narrative'].forEach(k => {
+  if (k in newRecord) wdPayload[k] = newRecord[k];
+});
+```
+
+**SJD pre-fill for org_context:** when `POST /api/wd/{id}/sjd-start` is called, the SJD entry's `organizational_context` text (already parsed into `SJDEntry` in Phase 22) pre-fills `wd.org_context` on the backend. The frontend should also pre-populate the `org_context` draft answer after the `sjd-start` response returns, using the same pattern as the existing record-update on sjd-start.
+
+---
+
+## Question 3: Structured data export — field mapping
+
+The seven Part 2 elements and their sources in the existing data model:
+
+| Element | Source field | Path | Notes |
+|---------|-------------|------|-------|
+| Organizational Context | `wd.org_context` | WD root (new) | Falls back to `_build_organizational_context_text(wd)` computed from branch/reports/summary |
+| Client Service Results | `wd.record.get('client_service_results')` | record dict | Existing Phase 23 STEPS entry |
+| Key Activities | `wd.duties` | WD root list[DraftDuty] | Each DraftDuty has `.text`, `.provenance_noc_code`, `.advisor` |
+| Skills (Qualifications) | `wd.qualification.education` + `wd.qualification.experience` | WD root | Falls back to `wd.record.get('quals')` |
+| Effort | `wd.jes_scores` filtered by category=='Effort' | WD root | Via `_factor_category_map()` + `JES_FACTORS_BY_GROUP` |
+| Responsibility | `wd.responsibilities_narrative` (new) + JES responsibility factors | WD root (new) | New field; can also derive from JES responsibility-category scores as supplementary |
+| Working Conditions | `wd.jes_scores` filtered by category=='Conditions' | WD root | Via `_factor_category_map()` |
+
+**Transformations needed for structured export:**
+
+1. **Organizational Context** — use `wd.org_context` directly (new field). If blank, fall back to `_build_organizational_context_text(wd)`. No transformation needed — it's a plain text string.
+
+2. **Client Service Results** — read from `wd.record.get('client_service_results', '')`. Plain text, no transformation.
+
+3. **Key Activities** — transform `list[DraftDuty]` into:
+   ```python
+   [{"text": d.text, "noc_code": d.provenance_noc_code or None, "source": "sjd" if d.source == "sjd" else ("advisor" if d.advisor else "noc")} for d in wd.duties]
+   ```
+   For CSV: flatten to one row per duty with columns `duty_text`, `noc_code`, `source`.
+
+4. **Skills** — merge education and experience into a dict:
+   ```python
+   qual = wd.qualification or QualificationStandard(**((wd.record or {}).get('quals') or {}))
+   {"education": qual.education, "experience": qual.experience}
+   ```
+   For CSV: two columns `skills_education`, `skills_experience`.
+
+5. **Effort** — use `_factor_category_map()` to bucket `wd.jes_scores`:
+   ```python
+   cat_map = _factor_category_map()
+   effort = [s for s in wd.jes_scores if cat_map.get(s.get('factor_name', '')) == 'Effort']
+   # Each s is {"factor_name": ..., "degree": ..., "points": ..., "rationale": ...}
+   ```
+   For CSV: flatten to `effort_factor`, `effort_degree`, `effort_points`.
+
+6. **Responsibility** — prefer `wd.responsibilities_narrative` (new free-text field). Supplement with JES responsibility factors as machine-readable signals:
+   ```python
+   responsibility_factors = [s for s in wd.jes_scores if cat_map.get(s.get('factor_name', '')) == 'Responsibility']
+   {"narrative": wd.responsibilities_narrative or "", "jes_factors": responsibility_factors}
+   ```
+   For CSV: `responsibility_narrative` column plus `responsibility_jes_factors` as a JSON string.
+
+7. **Working Conditions** — same pattern as Effort:
+   ```python
+   wc = [s for s in wd.jes_scores if cat_map.get(s.get('factor_name', '')) == 'Conditions']
+   ```
+
+**New service function** in `export_service.py`:
+```python
+def build_seven_elements(wd: WorkDescription) -> dict:
+    """Map WorkDescription fields to the 7 Part 2 elements."""
+    cat_map = _factor_category_map()
+    scores = wd.jes_scores or []
+    record = wd.record or {}
+
+    qual = wd.qualification
+    if qual is None:
+        rq = record.get('quals') or {}
+        qual_education = rq.get('education', '')
+        qual_experience = rq.get('experience', '')
+    else:
+        qual_education = qual.education
+        qual_experience = qual.experience
+
+    return {
+        "organizational_context": wd.org_context or _build_organizational_context_text(wd),
+        "client_service_results": (record.get('client_service_results') or '').strip(),
+        "key_activities": [
+            {"text": d.text, "noc_code": d.provenance_noc_code or None,
+             "source": "sjd" if d.source == "sjd" else ("advisor" if d.advisor else "noc")}
+            for d in (wd.duties or [])
+        ],
+        "skills": {"education": qual_education, "experience": qual_experience},
+        "effort": [s for s in scores if cat_map.get(s.get('factor_name', '')) == 'Effort'],
+        "responsibility": {
+            "narrative": wd.responsibilities_narrative or '',
+            "jes_factors": [s for s in scores if cat_map.get(s.get('factor_name', '')) == 'Responsibility'],
+        },
+        "working_conditions": [s for s in scores if cat_map.get(s.get('factor_name', '')) == 'Conditions'],
+    }
+```
+
+**JSON export endpoint:**
+```python
+@router.post("/wd/{wd_id}/export/json")
+async def export_json(wd_id: str) -> Response:
+    wd = _load_wd(wd_id, get_settings().db_path)
+    payload = build_seven_elements(wd)
+    payload["wd_id"] = wd_id
+    payload["exported_at"] = datetime.utcnow().isoformat()
+    return Response(
+        content=json.dumps(payload, indent=2, ensure_ascii=False),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{wd_id}-elements.json"'}
+    )
+```
+
+**CSV export endpoint:**
+```python
+import csv, io
+
+@router.post("/wd/{wd_id}/export/csv")
+async def export_csv(wd_id: str) -> Response:
+    wd = _load_wd(wd_id, get_settings().db_path)
+    elements = build_seven_elements(wd)
+    # One row per duty (key_activities), side-by-side with scalar fields
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=[
+        'wd_id', 'organizational_context', 'client_service_results',
+        'duty_text', 'duty_noc_code', 'duty_source',
+        'skills_education', 'skills_experience',
+        'effort_factors_json', 'responsibility_narrative',
+        'responsibility_jes_factors_json', 'working_conditions_json',
+    ])
+    writer.writeheader()
+    duties = elements['key_activities'] or [{}]
+    for duty in duties:
+        writer.writerow({
+            'wd_id': wd_id,
+            'organizational_context': elements['organizational_context'],
+            'client_service_results': elements['client_service_results'],
+            'duty_text': duty.get('text', ''),
+            'duty_noc_code': duty.get('noc_code', ''),
+            'duty_source': duty.get('source', ''),
+            'skills_education': elements['skills']['education'],
+            'skills_experience': elements['skills']['experience'],
+            'effort_factors_json': json.dumps(elements['effort']),
+            'responsibility_narrative': elements['responsibility']['narrative'],
+            'responsibility_jes_factors_json': json.dumps(elements['responsibility']['jes_factors']),
+            'working_conditions_json': json.dumps(elements['working_conditions']),
+        })
+    return Response(
+        content=buf.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{wd_id}-elements.csv"'}
+    )
+```
+
+---
+
+## Question 4: Build order
+
+Feature dependency graph:
+
+```
+Feature 1: org_context field + STEPS entry
+Feature 2: responsibilities_narrative field + gated STEPS entry
+Feature 3: Seven-Elements Completeness Audit endpoint
+Feature 4: Manager-Track UX (role selector)
+Feature 5: Enhanced Job Poster (consumes new fields)
+Feature 6: Structured Data Export JSON+CSV (consumes new fields)
+```
+
+Dependencies:
+- Feature 3 reads `org_context` + `responsibilities_narrative` → depends on Features 1 and 2
+- Feature 5 reads `org_context` → depends on Feature 1
+- Feature 6 reads `org_context` + `responsibilities_narrative` → depends on Features 1 and 2
+- Feature 4 is UX-only (state + display filter) with no model dependencies → independent
+
+**Recommended build order:**
+
+### Phase 26: org_context (Feature 1)
+Lowest risk, highest leverage. Adds one new WorkDescription field + one STEPS entry + SJD pre-fill hook. Unlocks all downstream features.
+
+Deliverables:
+- `WorkDescription.org_context: Optional[str] = None`
+- `WDPatchRequest.org_context: Optional[str] = None`
+- `STEPS` entry `'org_context'` in Phase 0 (after branch, before reports_to_military)
+- commit() mirror: add `'org_context'` to the mirror list
+- `POST /api/wd/{id}/sjd-start` extended: write `wd.org_context = entry.organizational_context` when the SJD entry has it
+- `_build_wd_context()` in export_service: use `wd.org_context` preferentially over the computed fallback for `organizational_context_text`
+- `buildOverview()` in document.jsx: use `record.org_context` when present for the preview pane
+- Tests: model round-trip, PATCH field, SJD pre-fill sets field, export context builder
+
+### Phase 27: responsibilities_narrative + completeness audit (Features 2 + 3)
+Build together — the completeness audit endpoint is trivial once the fields exist, and shipping it immediately validates the field contract.
+
+Deliverables:
+- `WorkDescription.responsibilities_narrative: Optional[str] = None`
+- `WDPatchRequest.responsibilities_narrative: Optional[str] = None`
+- Gated STEPS entry `'responsibilities_narrative'` in Phase 3, after duties, conditional on `supervises` answer
+- `isStepVisible()` extension: case for `'responsibilities_narrative'` returns `['few','team','many'].includes(answers.supervises?.id)`
+- commit() mirror: add `'responsibilities_narrative'`
+- `POST /api/wd/{id}/validate-elements` endpoint:
+  - Reads WD; for each of the 7 elements checks populated/derived/missing
+  - Returns `{elements: [{name, status, value_preview}]}` where status is `"populated"`, `"derived"`, or `"missing"`
+  - No gate — advisory badge only
+- `ReviewState` completeness badge: renders element status summary (e.g. "6/7 elements complete")
+- Tests: gating logic, PATCH field, validate-elements endpoint, status logic
+
+### Phase 28: Manager-Track UX (Feature 4)
+Independent of field additions. UX-only change with no backend model changes.
+
+Deliverables:
+- `userRole` state in app.jsx, persisted to `jd-builder-v2-role` localStorage key
+- Role selector screen (rendered when `userRole === null`): two cards — "Classification Advisor" / "Hiring Manager"
+- Manager mode: suppress OG/JES classification pane in document preview; suppress CBA audit panel in ReviewState; rename PHASES label for manager context
+- Advisor mode: full existing UX, no change
+- `userRole` passed as prop to `<ReviewState>`, `<DocumentPane>`, `<ClassBlock>`
+- Tests: role selection renders, role persists on reload, manager mode hides classification block
+
+### Phase 29: Enhanced Job Poster + Structured Data Export (Features 5 + 6)
+Build together — both consume the same `build_seven_elements()` function and can share a single phase.
+
+Deliverables:
+- `build_seven_elements(wd)` function in `export_service.py`
+- Enhanced poster: extend `_build_poster_context()` to pass `org_context`, `key_activities` (as top-5 duties), `skills`
+- Update `poster_template.docx`: add "About the Organization" section consuming `org_context`, rename "Qualifications" to include skills context
+- `POST /api/wd/{id}/export/json` endpoint
+- `POST /api/wd/{id}/export/csv` endpoint
+- Frontend: two new `exportAs('json')` and `exportAs('csv')` branches in app.jsx
+- Structured export buttons in ReviewState (separate from DOCX/poster buttons)
+- Tests: `build_seven_elements()` with full/partial/empty WD, JSON endpoint, CSV endpoint, poster context builder
 
 ---
 
 ## New Components
 
-### Backend: `app/services/audit_service.py`
+### Backend: `app/api/elements.py` (new)
 
-Purpose: Risk audit engine. Reads the confirmed WD (duties, OG classification, qualifications) and returns structured findings keyed to source authority.
-
-```python
-# Public API
-def run_risk_audit(wd: WorkDescription, og_code: str) -> list[AuditFinding]
-
-@dataclass
-class AuditFinding:
-    finding_id: str          # deterministic: f"{section}_{rule_id}"
-    section: str             # "duties" | "quals" | "classification" | "overview"
-    severity: str            # "high" | "medium" | "low"
-    rule_id: str             # e.g. "CA-SCOPE-01", "ERR-PRINCIPLE-07"
-    citation: str            # verbatim clause or case name
-    citation_source: str     # "CBA" | "Federal Court" | "TBS Directive"
-    text: str                # human-readable description of the risk
-    status: str              # "open" | "accepted" | "manual_edit" | "skipped"
-```
-
-This service is purely deterministic — no LLM. Rules are encoded as check functions against WD fields. Rule corpus is drawn from:
-- `data/directive_on_classification.txt` (TBS)
-- `data/AI Docs/ERR_Principles_drawn_from_Federal_Court.pdf` (Federal Court principles)
-- `data/AI Docs/Wilkonson v. Canada.pdf` (specific case authority)
-- Collective agreement scope/exclusion clauses already indexed in v1.0 data
-
-Storage: audit findings are persisted in `audit_log` table with `event='risk_audit_finding'` and a JSON `detail` matching the `AuditFinding` shape. Advisor status updates (`accepted`/`skipped`/`manual_edit`) write a new row with `event='risk_audit_status'` — same deduplication-by-max-id pattern used by amendments.
-
-### Backend: `app/api/audit.py`
+Routes for the seven-elements audit and structured export:
 
 ```python
-POST /api/wd/{id}/audit                     # trigger audit; returns list[AuditFinding]
-PATCH /api/wd/{id}/audit/{finding_id}       # update status for one finding
-GET  /api/wd/{id}/audit                     # retrieve current findings with status
+POST /api/wd/{wd_id}/validate-elements   # completeness audit (Phase 27)
+POST /api/wd/{wd_id}/export/json         # JSON structured export (Phase 29)
+POST /api/wd/{wd_id}/export/csv          # CSV structured export (Phase 29)
 ```
 
-Router pattern mirrors `amendments.py`: thin layer that calls `audit_service`, reads/writes `audit_log`, returns JSON.
+Mount in `main.py` alongside existing routers. No classification gate on validate-elements (advisory). JSON/CSV export require no OG confirmation — they export whatever is present.
 
-### Backend: `app/api/sjd.py`
+### Frontend: Role selector screen
 
-```python
-GET  /api/sjd                   # list all SJDs (id, job_title, og_level, noc_code)
-GET  /api/sjd/{id}              # full SJD record
-POST /api/wd/{id}/sjd-start     # seed a WD's record fields from an SJD
-```
+A pre-flow screen (not in STEPS) rendered when `userRole === null`. Single JSX block in app.jsx above the STEPS flow. Two cards: advisor / manager. On selection, sets `userRole` state + localStorage key, advances to the existing STEPS flow.
 
-### Backend: `app/data/sjd_library.py`
+### Frontend: Completeness badge in ReviewState
 
-A module-level constant `SJD_LIBRARY: list[dict]` parsed at import time from the tab-delimited `data/SJD Examples.txt`. Each entry includes: `sjd_number`, `job_title`, `group_level`, `noc_code`, `supervisory`, `organizational_context`, `og_name`.
-
-**Why a module constant and not a SQLite table:** the SJD file has 9 entries now; the whole dataset fits in ~10KB. A SQLite table adds a migration and a startup seed check with no benefit at this volume. If the dataset grows beyond ~100 entries, the same module can be converted to a seeded SQLite table with no API contract change. The `POST /api/wd/{id}/sjd-start` endpoint is the only consumer — the data access path is trivially replaceable.
-
-### Backend: `app/services/writing_guide_service.py`
-
-Purpose: Validates duty statement text against principles extracted from `data/AI Docs/Job Description Writing Guide.docx`. Returns a list of `DutyViolation` objects.
-
-```python
-@dataclass
-class DutyViolation:
-    duty_index: int     # 0-based index in the duties array
-    rule_id: str        # e.g. "WG-VERB-01", "WG-PASSIVE-02"
-    text: str           # human-readable hint
-    severity: str       # "error" | "warning"
-```
-
-Rules are encoded as regex or string-pattern checks — no LLM. Examples from the Writing Guide pattern:
-- Passive voice detection (`"is responsible for"`, `"will be"`)
-- Missing action verb at sentence start
-- Duty exceeds 25 words (guideline length cap)
-- Vague opener words (`"performs"`, `"assists"`, `"supports"` without specific object)
-
-### Backend: `app/api/writing_guide.py`
-
-```python
-POST /api/wd/{id}/validate-duties   # run writing guide check; returns list[DutyViolation]
-```
-
-### Backend: `scripts/build_accessible_template.py`
-
-Build script for the new Accessible JD DOCX template. Follows the exact pattern of `scripts/build_wd_template.py`: creates a `DocxTemplate`, declares all variables, saves to `app/templates/accessible_wd_template.docx`, and self-verifies via `get_undeclared_template_variables()`. The new template adds accessibility-required structural elements (proper heading levels, alt-text for any non-text elements, bilingual label rows).
-
-### Frontend: `AuditPanel` component (in `components.jsx`)
-
-Renders the risk audit findings inline within the Review phase. Each finding shows:
-- Severity badge (high/medium/low, colour-coded matching existing `.orphan-badge` pattern)
-- Section label
-- Citation source pill (matching `.src` pill pattern in `.sec__h`)
-- Finding text
-- Action buttons: Accept / Manual Edit / Skip (call `PATCH /api/wd/{id}/audit/{finding_id}`)
-
-**Placement:** rendered inside the Review phase's left-pane panel (not in the document preview pane), consistent with how `ReviewState` already presents the completion checklist. The review phase left pane is the right surface because audit is an advisor action, not a document section.
+A badge component in `conversation.jsx` — rendered in the ReviewState left pane when `elementStatuses` state is available. Shows "N/7 elements complete" with a breakdown list. Fetches `POST /api/wd/{id}/validate-elements` on review entry (same trigger as orphan check and amendment hydration).
 
 ---
 
-## Extended Components
+## Modified Components
 
-### `app/data/constants.py` — Extended for 12 new OG groups
-
-**What changes:**
-
-1. `OG_LEVELS` already has `FB`, `FS` entries. Extend with the remaining 10 groups from `data/Job_evaluation/`: `ED`, `LC`, `LP`, `MT`, `NT`, `NU`, `PO`, `PS`, `SW`, `WP`. Level ranges are read from the JES standard files already present in that directory.
-
-2. `OG_DEFINITIONS` — Add definition dict entries for each of the 12 new groups, sourced from TBS OCHRO (same sourcing pattern as existing AS/FI entries).
-
-3. `NON_EC_TOTALS` — Add approximate total JES point ranges for each new group at each level. For groups whose published JES standard provides explicit point totals (ED, FB, FS, LC, LP, MT, NT, NU, PO, PS, SW, WP text files are present), use those directly. For groups without numeric point scales in the available data files, use `None` as the level value and the scoring path returns a `best_effort: True` flag — this is preferable to a wrong number.
-
-4. `NON_EC_STANDARD_NAMES` (both the copy in `constants.py` and the module-level copy in `export_service.py`) — Add an entry per new group. These two copies are an acknowledged drift risk (Phase 20 code review advisory open item); a content-parity test should be added.
-
-5. `QUAL_STANDARDS` — Add a qualification standard dict entry per new group (or point to the relevant collective agreement standard).
-
-**QUESTION_BANK extension strategy — keeping it maintainable:**
-
-Do NOT add 12 new answer options to existing questions. The `accumulateSignals()` function already tallies `og_candidates` lists — adding more signal options is additive. Instead:
-
-- Add a fifth question: `"work_type_sector"` — "What sector or specialty domain does this work primarily fall under?" with answer options that each map to a cluster of new OG groups (e.g. "Law and justice" → `["LC", "LP"]`; "Health and social services" → `["NT", "NU", "SW", "WP"]`; "Science and environment" → `["MT", "PS", "PO"]`; "Education and training" → `["ED"]`; "Border and operations" → `["FB"]`; "Foreign affairs" → `["FS"]`; "None of the above" → no signals, falls through to existing EC/AS/IT/FI path).
-- Add a sixth question, `"work_type_disambiguate"`, conditional on the sector answer, that disambiguates within the cluster (e.g. after "Law and justice": "Is this a management/advisory/litigation support role (LC) or a legal practitioner/litigator role (LP)?").
-- New questions use `phase_slot: "work_type"` so they slot into the existing Phase 1 (Work Type) without a STEPS restructure.
-- Practical size: 8 total QUESTION_BANK entries at ~80 lines each = ~640 lines. Remains in one file. If it exceeds ~1000 lines, split into `QUESTION_BANK_CORE` (existing 4) and `QUESTION_BANK_EXTENDED` (new) and merge at import with list concatenation.
-
-### `app/services/export_service.py` — New template function
-
-1. Add `generate_accessible_wd_docx(wd_id, db_path)` — same pattern as `generate_wd_docx` but using `accessible_wd_template.docx`. The `_build_wd_context()` helper is reused without change; only the template path differs.
-2. Extend `NON_EC_STANDARD_NAMES` (module-level dict) to cover all 12 new groups.
-
-### `app/api/export.py` — New route
-
-Add `POST /api/wd/{id}/export/accessible-docx` alongside the existing three export routes. No structural change — same response pattern.
-
-### `app/api/__init__.py` — Three new router imports
-
-```python
-from . import audit, sjd, writing_guide
-api_router.include_router(audit.router)
-api_router.include_router(sjd.router)
-api_router.include_router(writing_guide.router)
-```
-
-### `v2/frontend/src/data.jsx` — Extended STEPS and new constants
-
-1. Extend `QUAL_DEFAULTS` to cover the 12 new OG groups, mirroring backend `QUAL_STANDARDS`.
-2. Add new STEPS entries for the sector-disambiguation questions.
-3. SJD browser is NOT a STEPS entry — it is a collapsible panel in `.convo__head`, so it does not block the main flow.
-
-### `v2/frontend/src/app.jsx` — New state slices
-
-- `auditFindings: []` — populated from `POST /api/wd/{id}/audit` response.
-- `dutyViolations: []` — populated from `POST /api/wd/{id}/validate-duties` response after duties commit.
-- `sjdList: []` — populated once from `GET /api/sjd` on mount (or lazily on panel open).
-
-### `v2/frontend/src/document.jsx` — Audit summary row + writing hints
-
-1. `DocumentPane` receives optional `auditFindings` prop. When present and `reviewing === true`, renders an audit summary above the provenance footer: "N risk findings — N open".
-2. Individual duty items (`doc-duty` li) receive an optional inline `.duty-hint` span rendered when `dutyViolations` has an entry for that duty index and `showWritingHints` is true. Display-only; does not block progression or export.
-
-### `v2/frontend/src/styles.css` — Preview fix + new UI classes
-
-**Preview white-page extension fix:**
-
-The `.doc-scroll` flex container currently has no `align-items` declaration, which defaults to `stretch`. This causes `.doc` to stretch to fill the full scroll container height when content is shorter than the viewport, and it causes the paper to not grow beyond its content because the flex item height is set by the container. The fix:
-
-```css
-/* Add to existing .doc-scroll rule: */
-.doc-scroll {
-  align-items: flex-start;  /* prevents .doc from stretching to container height */
-}
-```
-
-This is a one-line addition to the existing `.doc-scroll` rule block. The paper will now grow with its content and not overflow into the grey background at any document length.
-
-Add at end of file in a `/* v3.0 */` block:
-- `.audit-finding`, `.audit-finding--high`, `.audit-finding--medium`, `.audit-finding--low` — severity badge styles (use existing orphan-badge and gold/green/accent palette variables).
-- `.duty-hint` — small italic hint below duty text, accent-line left border.
-- `.sjd-picker`, `.sjd-card` — SJD browser panel and card styles.
+| Component | What changes | Why |
+|-----------|-------------|-----|
+| `WorkDescription` model | +`org_context`, +`responsibilities_narrative` | New fields |
+| `WDPatchRequest` | +`org_context`, +`responsibilities_narrative` | New fields mirrored from frontend |
+| `app/api/wd.py` patch_wd() | Mirror new fields in body_dump loop | Automatic via `setattr` loop already in place |
+| `export_service._build_wd_context()` | Use `wd.org_context` for `organizational_context_text` | New field available |
+| `export_service._build_poster_context()` | Add `org_context`, `key_activities` keys | Enhanced poster |
+| `export_service.py` (module) | Add `build_seven_elements()` | Shared by JSON/CSV export |
+| `app/api/export.py` | Add JSON + CSV routes | Structured export |
+| `data.jsx STEPS` | +`org_context` entry (Phase 0), +`responsibilities_narrative` entry (Phase 3) | New conversational steps |
+| `data.jsx isStepVisible()` | +case for `'responsibilities_narrative'` | Gating logic |
+| `data.jsx exports` | Export new step-related helpers if needed | Standard export pattern |
+| `app.jsx` | +`userRole` state, +role selector gate, +`elementStatuses` state, +`handleExportJson/Csv`, mirror new fields in commit() | New features |
+| `document.jsx buildOverview()` | Use `record.org_context` as leading text when present | New field display |
+| `conversation.jsx ReviewState` | +completeness badge, +manager-mode conditional rendering | Phase 27 + Phase 28 |
+| `styles.css` | +role selector styles, +completeness badge styles, +manager-mode display rules | New UI |
 
 ---
 
 ## Data Flow Changes
 
-### New API Routes
+### New commit() mirror fields (app.jsx)
 
-| Route | Method | Service | Description |
-|-------|--------|---------|-------------|
-| `GET /api/sjd` | GET | `sjd_library.SJD_LIBRARY` | List SJD index |
-| `GET /api/sjd/{id}` | GET | `sjd_library.SJD_LIBRARY` | Single SJD record |
-| `POST /api/wd/{id}/sjd-start` | POST | `sjd.py` (thin) | Seed WD record fields from SJD |
-| `GET /api/wd/{id}/audit` | GET | `audit_service` | Retrieve findings with status |
-| `POST /api/wd/{id}/audit` | POST | `audit_service` | Trigger fresh audit run |
-| `PATCH /api/wd/{id}/audit/{finding_id}` | PATCH | `audit_service` | Update finding status |
-| `POST /api/wd/{id}/validate-duties` | POST | `writing_guide_service` | Check duties against guide |
-| `POST /api/wd/{id}/export/accessible-docx` | POST | `export_service` | Accessible JD DOCX |
-
-### New Data Models
-
-**`AuditFinding`** (Pydantic model in `app/models/audit_finding.py`):
-```python
-class AuditFinding(BaseModel):
-    finding_id: str
-    section: str
-    severity: Literal["high", "medium", "low"]
-    rule_id: str
-    citation: str
-    citation_source: str
-    text: str
-    status: Literal["open", "accepted", "manual_edit", "skipped"] = "open"
+```js
+// Extend existing mirror list:
+['confirmed_noc', 'confirmed_og', 'og_level', 'reports_to_military',
+ 'jes_scores', 'jes_total_points',
+ 'org_context', 'responsibilities_narrative'].forEach(k => { ... });
 ```
 
-Stored in `audit_log` as JSON `detail` with `event='risk_audit_finding'`; status updates stored with `event='risk_audit_status'`. No schema migration required.
+### New state slices (app.jsx)
 
-**`DutyViolation`** (plain dataclass in `writing_guide_service.py`; not persisted):
-```python
-@dataclass
-class DutyViolation:
-    duty_index: int
-    rule_id: str
-    text: str
-    severity: Literal["error", "warning"]
+```js
+const [userRole, setUserRole] = useState(/* lazy localStorage */);
+const [elementStatuses, setElementStatuses] = useState([]);  // Phase 27
 ```
 
-**`SJDRecord`** (TypedDict in `sjd_library.py`; not persisted):
-```python
-class SJDRecord(TypedDict):
-    id: str                   # sjd_number
-    job_title: str
-    group_level: str          # e.g. "AS-01"
-    og_code: str              # parsed from group_level prefix
-    noc_code: str
-    supervisory: bool
-    organizational_context: str
+### New useEffect trigger (app.jsx)
+
+```js
+// Phase 27: validate elements when review starts (same pattern as orphan check)
+useEffect(() => {
+  if (!reviewing || !wd_id) return;
+  fetch(`/api/wd/${wd_id}/validate-elements`, { method: 'POST' })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => { if (data?.elements) setElementStatuses(data.elements); })
+    .catch(() => {});
+}, [reviewing, wd_id]);
 ```
 
-### State Flow: SJD Pre-fill
+### Completeness audit data flow
 
 ```
-User opens SJD panel (frontend, convo__head)
-  → GET /api/sjd  (index, 9 records)
-  → User selects SJD card
-  → POST /api/wd/{id}/sjd-start {sjd_id}
-  → Backend seeds WD record: {title, group_level, noc_code, organizational_context}
-  → Response: patched WorkDescription
-  → Frontend updates record state, triggers flash on affected fields
+User enters Review phase (reviewing = true)
+  → POST /api/wd/{id}/validate-elements (automatic, non-blocking)
+  → Backend: reads WD, checks 7 fields, returns {elements: [{name, status, value_preview}]}
+  → Frontend: setElementStatuses(data.elements)
+  → ReviewState renders completeness badge: "6/7 elements complete"
+  → Clicking badge expands element breakdown list
 ```
 
-### State Flow: Risk Audit
+### Enhanced poster data flow
 
 ```
-User clicks "Run Risk Audit" in ReviewState (left pane)
-  → POST /api/wd/{id}/audit
-  → audit_service.run_risk_audit(wd, og_code) — deterministic rules, ~milliseconds
-  → Each finding written to audit_log (event='risk_audit_finding')
-  → Response: {findings: [...]}
-  → Frontend stores in auditFindings state slice
-  → AuditPanel renders below ReviewState checklist
-  → User clicks Accept/Skip → PATCH /api/wd/{id}/audit/{finding_id}
-  → New audit_log row (event='risk_audit_status', detail={finding_id, status})
+User clicks "Export Poster" button
+  → exportAs('poster') in app.jsx
+  → POST /api/wd/{id}/export/poster (existing endpoint)
+  → _build_poster_context(wd) now reads wd.org_context and wd.duties[:5]
+  → poster_template.docx renders "About the Organization" from org_context
+  → File download
 ```
 
-### State Flow: Writing Guide Validation
+### Structured data export data flow
 
 ```
-User completes duties commit
-  → commit() fires normally (WD persisted)
-  → POST /api/wd/{id}/validate-duties fires in parallel
-  → writing_guide_service.check_duties(duties) — regex rules, ~microseconds
-  → Response: {violations: [...]}
-  → Frontend stores in dutyViolations state slice
-  → document.jsx renders .duty-hint below flagged duties (display-only)
-  → No blocking of progression; violations are advisory
+User clicks "Export JSON" or "Export CSV" in ReviewState
+  → exportAs('json') or exportAs('csv') in app.jsx
+  → POST /api/wd/{id}/export/json or /export/csv
+  → build_seven_elements(wd) maps all 7 fields
+  → JSON: single file download, Content-Type application/json
+  → CSV: one row per duty, shared scalar fields repeated
+  → File download via Blob + URL.createObjectURL (same pattern as DOCX)
 ```
-
-### OG Classification Data Flow Change
-
-Adding 12 new OG groups extends but does not change the data flow. `accumulateSignals()` already handles arbitrary `og_candidates` lists; `/api/og/classify` already ranks by signal tally with no group hardcoding; `OgConfirmList` renders the top-3 candidates regardless of which groups they are.
 
 ---
 
-## Suggested Build Order
+## Architectural Invariants to Preserve
 
-### Phase 21: OG Expansion (data foundation)
+1. **No SQLite schema migration.** New `org_context` and `responsibilities_narrative` fields live in the JSON blob inside `work_descriptions.data`. `extra="ignore"` handles old rows gracefully.
 
-Build first because all other features that touch classification need the new OG data constants populated. Additive change, low risk, existing test patterns apply directly.
+2. **Classification gate unchanged.** `require_og_confirmed` is not applied to structured export endpoints — these export whatever is present, because a manager-track WD may never have a confirmed OG.
 
-**Deliverables:** 12 new OG groups in `OG_LEVELS`, `OG_DEFINITIONS`, `NON_EC_TOTALS`, `NON_EC_STANDARD_NAMES`, `QUAL_STANDARDS` (backend). New sector-disambiguation questions in `QUESTION_BANK` (entries 5-8). Matching entries in frontend `QUAL_DEFAULTS`. A `test_qual_parity.py` to enforce content alignment between backend `QUAL_STANDARDS` and frontend `QUAL_DEFAULTS`.
+3. **Manager-track never mutates WD model.** `userRole` lives entirely in the browser. The same WorkDescription row is readable and exportable regardless of which role created it. Backend endpoints are role-unaware.
 
-### Phase 22: SJD Library
+4. **QUES-02 constraint preserved.** No new STEPS entries expose OG codes in question text or option labels. `org_context` and `responsibilities_narrative` are free-text fields with no signal accumulation.
 
-Self-contained: new constant module + 3 new routes + frontend panel. Does not depend on Phase 21 data (existing SJD examples are AS/EC/IT groups). Unblocks the Writing Guide phase by giving the advisor a realistic starting duty set to validate.
+5. **SJD pre-fill is augmentative, not authoritative.** When org_context is pre-filled from an SJD, it appears as the default answer to the `org_context` STEPS entry — the advisor can edit it. The WD stores the advisor's final text, not a reference to the SJD.
 
-**Deliverables:** `sjd_library.py` (parses `SJD Examples.txt` at import), `api/sjd.py`, SJD picker collapsible panel in `conversation.jsx` header, `sjd-start` WD seeding endpoint.
+6. **`_factor_category_map()` is the single source of truth** for bucketing JES scores into Effort/Responsibility/Conditions/Skill. `build_seven_elements()` must use it — never `score.get('category')` directly (the EC scoring path does not persist a category key on scores).
 
-### Phase 23: Writing Guide Integration
+7. **Responsibilities narrative is supplementary to JES responsibility factors, not a replacement.** The Accessible Template already renders JES responsibility factors in its Responsibility section. The new `responsibilities_narrative` field adds the *human-readable* narrative that the template's `responsibilities_text` currently derives from JES factor rationale strings. These coexist.
 
-Depends on a populated WD (duties present). Writing guide validation is purely service+API+frontend rendering with no template or data changes. Produces duty hints that are distinct from CBA compliance audit findings (different authority, different signal).
-
-**Deliverables:** `writing_guide_service.py`, `api/writing_guide.py`, QUESTION_BANK question-text updates (reshape questions to align with guide verb-first principle), `.duty-hint` CSS + `document.jsx` inline hint rendering, `dutyViolations` state slice in `app.jsx`.
-
-### Phase 24: Risk Audit
-
-Most research-intensive feature — requires reading and encoding rules from ERR Principles PDF and CA clauses. Placed fourth to give maximum time for rule corpus authoring. Depends on a complete WD with confirmed classification, duties, and quals.
-
-**Deliverables:** `audit_service.py`, `app/models/audit_finding.py`, `api/audit.py`, `AuditPanel` component in `components.jsx`, audit CSS classes in `styles.css`, `PATCH` status update flow, `auditFindings` state slice in `app.jsx`.
-
-### Phase 25: Accessible Template + Preview Fix
-
-Template work and CSS are independent of all other features. The CSS fix is one line — deliver it in the first commit of this phase regardless of template progress.
-
-**Deliverables:** `app/templates/accessible_wd_template.docx`, `scripts/build_accessible_template.py`, `POST /api/wd/{id}/export/accessible-docx` route and `generate_accessible_wd_docx` function, `align-items: flex-start` fix on `.doc-scroll`.
-
-### Dependency graph
-
-```
-Phase 21 (OG data)
-  └─► Phase 22 (SJD — independent, but benefits from expanded group coverage)
-        └─► Phase 23 (Writing Guide — needs duties to validate)
-              └─► Phase 24 (Risk Audit — needs complete WD)
-
-Phase 25 (Template + CSS — independent of 22-24, can run in parallel)
-```
+8. **Gating logic for responsibilities_narrative must match between isStepVisible() and validate-elements endpoint.** If the STEPS entry is skipped (non-supervisory role), the completeness audit must not flag the field as "missing" — it should return "not_applicable". This prevents a false 6/7 score for individual-contributor roles.
 
 ---
 
@@ -360,25 +526,25 @@ Phase 25 (Template + CSS — independent of 22-24, can run in parallel)
 
 | Feature | New files | Modified files |
 |---------|-----------|----------------|
-| SJD Library | `app/data/sjd_library.py`, `app/api/sjd.py` | `app/api/__init__.py`, `app.jsx` (state), `conversation.jsx` (panel) |
-| Accessible Template | `scripts/build_accessible_template.py`, `app/templates/accessible_wd_template.docx` | `export_service.py` (new fn), `app/api/export.py` (new route), `app.jsx` (exportAs case), `app/api/__init__.py` |
-| Writing Guide | `app/services/writing_guide_service.py`, `app/api/writing_guide.py` | `app/api/__init__.py`, `app.jsx` (state), `document.jsx` (hints), `data.jsx` (question text), `styles.css` |
-| Risk Audit | `app/services/audit_service.py`, `app/models/audit_finding.py`, `app/api/audit.py` | `app/api/__init__.py`, `app.jsx` (state), `document.jsx` (summary row), `components.jsx` (AuditPanel), `styles.css` |
-| OG Expansion | — | `app/data/constants.py`, `app/services/export_service.py` (NON_EC_STANDARD_NAMES), `v2/frontend/src/data.jsx` |
-| Preview fix | — | `styles.css` (one line) |
+| org_context field | — | `models/work_description.py`, `api/wd.py` (WDPatchRequest), `export_service.py` (_build_wd_context, _build_poster_context), `data.jsx` (STEPS), `app.jsx` (commit mirror), `document.jsx` (buildOverview) |
+| responsibilities_narrative field | — | `models/work_description.py`, `api/wd.py` (WDPatchRequest), `data.jsx` (STEPS, isStepVisible), `app.jsx` (commit mirror) |
+| Seven-Elements Audit | `app/api/elements.py` | `app/main.py` (router mount), `app.jsx` (state + useEffect), `conversation.jsx` (badge) |
+| Manager-Track UX | — | `app.jsx` (state + gate + role selector JSX), `conversation.jsx` (manager-mode render), `document.jsx` (manager-mode hide classification), `styles.css` |
+| Enhanced Job Poster | `scripts/build_poster_template.py` (re-run to update binary) | `export_service._build_poster_context()`, `app/templates/poster_template.docx` |
+| Structured Data Export | `app/api/elements.py` (json+csv routes) | `export_service.py` (build_seven_elements fn), `app.jsx` (exportAs cases), `conversation.jsx` (export buttons), `styles.css` |
+
+Note: `app/api/elements.py` is a single new file covering three endpoints (validate-elements, export/json, export/csv) rather than splitting into separate files — the domain cohesion (seven-elements operations) justifies co-location.
 
 ---
 
-## Architectural Invariants to Preserve
+## Confidence Assessment
 
-1. **No schema migration required.** All new storage uses the existing `audit_log` table with new event names. `work_descriptions.data` JSON absorbs new WD fields via Pydantic optional fields.
-
-2. **Classification gate is not widened.** `require_og_confirmed` in `classification_gate.py` stays as-is. Audit, writing guide, and SJD seeding are advisory layers — they do not gate export.
-
-3. **QUESTION_BANK OG code constraint (QUES-02).** New questions must not surface OG codes in `question`, `helper`, or `options[].label`. All 12 new groups are signalled only via `signals.og_candidates`.
-
-4. **All service functions remain synchronous or use `asyncio.to_thread`.** `audit_service.run_risk_audit` and `writing_guide_service.check_duties` are synchronous rule engines — sub-millisecond, fine to call inline from an async route handler without `to_thread`.
-
-5. **docxtpl template binaries are reproducible.** Every new `.docx` template must have a corresponding `build_*.py` script that recreates it and self-verifies via `get_undeclared_template_variables()`.
-
-6. **Frontend state remains in `app.jsx` local state (no Redux/Zustand).** New state slices (`auditFindings`, `dutyViolations`, `sjdList`) follow the existing `useState` pattern. If any slice exceeds ~3 levels of prop-passing, consider a `useContext` wrapper — but do not introduce a store library.
+| Area | Confidence | Basis |
+|------|------------|-------|
+| WorkDescription model extension | HIGH | Direct read of models/work_description.py; `extra="ignore"` confirmed |
+| WDPatchRequest merge behavior | HIGH | Direct read of api/wd.py patch_wd(); `setattr` loop pattern confirmed |
+| user_role localStorage pattern | HIGH | Direct read of app.jsx; identical pattern already used for wd_id |
+| export pipeline field mapping | HIGH | Direct read of export_service.py `_build_wd_context()` and `_factor_category_map()` |
+| isStepVisible gating pattern | HIGH | Direct read of data.jsx; case-switch pattern confirmed, new case is additive |
+| Poster template rebuild | MEDIUM | Pattern confirmed; actual template binary must be regenerated and tested |
+| CSV schema for analytics | MEDIUM | Designed for Julian's workflow; exact column set may need adjustment after review |

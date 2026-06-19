@@ -1,175 +1,235 @@
-# Stack Research — v3.0
+# Stack Research — v4.0 Seven-Elements Conversational Architecture
 
-**Project:** JD Builder v3.0 — Classification Depth & Document Quality
-**Researched:** 2026-06-10
+**Project:** JD Builder v4.0 — Seven-Elements Conversational Architecture
+**Researched:** 2026-06-19
 **Platform:** Jetson AGX Orin "Jane" — ARM64 (aarch64), Python 3.10.12
-**Confidence:** HIGH (all findings verified by direct execution on target hardware)
+**Confidence:** HIGH (all findings verified by direct execution on target hardware or inspection of existing source)
 
 ---
 
-## Context: What Already Exists
-
-The v2.0 stack is locked and working. Do not change or re-research it.
+## Context: What Already Exists (Do Not Re-Research)
 
 | Component | Version | Status |
 |-----------|---------|--------|
 | FastAPI | 0.128.8 | CONFIRMED installed |
 | Pydantic v2 | 2.12.5 | CONFIRMED installed |
+| docxtpl | 0.19.0 (pinned) / 0.18.0 (installed) | CONFIRMED |
 | python-docx | 1.1.2 | CONFIRMED installed |
-| docxtpl | 0.18.0 | CONFIRMED installed (requirements.txt pins 0.19.0; pip shows 0.18.0 — harmless) |
 | WeasyPrint | 69.0 | CONFIRMED installed |
 | SQLite (stdlib) | — | CONFIRMED |
-| React 18 + Vite | 18.3.1 / 5.4.10 | CONFIRMED |
+| React 18 | 18.3.1 | CONFIRMED |
+| Vite | 5.4.10 | CONFIRMED |
+| vitest | 4.1.8 (dev) | CONFIRMED |
+| pandas | 2.3.3 | CONFIRMED installed on aarch64 |
+
+The v3.0 research decision stands: **net new pip dependencies for v3.0 were zero**. v4.0 adds no new pip dependencies either. All six new features are implemented using stdlib, existing packages, or pure data work.
 
 ---
 
-## New Dependencies
+## Net-New Dependencies for v4.0: Zero
 
-| Library | Version | Purpose | ARM64 ok? |
-|---------|---------|---------|-----------|
-| PyMuPDF (`pymupdf`) | 1.27.2.3 | Read PDF reference docs (ERR Principles, Wilkonson case) to extract audit rule text at build time | CONFIRMED installed and running on aarch64 |
-| *(none for DOCX reading)* | — | python-docx 1.1.2 already reads .docx files; no new library needed for Accessible JD Template or Writing Guide parsing | already installed |
-| *(none for SJD storage)* | — | SJD library is a Python constant in `constants.py` (9 records from SJD Examples.txt); no new library needed | N/A |
-| *(none for audit patterns)* | — | Risk Audit uses existing FastAPI route + Pydantic models; no new framework needed | N/A |
-| *(none for CSS fix)* | — | Preview page height is a 2-line CSS fix; no JS library needed | N/A |
-
-**Net new pip dependencies for v3.0: zero.** All required capabilities are either already installed or pure Python data work.
+No new `pip install` or `npm install` required. Every v4.0 capability maps to a tool already present.
 
 ---
 
-## Feature-by-Feature Analysis
+## Feature-by-Feature Stack Analysis
 
-### Feature 1: SJD Library
+### Feature 1: Organizational Context Conversational Step
 
-**Storage: Python constant in `constants.py`, not a SQLite table.**
+**Backend:** No new library. New field `organizational_context` on `WorkDescription` (a Pydantic str field, default `""`). The existing `_build_organizational_context_text()` function in `export_service.py` already constructs this text from `branch`/`reports`/`title`/`summary` record fields — the v4.0 step makes this explicit by also surfacing it as a directly editable field so advisors who bypass the "composed" path can enter it directly.
 
-The SJD Examples.txt contains 9 records in a TSV-like format (Job Title, JobCode, SJD Number, Group Level, Supervisory, NOC, Salary, Organizational Context). Parsed once at module load into a list of typed dicts. No query-time search is needed — the advisor browses by OG group and level. A SQLite table adds migration complexity with zero query benefit at this record count.
+**SJD pre-fill:** `sjd_library.py` already carries `organizational_context` per record. The `POST /api/wd/{id}/sjd-start` route (Phase 22) can be extended to copy `organizational_context` into the new WD field in one line. No new API.
 
-Data shape per SJD record:
+**Frontend:** New STEP entry in `data.jsx` STEPS array with `id: 'org_context'`, input type `textarea`. The existing `apply` + `transcript` pattern handles it. The step renders before `client_service_results` in Phase order. No new state slice required — `record.org_context` follows the same pattern as `record.summary`.
+
+**Document preview:** `document.jsx` already renders `client_service_results` via a `<Sec>` component. Prepending an `org_context` section follows the identical pattern.
+
+### Feature 2: Responsibilities Narrative
+
+**Backend:** New field `responsibilities_narrative: Optional[str]` on `WorkDescription`. The narrative is gated on supervisory/senior positions: only written to the WD when `record.supervises` is not `'none'` AND (`og_level >= 4` OR work type is managerial). Gate logic is pure Python in the PATCH handler — no new library.
+
+**Frontend:** New STEP entry with `id: 'responsibilities_narrative'`, input type `textarea`. The existing `isStepVisible(step, answers)` gating mechanism (already used in Phase 21 for cluster steps) handles conditional display. The condition is `answers.supervises?.id !== 'none'` — this is one line in the step's `visible` predicate. No new state slice, no new hook.
+
+**Why no separate "supervisory flag" API call is needed:** `record.supervises` is already committed to the WD at the Role phase. The gate reads it from `answers` on the frontend and from `wd.record['supervises']` on the backend. The data is already there.
+
+### Feature 3: Seven-Elements Completeness Audit
+
+**Backend:** New route `POST /api/wd/{id}/validate-elements`. Returns a list of per-element status objects:
+
 ```python
-{
-  "sjd_number": "DND-PA-57047",
-  "job_title": "Compensation Agent",
-  "og_code": "AS",
-  "og_level": 1,
-  "noc_code": "13100",
-  "supervisory": False,
-  "organizational_context": "...",
-  "salary_range": "$61,786 - $69,106"
-}
+class ElementStatus(BaseModel):
+    element: str          # "Organizational Context", "Client Service Results", etc.
+    status: str           # "populated" | "derived" | "missing"
+    source: Optional[str] # "direct_entry" | "sjd_prefill" | "composed_from_record" | None
+    value_preview: Optional[str]  # first 80 chars for UI confirmation
 ```
 
-FastAPI route: `GET /api/sjd` with optional `?og_code=AS` filter. Returns list of SJD summaries. `GET /api/sjd/{sjd_number}` returns full record. No new dependency.
+No new library. The audit is a pure Python function that reads `wd.record` and `wd` fields — the same fields `_build_wd_context()` already reads. Extract the seven-element read logic into a standalone `_audit_elements(wd) -> list[ElementStatus]` function, then call it from both the validate endpoint and (optionally) from `generate_wd_docx`.
 
-### Feature 2: Accessible JD DOCX Template
+**Frontend:** New `[elementAudit, setElementAudit]` useState slice in `app.jsx`. The ReviewState component (in `conversation.jsx`) already renders the audit findings panel (Phase 24 pattern) — the completeness badge follows the same `auditRan`/`auditFindings` pattern, just for elements instead of risk findings. One button click triggers `POST /api/wd/{id}/validate-elements`, response populates `elementAudit`. The badge is green (all 7 populated/derived), amber (some missing), or red (3+ missing).
 
-**Library: python-docx 1.1.2 — already installed. No new library.**
+**Why a separate endpoint rather than embedding in GET /api/wd/{id}:** The completeness check is user-initiated (Review phase), not automatic. Keeping it as an explicit POST preserves the same advisor-control contract as Phase 24 Risk Audit. This also avoids re-running the element walk on every GET.
 
-The Accessible JD Template (`data/AI Docs/Accessible Job Description Template (1).docx`) was verified readable by python-docx: 58 paragraphs, 1 table, standard heading styles (Heading 1, Heading 2, Normal). The template uses standard OOXML styles with no custom XML hacks.
+### Feature 4: Manager-Track UX
 
-Approach: create a new `accessible_jd_template.docx` Jinja2-compatible template using docxtpl, mirroring the structure of the accessible template. The existing `build_wd_template.py` pattern (from Phase 20) handles this cleanly. The template binary is committed as an artifact; the build script is the reproducible source.
+**Backend:** No new API surface. The manager track is a frontend-only concern at this stage. The WD model stores all data identically regardless of user role — the manager track just hides OG/JES/CBA mechanics in the UI and routes to a simplified review. The WD export is the same DOCX; the classification team consumes it downstream.
 
-No new library. docxtpl + python-docx covers all .docx read and render operations.
+One addition: a `user_role` field stored in `WorkDescription` (`'advisor'` | `'manager'`, default `'advisor'`). This lets the export manifest note the authoring role (traceability). No new endpoint required — it is set via the existing `PATCH /api/wd/{id}` route.
 
-### Feature 3: Writing Guide Integration
+**Frontend:** New `[userRole, setUserRole]` useState slice. A role selector renders at the entry screen (before the first STEP). Setting `userRole = 'manager'` suppresses:
+- The four QUESTION_BANK Socratic steps (`qb_*`) — OG is not visible in manager mode
+- The `og_confirm` and `og_level` steps
+- The `noc_confirm` step
+- The JES scoring section in the document preview
+- The CBA/risk audit button in the Review phase
 
-**Library: python-docx 1.1.2 — already installed. No new library.**
+This is implemented via the existing `isStepVisible(step, answers)` predicate: each suppressed step gets a `visible: (answers, role) => role !== 'manager'` check. The predicate already receives `answers`; extend its signature to also receive `userRole` from the App closure.
 
-The Writing Guide (`data/AI Docs/Job Description Writing Guide.docx`) is 550 paragraphs across 13 tables. python-docx reads it correctly. The guide's duty-writing rules (strong action verbs, present tense, no gerunds, no passive voice, specificity requirements) are extracted once as a Python constant at build time — not at runtime.
+**Why no new state management library (Redux, Zustand, Jotai):** The `userRole` slice is one boolean-equivalent value touched in two places: the entry selector and the `isStepVisible` predicate. The existing `useState` + prop-passing pattern handles it with zero overhead. The app has 11 existing useState slices — adding a 12th is consistent with the established pattern. The rule from v2.0 onward is: add a state management library only when prop drilling reaches 4+ levels or cross-cutting state creates obvious complexity. Neither condition is met here.
 
-Validation approach: a pure-Python regex + rule-table function `validate_duty_statement(text: str) -> list[DutyWarning]`. No NLP library. The Writing Guide's explicit principles reduce to ~8-12 detectable patterns (starts with gerund, passive construction, missing object, vague verb, etc.). This is testable, auditable, and runs in under 1ms per duty.
+**Why not React Context:** The role propagates from App → `isStepVisible` (a utility in `data.jsx`) which is already imported and called in App. Passing `userRole` as a parameter to that function is simpler than wrapping the tree in a Provider.
 
-Inline tips: a `WRITING_TIPS` dict keyed by `og_code` and step, populated from guide content, returned via `GET /api/writing-tips?og_code=EC&step=duties`. Pure data, no new library.
+### Feature 5: Enhanced Job Poster Generation
 
-### Feature 4: Risk Audit
+**Backend:** `export_service.py` already has `_build_poster_context(wd)`. The enhancement adds three field mappings:
 
-**Library: none new. Pattern: new FastAPI router + Pydantic models.**
+- `org_context` → "About the Organization" poster section (new field on WD)
+- `key_activities` / duties → "Key Activities" (already present as top-5 duties; rename the label)
+- `qualification` → "Skills and Qualifications" (already present)
 
-The audit checks JD content against:
-- CBA clauses (text already in `data/agreements/` — existing v1.0 ingest, available as plaintext)
-- Federal Court principles from `data/AI Docs/ERR_Principles_drawn_from_Federal_Court.pdf` (8 pages, extracted via PyMuPDF at build time into a constant)
-- Wilkonson v. Canada (29 pages, same approach)
+The poster DOCX template (`wd_poster_template.docx`) is the binary artifact to update via `build_poster_template.py`. The `_build_poster_context` function receives two additional keys. No new library.
 
-PyMuPDF (`fitz`) is already installed (1.27.2.3, CONFIRMED on aarch64). It is not in `requirements.txt` — add it. It is not a runtime dependency in the hot path; it is used once in a data-prep script to extract audit rule text into a Python constant before committing.
+**Frontend:** The "Export Poster" button already calls `POST /api/wd/{id}/export/poster`. No frontend change needed — the backend context enrichment is transparent to the client.
 
-The audit itself is deterministic rule matching, not LLM. Each finding has: `section`, `finding_type` (cba_clause | federal_court_principle), `citation`, `description`, `severity` (high | medium | low), `recommendation`. The advisor responds with `Accept | Manual Edit | Skip`. This is stored in `audit_log` with `event='risk_audit_decision'`.
+### Feature 6: Structured Data Export (JSON + CSV)
 
-FastAPI pattern: `POST /api/wd/{id}/audit` triggers the audit, returns `list[AuditFinding]`. `POST /api/wd/{id}/audit/decision` records advisor decision. No streaming needed — the audit runs in <100ms deterministically.
+This is the most detailed decision. Three options evaluated:
 
-No new Python library. New Pydantic models (`AuditFinding`, `AuditDecision`) and a new router `app/api/audit.py`.
+**Option A: stdlib `csv` module**
+- Ships with Python 3.10. Zero install, zero ARM64 risk.
+- `csv.DictWriter` produces RFC 4180-compliant CSV in-memory via `io.StringIO`.
+- Adequate for a 7-row, 2-column (element, value) export or a multi-column pivot.
+- Confirmed working on Jane: direct test produces correct output (see verification below).
+- Limitation: no type coercion, no multi-sheet, no column type inference. None of these limitations matter for a 7-row structured export.
 
-### Feature 5: Broader OG Classification (12 new groups)
+**Option B: pandas 2.3.3**
+- Confirmed installed on aarch64 (Jane already has it for data work).
+- `DataFrame.to_csv()` and `DataFrame.to_json()` are idiomatic.
+- Adds ~30 MB import overhead and a 50-200ms cold import penalty to a route that is rarely called.
+- Correct choice if the export grows to hundreds of rows, requires type-aware column formatting, or needs multi-sheet Excel.
 
-**Library: none new. Data work only.**
+**Option C: polars**
+- Not installed on Jane. Would require `pip install polars` — polars publishes aarch64 wheels on PyPI (confirmed via PyPI metadata), so ARM64 is not a blocker in principle, but it is an unnecessary new dependency for a 7-row export.
 
-All 12 JES standards are already present in `data/Job_evaluation/` as plaintext files:
-- ED, FB (has both standard and application guidelines), FS (same), LC, LP, MT, NT, NU, PO, PS, SW, WP
+**Decision: stdlib `csv` for the CSV export route. pandas is available as a fallback if the export scope grows.**
 
-The OG_LEVELS dict already contains FB and FS. The remaining 10 (ED, LC, LP, MT, NT, NU, PO, PS, SW, WP) need level ranges added — sourced from `data/rates_of_pay/` CSV files.
+Rationale: the 7 Part 2 elements are always exactly 7 rows. The export is a one-shot serialisation of already-computed Python dicts. `io.StringIO` + `csv.DictWriter` produces the correct output in under 1ms with zero import penalty. The pandas cold-import cost (50-200ms) is disproportionate to the task. If Julian's analytics toolchain later requires multi-column pivot tables, multi-sheet XLSX, or typed column schemas, swap to pandas at that point — it is already installed and the migration is one function rewrite with no pip change.
 
-The expansion is pure Python constant work in `constants.py`:
-1. Add level ranges to `OG_LEVELS` for the 10 missing groups
-2. Add `JES_ELEMENTS` dicts for each group (factor names + degree/point tables from the .txt files)
-3. Add `DEGREE_VECTORS` for each group (same structure as `EC_DEGREES`)
-4. Add entries to `NON_EC_STANDARD_NAMES` for groups without full JES tables in data
-5. Extend `QUESTION_BANK` with Socratic signals covering all 12 new groups
+**Implementation: separate routes, not content negotiation**
 
-The JES scoring service (`app/services/jes_scoring.py`) already has an OG-dispatch pattern. Adding new groups is additive, no structural change.
+Two options for multi-format export:
 
-No new library.
+- Content negotiation: single `POST /api/wd/{id}/export/structured`, reads `Accept` header, returns JSON or CSV.
+- Separate routes: `POST /api/wd/{id}/export/json` + `POST /api/wd/{id}/export/csv`.
 
-### Feature 6: Document Preview Page Extension
+**Decision: separate routes.** Rationale:
+1. The existing export router uses separate routes for every format (`/export/docx`, `/export/poster`, `/export/pdf`). Consistency with the established pattern is the dominant reason.
+2. Content negotiation requires the client to set `Accept` headers correctly. The SPA's `exportAs()` function uses `fetch` with a `Blob` download — explicit route names are clearer and easier to test.
+3. FastAPI's `@router.post("/wd/{wd_id}/export/json")` with `Response(content=..., media_type="application/json")` and `@router.post("/wd/{wd_id}/export/csv")` with `media_type="text/csv"` are trivial. The shared work is a `_build_seven_elements_dict(wd) -> dict` helper called by both routes.
+4. Separate routes produce distinct OpenAPI schema entries, which is useful if the API is ever documented for Julian's analytics team.
 
-**Library: none. Pure CSS fix.**
+**JSON export implementation:**
 
-Root cause: `.app` is `height: 100vh`. The `.preview` column is a flex child with `min-height: 0`. The `.doc-scroll` container is `flex: 1 1 auto; min-height: 0; overflow-y: auto`. The `.doc` paper div has no explicit `min-height` and grows with content — this part is correct. The bug is that `.doc` is a block inside a scroll container, so it should grow freely. If content overflows into the grey background, the issue is either `overflow: hidden` somewhere in the ancestor chain or a missing `align-self` on `.doc`.
+```python
+import json
 
-Fix: confirm `.doc-scroll` uses `align-items: flex-start` (or `align-content: flex-start`) so the `.doc` child doesn't stretch to the scroll container's cross-axis height. The scroll container itself scrolls; the paper grows. Two CSS properties, no library.
-
-```css
-.doc-scroll {
-  /* existing */
-  flex: 1 1 auto; min-height: 0; overflow-y: auto;
-  padding: 38px 34px 80px;
-  display: flex; justify-content: center;
-  /* add: */
-  align-items: flex-start;   /* paper starts at top, grows down */
-}
+@router.post("/wd/{wd_id}/export/json")
+async def export_structured_json(wd_id: str) -> Response:
+    wd = _load_wd(wd_id, settings.db_path)
+    require_og_confirmed(wd)
+    payload = _build_seven_elements_dict(wd)
+    return Response(
+        content=json.dumps(payload, ensure_ascii=False, indent=2),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{wd_id}-elements.json"'},
+    )
 ```
 
-If the paper is already `flex-start` aligned and the bug is content being clipped, the alternative fix is `min-height: max-content` on `.doc`. Diagnose in browser before committing.
+`json` is stdlib. No new dependency.
+
+**CSV export implementation:**
+
+```python
+import csv, io
+
+@router.post("/wd/{wd_id}/export/csv")
+async def export_structured_csv(wd_id: str) -> Response:
+    wd = _load_wd(wd_id, settings.db_path)
+    require_og_confirmed(wd)
+    elements = _build_seven_elements_dict(wd)
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=["element", "value"])
+    writer.writeheader()
+    for element, value in elements.items():
+        writer.writerow({"element": element, "value": value})
+    return Response(
+        content=buf.getvalue().encode("utf-8-sig"),  # BOM for Excel compatibility
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{wd_id}-elements.csv"'},
+    )
+```
+
+Note: `utf-8-sig` (UTF-8 with BOM) is used so Excel on Windows opens the file without the "import text wizard". This is a two-character change from `utf-8` and requires no library.
+
+**Shared helper `_build_seven_elements_dict`:**
+
+This function reads the same fields `_build_wd_context()` already reads for the Accessible DOCX template. The seven elements and their WD field sources:
+
+| Part 2 Element | WD Source Field |
+|---------------|----------------|
+| Organizational Context | `wd.record.get('org_context')` or composed from branch/reports/title/summary |
+| Client Service Results | `wd.record.get('client_service_results')` |
+| Key Activities | `wd.duties` (list of DraftDuty.text) — joined as newline-separated string |
+| Skills | `wd.qualification.education + experience` |
+| Effort | JES effort factors from `wd.jes_scores` (factor_name + degree + points) |
+| Responsibility | JES responsibility factors from `wd.jes_scores` |
+| Working Conditions | JES conditions factors from `wd.jes_scores` |
+
+The `_factor_category_map()` function already exists in `export_service.py` and performs the JES factor bucketing. Reuse it.
 
 ---
 
 ## Integration Points
 
-### PyMuPDF — where it hooks in
+### WorkDescription model additions (v4.0)
 
-Used exclusively in one-shot data extraction scripts (not runtime). Add to `requirements.txt`. Usage pattern:
+Two new fields required on `WorkDescription`:
 
 ```python
-import fitz  # PyMuPDF
-doc = fitz.open("data/AI Docs/ERR_Principles_drawn_from_Federal_Court.pdf")
-text = "\n".join(page.get_text() for page in doc)
+organizational_context: Optional[str] = None  # v4.0: explicit org context field
+responsibilities_narrative: Optional[str] = None  # v4.0: supervisory/senior narrative
+user_role: str = "advisor"  # v4.0: "advisor" | "manager"
 ```
 
-Output is a Python constant `FEDERAL_COURT_PRINCIPLES: list[AuditRule]` in `app/data/audit_rules.py`. The FastAPI audit endpoint reads this constant, never calls fitz at request time.
+These are additive — Pydantic v2 with `extra="ignore"` means existing WD rows deserialise without error. No schema migration needed. `schema_version` can increment to 2 if a migration tracker is desired, but the model handles it gracefully without one.
 
-### SJD constant — where it hooks in
+### export.py router additions
 
-New file: `app/data/sjd_library.py`. Contains `SJD_LIBRARY: list[dict]` parsed from SJD Examples.txt. Imported by a new router `app/api/sjd.py`. The conversation front-end gets a new step type (`sjd_browse`) that calls `GET /api/sjd` and lets the advisor pre-populate the WD record from a selected SJD.
+Add to `app/api/export.py`:
+- `POST /api/wd/{wd_id}/export/json`
+- `POST /api/wd/{wd_id}/export/csv`
+- `POST /api/wd/{wd_id}/validate-elements`
 
-### Writing Guide rules — where they hook in
+All three follow the existing `_load_wd()` → `require_og_confirmed()` → build response pattern. The validate-elements route does NOT require `og_confirmed` (advisors in manager mode need completeness feedback before classification is set).
 
-New file: `app/data/writing_rules.py`. Contains `DUTY_VALIDATION_RULES: list[DutyRule]` (regex + description + fix hint) and `WRITING_TIPS: dict[str, list[str]]`. The existing `app/api/wd.py` PATCH endpoint calls `validate_duty_statement()` and returns warnings in the response alongside the saved record. No separate endpoint needed.
+### Frontend state additions (v4.0)
 
-### Audit rules — where they hook in
+New useState slices (in App):
+- `[userRole, setUserRole]` — `'advisor'` | `'manager'`, initialized from localStorage key `'jd-builder-v2-role'`
+- `[elementAudit, setElementAudit]` — array of `{element, status, source, value_preview}` from `/validate-elements`
+- `[elementAuditRan, setElementAuditRan]` — boolean, same pattern as `auditRan`
 
-New file: `app/data/audit_rules.py`. New router `app/api/audit.py`. The audit is triggered explicitly by the advisor in the Review phase (not automatic). The `audit_log` table already exists and can store audit decisions with `event='risk_audit_decision'`.
-
-### OG expansion — where it hooks in
-
-`app/data/constants.py` only. The OG classifier (`app/api/og.py`) and JES scorer (`app/services/jes_scoring.py`) dispatch on `og_code`. Adding new groups to `OG_LEVELS`, `JES_ELEMENTS`, and `QUESTION_BANK` is sufficient — the dispatch logic is already OG-agnostic.
+No new npm packages. No state management library.
 
 ---
 
@@ -177,44 +237,43 @@ New file: `app/data/audit_rules.py`. New router `app/api/audit.py`. The audit is
 
 | Temptation | Why Not |
 |------------|---------|
-| A database table for SJD library | 9 records. A Python constant is simpler, testable, version-controlled, and requires no migration. Add a SQLite table only if the library grows beyond ~200 records or needs full-text search. |
-| An NLP library (spaCy, NLTK) for duty validation | The Writing Guide principles reduce to ~10 regex patterns. spaCy on ARM64 has wheel availability issues for some versions; it pulls in large models; and it's overkill for rule-based validation. Regex + a lookup table is auditable and fast. |
-| A rule-engine library (drools-style) for audit | The audit has ~20-30 rules. A list of dataclasses with a `check(wd: WorkDescription) -> list[AuditFinding]` signature is sufficient. Durable Rules, Pyke, or similar frameworks add complexity for no gain at this scale. |
-| LLM for Writing Guide validation or Risk Audit | The Writing Guide gives explicit, enumerable principles. The Federal Court document gives citable rules. Deterministic matching is auditable; LLM output is not. The audit must be legally defensible. |
-| A new PDF library | PyMuPDF is already installed. WeasyPrint handles export. No gap. |
-| A frontend charting/visualization library | The Risk Audit findings are rendered as an inline list with Accept/Edit/Skip controls. No chart. No new npm package. |
-| React Router or a client-side router | The SJD browser is a new step in the existing STEPS array, not a new page. The existing step-navigation pattern handles it. |
-| A separate microservice for the audit | Single-user local app. One FastAPI process. Splitting into services adds network complexity and a second process to manage on the Jetson. |
+| pandas for CSV export | Already installed but 50-200ms cold import is disproportionate to a 7-row export. stdlib csv is adequate. Add pandas only if export grows to multi-column analytics tables or Julian's toolchain requires XLSX. |
+| polars for CSV export | Not installed. Would require a new pip dep and an ARM64 wheel confirmation. Zero benefit over stdlib csv for this use case. |
+| Zustand / Redux for role-based UX | userRole is one value touched in two places. useState + prop is sufficient. The existing 11 useState slices are not at a complexity threshold that justifies a store library. |
+| React Context for userRole | Over-engineering for a value that flows App → isStepVisible (a utility function, not a deeply nested component tree). |
+| A new FastAPI middleware for role gating | The manager track is a UI concern, not an API security boundary. The WD data model is identical regardless of role. Role-based API gating is a future multi-tenant concern. |
+| Content negotiation (Accept header routing) | Inconsistent with the existing `/export/docx`, `/export/poster`, `/export/pdf` separate-route pattern. Harder to test and document. |
+| A dedicated validation microservice | Single-user local app on the Jetson. One FastAPI process. Seven-element validation is a pure Python function, not a network boundary. |
+| sqlalchemy / an ORM for new fields | All WD persistence is parameterized SQL with JSON blobs. v4.0 adds fields to the JSON model, not new SQL columns. An ORM would require schema migration infrastructure for zero benefit. |
+| A charting library for completeness badge | The completeness status is 7 items with three states. CSS + inline SVG (already used for the classification confidence ring) handles it with no new dependency. |
 
 ---
 
 ## ARM64 Compatibility Summary
 
-All existing packages: CONFIRMED on aarch64 (running on this machine).
+No new packages. All existing packages confirmed on aarch64. The two stdlib modules used (csv, json) are part of CPython — no wheels, no platform concern.
 
-PyMuPDF 1.27.2.3: CONFIRMED on aarch64. Already installed at `/home/charles/.local/lib/python3.10/site-packages`. The package bundles libmupdf as a native extension; the aarch64 wheel is published to PyPI and resolves cleanly. No system dependencies beyond what is already present.
-
-No new packages with ARM64 risk.
+pandas 2.3.3 is confirmed installed on aarch64 (`import pandas; platform.machine() == 'aarch64'`). If the CSV export is ever migrated to pandas, no ARM64 work is required.
 
 ---
 
-## Required requirements.txt Change
+## Required requirements.txt Changes
 
-Add one line to `v2/backend/requirements.txt`:
+None. v4.0 adds zero new pip dependencies.
 
-```
-pymupdf==1.27.2.3
-```
-
-This documents an already-installed package that the data-prep scripts depend on. It is not a runtime hot-path dependency, but it should be pinned so a fresh environment can reproduce the audit rule extraction scripts.
+The `pymupdf==1.27.2.3` line (documented in v3.0 STACK.md as a needed addition) should be confirmed present. If not yet added, add it — but that is a v3.0 carry-forward, not a v4.0 requirement.
 
 ---
 
 ## Sources
 
-- python-docx verified readable on target hardware: direct execution of `docx.Document(...)` on both source files (Accessible JD Template: 58 paragraphs, 1 table; Writing Guide: 550 paragraphs, 13 tables)
-- PyMuPDF ARM64: `pip show pymupdf` → Version 1.27.2.3, confirmed on aarch64 3.10.12 on this machine
-- PyMuPDF PDF read verified: `fitz.open(...)` on ERR_Principles (8 pages) and Wilkonson (29 pages), both readable
-- SJD Examples.txt: 9 records, tab-separated format confirmed by file inspection
-- OG JES standards: 18 files in `data/Job_evaluation/` confirmed present for all 12 new groups
-- CSS fix rationale: styles.css inspected; `.doc-scroll` uses `display: flex; justify-content: center` without `align-items: flex-start` — paper stretches to scroll container height, causing visible overflow for short documents; fix is additive, not a rewrite
+- `v2/backend/requirements.txt` — current pinned versions, inspected directly
+- `v2/backend/app/api/export.py` — existing route structure, separate-route pattern confirmed
+- `v2/backend/app/services/export_service.py` — `_build_organizational_context_text`, `_factor_category_map`, `_build_wd_context` inspected; seven-element field sources identified
+- `v2/backend/app/models/work_description.py` — existing fields, extension points identified
+- `v2/frontend/src/app.jsx` — existing useState slices (11 confirmed), `isStepVisible` usage pattern
+- `v2/frontend/package.json` — no state management library currently installed
+- `v2/frontend/src/data.jsx` — STEPS array structure, `isStepVisible` predicate pattern, `supervises` step confirmed
+- Direct execution on Jane: `python3 -c "import pandas; print(pandas.__version__)"` → 2.3.3, `platform.machine()` → aarch64
+- Direct execution on Jane: stdlib csv DictWriter test — 7-row export produced correctly in-memory
+- polars: not installed on Jane (`import polars` → ImportError); PyPI publishes aarch64 wheels but installation is unnecessary

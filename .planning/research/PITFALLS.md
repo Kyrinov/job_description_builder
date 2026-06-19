@@ -1,234 +1,243 @@
-# Pitfalls Research — v3.0
+# Pitfalls Research — v4.0 Seven-Elements Conversational Architecture
 
 **System:** React 18 SPA + FastAPI, ARM64 (Jetson AGX Orin), SQLite, docxtpl, WeasyPrint
-**Researched:** 2026-06-10
-**Scope:** Pitfalls specific to adding v3.0 features to the existing v2.0 production system.
-
-This document is additive to `.planning/research/PITFALLS.md` (domain-level pitfalls from v1.0 research). It covers only the integration and implementation risks introduced by v3.0's five feature areas.
-
----
-
-## Accessible JD Template — Template Variable Contract Drift
-
-**Risk:** The new Accessible JD DOCX template (`data/AI Docs/Accessible Job Description Template (1).docx`) will have a different Jinja2 variable surface than the existing `wd_template.docx`. `_build_wd_context()` in `export_service.py` returns a precisely defined 15-key dict. Any variable referenced in the new template that is absent from that dict silently renders as an empty string in docxtpl — no exception is raised, no test fails, the exported document just has blank sections. This failure mode is invisible until a human opens the file.
-
-The existing system already has two separate `NON_EC_STANDARD_NAMES` dicts — one in `export_service.py` (lines 50-55) and one in `constants.py` (lines 600-605) — carrying different content. This is the clearest existing proof that contract drift happens in this codebase when two artifacts claim to own the same data.
-
-The build scripts (`build_wd_template.py`, `build_poster_template.py`) use `get_undeclared_template_variables()` to self-verify, but only if they are re-run after template changes. If a developer edits the `.docx` binary directly in Word without re-running the build script, the verification is bypassed entirely.
-
-Additionally, the Accessible JD template likely restructures Section 5 (qualifications) and may add accessibility-required fields (plain-language summary, screen-reader-friendly table structure) that have no matching key in `_build_wd_context()`. Adding new keys to the context dict without removing old ones is safe; renaming or removing keys while the old template is still referenced elsewhere will silently break the old template.
-
-**Prevention:**
-- Before touching any template file, run `get_undeclared_template_variables()` on both the old and new template and diff the outputs. The diff is the work that must happen in `_build_wd_context()`.
-- After building the new template, add a test that renders it with a known context dict and asserts that every declared variable is non-empty (not just that the render succeeded with non-zero bytes).
-- Consolidate the two `NON_EC_STANDARD_NAMES` dicts as part of this phase. The `export_service.py` copy should import from `constants.py`; it should not define its own version.
-- Gate the template swap with a flag (`USE_ACCESSIBLE_TEMPLATE=true` in env) so the old template can be tested side-by-side during the transition phase.
-
-**Phase to address:** Accessible JD Template phase (whichever phase implements the template swap). The context dict audit must happen before the `.docx` binary is committed.
+**Researched:** 2026-06-19
+**Scope:** Integration pitfalls for adding the 6 v4.0 features to the existing v2.0/v3.0 production codebase.
+**Prior art:** The v3.0 PITFALLS.md (template contract drift, CBA parsing, writing guide false-positives, SJD field mapping, ARM64 dependencies) is assumed read. This document covers only the NEW risks introduced by v4.0's four pitfall categories.
 
 ---
 
-## Accessible JD Template — Section Reordering Breaks manifest / amendments Loop Logic
+## 1. Role-Based UX Branching — Gating STEPS on user_role
 
-**Risk:** The TBS WD template sections are rendered in a fixed order: identification → context → duties → classification → qualifications → manifest → amendments. The Accessible JD template may reorder these sections (e.g., moving qualifications before classification, or merging the manifest into a footer). The `{%p for entry in manifest %}` and `{%p if amendments|length > 0 %}` loops in docxtpl are paragraph-level: they depend on the template's paragraph ordering, not the context dict. A section reorder that puts `{%p if amendments|length > 0 %}` before `amendments` is populated in the context will silently drop the appendix.
+### 1a. The isStepVisible() predicate pattern is not designed for multi-role exclusion
 
-This is not theoretical: the Phase 20 code review already logged CR-02 (HTML injection in WeasyPrint) as a consequence of the render order assumption in the PDF path.
+**What goes wrong:** The existing `isStepVisible(step, answers)` function in `data.jsx` (lines 459–488) operates as a purely additive gate — it hides steps whose prerequisite answer is absent. It was designed to answer "has the sector-gate question been answered yet?" (show cluster step) not "does the current user type want to see this?" (hide classification mechanics).
+
+If Manager-Track hides `og_confirm`, `og_level`, `qb_*` classification steps, and `jes_scoring` by checking a `user_role` stored in `answers`, the predicate will evaluate correctly at first render. The dangerous moment is step-index persistence: `stepIndex` is stored in `answers` and carries across `localStorage` restores. An advisor who switches to manager mode mid-session will have `stepIndex` pointing at an `og_confirm` step that `isStepVisible` now returns false for. The `activeStepIndex` memoization in `app.jsx` (lines 120–125) snaps forward to the first visible step — but if `og_confirm` was already answered in a prior session, the `answers` dict retains the `og_confirm` value. The WD record then carries a confirmed OG that the manager-track flow never surfaced, but that the export and completeness audit will try to use.
+
+This is not theoretical: Phase 21 had the exact same pattern where a sub-group picker read a committed record instead of draft value and rendered incorrectly until a component-level `useEffect` fetch was added.
 
 **Prevention:**
-- After building the new template, add a test that seeds a WD with two amendment notes and one manifest entry, renders the template, and opens the resulting DOCX with `python-docx` to assert that the amendment section is present and the manifest table has at least one row.
-- Do not rely on the "non-zero bytes and file > 5 kB" proxy test that current tests use. Those tests cannot detect a correctly-sized file with silently-empty sections.
+- Store `user_role` as a top-level React state slice (not inside `answers`), so it never persists in the WD record or contaminate the answers-driven step visibility logic.
+- Add a role-change handler that calls `handleStartOver()` (or a scoped equivalent that clears classification answers) when `user_role` changes. Never allow a mid-session role switch to silently carry forward answers from a different role's flow.
+- In `isStepVisible`, add manager-track exclusions as an explicit case that checks `user_role` state — but pass `user_role` as a third argument rather than embedding it in `answers`. Mixing role signal into the answers dict creates a coupling where the step predicate depends on values the WD PATCH endpoint also reads, causing the backend and frontend to disagree about what the session contains.
+- Write a test: switch role from advisor to manager after completing `og_confirm`, assert that `isStepVisible('og_confirm', answers)` returns false AND that `answers.og_confirm` is cleared.
 
-**Phase to address:** Accessible JD Template phase, test-writing step.
+**Phase to address:** Phase 29 (Manager-Track UX), step-predicate design, before any new STEPS entries are written.
 
 ---
 
-## QUESTION_BANK Scaling — Signal Contamination Across 12 New Groups
+### 1b. Classification gate (require_og_confirmed) fires for manager-track WDs on export
 
-**Risk:** The current `QUESTION_BANK` has 4 questions covering 4 groups (EC, AS, IT, FI). The 12 new v3.0 groups (ED, FB, FS, LC, LP, MT, NT, NU, PO, PS, SW, WP) are structurally heterogeneous: FB (Border Services) overlaps significantly with EC and PS in policy/enforcement vocabulary; LP and LC are law groups whose JES factors align more with EC than with IT/AS; NU and NT are clinical roles that share no signal vocabulary with any current group. Adding options for all 12 new groups to the existing 4 questions will produce options whose `og_candidates` signals overlap with existing groups, degrading `accumulateSignals()`'s ability to rank candidates.
+**What goes wrong:** `require_og_confirmed` in `classification_gate.py` raises HTTP 409 if `wd.confirmed_og` is None. The existing export endpoints (`/export/docx`, `/export/poster`, `/export/pdf`) call this gate unconditionally. A manager-track WD is deliberately incomplete — `confirmed_og` is None because the manager never sees the OG confirmation step. The export endpoint will therefore return 409 for every manager-track WD, which is the opposite of the intended UX.
 
-The current signal accumulation is a simple tally: `og_candidates` arrays are concatenated and the most-mentioned code wins. Adding 12 new groups with multi-group `og_candidates` entries (e.g., `["LP", "EC"]` for policy-heavy law work) means that a set of answers intended to surface LP will also increment EC, pushing a plausible-but-wrong group into the top-3.
-
-There is a second structural problem: the QUES-02 constraint forbids showing OG codes in user-visible text, which means question labels for 12 new groups must be worded without naming the group. With 12 groups, distinguishing "Social Work (SW)" from "Psychology (PS)" from "Nursing (NU)" using only abstract work-description language is genuinely hard. If the labels are too similar, users will select based on title similarity to their role, bypassing the Socratic intent.
+The DOCX export route also self-heals JES scores when `jes_total_points is None`, which will fire for manager-track WDs and fail silently because `og_code` will be empty. The `score_jes_v2` call will receive an empty `og_code` and return without writing anything, leaving `jes_total_points` still None. The route proceeds to call `generate_wd_docx`, which calls `_build_wd_context`, which calls `_og_code_from(wd)` — this returns an empty string, and `_og_level_str("", 0)` returns an empty string. The resulting template context has `"og_level": "[ADVISOR TO COMPLETE]"` throughout. This is actually acceptable behaviour for a manager-draft document, but only if the 409 gate is bypassed first.
 
 **Prevention:**
-- Do not add all 12 groups to the existing 4 questions. Instead, introduce a branching question tree: a root question ("Is this a specialized scientific/clinical/legal role?") gates whether the advisor enters the existing EC/AS/IT/FI path or a new specialized-group path.
-- For the specialized path, keep question sets small and purpose-built per cluster: clinical (NU, NT, PS, SW), legal (LP, LC), enforcement/operations (FB, PO), and scientific/technical (MT, ED, FS, WP).
-- After extending `QUESTION_BANK`, run the existing signal-accumulation test suite against all 4-answer combinations and verify that no new group bleeds into the top-3 for answers clearly intended to surface a different group.
-- Add a `KNOWN_GROUPS` integration test: for each new group, specify the "ideal" answer set and assert that `accumulateSignals()` returns that group as the top candidate.
+- Add a `wdType` field to `WorkDescription` (e.g., `wd_type: Literal["advisor", "manager"] = "advisor"`). Use this in `require_og_confirmed` to skip the gate for manager-type WDs.
+- Alternatively, keep the gate but add a `force_draft=true` query param to the export endpoints for manager-track exports, which bypasses the OG check and generates a watermarked "DRAFT — PENDING CLASSIFICATION" document.
+- The manager-draft export should use a different document template or header banner so the output is visually distinct from a finalised advisor WD.
+- Do not add manager-track logic to `_build_wd_context` by inserting if/else branches on `wd_type` — that function is already 130+ lines. Create a `_build_manager_context(wd)` function that reuses the safe portions of the context.
 
-**Phase to address:** Broader OG Classification phase, before `QUESTION_BANK` entries are written for new groups.
+**Phase to address:** Phase 29 (Manager-Track UX), export integration step. Gate bypass must be implemented before manager-track export is tested.
 
 ---
 
-## QUESTION_BANK Scaling — OG_LEVELS, OG_DEFINITIONS, QUAL_STANDARDS, NON_EC_TOTALS Must All Be Extended Together
+### 1c. Amendment panels, audit findings, and duty hints are keyed to wd_id, not user_role — state leaks between role contexts
 
-**Risk:** Adding a new group requires coordinated changes across at least 6 constants and data structures:
-
-| Artifact | Must add |
-|----------|----------|
-| `OG_LEVELS` | Level list (verified from rates CSV) |
-| `OG_DEFINITIONS` | Group definition text (from TBS OCHRO or JES standard) |
-| `QUAL_STANDARDS` | Default qualification text |
-| `NON_EC_TOTALS` | Approximate total points per level (from JES standard) |
-| `NON_EC_STANDARD_NAMES` (both copies, or consolidated) | Standard name string |
-| Frontend `QUAL_DEFAULTS` in `data.jsx` | Matching qualification text |
-
-Of the 12 new v3.0 groups, 10 (ED, LC, LP, MT, NT, NU, PO, PS, SW, WP) have no rates CSV in `data/rates_of_pay/`, meaning `OG_LEVELS` level counts must be derived from the JES standard files directly. Several of those files are scraped HTML with inconsistent formatting (see the `FS Foreigns Service - Job Evauation Standard.txt` typo in the filename — likely a scrape artifact). The FB group already has two JES-related files (`FB Border Services - Job Evaluation Standard 2005.txt` and `FB Border Services - Application Guidelines 2005.txt`), and it is not immediately obvious which file contains the point scales.
-
-If any of these 6 artifacts is extended without the others, the export manifests a silent failure: `NON_EC_STANDARD_NAMES.get(og_code, "JES")` in `_build_v2_manifest()` falls back to the literal string `"JES"` for an unknown group, which is not a valid citation in an HR document. The frontend `getQualDefault()` returns the generic default text for an unrecognized OG code, which may not satisfy the applicable TBS Qualification Standard for that group.
+**What goes wrong:** `amendmentNotes`, `amendmentPanels`, `auditFindings`, and `dutyHints` are loaded per `wd_id`. If an advisor converts a manager-track WD to a full advisor WD (or vice versa), these state slices will be stale because they were populated under the prior role's flow. The amendment hydration `useEffect` (app.jsx line 171) fires on `[wd_id, reviewing]` — it correctly re-fetches on review, but does not re-fetch when `user_role` changes. A manager who enters review will get amendment panels intended for advisor sections (e.g., "Classification" section) that have no visual counterpart in manager mode, and those panel states will be in `amendmentPanels` but never rendered — they are orphaned UI state that wastes memory and could confuse future state reads.
 
 **Prevention:**
-- Create a checklist requirement: adding a new OG group is not complete until all 6 artifacts are updated. Gate this with a test: for every key in `OG_LEVELS`, assert that a corresponding entry exists in `OG_DEFINITIONS`, `QUAL_STANDARDS`, and `NON_EC_TOTALS` (or that the group is EC, the only group with per-factor scoring).
-- Consolidate the duplicate `NON_EC_STANDARD_NAMES` before adding 12 new entries to it. Having two sources of truth for standard names with 4 entries will become unmanageable with 16.
-- Add a cross-parity test between backend `QUAL_STANDARDS` and frontend `QUAL_DEFAULTS` (the Phase 19 code review flagged this AS/EC content drift as advisory; it must be a failing test for v3.0 since 12 new groups will all need matching pairs).
-- Before writing new constants, verify `OG_LEVELS` for each new group by parsing the relevant JES standard file — do not guess levels from job titles.
+- Add `user_role` to the dependency array of the amendment hydration `useEffect` so it refetches when role changes.
+- When `user_role` changes, explicitly clear `auditFindings`, `dutyHints`, and `amendmentPanels` state.
+- The Section keys used in `amendmentPanels` (e.g., `'cls'`, `'drf'`) must be validated against the sections actually rendered in the current role's document view. Add a filter: `Object.fromEntries(Object.entries(amendmentPanels).filter(([k]) => VISIBLE_SECTIONS_FOR_ROLE[user_role].includes(k)))` before passing to the document component.
 
-**Phase to address:** Broader OG Classification phase, data-entry step. This is a pre-condition for any classification work on new groups.
+**Phase to address:** Phase 29 (Manager-Track UX), state isolation design step.
 
 ---
 
-## CBA Clause Matching — False Positive Audit Findings in an HR Legal Context
+## 2. Additive Schema Migration — Optional Fields on a Pydantic JSON Blob
 
-**Risk:** A false positive in the Risk Audit — flagging a valid duty statement as a CA violation — is not a minor inconvenience in an HR legal context. It is actively dangerous for two reasons.
+### 2a. Legacy WD rows silently deserialise missing fields as None — correct by accident, until it isn't
 
-First, advisor fatigue: if the audit flags obviously-valid duty text, advisors learn to dismiss all audit findings, including true positives. This is the canonical false-positive failure mode in compliance tooling: the signal-to-noise ratio degrades to the point where the tool's findings are treated as noise by default. A tool that advisors learn to ignore provides negative value compared to no tool at all.
+**What goes wrong:** `WorkDescription` uses `model_config = ConfigDict(extra="ignore")`. When a new Optional field (e.g., `org_context: Optional[str] = None`) is added to the model and a legacy row is loaded via `WorkDescription.model_validate_json(row["data"])`, the missing key is silently populated as `None`. This is the intended Pydantic v2 behaviour for Optional fields with defaults.
 
-Second, documentation risk: if an advisor accepts (clicks "Accept") on an audit finding that incorrectly says "this duty may conflict with Article 7.3 of the EC CA," the audit trail records that the advisor reviewed and accepted a CA concern. If the WD is later challenged and the audit log is produced in discovery, a row saying "Accepted: potential CA conflict" exists even when there was no actual conflict. The audit log becomes a liability rather than protection.
+The trap is in the completeness audit (Phase 28). `POST /api/wd/{id}/validate-elements` will check whether each of the 7 elements is populated. For a legacy WD row that was created before Phase 26, `org_context` will be `None` — correctly flagged as missing. But `client_service_results` lives in `record` (a freeform dict), not as a typed field, and `responsibilities` will also come back as `None`. The completeness audit must therefore distinguish between:
 
-The CBA files in `data/agreements/` are large (`EC_full.txt` is 336 KB, `PA_full.txt` is 534 KB). String-matching duty text against entire CA articles without semantic grounding will produce false positives on shared vocabulary: "provides advice" appears in articles about overtime, leave, and grievance procedures as well as scope clauses.
+- Field genuinely not collected (legacy WD): show "Not collected yet"
+- Field collected but blank (advisor deliberately left empty): show "Advisor left blank"
+- Field JES-derived but JES not yet run: show "Run JES scoring first"
+- Field populated: show "Complete"
+
+If the audit treats all four states as "missing", it will flag every legacy WD as fully incomplete, which is false and undermines trust in the tool.
 
 **Prevention:**
-- Scope the CBA clause matching to a curated subset of articles, not the full agreement. The relevant articles for a WD audit are: scope/application clauses (which positions are covered), classification-relevant exclusions (what work is excluded from the bargaining unit), and any articles that constrain the content of work descriptions. Do not attempt to match against all 80+ articles in a typical CA.
-- Use a pre-extracted clause index (built once at startup from the JSON versions of the CBA files that already exist in `data/agreements/*/`), not real-time full-text search. The JSON files (`EC_full.json`, etc.) are already present and structured; use them.
-- Require at least two signal types to fire an audit flag: (1) vocabulary match AND (2) the matched article is in the set of classification-relevant articles. Single-signal flags should be silently suppressed.
-- Display the matched CA text verbatim alongside every audit finding so the advisor can immediately see whether the match is plausible. Do not just display the article number.
-- Make the "Skip" option prominent and labeled "Not applicable — no conflict found." Do not label it "Dismiss" or "Ignore" (which imply the advisor is overriding a real concern).
+- Do not add `org_context` and `responsibilities_narrative` as bare Optional fields. Add them alongside a corresponding `{field}_collected_at: Optional[datetime]` sentinel or a `metadata: dict` blob on WorkDescription that tracks which fields were explicitly set during the v4.0 flow. A `None` value without the sentinel means "not collected yet"; a `None` with the sentinel means "advisor explicitly skipped or left blank."
+- Alternatively, encode completeness state in `schema_version`. Currently `schema_version = 1` for all rows. Bump to `schema_version = 2` when a WD has gone through the v4.0 flow. The completeness audit returns "not applicable — legacy WD" for `schema_version < 2` rows.
+- The simpler approach: add a `seven_elements_flow: bool = False` field. The Phase 26 conversational step sets it to True when `org_context` is committed. The completeness audit gates all 7-element checks on `seven_elements_flow`.
+- Do not put the completeness logic in `_build_wd_context` — it already has 29 variables. Create a dedicated `build_elements_status(wd) -> dict` function.
 
-**Phase to address:** Risk Audit phase, requirements and UX design step, before any matching logic is written.
+**Phase to address:** Phase 26 (Org Context Step) — schema design. Must be decided before any new fields are committed to the model. Phase 28 (Completeness Audit) will depend on this decision.
 
 ---
 
-## CBA Clause Matching — Parsing Large .txt CBA Files at Runtime
+### 2b. WDPatchRequest does not include new v4.0 fields — PATCH silently drops them
 
-**Risk:** The 28 CBA directories each contain both a `.txt` file (336 KB to 534 KB) and a `.json` file. If the Risk Audit parses the `.txt` files at runtime per export/audit request, it will add 1-2 seconds of I/O + text processing to an already compute-bound export pipeline running on a Jetson. More critically, the `.txt` files are scraped HTML with inconsistencies: the FS file has a typo in its filename, the FB directory has two files with different scope, and the scraped text includes navigation headers and "Skip to main content" artifacts that will produce garbage matches.
+**What goes wrong:** `WDPatchRequest` in `wd.py` currently lists every patchable field explicitly. When `org_context` and `responsibilities_narrative` are added to `WorkDescription`, they must also be added to `WDPatchRequest`. If a developer adds the field to `WorkDescription` but forgets to add it to `WDPatchRequest`, the SPA's commit() call will include `org_context` in the request body, `WDPatchRequest(model_config=ConfigDict(extra="ignore"))` will silently drop it, the PATCH will succeed with HTTP 200, and the field will never be written to the database. The SPA will believe it succeeded, but the export and completeness audit will see `None`.
+
+This has happened before: Phase 20 required 6 UAT fix commits after initial ship, several of which were caused by fields present in the frontend request body but not plumbed through the backend response or PATCH model.
 
 **Prevention:**
-- Use the `.json` files, not the `.txt` files, for the Risk Audit. They are already pre-structured.
-- Pre-process the relevant CA clauses into a purpose-built in-memory index at application startup (or first audit request), not on every audit call. Cache keyed by `(og_code, ca_version_hash)`.
-- The audit should only load clauses for the confirmed OG group's CA, not all 28. EC advisor audits only need the EC CA; PA advisor audits only need the PA CA (which covers AS, CR, and PM).
+- When adding a new WorkDescription field intended to be patchable, add it to `WDPatchRequest` in the same commit, not a later one.
+- Add a test that creates a WD, PATCHes with a non-None value for each new field, GETs the WD, and asserts the field is non-None. This closes the silent-drop gap.
+- Consider a property test: serialize `WDPatchRequest.model_fields.keys()` and `WorkDescription.model_fields.keys()` and assert that every `WDPatchRequest` field is also on `WorkDescription` — and that every new `WorkDescription` field that is NOT intentionally server-managed (like `id`, `created_at`, `schema_version`) has a corresponding `WDPatchRequest` entry.
 
-**Phase to address:** Risk Audit phase, data access layer design.
+**Phase to address:** Phase 26 (Org Context Step) and Phase 27 (Responsibilities Narrative), backend model step. One failing test per new field.
 
 ---
 
-## Writing Guide Validation — The False-Positive Annoyance Threshold
+### 2c. record dict vs. typed field ambiguity for new 7-element fields
 
-**Risk:** The Job Description Writing Guide describes principles like "use active voice," "start duties with a verb," and "avoid vague language." A validation pass that mechanically checks these principles against every duty entry will flag legitimate professional language as a violation. Specific examples from real GC WDs that a naive validator would flag:
+**What goes wrong:** The existing system has a schizophrenic data storage pattern. Some fields are typed on `WorkDescription` (`confirmed_og`, `og_level`, `jes_scores`). Others live in the freeform `record: dict` (`client_service_results`, `title`, `branch`, `reports`, `quals`, `duties`). The `_build_wd_context` function reads from both (`record.get("client_service_results")`, `wd.qualification`, `wd.duties`). The completeness audit will need to check both locations for each of the 7 elements, and if the source of truth is wrong for even one element, the audit will give a false result.
 
-- "Responsible for the coordination of..." — technically passive construction but standard GC administrative language
-- "Ensures compliance with..." — "Ensures" is a valid active verb but may be flagged as vague by a keyword-based check
-- "Acts as departmental representative..." — "Acts as" is idiomatic and appropriate but may trigger a "weak verb" check
-- Duty statements for senior positions legitimately start with "Leads," "Directs," "Oversees" — a validator trained on EC-04 norms will flag these as vague for an EC-07 role
+For v4.0, `org_context` and `responsibilities_narrative` could be stored either way. Storing in `record` is consistent with `client_service_results` but makes the field invisible to the Pydantic schema and untyped. Storing as typed fields is more correct but requires schema migration and careful WDPatchRequest plumbing.
 
-The failure mode is the same as CBA false positives: advisors learn to dismiss all validation flags, including real ones. The writing guide validation must have a precision rate high enough to be trustworthy in daily use. For an internal HR tool used by classification specialists, "trustworthy" means fewer than 1 false flag per 5 duties on a well-written WD — which is a high precision bar.
-
-There is also a role-level dependence problem: what constitutes a "vague" duty at EC-03 level is appropriate at EC-07. A validator that does not account for the confirmed OG and level will consistently over-flag senior positions.
+The completeness audit is especially vulnerable: if `org_context` is stored in `record` but the audit checks `wd.org_context`, it returns None always. If `org_context` is stored as a typed field but `_build_wd_context` reads `record.get("org_context")`, the template renders the placeholder always.
 
 **Prevention:**
-- Do not implement a keyword blacklist for "vague verbs." Instead, validate structural properties only: does the duty start with a verb (any verb, not just "strong" ones), is it a single sentence (no semicolons concatenating multiple duties), is it within the word count range (8-25 words is a reasonable range for GC WD duties).
-- Make every writing guide flag suppressible per-duty without affecting other duties. The advisor should be able to mark "This flag is not applicable to this duty" and have the system remember that for the session.
-- Surface writing guide tips as suggestions with an inline example of the improvement, not as errors. Reserve the error/blocking style for genuinely invalid content (empty duty field, duplicate duty text).
-- Test the validator against the existing SJD examples in `data/SJD Examples.txt` before shipping. If it flags more than 15% of SJD duty statements as violations, the validator is too aggressive.
+- Adopt a consistent rule before Phase 26: fields that appear in the Accessible JD Template's 7 Part 2 sections are typed fields on `WorkDescription`. Fields that are Part 1 identification data (position number, branch, title) remain in `record`. Document this rule in a comment at the top of `work_description.py`.
+- After making this decision, audit `_build_wd_context` for all existing 7-element reads and ensure they use the correct source. Specifically: `client_service_results` currently reads `record.get("client_service_results")` — if the rule above is adopted, this should be a typed field. Decide before Phase 26 whether to migrate it or leave it as an exception.
 
-**Phase to address:** Writing Guide integration phase. Establish the structural-only validation rule before any keyword-matching logic is written.
+**Phase to address:** Phase 26 (Org Context Step), schema design. This is a pre-condition for all 7-element completeness logic.
 
 ---
 
-## SJD Library — Template Variable Mismatch When Pre-Populating
+## 3. CSV Export Edge Cases
 
-**Risk:** An SJD from `data/SJD Examples.txt` carries these fields: Job Title, JobCode, SJD Number, Group Level, NOC/CNP, Salary, Organizational Context. The v2.0 conversation record carries: title, branch, reports, summary, position_number, duties, quals, og_code, og_level. The mapping is not 1:1:
+### 3a. Duty text with embedded commas, newlines, and double-quotes causes silent row corruption in naive CSV
 
-| SJD field | Maps to record field | Risk |
-|-----------|---------------------|------|
-| Job Title | record.title | Safe |
-| Group Level (e.g. "AS-01") | og_code + og_level | Must be parsed and split |
-| NOC / CNP | noc confirmation answer | Requires the NOC pipeline to re-run or be bypassed |
-| Organizational Context | record.summary (approximately) | Text is usually a paragraph, not a one-liner |
-| Salary | No field in v2.0 record | Must be dropped or stored as a display-only note |
-| Supervisory (Yes/No) | No direct field | Relevant for QUESTION_BANK answers, not record directly |
-| Competencies | No field in v2.0 | Must be dropped |
-| Streams | No field in v2.0 | Must be dropped |
+**What goes wrong:** GC work description duty text routinely contains commas ("Plans, coordinates and manages") and can contain double-quotes if an advisor pastes text from Word. Python's `csv` stdlib correctly wraps fields in double-quotes and escapes internal double-quotes as `""`. The silent corruption risk is not in the library — it's in not using the library.
 
-The highest-risk mapping is Group Level → og_code + og_level. The SJD format uses "AS-01" (OG code + hyphen + level with leading zero). The v2.0 system stores og_code and og_level separately (`wd.confirmed_og` as a dict with `og_code` key, `wd.og_level` as an integer). An SJD pre-population that writes "AS-01" directly to a field expecting a dict or integer will cause a Pydantic validation error at the next PATCH call — and since the error surfaces at PATCH time (not at pre-population time), the advisor may have already added several answers before the error is discovered.
+Any implementation that uses string interpolation (`f"{duty.text},{og_code}\n"`) or `str.join()` to build CSV will corrupt rows whose fields contain commas, newlines (multi-line duty text is legal), or double-quotes. The resulting file will parse incorrectly in Excel with no error — it will silently misalign columns.
+
+The second corruption vector: the 7-element CSV will export `effort_factors` and `working_conditions_factors` as JES factor rows. Each JES factor has a `rationale` field (a free-text LLM-generated string). Rationale text can contain all three dangerous characters.
 
 **Prevention:**
-- Write and test a dedicated `parse_sjd_record(sjd_text: str) -> dict` function before any SJD pre-population logic touches the WD data model. The function should return a dict with the same keys as `WDPatchRequest`, not a raw SJD field dict.
-- Specifically: parse "AS-01" → `{"confirmed_og": {"og_code": "AS", "og_name": "Administrative Services"}, "og_level": 1}` using `_og_code_from()` style parsing, and validate the parsed og_code against `OG_LEVELS` before writing.
-- Define explicitly which SJD fields are dropped (Salary, Supervisory, Streams, Competencies) and assert that the pre-population function never writes those fields to the WD record.
-- For Organizational Context: the SJD text is a full paragraph. Pre-populate it into `record.summary`, not `record.branch` or `record.title`. Surface it in the SPA as a pre-filled text that the advisor can edit, not as a locked value.
+- Use `csv.DictWriter` with `quoting=csv.QUOTE_ALL`. Never build CSV strings manually.
+- Use `io.StringIO` as the in-memory buffer, not `io.BytesIO`. Write to StringIO, encode as UTF-8-with-BOM (`utf-8-sig`) before returning the Response. The BOM is required for Excel on Windows to auto-detect encoding; without it, French characters (accents, cedillas) in duty text will display as mojibake when the file is opened by Julian's team.
+- For array-valued columns (multiple effort factors, multiple duties), join with a pipe delimiter (`|`) not a comma, and document this in the export specification. Do not use nested CSV or JSON within CSV cells.
+- Add a roundtrip test: generate a CSV from a WD whose duty text contains `"has commas, quotes\", and a newline\nembedded"`, parse it back with `csv.DictReader`, assert field values match exactly.
 
-**Phase to address:** SJD Library phase, data mapping design step.
+**Phase to address:** Phase 30 (Structured Data Export), implementation step. Establish the `csv.DictWriter + utf-8-sig` pattern before writing a single line of export code.
 
 ---
 
-## SJD Library — Stale SJD Data and Provenance Integrity
+### 3b. JES-derived Effort and Working Conditions are absent for non-EC groups — CSV has structurally empty columns
 
-**Risk:** The SJDs in `data/SJD Examples.txt` are a point-in-time snapshot. If an advisor uses an SJD as their starting point, the export must clearly attribute that the WD was seeded from a specific SJD (by SJD Number and date). If the SJD's source level or duties are outdated (e.g., the salary range in the SJD predates the current collective agreement), the export's version manifest must show the SJD as a source with a version date — not silently absorb the SJD content as if it were original advisor input.
+**What goes wrong:** The 7-element CSV maps: Effort → JES effort factors, Working Conditions → JES working conditions factors. For non-EC groups (AS, IT, FI, MT, FS, etc.), `wd.jes_scores` is either empty or contains only a totals dict (the `NON_EC_TOTALS` path), not per-factor scored rows. The completeness audit (Phase 28) will show these as "JES-derived — not available for this group."
 
-The current `_build_v2_manifest()` function walks `wd.duties[*].provenance_noc_code` and root-level fields. It has no path for SJD provenance. If SJD pre-population writes duties to `wd.duties` with `advisor=True` (because they did not come from the live NOC pipeline), the manifest will tag them as advisor-added — which is technically correct but obscures the fact that they came from an authoritative DND SJD.
+If the CSV export proceeds with an empty `effort_factors` list and emits empty cells for those columns, Julian's analytics pipeline will interpret them as missing data for non-EC positions. This is technically correct (the data does not exist) but may cause Julian's aggregation queries to undercount non-EC positions or treat them as data-quality errors.
 
 **Prevention:**
-- Add an `sjd_source` field to `WorkDescription` (or to `record`) that stores `{sjd_number, sjd_date, sjd_title}` when a WD is seeded from an SJD. The field is `None` for WDs started from scratch.
-- Extend `_build_v2_manifest()` to emit an SJD source entry when `wd.sjd_source is not None`.
-- For duties imported from an SJD, use a new provenance tag value (e.g., `source="sjd"`) rather than `advisor=True`. This allows the export to distinguish "advisor wrote this" from "this came from a DND SJD."
+- For non-EC groups, substitute the `NON_EC_TOTALS` approximate point total into a synthetic effort row: `{"factor_name": "Total (approximate)", "points": NON_EC_TOTALS[og_code][og_level], "rationale": "Non-EC group — level-description JES; individual factor scores not available"}`. This gives Julian's pipeline a non-null value with a machine-readable caveat.
+- Add a `data_completeness` column to the CSV that encodes `"full"` (EC with all 9 factors scored), `"approximate"` (non-EC with level totals), or `"missing"` (JES not run). Julian's pipeline can filter on this column instead of treating null effort columns as data quality failures.
+- Document the `data_completeness` values in the export endpoint's docstring and in the completeness audit response.
 
-**Phase to address:** SJD Library phase, data model step. The `WorkDescription` schema change must happen before any SJD pre-population logic is written.
+**Phase to address:** Phase 28 (Completeness Audit), element status design — the audit must define what "derived but approximate" means before Phase 30 implements it in the CSV.
 
 ---
 
-## Broader OG Classification — Disambiguation Alert Scaling
+### 3c. Supervisory/senior gate for Responsibilities Narrative means some WDs legitimately have null Responsibilities — CSV must distinguish null-by-design from null-by-error
 
-**Risk:** The current AS/EC disambiguation alert fires when both AS and EC appear in the top-3 OG candidates. It is a single hard-coded alert stored in `ASEC_DISAMBIGUATION` in `constants.py`. With 12 new groups, several new ambiguous pairs will exist:
+**What goes wrong:** Phase 27 gates the Responsibilities Narrative step on `supervises != 'none'` (or equivalent). An individual-contributor WD will never have `responsibilities_narrative` populated — it is null-by-design, not null-by-error. The CSV export will emit an empty Responsibilities cell for all IC positions.
 
-- LP (Law Practitioner) vs. LC (Law Management) — both law groups, very similar work descriptions
-- PS (Psychology) vs. SW (Social Work) vs. NT (Nutrition and Dietetics) — all human services clinical roles
-- EC vs. ED (Education) — both policy/analysis oriented; research and teaching roles overlap
-- FB (Border Services) vs. PO (Police Operations Support) — both enforcement/operations
-
-If the disambiguation pattern is extended by adding a separate constant for each pair (as was done for ASEC), the constants file will have O(n²) disambiguation entries for n groups. With 12 new groups, that is potentially 66 pairs, most of which will never fire.
+Julian's analytics pipeline cannot distinguish "IC position, field not applicable" from "supervisor position where the advisor forgot to complete the step." If Julian's team is counting completeness rates, IC positions will artificially deflate the rate.
 
 **Prevention:**
-- Refactor the disambiguation pattern before adding new groups. Instead of a dict per pair, use a rule-based structure: `DISAMBIGUATION_RULES = [{groups: {"LP", "LC"}, text: "...", citation: "..."}, ...]`. The classifier checks whether any rule's group set is a subset of the top-3 candidates and fires the appropriate alert.
-- Add disambiguation entries only for pairs that are empirically confused: run `accumulateSignals()` against a set of real position descriptions that are known edge cases and identify which pairs appear together in the top-3 most frequently.
-- Keep the existing `ASEC_DISAMBIGUATION` constant for backward compatibility, but migrate it to the rule-based structure in the same phase.
+- Add a `responsibilities_applicable: bool` field to the 7-element status (populated by the completeness audit) that encodes whether the Responsibilities Narrative step was visible to the advisor. Export this as a column in the CSV alongside the Responsibilities text column.
+- In the completeness audit, set `responsibilities_applicable = (record.get("supervises") != "none")` using the same predicate as the STEPS gate. The audit result and the CSV must both encode this flag.
+- Treat `responsibilities_applicable = False` as "complete" in the completeness badge, not "missing."
 
-**Phase to address:** Broader OG Classification phase, constants design step, before adding new group entries.
+**Phase to address:** Phase 27 (Responsibilities Narrative), gate predicate design. The `responsibilities_applicable` flag must be defined here, before Phase 28 and Phase 30 consume it.
 
 ---
 
-## ARM64 Pitfalls for New Dependencies
+## 4. Completeness Audit False Positives and Negatives
 
-**Risk:** The Jetson AGX Orin (aarch64) already runs the full v2.0 stack cleanly. New v3.0 features may introduce dependencies that are unavailable or broken on ARM64.
+### 4a. JES-derived Effort and Working Conditions — Phase 25 values not present until export-time self-heal fires
 
-**Specific risks by feature:**
+**What goes wrong:** Phase 25 added JES factor bucketing in `_build_wd_context` via `_factor_category_map()`. But JES scoring is triggered by the frontend chaining JES fetch off the WD PATCH at the `og_level` step (Phase 17 pattern). JES scores are written to `wd.jes_scores` when the advisor confirms the OG and level. The export self-heal in `export.py` re-runs `score_jes_v2` if `jes_total_points is None or all-factors-at-floor` — but this only fires at export time, not before.
 
-**Risk Audit (CBA parsing):** The existing `.json` CBA files can be parsed with `json` (stdlib) and matched with `rapidfuzz` (which is already installed and has ARM64 wheels at version 3.14.5). No new dependency risk here if the implementation stays within these tools. Risk arises if an NLP-based approach is chosen: `spacy` is not currently installed and its ARM64 wheels are available but large (200+ MB). `sentence-transformers` is installed (version 5.2.2) and will work but adds latency on every audit call if used for semantic clause matching — this is acceptable only if the clause index is pre-computed at startup, not computed per-audit.
+The completeness audit at Phase 28 runs `POST /api/wd/{id}/validate-elements` before the advisor exports. If the advisor has confirmed OG and level but `jes_total_points` is None (JES scoring failed silently, or the advisor is on the Jetson with Ollama unavailable), the completeness audit will flag Effort and Working Conditions as "missing" — even though the data will be populated at export time by the self-heal path.
 
-**Writing Guide validation:** A structural validator (verb-first check, word count check) requires only `re` (stdlib) and has no ARM64 risk. Risk arises only if a grammar/NLP library is chosen. `language-tool-python` requires a Java runtime which is not confirmed present on the Jetson. Do not use it.
-
-**SJD Library (PDF parsing of `SJD-guide.pdf`):** `pdfplumber` and `pymupdf` (fitz) both have ARM64 wheels. `PyMuPDF` is the faster choice for text extraction from structured PDFs. Neither is currently in `requirements.txt`. However, `data/SJD Examples.txt` is already a plain-text file — use it directly rather than parsing the PDF for the initial implementation. Defer PDF parsing to a later iteration.
-
-**docxtpl template swap:** No new dependency risk. `docxtpl 0.19.0` and `python-docx 1.1.2` are already installed and ARM64-compatible.
-
-**Broader OG (12 new groups):** The JES scoring for new groups uses the existing `NON_EC_TOTALS` pattern (hardcoded approximate totals, no LLM). No new dependency risk.
+This produces a false negative: the completeness badge shows red for Effort and Working Conditions, the advisor panics or re-runs the flow, and the export succeeds anyway.
 
 **Prevention:**
-- Before adding any new `pip` dependency for v3.0, verify ARM64 wheel availability: `pip download --platform manylinux2014_aarch64 --python-version 311 --only-binary :all: <package>` from the Jetson directly.
-- For the Risk Audit, implement the first version using `rapidfuzz` (already installed) against the pre-structured JSON clause index. This avoids any new dependency entirely.
-- Do not introduce `language-tool-python` or any Java-dependent grammar checker.
-- For SJD PDF parsing (if needed): choose `pymupdf` over `pdfplumber`. Add it to `requirements.txt` only when actually needed, not speculatively.
+- The completeness audit for Effort and Working Conditions should not simply check `jes_scores is not None and len > 0`. It should check: `(og_code == "EC" and jes_total_points is not None) OR (og_code != "EC" and og_level is not None)`. Non-EC groups will always have level-approximate totals available once OG and level are confirmed — they do not require per-factor scores.
+- For EC groups where `jes_total_points is None`, the audit should trigger `score_jes_v2` inline (the same self-heal the export does) and report status based on the result. The audit endpoint should not just read the persisted WD state — it should ensure JES is populated as a side effect.
+- Add a test: create an EC WD with `jes_total_points = None` (simulating a failed scoring run), call `POST /api/wd/{id}/validate-elements`, assert that the endpoint triggers JES scoring and returns `"status": "populated"` for Effort and Working Conditions, not `"missing"`.
 
-**Phase to address:** Each feature phase, in the requirements/dependencies verification step before implementation begins.
+**Phase to address:** Phase 28 (Completeness Audit), element status logic for JES-derived elements.
+
+---
+
+### 4b. org_context is pre-filled by `_build_organizational_context_text()` — audit may show "populated" for a synthesised placeholder
+
+**What goes wrong:** `_build_wd_context` calls `_build_organizational_context_text(wd)` to generate `organizational_context_text`. This function synthesises a context paragraph from `record.branch`, `record.reports`, `record.title`, and `record.summary` even when no dedicated `org_context` field exists. The output looks like: "Located within Strategic Policy Branch, and reporting to the Director, the Senior Policy Analyst performs coordination..."
+
+Phase 26 adds an explicit `org_context` conversational step that lets the advisor write their own organizational context. If the completeness audit checks `wd.org_context is not None`, it will correctly identify Phase-26-captured context. But if it checks the derived value from `_build_organizational_context_text`, it will always return "populated" — even for legacy WDs that never went through the new step. The audit would then show 7/7 elements complete for all legacy WDs, which defeats the purpose.
+
+**Prevention:**
+- The completeness audit must check `wd.org_context` (the typed field added in Phase 26), NOT the output of `_build_organizational_context_text`. The synthesised context is a fallback for export — it is not evidence that the advisor has explicitly addressed the element.
+- `_build_wd_context` should use `wd.org_context` if present, and fall back to `_build_organizational_context_text(wd)` only when `org_context is None`. This way the export always has something to render, but the audit correctly distinguishes the two cases.
+- Name the typed field `org_context` (not `organizational_context` or `organizational_context_text`) to make it distinct from the template variable `organizational_context_text`. The naming collision is a latent bug waiting to happen: if a developer confuses the field with the template variable and writes `wd.organizational_context_text` in a PATCH, Pydantic will reject it (field does not exist) and the error will surface as a confusing 422, not a clear "wrong field name."
+
+**Phase to address:** Phase 26 (Org Context Step), schema and template integration step.
+
+---
+
+### 4c. Responsibilities Narrative vs. the JES "Responsibility" factor — name collision creates audit ambiguity
+
+**What goes wrong:** The 7 Part 2 elements include "Responsibility" — but in the JES scoring context, "Responsibility" refers to the JES Responsibility factor (a scored dimension of the EC JES, bucketed by `_factor_category_map()`). In the v4.0 context, "Responsibilities" refers to the Phase 27 narrative field about decision-making authority. These are two different things with nearly identical names.
+
+The completeness audit must check both:
+- Element 6 (Responsibilities): Is `wd.responsibilities_narrative` populated? (Phase 27 conversational field)
+- JES Responsibility: Are `responsibility_factors` non-empty in `wd.jes_scores`? (Phase 17 JES scoring)
+
+If the audit implementation conflates these (checking `responsibility_factors` instead of `responsibilities_narrative` for Element 6), it will always show EC positions as "complete" for Element 6 (because they have JES Responsibility factors) and non-EC positions as "missing" (because they have no per-factor scores) — the exact opposite of the intended logic.
+
+**Prevention:**
+- Name the Phase 27 field `responsibilities_narrative` (not `responsibilities` or `responsibility_text`) to force a naming distinction from `responsibility_factors` in the JES context.
+- In the completeness audit response, use unambiguous keys: `"responsibilities_narrative_status"` for the Phase 27 field, `"jes_responsibility_status"` for the JES factor. Do not use a single `"responsibility"` key that could mean either.
+- In `_build_wd_context`, the existing `responsibilities_text` variable is already populated from JES Responsibility factors (`responsibility_factors`). Phase 27's narrative is a separate document section — do not overwrite `responsibilities_text` with `wd.responsibilities_narrative`. Add a new template variable `responsibilities_narrative_text` for the Phase 27 content.
+- Add a test that explicitly verifies: a WD with `jes_scores` containing a Responsibility factor but `responsibilities_narrative = None` should have `responsibilities_narrative_status = "missing"` in the completeness audit.
+
+**Phase to address:** Phase 27 (Responsibilities Narrative), field naming. Must be resolved before Phase 28 implements the audit.
+
+---
+
+### 4d. Completeness audit "derived" status for JES fields must survive the seven_elements_flow=False case
+
+**What goes wrong:** Phase 25 added JES factor bucketing. For EC groups, `jes_scores` contains all 9 factors with explicit point values. The Effort factors are: `["Physical Effort", "Sensory Demands", "Work Environment"]` (from `_factor_category_map()`). For non-EC groups, `jes_scores` is an empty list and `jes_total_points` is the approximate total.
+
+The completeness audit must handle this matrix:
+
+| OG type | JES run | Effort status | Working Conditions status |
+|---------|---------|---------------|--------------------------|
+| EC | Yes, complete | "populated" | "populated" |
+| EC | No (not run) | "run JES first" | "run JES first" |
+| EC | Partial (some floor) | "partially scored" | "partially scored" |
+| Non-EC | Level confirmed | "derived (approximate)" | "derived (approximate)" |
+| Non-EC | No level | "confirm level first" | "confirm level first" |
+
+A simple `len(effort_factors) > 0` check collapses all five states into two (non-empty / empty), giving false positives for partial scoring and false negatives for non-EC groups with confirmed levels.
+
+**Prevention:**
+- Implement `build_elements_status(wd)` as a dedicated function (not inline in the endpoint) with explicit handling for each row of the matrix above. The function must be unit-tested against all five states.
+- For partial EC scoring (some factors at degree=-1 sentinel), report "partially scored" rather than "populated" — the export self-heal will attempt to re-run, but the audit should flag it honestly.
+- `build_elements_status` must be the single source of truth for completeness logic. Do not duplicate it in `_build_wd_context` or the CSV export. The CSV's `data_completeness` column should call the same function, not re-implement the logic.
+
+**Phase to address:** Phase 28 (Completeness Audit), core logic design. This function must be written and tested before the Review badge and CSV column consume it.
 
 ---
 
@@ -236,19 +245,31 @@ If the disambiguation pattern is extended by adding a separate constant for each
 
 | Feature | Pitfall | Mitigation | Phase |
 |---------|---------|------------|-------|
-| Accessible JD Template | Context dict missing new template variables — silent empty sections | Diff `get_undeclared_template_variables()` before and after; add content-presence test | Template phase |
-| Accessible JD Template | Duplicate `NON_EC_STANDARD_NAMES` dicts diverge further | Consolidate to single source in `constants.py` before template work | Template phase (pre-condition) |
-| Accessible JD Template | Section reorder silently drops amendments appendix | Assert amendment section present in rendered DOCX via `python-docx` inspection | Template phase, tests |
-| Risk Audit | False positives train advisors to dismiss all audit findings | Curated clause subset only; two-signal requirement; verbatim CA text shown inline | Audit phase, requirements |
-| Risk Audit | `.txt` CBA files contain scrape artifacts | Use `.json` CBA files; pre-build index at startup | Audit phase, data layer |
-| Risk Audit | Audit trail becomes liability (accepted false positive recorded) | Label Skip as "Not applicable — no conflict" not "Dismiss" | Audit phase, UX |
-| Writing Guide | Aggressive validation frustrates advisors | Structural checks only (verb-first, word count, no duplicates); no keyword blacklist | Writing Guide phase |
-| Writing Guide | Validation insensitive to OG level | Suppress or downgrade flags for senior-level positions (EC-06, EC-07) | Writing Guide phase |
-| QUESTION_BANK (12 groups) | Signal contamination across new groups | Branching tree, not flat option expansion; per-cluster question sets | OG Classification phase |
-| QUESTION_BANK (12 groups) | Missing entries in 5 dependent constants | Checklist test: every OG_LEVELS key must have OG_DEFINITIONS + QUAL_STANDARDS + NON_EC_TOTALS entries | OG Classification phase |
-| QUESTION_BANK (12 groups) | OG_LEVELS missing for 10 of 12 new groups | Derive from JES standard files; do not guess | OG Classification phase, data entry |
-| QUESTION_BANK (12 groups) | Disambiguation O(n²) pair explosion | Refactor to rule-based structure before adding new pairs | OG Classification phase |
-| SJD Library | "AS-01" pre-population crashes Pydantic validation | Dedicated `parse_sjd_record()` with OG split + validation before any WD writes | SJD phase, data model |
-| SJD Library | SJD provenance absorbed as "advisor-added" | New `source="sjd"` tag; `sjd_source` field on WorkDescription; manifest extension | SJD phase, schema design |
-| ARM64 | Grammar/NLP library without ARM64 wheels | Structural validator uses `re` only; clause matching uses `rapidfuzz`; no Java deps | All phases |
-| ARM64 | `sentence-transformers` per-audit latency | Pre-build clause index at startup if embedding-based; not per-request | Audit phase if embeddings used |
+| Manager-Track UX | `user_role` in `answers` causes step visibility / WD record contamination | Store `user_role` as separate React state; clear classification answers on role switch | Phase 29 |
+| Manager-Track UX | `require_og_confirmed` 409 fires for manager WDs at export | Add `wd_type` field or `force_draft` param; bypass gate for manager-type WDs | Phase 29 |
+| Manager-Track UX | Amendment panels / audit findings keyed to wd_id, leak across role contexts | Add `user_role` to useEffect deps; clear role-specific state on role change | Phase 29 |
+| Org Context Step | `org_context` None on legacy WDs silently deserialises as None | Add `seven_elements_flow` boolean sentinel; completeness audit gates 7-element checks on it | Phase 26 |
+| Org Context / Responsibilities | New fields missing from `WDPatchRequest` — PATCH silently drops them | Add fields to `WDPatchRequest` in the same commit; add PATCH roundtrip test per field | Phase 26, 27 |
+| record vs. typed field | `client_service_results` in record, new fields typed — inconsistent source of truth | Decide rule before Phase 26: Part 2 fields are typed, Part 1 fields stay in record | Phase 26 |
+| CSV Export | Naive string interpolation corrupts rows with commas, newlines, quotes | Use `csv.DictWriter` with `QUOTE_ALL`; encode as `utf-8-sig` for Excel | Phase 30 |
+| CSV Export | Non-EC groups have empty Effort/Working Conditions columns | Emit synthetic approximate row using `NON_EC_TOTALS`; add `data_completeness` column | Phase 30 |
+| CSV Export | IC positions have null Responsibilities by design, not by error | Add `responsibilities_applicable` column; completeness audit must encode this | Phase 27 |
+| Completeness Audit | JES scores absent pre-export; audit flags Effort/WC as missing | Audit triggers `score_jes_v2` as side effect for EC groups with null `jes_total_points` | Phase 28 |
+| Completeness Audit | `_build_organizational_context_text()` always returns a string — audit reads wrong source | Audit checks `wd.org_context` (typed field), not derived context text | Phase 26, 28 |
+| Completeness Audit | "Responsibilities" name collision: JES factor vs. Phase 27 narrative | Name field `responsibilities_narrative`; use `responsibilities_narrative_status` in audit keys | Phase 27 |
+| Completeness Audit | Partial EC JES scoring (sentinel -1 factors) collapses to "populated" | Implement `build_elements_status()` with 5-state matrix; test all states explicitly | Phase 28 |
+
+---
+
+## Cross-Cutting Risk: stepIndex Persistence After STEPS Array Extension
+
+**What goes wrong:** Every time STEPS gains new entries (Phase 26 adds org_context step, Phase 27 adds responsibilities_narrative step), the integer `stepIndex` persisted in `localStorage` under `jd-builder-v2-record` becomes stale. An advisor who started a WD before Phase 26 will have `stepIndex = 8` (pointing at what was `noc_confirm`). After Phase 26 inserts an org_context step at position 6 (after `supervises`), `stepIndex = 8` now points at `qb_sector_gate`. The advisor's session resumes at the wrong step.
+
+This happened in Phases 15–17 (STEPS ordering bugs caused UX regressions).
+
+**Prevention:**
+- Do not rely on integer `stepIndex` for session resume. Instead, resume by finding the last answered step: `const resumeIdx = STEPS.findLastIndex(s => answers[s.id] !== undefined)`. This is position-independent.
+- When adding new steps to STEPS, place them at the end of their phase block (not at a low index), or bump a `STEPS_VERSION` constant and clear `localStorage` on version mismatch at app startup.
+- Add a test: insert a hypothetical step at position 3 in a test copy of STEPS, simulate a persisted `stepIndex = 5`, and assert that `activeStepIndex` resolves correctly.
+
+**Phase to address:** Phase 26 (Org Context Step) — any STEPS array modification. This must be resolved before the first new step is added.
