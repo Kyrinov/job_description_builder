@@ -4,7 +4,8 @@
 
 - ✅ **v1.0 MVP** — Phases 1–9 incl. 8.1 (shipped 2026-06-03)
 - ✅ **v2.0 Real Guided Conversation** — Phases 10–20 (shipped 2026-06-10)
-- 🚀 **v3.0 Classification Depth & Document Quality** — Phases 21–25 (in progress, 2026-06-10)
+- ✅ **v3.0 Classification Depth & Document Quality** — Phases 21–25 (shipped 2026-06-16)
+- 🚀 **v4.0 Seven-Elements Conversational Architecture** — Phases 26–29 (in progress, 2026-06-19)
 
 ## Phases
 
@@ -45,20 +46,29 @@ Full phase details archived in ROADMAP.md history above.
 
 </details>
 
-### 🚀 v3.0 Classification Depth & Document Quality (Phases 21–25)
-
-v3.0 expands the classification engine to all GC occupational groups with JES standards, replaces the export template with the Accessible JD format, wires the Job Description Writing Guide into duty authoring, adds a CBA + jurisprudence compliance audit, and seeds a DND SJD library as a conversation starting point.
+<details>
+<summary>✅ v3.0 Classification Depth & Document Quality (Phases 21–25) — SHIPPED 2026-06-16</summary>
 
 - [x] **Phase 21: OG Expansion + Preview Fix** — Extend all six constants atomically for 16 OG groups (12 new); consolidate NON_EC_STANDARD_NAMES; full JES scoring for point-rating groups; level-lookup for level-description groups; sub-group disambiguation for NU/SW/ED; fix .doc-scroll CSS. (OGX-01, OGX-02, OGX-03, OGX-04, OGX-05, OGX-06, OGX-07, UI-01)
 - [x] **Phase 22: SJD Library** — Parse SJD_LIBRARY constant from data/SJD Examples.txt; expose GET /api/sjd endpoints; non-blocking "Browse SJDs" flow at end of Role phase; SJD pre-fill with provenance and OG-change warning. (SJD-01, SJD-02, SJD-03)
 - [x] **Phase 23: Writing Guide Integration** — Structural duty validation (active-voice, word-count, no-passive, no-duplicate); non-blocking inline .duty-hint warnings via POST /api/wd/{id}/validate-duties; Client Service Results question inserted in QUESTION_BANK; per-step OG-specific duty tips from OG_DEFINITIONS. (WG-01, WG-02, WG-03, WG-04)
 - [x] **Phase 24: Risk Audit** — "Run compliance audit" button in Review phase; deterministic CBA clause matching (exclusion/scope/application articles) + Federal Court ERR principle rules; per-finding Accept/Manual Edit/Skip decisions written to audit_log; Manual Edit links to existing amendment panel. (AUDIT-01, AUDIT-02, AUDIT-03, AUDIT-04, AUDIT-05) (completed 2026-06-16)
 - [x] **Phase 25: Accessible Template** — Build and self-verify wd_accessible_template.docx (Part 1: position ID + signatures; Part 2: 7 subsections); populate Effort/Working Conditions from JES factor scores; retire TBS WD template; content-presence test against fully-completed WD. (ACC-01, ACC-02, ACC-03, ACC-04) — **Completed 2026-06-16 (pending 9-step human UAT)**
-  - [x] Plan 25-01: RED baseline — 4 JES-shape fixture helpers + 6 RED tests in v2/backend/tests/test_export.py (6 failed, 13 passed against current TBS template). Pins ACC-01 structure, ACC-02 effort/WC bucketing (4 branches), ACC-04 content-presence. **Completed 2026-06-16.**
-  - [x] Plan 25-02: build_accessible_template.py + wd_accessible_template.docx (Part 1 + 7 Part 2 subsections, self-verified via get_undeclared_template_variables; 29/29 required Jinja2 vars declared, 4 tables / 14 headings / 43 paragraphs in committed binary; 6 RED tests still RED as expected). **Completed 2026-06-16.**
-  - [x] Plan 25-03: _factor_category_map helper + _build_wd_context rewrite + template path swap + retire wd_template.docx/build_wd_template.py — _factor_category_map derives categories from EC_JES_ELEMENTS + JES_FACTORS_BY_GROUP (never trusts runtime score dict); _build_wd_context produces all 29 Accessible Jinja2 vars; _resolve_template_path swapped; wd_template.docx + build_wd_template.py deleted; 6 RED tests now GREEN; 19/19 test_export.py passing; 150/150 full backend suite green; ACC-02/03/04 closed. **Completed 2026-06-16.**
 
-**Coverage:** 24/24 v3.0 requirements mapped · 5 phases (21–25) · 0 unmapped · 0 orphans
+Full phase details in Phase Details section below.
+
+</details>
+
+### 🚀 v4.0 Seven-Elements Conversational Architecture (Phases 26–29)
+
+v4.0 surfaces all 7 Part 2 sections of the TBS Accessible JD Template as a natural conversational experience. Two new WD fields (org_context, responsibilities_narrative) are added, connected to a completeness audit, exposed as structured JSON/CSV export for workforce analytics, and branched into a Manager-Track UX that hides classification internals from hiring managers.
+
+- [ ] **Phase 26: Org Context Conversational Step** — Foundation phase: new org_context typed field on WorkDescription + WDPatchRequest (same-commit rule), 4-part Socratic step added to STEPS (with stepIndex regression fix before insertion), document preview rendering above Client Service Results, Accessible DOCX Part 2 export. (ORG-01, ORG-02, ORG-03)
+- [ ] **Phase 27: Responsibilities Narrative + Completeness Audit** — Last new WD field (responsibilities_narrative + WDPatchRequest co-update), document preview section, Accessible DOCX export, POST /api/wd/{id}/validate-elements with 5-state matrix, Review phase completeness badge as soft gate with jump-to-fill navigation. (RESP-01, RESP-02, RESP-03, ELEM-01, ELEM-02, ELEM-03)
+- [ ] **Phase 28: Manager-Track UX** — Role selector at app entry (jd-builder-v2-role localStorage key, never in WD model or answers dict), userRole state slice, conditional rendering suppressing OG/JES/CBA strings in manager mode, manager-track STEPS variant, require_og_confirmed bypass via wd_type field, DRAFT watermark on manager DOCX exports. (MGR-01, MGR-02, MGR-03)
+- [ ] **Phase 29: Structured Export + Enhanced Poster** — Shared build_seven_elements(wd) helper in export_service.py, POST /api/wd/{id}/export/json (7-element analytics JSON with provenance), POST /api/wd/{id}/export/csv (utf-8-sig DictWriter, one row per duty), SPA JSON + CSV download buttons, enhanced poster with "About the Organization" section, build_poster_template.py self-verify update. (SEXP-01, SEXP-02, SEXP-03, POST-01)
+
+**Coverage:** 16/16 v4.0 requirements mapped · 4 phases (26–29) · 0 unmapped · 0 orphans
 
 ---
 
@@ -193,6 +203,88 @@ Plans:
 
 ---
 
+### Phase 26: Org Context Conversational Step
+
+**Goal:** Advisors can capture and persist organizational context through a 4-part conversational step; the text renders in the document preview above Client Service Results and exports to the Accessible JD DOCX Part 2 Organizational Context section.
+
+**Depends on:** Phase 25 (Accessible Template complete; Part 2 structure is the export target)
+
+**Requirements:** ORG-01, ORG-02, ORG-03
+
+**Success Criteria** (what must be TRUE):
+1. Advisor completes the org context step (work stream, organizational placement, reporting relationship, additional context) and the assembled text appears in the live document preview above the Client Service Results section without disrupting any existing step.
+2. A PATCH /api/wd round-trip (PATCH with org_context → GET → assert org_context non-None) confirms WDPatchRequest was co-updated in the same commit as WorkDescription; no silent field drop.
+3. An existing session with a persisted stepIndex integer in localStorage resumes at the correct step after the org_context step is inserted into STEPS — confirming the resume-by-last-answered fix is in place before any STEPS entry is added.
+4. Downloading the Accessible JD DOCX for a WD with org_context filled shows that text in the Part 2 Organizational Context section; a WD without org_context shows the advisor placeholder string.
+
+**Plans:** TBD
+
+**UI hint**: yes
+
+---
+
+### Phase 27: Responsibilities Narrative + Completeness Audit
+
+**Goal:** Advisors can record a responsibilities narrative that exports to the Accessible DOCX, and the Review phase displays a per-element completeness badge over all 7 Part 2 elements using a single validate-elements endpoint.
+
+**Depends on:** Phase 26 (org_context field exists; both new WD fields must be present before the completeness audit can evaluate all 7 elements)
+
+**Requirements:** RESP-01, RESP-02, RESP-03, ELEM-01, ELEM-02, ELEM-03
+
+**Success Criteria** (what must be TRUE):
+1. Advisor enters a free-text responsibilities narrative; it appears as its own named section in the document live preview and persists via PATCH /api/wd without loss on GET round-trip — confirming WDPatchRequest co-update.
+2. Downloading the Accessible JD DOCX shows the responsibilities narrative in the Part 2 Responsibilities section; a WD without the narrative shows the advisor placeholder.
+3. POST /api/wd/{id}/validate-elements returns per-element status for all 7 elements: Effort and Working Conditions show as "derived" (not "missing") when jes_total_points is populated; Responsibilities shows the narrative value when filled, and "missing" (not "not_applicable") when empty — because the field is open to all positions.
+4. The completeness audit reads wd.org_context (the typed root field), not the derived fallback text from _build_organizational_context_text() — confirmed by a test that leaves org_context None while record has branch/reports data, asserting the element status is "missing".
+5. The Review phase completeness badge shows N/7 elements as populated or derived; the advisor can proceed to export with any count after acknowledging the badge — the badge is a soft gate, not a hard block.
+
+**Plans:** TBD
+
+**UI hint**: yes
+
+---
+
+### Phase 28: Manager-Track UX
+
+**Goal:** A hiring manager can use the full application without seeing OG codes, JES factor names, or CBA clause references; their session is clearly labelled as a draft for the classification team, and the DOCX exports without a 409 gate error.
+
+**Depends on:** Phase 27 (full conversation flow including org_context and responsibilities_narrative steps is stable before branching it for manager-track)
+
+**Requirements:** MGR-01, MGR-02, MGR-03
+
+**Success Criteria** (what must be TRUE):
+1. On first load (localStorage key jd-builder-v2-role absent), a role selector screen precedes the conversation; selecting "I am a hiring manager" persists the role to localStorage and launches manager-track; selecting "I am a classification advisor" launches the standard flow; refreshing the page does not re-show the selector.
+2. In manager mode, no OG group codes (EC, AS, IT, FI, etc.), JES factor names (e.g. "Supervision", "Initiative and Independent Action"), or CBA clause references appear in any visible UI element — confirmed by systematic visual inspection against the manager-track checklist covering STEPS labels, document preview, classification block, ReviewState, and export labels.
+3. The manager-track STEPS array skips og_confirm, og_level, and JES override steps; a manager can reach Review and trigger a DOCX download without a 409 from require_og_confirmed; the downloaded DOCX is watermarked as "DRAFT — PENDING CLASSIFICATION".
+4. The userRole value is never present in the WD PATCH body sent to /api/wd — confirmed by a test asserting WDPatchRequest does not accept a user_role key and that the field does not appear in the work_descriptions.data JSON column after a full conversation.
+
+**Plans:** TBD
+
+**UI hint**: yes
+
+---
+
+### Phase 29: Structured Export + Enhanced Poster
+
+**Goal:** Advisors and managers can download machine-readable JSON and CSV exports mapping all 7 Part 2 elements for workforce analytics; the job poster gains an "About the Organization" section sourced from org_context.
+
+**Depends on:** Phase 28 (manager-track wd_type field in place so export routes handle both tracks; org_context and responsibilities_narrative fields available from Phases 26–27)
+
+**Requirements:** SEXP-01, SEXP-02, SEXP-03, POST-01
+
+**Success Criteria** (what must be TRUE):
+1. POST /api/wd/{id}/export/json returns a JSON object with all 7 Part 2 element keys (organizational_context, client_service_results, key_activities, skills, effort, responsibility, working_conditions) plus classification metadata and provenance fields; org_context and responsibilities_narrative populate their elements when filled; null when not set.
+2. POST /api/wd/{id}/export/csv returns a UTF-8-with-BOM CSV with one row per key activity (duty), scalar fields repeated per row; the file opens in Excel without encoding errors; cells containing commas, double-quotes, or newlines are correctly quoted per RFC 4180.
+3. The Review phase SPA shows JSON Download and CSV Download buttons alongside existing DOCX/PDF buttons; clicking either triggers a file download using the existing exportAs() pattern (fetch + Blob + URL.createObjectURL).
+4. Both JSON and CSV export routes succeed for a manager-track WD without a 409; classification fields not set by the manager use "[ADVISOR TO COMPLETE]" placeholder strings in the output.
+5. Downloading the job poster DOCX for a WD with org_context shows an "About the Organization" section; build_poster_template.py self-verifies with exit 0 after the template update.
+
+**Plans:** TBD
+
+**UI hint**: yes
+
+---
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -218,8 +310,12 @@ Plans:
 | 18. JD Composition & Live Preview | v2.0 | 4/4 | Complete | — |
 | 19. Qualifications & Amendments | v2.0 | 4/4 | Complete | 2026-06-09 |
 | 20. Export | v2.0 | 3/3 | Complete | 2026-06-10 |
-| **21. OG Expansion + Preview Fix** | **v3.0** | **8/8** | **Gaps Found** | — |
-| **22. SJD Library** | **v3.0** | **4/4** | **Complete (pending UAT)** | **2026-06-11** |
-| **23. Writing Guide Integration** | **v3.0** | **4/4** | **Complete (pending UAT)** | **2026-06-15** |
-| **24. Risk Audit** | **v3.0** | **4/4** | **Complete** | **2026-06-16** |
-| **25. Accessible Template** | **v3.0** | **3/3** | **Complete (pending UAT)** | **2026-06-16** |
+| 21. OG Expansion + Preview Fix | v3.0 | 9/9 | Complete | 2026-06-11 |
+| 22. SJD Library | v3.0 | 4/4 | Complete (pending UAT) | 2026-06-11 |
+| 23. Writing Guide Integration | v3.0 | 4/4 | Complete (pending UAT) | 2026-06-15 |
+| 24. Risk Audit | v3.0 | 4/4 | Complete | 2026-06-16 |
+| 25. Accessible Template | v3.0 | 3/3 | Complete (pending UAT) | 2026-06-16 |
+| **26. Org Context Conversational Step** | **v4.0** | **0/?** | **Not started** | — |
+| **27. Responsibilities Narrative + Completeness Audit** | **v4.0** | **0/?** | **Not started** | — |
+| **28. Manager-Track UX** | **v4.0** | **0/?** | **Not started** | — |
+| **29. Structured Export + Enhanced Poster** | **v4.0** | **0/?** | **Not started** | — |

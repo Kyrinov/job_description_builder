@@ -79,19 +79,19 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| ORG-01 | — | Pending |
-| ORG-02 | — | Pending |
-| ORG-03 | — | Pending |
-| RESP-01 | — | Pending |
-| RESP-02 | — | Pending |
-| RESP-03 | — | Pending |
-| ELEM-01 | — | Pending |
-| ELEM-02 | — | Pending |
-| ELEM-03 | — | Pending |
-| MGR-01 | — | Pending |
-| MGR-02 | — | Pending |
-| MGR-03 | — | Pending |
-| SEXP-01 | — | Pending |
-| SEXP-02 | — | Pending |
-| SEXP-03 | — | Pending |
-| POST-01 | — | Pending |
+| ORG-01 | Phase 26 | Pending |
+| ORG-02 | Phase 26 | Pending |
+| ORG-03 | Phase 26 | Pending |
+| RESP-01 | Phase 27 | Pending |
+| RESP-02 | Phase 27 | Pending |
+| RESP-03 | Phase 27 | Pending |
+| ELEM-01 | Phase 27 | Pending |
+| ELEM-02 | Phase 27 | Pending |
+| ELEM-03 | Phase 27 | Pending |
+| MGR-01 | Phase 28 | Pending |
+| MGR-02 | Phase 28 | Pending |
+| MGR-03 | Phase 28 | Pending |
+| SEXP-01 | Phase 29 | Pending |
+| SEXP-02 | Phase 29 | Pending |
+| SEXP-03 | Phase 29 | Pending |
+| POST-01 | Phase 29 | Pending |

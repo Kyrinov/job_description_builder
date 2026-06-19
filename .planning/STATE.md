@@ -4,10 +4,10 @@ milestone: v4.0
 milestone_name: Seven-Elements Conversational Architecture
 current_phase: null
 current_plan: null
-status: defining requirements
+status: roadmap ready
 last_updated: "2026-06-19T00:00:00Z"
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -16,10 +16,10 @@ progress:
 
 # Project State
 
-**Status:** Defining requirements
+**Status:** Roadmap ready — Phase 26 is next
 **Current phase:** Not started
 **Last updated:** 2026-06-19
-**Next action:** Requirements and roadmap for v4.0 in progress.
+**Next action:** `/gsd-plan-phase 26` to begin Org Context Conversational Step
 
 ---
 
@@ -32,6 +32,10 @@ progress:
 | 23 | Writing Guide Integration | Complete (4 plans); 9/9 test_writing_guide.py GREEN; 134/134 backend suite GREEN; 60/60 frontend tests GREEN; pending 4-step human UAT |
 | 24 | Risk Audit | Complete (4 plans) |
 | 25 | Accessible Template | Complete (3 plans); 19/19 test_export.py + 150/150 full backend suite green; wd_accessible_template.docx live (37,872 bytes, 3 tables, 14 headings, 7 Part 2 subsections); TBS template + build script retired; poster unchanged; ACC-01/02/03/04 closed; pending 9-step human UAT |
+| 26 | Org Context Conversational Step | Not started |
+| 27 | Responsibilities Narrative + Completeness Audit | Not started |
+| 28 | Manager-Track UX | Not started |
+| 29 | Structured Export + Enhanced Poster | Not started |
 
 ---
 
@@ -66,6 +70,7 @@ See: `.planning/PROJECT.md`
 - Evidence-based classification (NOC pipeline + OG ranker + JES scoring) — deterministic in the main flow
 - Socratic constraint: manager never selects OG directly; OG is derived from accumulated answer signals
 - Socratic intent (extended in Phase 21 Plan 06 fix): manager is only asked questions relevant to their selected sector; cluster questions are gated on the sector-gate answer
+- WDPatchRequest co-update rule (v4.0 addition): every new WorkDescription field that is advisor-patchable must have a corresponding WDPatchRequest field added in the same git commit, with a roundtrip test gating merge
 
 ---
 
@@ -108,16 +113,28 @@ See: `.planning/PROJECT.md`
 | Accessible build script duplicates _set_cell_text rather than refactoring to shared helper (Phase 25 Plan 02) | Followed established project convention (build_wd_template.py + build_poster_template.py also duplicate this 12-line helper). PATTERNS.md guidance: 'duplicating it a third time is the established convention, not an anti-pattern here' |
 | wd_template.docx + build_wd_template.py retirement deferred to Plan 25-03 (Phase 25 Plan 02) | Avoids leaving the export route pointing at a deleted file mid-wave. Plan 25-03 swaps the path in _resolve_template_path call site FIRST, then deletes the old template after the 6 RED tests turn GREEN |
 
+### v4.0 Key Decisions (to be populated as phases execute)
+
+| Decision | Rationale |
+|----------|-----------|
+| org_context and responsibilities_narrative as typed root fields on WorkDescription (not in record dict) | Export pipeline reads typed fields directly; record blob is freeform and unreliable for structured export |
+| WDPatchRequest co-update rule enforced in Phases 26 and 27 | Silent PATCH drop (extra="ignore" swallows unknown keys with HTTP 200) has caused UAT regressions in prior phases |
+| stepIndex regression fix must land in Phase 26 before any STEPS insertion | Resume by STEPS.findLastIndex(s => answers[s.id] !== undefined) instead of integer position; existing sessions must survive STEPS growth |
+| user_role in localStorage only — never in WD model or answers dict | Role is session preference, not document data; sending it in PATCH body would write it to work_descriptions.data |
+| build_seven_elements(wd) -> dict shared helper in export_service.py | Single source of truth for 7-element data; consumed by JSON route, CSV route, and completeness audit |
+| require_og_confirmed bypassed for manager-track WDs via wd_type field on WorkDescription | Manager WDs deliberately never have confirmed_og; bypass enables export without breaking the advisor gate |
+| Completeness audit reads wd.org_context (typed field), not derived fallback text | _build_organizational_context_text() returns non-empty synthesized string even when advisor skipped the step — would produce false positive in audit |
+
 ### Active Blockers
 
-None. Phase 21 gap closed by Plan 21-09 (2026-06-11). Sub_group propagation fixed for all 6 sub-group-bearing OG groups. 60/60 frontend tests passing.
+None. v3.0 complete (Phase 25 done). v4.0 roadmap ready. Phase 26 unblocked.
 
 ### Roadmap Evolution
 
 - v1.0 closed 2026-06-03: Phases 1–9 (incl. 8.1), 188 tests, 21/21 requirements
 - v2.0 closed 2026-06-10: Phases 10–20, 299 tests (80 backend + 31 frontend + 188 v1), 52/52 requirements
-- v3.0 started 2026-06-10: Phases 21–25, 24 requirements, roadmap defined
-- Phase 21: 8 plans complete (21-01 through 21-08). 174 tests (115 backend + 59 frontend). OG expansion live for all 16 OG groups; Socratic mini-interview suggests JES level for NU/PS/NT/PO/SW/ED.
+- v3.0 closed 2026-06-16: Phases 21–25, 150 backend + 60 frontend tests, 24/24 requirements
+- v4.0 started 2026-06-19: Phases 26–29, 16 requirements, roadmap defined
 
 ---
 
@@ -131,16 +148,6 @@ None. Phase 21 gap closed by Plan 21-09 (2026-06-11). Sub_group propagation fixe
 | Requirements delivered | 21/21 |
 | Tests passing at ship | 188 |
 | Timeline | 7 days (2026-05-27 → 2026-06-03) |
-| Phase 21 P09 | 5 | 3 tasks | 2 files |
-| Phase 22 P01 | 180 | 1 tasks | 1 files |
-| Phase 22 P02 | 7 | 2 tasks | 3 files |
-| Phase 22 P02 | 7min | 2 tasks | 3 files |
-| Phase 22 P03 | 5 | 2 tasks | 4 files |
-| Phase 22 P04 | 6min | 2 tasks | 4 files |
-| Phase 25 P01 | 7 | 2 tasks | 1 files |
-| Phase 25 P02 | 7min | 2 tasks | 2 files |
-| Phase 25 P02 | 7min | 2 tasks | 2 files |
-| Phase 25 P03 | 12 | 2 tasks | 3 files |
 
 ### v2.0 (complete)
 
@@ -151,13 +158,23 @@ None. Phase 21 gap closed by Plan 21-09 (2026-06-11). Sub_group propagation fixe
 | Tests passing at ship | 299 (80 backend + 31 frontend + 188 v1) |
 | Timeline | 7 days (2026-06-03 → 2026-06-10) |
 
-### v3.0 (active)
+### v3.0 (complete)
 
 | Metric | Value |
 |--------|-------|
 | Phases total | 5 (21–25) |
-| Requirements total | 24 |
-| Tests passing (after Phase 25) | 150 backend + 60 frontend (19 in test_export.py: 13 prior + 6 newly GREEN); 19 total export tests all GREEN |
+| Requirements delivered | 24/24 |
+| Tests passing at ship | 150 backend + 60 frontend |
+| Timeline | 2026-06-10 → 2026-06-16 |
+
+### v4.0 (active)
+
+| Metric | Value |
+|--------|-------|
+| Phases total | 4 (26–29) |
+| Requirements total | 16 |
+| Tests passing at start | 150 backend + 60 frontend |
+| Started | 2026-06-19 |
 
 **Completed Phase:** 25 Plan 03 (Accessible template export path + TBS retirement) — 2026-06-16T19:19Z
 
