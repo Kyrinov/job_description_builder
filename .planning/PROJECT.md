@@ -24,17 +24,17 @@ v1.0 (MVP, HTMX wizard) shipped 2026-06-03 and is archived. v2.0 ("Real Guided C
 - **Phase 24 (Risk Audit) complete 2026-06-16** — 4 plans: Wave 0 RED baseline + risk_auditor.py stub (24-01), CBA loader + ERR rules + two-signal CBA matching (24-02), `POST /api/wd/{id}/audit` + `POST /api/wd/{id}/audit/decide` endpoints (24-03), frontend `auditFindings` state + `handleRunAudit` + ReviewState audit panel (24-04). 150 backend + 60 frontend tests GREEN. Code review clean. Requirements AUDIT-01/02/03/04/05 validated.
 - **Phase 25 (Accessible Template) complete 2026-06-16** — 3 plans: Wave 0 RED baseline (25-01) + 4 JES-shape fixture helpers (EC, FB, MT, AS) + 6 RED tests pinning ACC-01/02/04 contract; build_accessible_template.py + wd_accessible_template.docx (37,872 bytes, 3 tables, 14 headings, 7 Part 2 subsections, 29/29 Jinja2 vars self-verified via `get_undeclared_template_variables()`) (25-02); `_factor_category_map()` helper + rewritten `_build_wd_context()` producing all 29 Accessible vars + template path swap from wd_template.docx to wd_accessible_template.docx + retirement of TBS template + build script (25-03). 6 RED tests from Plan 25-01 turned GREEN. 19/19 test_export.py + 150/150 full backend suite green. Code review clean. 9 visual human UAT items in 25-HUMAN-UAT.md (visual layout, signature blocks, loop expansion, manifest section, amendments gate, MT/AS placeholder, SPA download flow, poster parity, Word Document Inspector). Requirements ACC-01/02/03/04 validated. v3.0 milestone structurally complete.
 
-## Current Milestone: v3.0 Classification Depth & Document Quality
+## Current Milestone: v4.0 Seven-Elements Conversational Architecture
 
-**Goal:** Expand the classification engine to cover all GC occupational groups that have JES standards in data/, replace the export template with the Accessible JD format, wire the Job Description Writing Guide principles into every stage of duty authoring, add a CBA + jurisprudence compliance audit, seed a DND SJD library as a conversation starting point, and fix the live preview page extension.
+**Goal:** Collect all 7 Part 2 sections of the Accessible JD Template through natural conversation — the "Facebook Pattern" where Julian's structured data is captured invisibly and exportable as machine-readable JSON/CSV for workforce analytics.
 
 **Target features:**
-- SJD Library — seed from `data/SJD Examples.txt` + `data/AI Docs/SJD-guide.pdf`; advisor can start a conversation from an SJD or browse as reference
-- Accessible JD Template — export format follows `data/AI Docs/Accessible Job Description Template (1).docx`; replaces existing TBS Work Description DOCX template
-- Writing Guide integration — (a) Socratic questions reshaped per `data/AI Docs/Job Description Writing Guide.docx`; (b) inline duty-entry tips; (c) validation pass flagging duty statements that violate guide principles
-- Risk Audit — explicit advisor action in Review phase; inline recommendations per JD section (Accept / Manual Edit / Skip) citing CBA clauses and Federal Court principles (`data/AI Docs/ERR_Principles_drawn_from_Federal_Court.pdf` + `Wilkonson v. Canada.pdf`)
-- Broader OG classification — full Socratic interview + JES scoring for 12 new groups (ED, FB, FS, LC, LP, MT, NT, NU, PO, PS, SW, WP); best-effort approximate totals for remaining groups without JES standards in data/
-- Document preview page extension — the simulated white page grows seamlessly to contain all preview content at any document length (no overflow into grey background)
+- Organizational Context conversational step — new WD field, SJD pre-fill, renders above Client Service Results in document preview
+- Responsibilities Narrative — new conversational step gated on supervisory/senior positions; captures decision-making authority and delegation scope
+- Seven-Elements Completeness Audit — `POST /api/wd/{id}/validate-elements`; per-element populated/derived/missing status; Review phase completeness badge
+- Manager-Track UX — role selector at entry ("classification advisor" / "hiring manager"); manager mode hides OG/JES/CBA mechanics; output is draft JD for classification team
+- Enhanced Job Poster Generation — 7-element data populates poster; Key Activities → Duties, Skills → Qualifications, Org Context → About the org
+- Structured Data Export — `POST /api/wd/{id}/export/json` + `/export/csv`; output maps the 7 Part 2 elements (Organizational Context, Client Service Results, Key Activities, Skills, Effort, Responsibility, Working Conditions); machine-readable for Julian's workforce analytics
 
 ## Core Value
 
@@ -185,4 +185,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-16 — Phase 25 (Accessible Template) complete; v3.0 structurally complete (24/24 requirements validated, 24/24 plans done); pending: 9-step human UAT of the Accessible-format DOCX in `.planning/phases/25-accessible-template/25-HUMAN-UAT.md`*
+*Last updated: 2026-06-19 — Milestone v4.0 (Seven-Elements Conversational Architecture) started; v3.0 complete (25 phases, 24/24 requirements validated)*

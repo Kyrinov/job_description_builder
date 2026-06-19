@@ -1,25 +1,25 @@
 ---
 gsd_state_version: 1.0
-milestone: v3.0
-milestone_name: Classification Depth & Document Quality
-current_phase: 25
+milestone: v4.0
+milestone_name: Seven-Elements Conversational Architecture
+current_phase: null
 current_plan: null
-status: complete
-last_updated: "2026-06-16T19:35:00Z"
+status: defining requirements
+last_updated: "2026-06-19T00:00:00Z"
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 24
-  completed_plans: 24
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
-**Status:** Phase 25 Accessible Template complete (pending 9-step human UAT)
-**Current phase:** 25
-**Last updated:** 2026-06-16
-**Next action:** All 5 phases of v3.0 complete (24/24 plans, 24/24 requirements). Phase 25 Accessible Template ships: 19/19 test_export.py + 150/150 full backend suite green; _factor_category_map helper + rewritten _build_wd_context produces all 29 Accessible Jinja2 vars; wd_accessible_template.docx live (37,872 bytes, 3 tables, 14 headings, 7 Part 2 subsections, self-verified); TBS template + build script retired; poster_template.docx unchanged. Pending: 9-step human UAT of the Accessible-format DOCX (see `.planning/phases/25-accessible-template/25-HUMAN-UAT.md`).
+**Status:** Defining requirements
+**Current phase:** Not started
+**Last updated:** 2026-06-19
+**Next action:** Requirements and roadmap for v4.0 in progress.
 
 ---
 
