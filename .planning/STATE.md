@@ -2,24 +2,24 @@
 gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: Seven-Elements Conversational Architecture
-current_phase: null
-current_plan: null
-status: roadmap ready
-last_updated: "2026-06-19T00:00:00Z"
+current_phase: 26
+current_plan: 02
+status: executing
+last_updated: "2026-06-23T18:44:00Z"
 progress:
-  total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 9
+  completed_phases: 5
+  total_plans: 26
+  completed_plans: 25
+  percent: 96
 ---
 
 # Project State
 
-**Status:** Phase 26 planned — ready to execute
-**Current phase:** 26 — Org Context Conversational Step (2 plans, 2 waves)
+**Status:** Executing Phase 26 — Plan 01 (Wave 0 RED baseline) complete; Plan 02 (Wave 1 implementation) next
+**Current phase:** 26 — Org Context Conversational Step (1/2 plans done)
 **Last updated:** 2026-06-23
-**Next action:** `/gsd-execute-phase 26` to implement org context conversational step
+**Next action:** `/gsd-execute-plan 26-02` to implement org_context conversational step (turns the 8 RED stubs from Plan 01 GREEN)
 
 ---
 
@@ -32,7 +32,7 @@ progress:
 | 23 | Writing Guide Integration | Complete (4 plans); 9/9 test_writing_guide.py GREEN; 134/134 backend suite GREEN; 60/60 frontend tests GREEN; pending 4-step human UAT |
 | 24 | Risk Audit | Complete (4 plans) |
 | 25 | Accessible Template | Complete (3 plans); 19/19 test_export.py + 150/150 full backend suite green; wd_accessible_template.docx live (37,872 bytes, 3 tables, 14 headings, 7 Part 2 subsections); TBS template + build script retired; poster unchanged; ACC-01/02/03/04 closed; pending 9-step human UAT |
-| 26 | Org Context Conversational Step | Not started |
+| 26 | Org Context Conversational Step | **In progress** — Plan 01 (Wave 0 RED baseline) complete: 8 stubs RED, 150 backend + 60 frontend pre-existing GREEN; Plan 02 (Wave 1 implementation) next |
 | 27 | Responsibilities Narrative + Completeness Audit | Not started |
 | 28 | Manager-Track UX | Not started |
 | 29 | Structured Export + Enhanced Poster | Not started |
@@ -124,6 +124,9 @@ See: `.planning/PROJECT.md`
 | build_seven_elements(wd) -> dict shared helper in export_service.py | Single source of truth for 7-element data; consumed by JSON route, CSV route, and completeness audit |
 | require_og_confirmed bypassed for manager-track WDs via wd_type field on WorkDescription | Manager WDs deliberately never have confirmed_og; bypass enables export without breaking the advisor gate |
 | Completeness audit reads wd.org_context (typed field), not derived fallback text | _build_organizational_context_text() returns non-empty synthesized string even when advisor skipped the step — would produce false positive in audit |
+| Wave 0 RED baseline plan shape for v4.0 conversation steps (Phase 26 Plan 01) | 8 stubs (3 backend, 5 frontend) gate the implementation plan; each Wave 1 task references a specific stub as its done criterion; pre-existing 150 backend + 60 frontend must stay GREEN as a contract |
+| OrgContextInput test uses expect(true).toBe(false) placeholder per plan fallback rule (Phase 26 Plan 01) | OrgContextInput is not yet exported from components.jsx; an eager import would surface as ReferenceError (crash, not assertion). Placeholder documents the real assertion to wire when Plan 26-02 Task 2 adds the export |
+| Wave 0 marks NO requirements complete — ORG-01/02/03 stay Pending until Plan 26-02 turns RED → GREEN | Wave 0 delivers tests, not user-facing functionality; marking requirements complete pre-implementation would misrepresent milestone progress |
 
 ### Active Blockers
 
@@ -175,6 +178,18 @@ None. v3.0 complete (Phase 25 done). v4.0 roadmap ready. Phase 26 unblocked.
 | Requirements total | 16 |
 | Tests passing at start | 150 backend + 60 frontend |
 | Started | 2026-06-19 |
+
+**Completed Plan:** 26 Plan 01 (Org Context Wave 0 RED baseline) — 2026-06-23T18:44Z
+
+- 8 RED test stubs added across 5 existing test files (no production code touched):
+  - Backend (3): test_patch_org_context_round_trip (test_wd.py, KeyError — gates WDPatchRequest co-update for ORG-01), test_org_context_in_export + test_org_context_fallback_in_export (test_export.py, gates ORG-03 export priority change)
+  - Frontend (5): stepIndex resume (app.test.jsx, placeholder), STEPS org_context shape + OrgContextInput assembly (conversation.test.jsx), Organizational Context Sec + Client Service Results Sec (document.test.jsx)
+- Baseline verified: 150/150 pre-existing backend GREEN + 2/3 new backend RED (test_org_context_fallback_in_export already GREEN per commit 05ad815 — retained as regression guard); 60/60 pre-existing frontend GREEN + 5/5 new frontend RED with AssertionErrors
+- Commits: 05ad815 (Task 1: backend stubs), d015227 (Task 2: frontend stubs), edfc9ba (Rule 1 fix: OrgContextInput placeholder per plan fallback rule)
+- Deviations: 1 Rule 1 fix (OrgContextInput stub originally failed with ReferenceError instead of AssertionError — plan's done criterion violated; rewrote with expect(true).toBe(false) placeholder pattern that the plan explicitly sanctions for non-exported identifiers)
+- Out-of-scope discovery: working tree had Wave 1 production WIP uncommitted (org_context field on WorkDescription + WDPatchRequest); stashed for clean RED verification, restored untouched — belongs to Plan 26-02 Task 1
+- ORG-01/02/03 left Pending in REQUIREMENTS.md (Wave 0 delivers tests, not user-visible functionality)
+- Next: Plan 26-02 (Wave 1 implementation) turns the 8 RED stubs GREEN; implementation order from PATTERNS.md §"Critical Implementation Order" must be respected (stepIndex resume fix FIRST, then WD co-update, then STEPS, then document Secs, then export priority)
 
 **Completed Phase:** 25 Plan 03 (Accessible template export path + TBS retirement) — 2026-06-16T19:19Z
 
