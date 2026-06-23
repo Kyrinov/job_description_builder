@@ -709,6 +709,61 @@ function QualEditor({ value, onChange, og_code }) {
   );
 }
 
+/* ---- ORG CONTEXT INPUT (Phase 26 — ORG-01) -------------------- */
+// Local state for the 4-part org context (work_stream, org_placement,
+// reporting, additional). Each change re-assembles the non-empty parts
+// joined by single spaces and emits the assembled string via onChange —
+// the parent step.apply writes it to record.org_context as a single typed
+// string. The assembly pattern (filter empties + join) keeps the persisted
+// value clean when the advisor leaves optional sub-fields blank.
+//
+// Mirror the OgLevelQuestions structural pattern: useState + per-field
+// handler + onChange emit. Do NOT use dangerouslySetInnerHTML — textarea
+// values flow to record.org_context which renders as a React text node.
+function OrgContextInput({ value, onChange }) {
+  const [parts, setParts] = useState({
+    work_stream: '', org_placement: '', reporting: '', additional: '',
+  });
+
+  function handlePart(key, val) {
+    const updated = { ...parts, [key]: val };
+    setParts(updated);
+    const assembled = [updated.work_stream, updated.org_placement,
+                       updated.reporting, updated.additional]
+      .filter(s => s.trim()).join(' ');
+    onChange(assembled);
+  }
+
+  return (
+    <div className="org-context-input">
+      <div className="org-context-input__field">
+        <label>Work stream or program</label>
+        <textarea className="tf" rows={2} value={parts.work_stream}
+          placeholder="e.g. This position sits within the Strategic Policy program area…"
+          onChange={e => handlePart('work_stream', e.target.value)} />
+      </div>
+      <div className="org-context-input__field">
+        <label>Organizational placement</label>
+        <textarea className="tf" rows={2} value={parts.org_placement}
+          placeholder="e.g. Located within the ADM(Policy) group, Branch X…"
+          onChange={e => handlePart('org_placement', e.target.value)} />
+      </div>
+      <div className="org-context-input__field">
+        <label>Reporting relationship</label>
+        <textarea className="tf" rows={2} value={parts.reporting}
+          placeholder="e.g. Reports to the Director, Policy Development…"
+          onChange={e => handlePart('reporting', e.target.value)} />
+      </div>
+      <div className="org-context-input__field">
+        <label>Additional context (optional)</label>
+        <textarea className="tf" rows={2} value={parts.additional}
+          placeholder="Any other relevant context about the position's role in the organization…"
+          onChange={e => handlePart('additional', e.target.value)} />
+      </div>
+    </div>
+  );
+}
+
 /* ---- input dispatcher ---------------------------------------- */
 function StepInput(props) {
   const t = props.cfg.type;
@@ -722,6 +777,7 @@ function StepInput(props) {
   if (t === 'og_confirm') return <OgConfirmList {...props} />;
   if (t === 'og_level_questions') return <OgLevelQuestions {...props} />;
   if (t === 'og_level') return <OgLevelPicker {...props} />;
+  if (t === 'org_context_input') return <OrgContextInput {...props} />;
   return null;
 }
 
@@ -731,6 +787,7 @@ function initialAnswer(step, record) {
   if (c.type === 'text' || c.type === 'textarea') return c.preset || '';
   if (c.type === 'duties') return [];
   if (c.type === 'quals') return getQualDefault(record?.confirmed_og?.og_code);
+  if (c.type === 'org_context_input') return '';
   return null;
 }
 function answerValid(step, value) {
@@ -747,7 +804,8 @@ function answerValid(step, value) {
     return !!value && typeof value === 'object' && Object.keys(value).length > 0;
   }
   if (t === 'og_level') return typeof value === 'number' && value >= 1;
+  if (t === 'org_context_input') return !!(value && typeof value === 'string' && value.trim());
   return !!value;
 }
 
-export { Icon, Check, StepInput, initialAnswer, answerValid, OgLevelQuestions, OgLevelPicker };
+export { Icon, Check, StepInput, initialAnswer, answerValid, OgLevelQuestions, OgLevelPicker, OrgContextInput };

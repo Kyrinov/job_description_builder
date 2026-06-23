@@ -7,7 +7,7 @@
 import { describe, it, expect, beforeAll, vi, afterEach, beforeEach } from 'vitest';
 import { render, fireEvent, waitFor } from '@testing-library/react';
 import { STEPS, PHASES, accumulateSignals, isStepVisible, getVisibleSteps } from './data.jsx';
-import { StepInput, answerValid } from './components.jsx';
+import { StepInput, answerValid, OrgContextInput } from './components.jsx';
 import App from './app.jsx';
 
 // Helpers for driving the App through the conversation flow in integration
@@ -427,15 +427,16 @@ describe('OGX-04: sector-gate + cluster questions gated by sector answer', () =>
     expect(visibleIds).not.toContain('qb_education_cluster');
   });
 
-  it('getVisibleSteps omits all cluster steps when no sector answer (22 - 9 = 13)', () => {
+  it('getVisibleSteps omits all cluster steps when no sector answer (23 - 9 = 14)', () => {
     // Phase 21 Plan 07: the 4 legacy work-type questions + the 4 cluster
     // questions + qb_programme_admin_cluster are all gated on the sector
     // answer. With no sector answer, all 9 of those are hidden. The 5
     // role + summary + sector + 4 post-cluster steps (noc/og/level/duties/quals)
-    // remain visible. Plus the Phase 23 client_service_results step (unconditional).
-    // Total 13 = 22 - 9 gated.
+    // remain visible. Plus the Phase 23 client_service_results step and the
+    // Phase 26 org_context step (both unconditional).
+    // Total 14 = 23 - 9 gated. (Was 13 = 22 - 9 before Phase 26 added org_context.)
     const visible = getVisibleSteps(STEPS, {});
-    expect(visible.length).toBe(13);
+    expect(visible.length).toBe(14);
     const visibleIds = visible.map(s => s.id);
     expect(visibleIds).not.toContain('qb_work_output_type');
     expect(visibleIds).not.toContain('qb_work_audience');
@@ -611,23 +612,20 @@ describe('Phase 26: org_context step in STEPS', () => {
 
 describe('Phase 26: OrgContextInput component', () => {
   it('OrgContextInput calls onChange with assembled string when a sub-field is filled', () => {
-    // RED placeholder: OrgContextInput is not yet exported from components.jsx,
-    // and `screen` is not in this file's import block. Importing OrgContextInput
-    // eagerly would surface as a ReferenceError (a crash, not an assertion
-    // failure), which the plan's Wave 0 contract forbids. The plan's explicit
-    // fallback rule applies here: use the placeholder pattern, with a comment
-    // documenting what the real assertion should become once Plan 26-02 Task 2
-    // adds OrgContextInput to the components.jsx export block.
-    //
-    // Real assertion (re-enable in Plan 26-02 Task 2):
-    //   import { OrgContextInput } from './components.jsx';
-    //   import { screen } from '@testing-library/react';   // already imported via render? — verify
-    //   const onChange = vi.fn();
-    //   render(<OrgContextInput value="" onChange={onChange} />);
-    //   const textareas = screen.getAllByRole('textbox');
-    //   fireEvent.change(textareas[0], { target: { value: 'Strategic Policy program' } });
-    //   expect(onChange).toHaveBeenCalledWith(expect.stringContaining('Strategic Policy program'));
-    expect(true).toBe(false); // RED: OrgContextInput not yet implemented/exported
+    // Plan 26-02 Task 2: OrgContextInput is now a named export from
+    // components.jsx. The test renders it directly and fires a change on
+    // the first textarea (work_stream sub-field). The component's
+    // handlePart() assembles the non-empty parts joined by single spaces
+    // and emits the assembled string via onChange — so the first change
+    // produces an onChange call whose argument contains the typed text.
+    // Uses `container.querySelector` rather than `screen` to avoid adding
+    // a new import to this file's import block.
+    const onChange = vi.fn();
+    const { container } = render(<OrgContextInput value="" onChange={onChange} />);
+    const textareas = container.querySelectorAll('textarea');
+    expect(textareas.length).toBeGreaterThanOrEqual(1);
+    fireEvent.change(textareas[0], { target: { value: 'Strategic Policy program' } });
+    expect(onChange).toHaveBeenCalledWith(expect.stringContaining('Strategic Policy program'));
   });
 
 });
@@ -709,6 +707,13 @@ describe('Phase 26: OrgContextInput component', () => {
       { sector: 'Education and training', cluster: 'Teaching language' },
     ];
     for (const { sector, cluster } of sectors) {
+      // Phase 26 (Rule 1 fix): the stepIndex resume-by-last-answered
+      // initialiser (Plan 26-02 Task 1) hydrates from localStorage. Without
+      // a clear between iterations, the second render would resume past
+      // step 0 and fillInput would fail (active step isn't a text input).
+      // Clear localStorage at the start of each iteration so every render
+      // starts at the Title step.
+      globalThis.localStorage.clear();
       const { container, unmount } = render(<App />);
       // Phase 0 — role (5 steps)
       fillInput(container, 'Worker');

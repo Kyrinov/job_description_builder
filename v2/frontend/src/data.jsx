@@ -654,6 +654,20 @@ const I = {
       apply: (r, a) => ({ og_level: a }),
       transcript: a => a !== null && a !== undefined ? String(a) : 'Pending' },
 
+    /* Phase 26 (ORG-01): organizational context step — 4-part Socratic
+       interview that captures the advisor's plain-language description of
+       where the position fits. Sits at phase 3 immediately before
+       client_service_results so the conversation reads as Role → Work Type
+       → Classification → Org Context + Client Service Results → Duties.
+       apply() writes a single assembled string to record.org_context,
+       which is the typed root field consumed by export_service.py. */
+    { id: 'org_context', phase: 3, icon: I.org,
+      q: 'Tell me about the organizational context for this position.',
+      helper: 'Answer the questions below about where this position fits in the organization.',
+      input: { type: 'org_context_input' },
+      apply: (r, a) => ({ org_context: a }),
+      transcript: a => a ? a.slice(0, 60) + (a.length > 60 ? '...' : '') : 'Pending' },
+
     { id: 'client_service_results', phase: 3, icon: I.flag,
       q: 'What client service results does this position deliver?',
       helper: 'Describe the outcomes this role produces for clients or stakeholders. This will appear in the work description context section.',
