@@ -230,7 +230,11 @@ Plans:
 3. An existing session with a persisted stepIndex integer in localStorage resumes at the correct step after the org_context step is inserted into STEPS — confirming the resume-by-last-answered fix is in place before any STEPS entry is added.
 4. Downloading the Accessible JD DOCX for a WD with org_context filled shows that text in the Part 2 Organizational Context section; a WD without org_context shows the advisor placeholder string.
 
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 26-01-PLAN.md — Wave 0 RED test stubs (backend + frontend, all 8 failing tests)
+- [ ] 26-02-PLAN.md — Full implementation (stepIndex fix, WD co-update, OrgContextInput, preview Secs, export priority)
 
 **UI hint**: yes
 
@@ -328,7 +332,7 @@ Plans:
 | 23. Writing Guide Integration | v3.0 | 4/4 | Complete (pending UAT) | 2026-06-15 |
 | 24. Risk Audit | v3.0 | 4/4 | Complete | 2026-06-16 |
 | 25. Accessible Template | v3.0 | 3/3 | Complete (pending UAT) | 2026-06-16 |
-| **26. Org Context Conversational Step** | **v4.0** | **0/?** | **Not started** | — |
+| **26. Org Context Conversational Step** | **v4.0** | **0/2** | **Not started** | — |
 | **27. Responsibilities Narrative + Completeness Audit** | **v4.0** | **0/?** | **Not started** | — |
 | **28. Manager-Track UX** | **v4.0** | **0/?** | **Not started** | — |
 | **29. Structured Export + Enhanced Poster** | **v4.0** | **0/?** | **Not started** | — |
