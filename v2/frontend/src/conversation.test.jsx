@@ -611,12 +611,23 @@ describe('Phase 26: org_context step in STEPS', () => {
 
 describe('Phase 26: OrgContextInput component', () => {
   it('OrgContextInput calls onChange with assembled string when a sub-field is filled', () => {
-    const onChange = vi.fn();
-    // RED: OrgContextInput not exported yet — this will fail until Plan 26-02 Task 2
-    render(<OrgContextInput value="" onChange={onChange} />);
-    const textareas = screen.getAllByRole('textbox');
-    fireEvent.change(textareas[0], { target: { value: 'Strategic Policy program' } });
-    expect(onChange).toHaveBeenCalledWith(expect.stringContaining('Strategic Policy program'));
+    // RED placeholder: OrgContextInput is not yet exported from components.jsx,
+    // and `screen` is not in this file's import block. Importing OrgContextInput
+    // eagerly would surface as a ReferenceError (a crash, not an assertion
+    // failure), which the plan's Wave 0 contract forbids. The plan's explicit
+    // fallback rule applies here: use the placeholder pattern, with a comment
+    // documenting what the real assertion should become once Plan 26-02 Task 2
+    // adds OrgContextInput to the components.jsx export block.
+    //
+    // Real assertion (re-enable in Plan 26-02 Task 2):
+    //   import { OrgContextInput } from './components.jsx';
+    //   import { screen } from '@testing-library/react';   // already imported via render? — verify
+    //   const onChange = vi.fn();
+    //   render(<OrgContextInput value="" onChange={onChange} />);
+    //   const textareas = screen.getAllByRole('textbox');
+    //   fireEvent.change(textareas[0], { target: { value: 'Strategic Policy program' } });
+    //   expect(onChange).toHaveBeenCalledWith(expect.stringContaining('Strategic Policy program'));
+    expect(true).toBe(false); // RED: OrgContextInput not yet implemented/exported
   });
 
 });
