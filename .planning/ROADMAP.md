@@ -72,6 +72,19 @@ v4.0 surfaces all 7 Part 2 sections of the TBS Accessible JD Template as a natur
 
 ---
 
+### ICM Workspace (Phases 30–33)
+
+Adds `jd-builder` as a workspace in the ICM repo (`~/ICM/workspaces/jd-builder/`), modeling the full JD creation workflow as a staged AI pipeline. Parallel to v4.0 -- no app code changes.
+
+- [ ] **Phase 30: Workspace Scaffold + Policy Vault** — CLAUDE.md, CONTEXT.md, setup questionnaire, policy-vault with TBS classification policy, JD writing guide, and JES standards. (ICM-01, ICM-02, ICM-03)
+- [ ] **Phase 31: Shared Reference Extraction** — `shared/og-definitions.md` and `shared/qualification-standards.md` extracted from app constants; `shared/department-profile.md` template. (ICM-04)
+- [ ] **Phase 32: Stage CONTEXT Files** — All 5 stage CONTEXT.md files (01-intake through 05-export) with Inputs/Process/Outputs tables; all stage reference files. (ICM-05 through ICM-09)
+- [ ] **Phase 33: Skills + Integration + Validation** — `skills/jd-builder-api/SKILL.md`; ICM root CLAUDE.md and README.md updated; placeholder audit; status check. (ICM-10 through ICM-13)
+
+Full milestone doc: [milestones/icm-workspace.md](milestones/icm-workspace.md)
+
+---
+
 ## Phase Details
 
 ### Phase 21: OG Expansion + Preview Fix
