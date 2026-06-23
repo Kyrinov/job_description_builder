@@ -2,24 +2,23 @@
 gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: Seven-Elements Conversational Architecture
-current_phase: 26
-current_plan: 02
-status: executing
-last_updated: "2026-06-23T18:44:00Z"
+current_phase: 26 — Org Context Conversational Step (2/2 plans done; ready for Phase 27)
+status: phase-complete
+last_updated: "2026-06-23T19:04:51Z"
 progress:
   total_phases: 9
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 26
-  completed_plans: 25
-  percent: 96
+  completed_plans: 26
+  percent: 100
 ---
 
 # Project State
 
-**Status:** Executing Phase 26 — Plan 01 (Wave 0 RED baseline) complete; Plan 02 (Wave 1 implementation) next
-**Current phase:** 26 — Org Context Conversational Step (1/2 plans done)
+**Status:** Phase 26 complete — Plan 01 (Wave 0 RED baseline) + Plan 02 (Wave 1 GREEN) both done; all 8 RED stubs GREEN; ORG-01/02/03 delivered
+**Current phase:** 26 — Org Context Conversational Step (2/2 plans done)
 **Last updated:** 2026-06-23
-**Next action:** `/gsd-execute-plan 26-02` to implement org_context conversational step (turns the 8 RED stubs from Plan 01 GREEN)
+**Next action:** `/gsd-plan-phase 27` to plan Responsibilities Narrative + Completeness Audit (reuses the WDPatchRequest co-update pattern + stepIndex resume invariant from Phase 26)
 
 ---
 
@@ -32,7 +31,7 @@ progress:
 | 23 | Writing Guide Integration | Complete (4 plans); 9/9 test_writing_guide.py GREEN; 134/134 backend suite GREEN; 60/60 frontend tests GREEN; pending 4-step human UAT |
 | 24 | Risk Audit | Complete (4 plans) |
 | 25 | Accessible Template | Complete (3 plans); 19/19 test_export.py + 150/150 full backend suite green; wd_accessible_template.docx live (37,872 bytes, 3 tables, 14 headings, 7 Part 2 subsections); TBS template + build script retired; poster unchanged; ACC-01/02/03/04 closed; pending 9-step human UAT |
-| 26 | Org Context Conversational Step | **In progress** — Plan 01 (Wave 0 RED baseline) complete: 8 stubs RED, 150 backend + 60 frontend pre-existing GREEN; Plan 02 (Wave 1 implementation) next |
+| 26 | Org Context Conversational Step | **Complete** — Plan 01 (Wave 0 RED baseline) + Plan 02 (Wave 1 GREEN) both done; 8/8 RED stubs GREEN; 153/153 backend + 65/65 frontend GREEN; ORG-01/02/03 closed |
 | 27 | Responsibilities Narrative + Completeness Audit | Not started |
 | 28 | Manager-Track UX | Not started |
 | 29 | Structured Export + Enhanced Poster | Not started |
@@ -126,7 +125,11 @@ See: `.planning/PROJECT.md`
 | Completeness audit reads wd.org_context (typed field), not derived fallback text | _build_organizational_context_text() returns non-empty synthesized string even when advisor skipped the step — would produce false positive in audit |
 | Wave 0 RED baseline plan shape for v4.0 conversation steps (Phase 26 Plan 01) | 8 stubs (3 backend, 5 frontend) gate the implementation plan; each Wave 1 task references a specific stub as its done criterion; pre-existing 150 backend + 60 frontend must stay GREEN as a contract |
 | OrgContextInput test uses expect(true).toBe(false) placeholder per plan fallback rule (Phase 26 Plan 01) | OrgContextInput is not yet exported from components.jsx; an eager import would surface as ReferenceError (crash, not assertion). Placeholder documents the real assertion to wire when Plan 26-02 Task 2 adds the export |
-| Wave 0 marks NO requirements complete — ORG-01/02/03 stay Pending until Plan 26-02 turns RED → GREEN | Wave 0 delivers tests, not user-facing functionality; marking requirements complete pre-implementation would misrepresent milestone progress |
+| Wave 0 marks NO requirements complete — ORG-01/02/03 stay Pending until Plan 26-02 turns RED → GREEN (Phase 26 Plan 01) | Wave 0 delivers tests, not user-facing functionality; marking requirements complete pre-implementation would misrepresent milestone progress |
+| stepIndex resume-by-last-answered replaces useState(0) as the canonical initialiser (Phase 26 Plan 02) | STEP_RECORD_KEY map + STEPS.reduce walks record keys to find last answered step + 1; resilient to STEPS growth — every future step insertion (Phase 27/28/29) inherits the resume invariant for free |
+| OrgContextInput 4-part assembly pattern for multi-sub-field conversational steps (Phase 26 Plan 02) | Local useState per sub-field, handlePart re-assembles non-empty parts joined by spaces, emits single typed string via onChange; reusable template for any future step whose persisted value is an assembled string (e.g. Phase 27 responsibilities_narrative if it captures decision-impact + delegation-scope) |
+| DocumentPane conditional Sec with dynamic n++ (Phase 26 Plan 02) | Wrap each new Sec's n++ inside `if (r.field)` so downstream sections renumber transparently when optional sections are hidden; canonical template for Phase 27/28/29 Part 2 additions |
+| Export priority idiom preserves synthesized fallback as regression guard (Phase 26 Plan 02) | `wd.org_context if wd.org_context is not None else _build_organizational_context_text(wd)` keeps the fallback path live so blank advisor input still renders without {{template leak}}; test_org_context_fallback_in_export stays GREEN indefinitely as a guard |
 
 ### Active Blockers
 
@@ -151,6 +154,7 @@ None. v3.0 complete (Phase 25 done). v4.0 roadmap ready. Phase 26 unblocked.
 | Requirements delivered | 21/21 |
 | Tests passing at ship | 188 |
 | Timeline | 7 days (2026-05-27 → 2026-06-03) |
+| Phase 26 P02 | 14min | 3 tasks | 9 files |
 
 ### v2.0 (complete)
 
@@ -178,6 +182,19 @@ None. v3.0 complete (Phase 25 done). v4.0 roadmap ready. Phase 26 unblocked.
 | Requirements total | 16 |
 | Tests passing at start | 150 backend + 60 frontend |
 | Started | 2026-06-19 |
+
+**Completed Plan:** 26 Plan 02 (Org Context Wave 1 GREEN implementation) — 2026-06-23T19:04Z
+
+- 7 production files + 2 test files modified across 3 atomic task commits (strict sequence):
+  - Task 1 (`c7266db` feat): stepIndex resume-by-last-answered lazy initialiser in app.jsx (STEP_RECORD_KEY + STEPS.reduce); FLASH + SECTION_NAMES entries for org_ctx + csr; org_context: Optional[str] = None on WorkDescription; org_context: Optional[str] = Field(default=None, max_length=4000) on WDPatchRequest (co-update rule — same commit); app.test.jsx stepIndex placeholder rewritten with real DOM assertion
+  - Task 2 (`f81753b` feat): OrgContextInput component (4-part local state, assembled emit); StepInput dispatch + answerValid + initialAnswer extensions; org_context step in STEPS before client_service_results; OrgContextInput added to components.jsx export; conversation.test.jsx placeholder rewritten with real render + fireEvent + onChange assertion
+  - Task 3 (`1d49574` feat): DocumentPane Secs for Organizational Context (key='org_ctx') + Client Service Results (key='csr') above Key Responsibilities with dynamic n++ renumbering; export_service._build_wd_context prefers wd.org_context over synthesized fallback (fallback retained as regression guard)
+- All 8 Wave 0 RED stubs are GREEN: 3 backend (test_patch_org_context_round_trip, test_org_context_in_export, test_org_context_fallback_in_export) + 5 frontend (stepIndex resume, STEPS shape, OrgContextInput assembly, Organizational Context Sec, Client Service Results Sec)
+- Backend suite: 153 passed, 0 failed (150 pre-existing + 3 Wave 0 stubs all GREEN)
+- Frontend suite: 65 passed, 0 failed (60 pre-existing + 5 Wave 0 stubs all GREEN)
+- Deviations: 4 Rule 1 auto-fixes — (1) stepIndex placeholder test rewritten with real assertion (required by plan's done criterion), (2) OrgContextInput placeholder rewritten + added to components.jsx export (required by plan's done criterion), (3) getVisibleSteps expected count updated from 13 to 14 (STEPS grew by 1 after org_context insertion), (4) OGX-04 loop test "also handles the other 3 sectors" needed localStorage.clear() between iterations (Task 1 resume fix interacted with stale localStorage from prior iteration)
+- ORG-01/02/03 marked complete in REQUIREMENTS.md (Wave 1 delivers user-visible functionality: 4-part Socratic step, document preview Secs, DOCX export priority)
+- Phase 26 structurally complete; Phase 27 (Responsibilities Narrative + Completeness Audit) is unblocked — will reuse WDPatchRequest co-update pattern, stepIndex resume invariant, DocumentPane conditional Sec template, and possibly OrgContextInput 4-part assembly pattern
 
 **Completed Plan:** 26 Plan 01 (Org Context Wave 0 RED baseline) — 2026-06-23T18:44Z
 

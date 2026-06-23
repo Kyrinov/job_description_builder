@@ -9,9 +9,12 @@
 
 ## Organizational Context (ORG) — 3 requirements
 
-- [ ] **ORG-01** — User can provide organizational context through a 4-part Socratic step (work stream, organizational placement, reporting relationship, additional context); responses are assembled into `org_context: Optional[str]` on WorkDescription; `WDPatchRequest` updated in the same commit
-- [ ] **ORG-02** — Organizational context renders in the document live preview above the Client Service Results section
-- [ ] **ORG-03** — Organizational context populates the Part 2 Organizational Context section of the Accessible JD DOCX export
+- [x] **ORG-01
+** — User can provide organizational context through a 4-part Socratic step (work stream, organizational placement, reporting relationship, additional context); responses are assembled into `org_context: Optional[str]` on WorkDescription; `WDPatchRequest` updated in the same commit
+- [x] **ORG-02
+** — Organizational context renders in the document live preview above the Client Service Results section
+- [x] **ORG-03
+** — Organizational context populates the Part 2 Organizational Context section of the Accessible JD DOCX export
 
 ---
 
@@ -79,9 +82,9 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| ORG-01 | Phase 26 | Pending |
-| ORG-02 | Phase 26 | Pending |
-| ORG-03 | Phase 26 | Pending |
+| ORG-01 | Phase 26 | Complete (Plan 26-02 — co-update + 4-part step + stepIndex resume) |
+| ORG-02 | Phase 26 | Complete (Plan 26-02 — DocumentPane org_ctx + csr Secs) |
+| ORG-03 | Phase 26 | Complete (Plan 26-02 — export_service priority over synthesized fallback) |
 | RESP-01 | Phase 27 | Pending |
 | RESP-02 | Phase 27 | Pending |
 | RESP-03 | Phase 27 | Pending |
