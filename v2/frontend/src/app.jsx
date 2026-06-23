@@ -297,7 +297,7 @@ function App() {
       step_index: stepIndex,
     };
     ['confirmed_noc', 'confirmed_og', 'og_level', 'reports_to_military',
-     'jes_scores', 'jes_total_points'].forEach(k => {
+     'jes_scores', 'jes_total_points', 'org_context'].forEach(k => {
       if (k in newRecord) wdPayload[k] = newRecord[k];
     });
     // Persist duties with provenance when committing the duties step (JD-02)
