@@ -54,3 +54,25 @@ async def test_get_wd_404_for_unknown_id(client):
     """GET /api/wd/{id} must return 404 for a non-existent id."""
     response = await client.get("/api/wd/does-not-exist")
     assert response.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Phase 26 — ORG-01: RED baseline for org_context round-trip
+# ---------------------------------------------------------------------------
+
+async def test_patch_org_context_round_trip(client):
+    """ORG-01: PATCH org_context → GET → assert org_context non-None.
+    Confirms WDPatchRequest co-update (extra='ignore' would drop unknown field silently)."""
+    create_resp = await client.post(
+        "/api/wd", json={"record": {}, "answers": {}, "step_index": 0}
+    )
+    wd_id = create_resp.json()["id"]
+
+    patch_resp = await client.patch(
+        f"/api/wd/{wd_id}", json={"org_context": "Test org context text"}
+    )
+    assert patch_resp.status_code == 200
+
+    get_resp = await client.get(f"/api/wd/{wd_id}")
+    assert get_resp.status_code == 200
+    assert get_resp.json()["org_context"] == "Test org context text"

@@ -594,3 +594,35 @@ async def test_accessible_structure_headings(client, env_with_db):
         assert heading in text, f"Missing Part 2 subsection heading: {heading!r}"
     assert "Part 1" in text, "Missing 'Part 1' marker (Position information and signatures)"
     assert "Part 2" in text, "Missing 'Part 2' marker (Job description)"
+
+
+# ---------------------------------------------------------------------------
+# Phase 26 — ORG-03: RED baseline for org_context export priority
+# ---------------------------------------------------------------------------
+
+async def test_org_context_in_export(client, env_with_db):
+    """ORG-03: When org_context is set, the typed value appears in the DOCX output."""
+    wd_id = await _create_wd_ec(client)
+    patch_resp = await client.patch(
+        f"/api/wd/{wd_id}", json={"org_context": "Test org context text for export"}
+    )
+    assert patch_resp.status_code == 200
+
+    export_resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert export_resp.status_code == 200
+    doc = docx.Document(io.BytesIO(export_resp.content))
+    full_text = "\n".join(p.text for p in doc.paragraphs)
+    assert "Test org context text for export" in full_text
+
+
+async def test_org_context_fallback_in_export(client, env_with_db):
+    """ORG-03: When org_context is None, synthesized fallback (branch/reports/summary) is used.
+    No template variable leak ({{}}) must appear in the output."""
+    wd_id = await _create_wd_ec(client)
+    # _create_wd_ec does NOT set org_context — org_context stays None
+    export_resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert export_resp.status_code == 200
+    doc = docx.Document(io.BytesIO(export_resp.content))
+    full_text = "\n".join(p.text for p in doc.paragraphs)
+    assert "{{" not in full_text
+    assert "organizational_context_text" not in full_text
