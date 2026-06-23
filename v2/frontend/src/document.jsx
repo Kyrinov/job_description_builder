@@ -294,7 +294,52 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
     </Sec>
   );
 
-  // 3 — Key responsibilities
+  // 3 — Organizational Context (Phase 26 — ORG-02)
+  // Renders above Client Service Results and Key Responsibilities when the
+  // advisor has populated record.org_context via the new Socratic step.
+  // Section number n is incremented conditionally so the downstream
+  // Responsibilities/Classification/Qualifications sections renumber
+  // correctly when this section is hidden (org_context is null).
+  if (r.org_context) {
+    n++;
+    sections.push(
+      <Sec
+        key="org_ctx" n={String(n)} title="Organizational Context"
+        src="Advisor-provided" fresh={isFresh('org_context')}
+        editable={reviewing} onEdit={() => onEditStep('org_context')}
+        sectionKey="org_ctx" reviewing={reviewing}
+        amendmentNote={amendmentNotes?.org_ctx}
+        amendmentPanel={amendmentPanels?.org_ctx}
+        onAmendToggle={onAmendToggle} onAmendSave={onAmendSave}
+      >
+        <p className="prose">{r.org_context}</p>
+      </Sec>
+    );
+  }
+
+  // 3b — Client Service Results (Phase 23 data capture; preview was missing — ORG-02 prereq)
+  // The data has been captured via the client_service_results step since
+  // Phase 23 (WG-03); preview rendering is added in Phase 26 alongside the
+  // org_context Sec so the document reflects everything the advisor answered.
+  if (r.client_service_results) {
+    n++;
+    sections.push(
+      <Sec
+        key="csr" n={String(n)} title="Client Service Results"
+        src="Advisor-provided" fresh={isFresh('client_service_results')}
+        editable={reviewing} onEdit={() => onEditStep('client_service_results')}
+        sectionKey="csr" reviewing={reviewing}
+        amendmentNote={amendmentNotes?.csr}
+        amendmentPanel={amendmentPanels?.csr}
+        onAmendToggle={onAmendToggle} onAmendSave={onAmendSave}
+      >
+        <p className="prose">{r.client_service_results}</p>
+      </Sec>
+    );
+  }
+
+  // Key Responsibilities (always rendered; renumbers dynamically when the
+  // optional org_context / csr Secs above are present)
   n++;
   sections.push(
     <Sec

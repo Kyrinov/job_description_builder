@@ -389,7 +389,16 @@ def _build_wd_context(wd: WorkDescription, amendments: list[dict]) -> dict:
         "supervisor_title": record.get("reports") or _ADVISOR_PLACEHOLDER,
         "supervisor_classification": _ADVISOR_PLACEHOLDER,
         # Part 2 — 7 subsections.
-        "organizational_context_text": _build_organizational_context_text(wd),
+        # organizational_context_text: Phase 26 (ORG-03) — prefer the typed
+        # wd.org_context field captured by the conversational step over the
+        # synthesized fallback. When the advisor has not yet populated
+        # org_context, fall back to _build_organizational_context_text(wd)
+        # so the section still renders (no {{template leak}}).
+        "organizational_context_text": (
+            wd.org_context
+            if wd.org_context is not None
+            else _build_organizational_context_text(wd)
+        ),
         "client_service_results_text": client_service_results_text,
         "duties": [
             {
