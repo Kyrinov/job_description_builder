@@ -160,4 +160,21 @@ describe('WD PATCH payload mirrors classification fields to root (JES-01 fix)', 
     expect(body.record.confirmed_og).toEqual({ og_code: 'EC', og_name: 'Economics and Social Science Services' });
     expect(body.record.og_level).toBe(5);
   });
+
+  // ---------------------------------------------------------------------------
+  // Phase 26 — ORG-01: RED baseline for stepIndex resume-by-last-answered
+  // ---------------------------------------------------------------------------
+
+  it('stepIndex resume: initialises past step 0 when record has answered fields', () => {
+    // Arrange — seed localStorage with a record that has og_level answered
+    globalThis.localStorage.setItem('jd-builder-v2-record', JSON.stringify({
+      title: 'Policy Analyst',
+      og_level: 3,
+    }));
+    // RED placeholder: current implementation always starts at stepIndex=0
+    // After the fix in Plan 26-02 Task 1, this should assert that render()
+    // shows a step index > 0 (not the "Title" step).
+    expect(true).toBe(false); // TODO: replace with real stepIndex assertion after Wave 1 Task 1
+  });
+
 });

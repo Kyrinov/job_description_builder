@@ -164,3 +164,19 @@ describe('DocumentPane — QUAL-03: Section 5 uses .qual-sub-k class (not inline
     expect(container.innerHTML).toContain('EXPERIENCE');
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 26 — ORG-02: RED baseline for org_context + CSR Sec rendering in DocumentPane
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('Phase 26: org_context and CSR sections', () => {
+  it('renders Organizational Context section when record.org_context is set', () => {
+    render(<DocumentPane record={{ org_context: 'Branch X, reports to Director' }} cls={null} flashes={new Set()} reviewing={false} onEditStep={() => {}} onJesOverride={() => {}} />);
+    expect(screen.getByText('Organizational Context')).toBeTruthy(); // RED: Sec not in document.jsx yet
+  });
+
+  it('renders Client Service Results section when record.client_service_results is set', () => {
+    render(<DocumentPane record={{ client_service_results: 'Clients receive timely advice' }} cls={null} flashes={new Set()} reviewing={false} onEditStep={() => {}} onJesOverride={() => {}} />);
+    expect(screen.getByText('Client Service Results')).toBeTruthy(); // RED: Sec not in document.jsx yet
+  });
+});

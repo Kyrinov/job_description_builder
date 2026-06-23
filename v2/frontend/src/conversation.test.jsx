@@ -593,8 +593,34 @@ describe('OGX-04 (bugfix round 3): screen does not blank after cluster step comm
         return { ok: true, json: async () => ({}) };
       }
       return { ok: true, json: async () => ({}) };
-    });
   });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 26 — ORG-01: RED baseline for org_context step + OrgContextInput
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('Phase 26: org_context step in STEPS', () => {
+  it('STEPS contains org_context step with phase 3 and type org_context_input', () => {
+    const step = STEPS.find(s => s.id === 'org_context');
+    expect(step).toBeDefined();                        // RED: org_context not in STEPS yet
+    expect(step.phase).toBe(3);
+    expect(step.input.type).toBe('org_context_input');
+  });
+});
+
+describe('Phase 26: OrgContextInput component', () => {
+  it('OrgContextInput calls onChange with assembled string when a sub-field is filled', () => {
+    const onChange = vi.fn();
+    // RED: OrgContextInput not exported yet — this will fail until Plan 26-02 Task 2
+    render(<OrgContextInput value="" onChange={onChange} />);
+    const textareas = screen.getAllByRole('textbox');
+    fireEvent.change(textareas[0], { target: { value: 'Strategic Policy program' } });
+    expect(onChange).toHaveBeenCalledWith(expect.stringContaining('Strategic Policy program'));
+  });
+
+});
+
   afterEach(() => { vi.restoreAllMocks(); });
 
   it('advances to noc_confirm without blanking the screen after picking "Direct patient care"', () => {
