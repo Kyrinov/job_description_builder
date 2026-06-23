@@ -166,15 +166,24 @@ describe('WD PATCH payload mirrors classification fields to root (JES-01 fix)', 
   // ---------------------------------------------------------------------------
 
   it('stepIndex resume: initialises past step 0 when record has answered fields', () => {
-    // Arrange — seed localStorage with a record that has og_level answered
+    // Arrange — seed localStorage with a record that has og_level answered.
+    // og_level sits at STEPS index 19 in the current STEPS array, so a
+    // resume-by-last-answered initialiser must land at index 20 (one past
+    // the last answered step), NOT 0 (the Title step).
     globalThis.localStorage.setItem('jd-builder-v2-record', JSON.stringify({
       title: 'Policy Analyst',
       og_level: 3,
     }));
-    // RED placeholder: current implementation always starts at stepIndex=0
-    // After the fix in Plan 26-02 Task 1, this should assert that render()
-    // shows a step index > 0 (not the "Title" step).
-    expect(true).toBe(false); // TODO: replace with real stepIndex assertion after Wave 1 Task 1
+    const { container } = render(<App />);
+    // The ActiveQuestion surfaces data-testid={`jump-${stepIndex}`} on its
+    // root .ask div (see conversation.jsx line 64). After the Phase 26 fix,
+    // the testid MUST NOT be `jump-0` — the resume initialiser should have
+    // advanced past the title step.
+    const ask = container.querySelector('[data-testid^="jump-"]');
+    expect(ask).toBeTruthy();
+    const testid = ask.getAttribute('data-testid');
+    const idx = parseInt(testid.replace('jump-', ''), 10);
+    expect(idx).toBeGreaterThan(0);
   });
 
 });

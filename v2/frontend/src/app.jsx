@@ -21,6 +21,10 @@ const FLASH = {
   og_confirm: 'level',
   og_level_questions: 'level',
   og_level: 'level',
+  // Phase 26 (ORG-02): flash keys for the new document-preview Secs.
+  // 'org_ctx' and 'csr' map to the new SECTION_NAMES entries below.
+  org_context: 'org_ctx',
+  client_service_results: 'csr',
   duties: 'duties', quals: 'quals',
 };
 
@@ -76,7 +80,54 @@ function App() {
     }
   });
   const [answers, setAnswers] = useState({});
-  const [stepIndex, setStepIndex] = useState(0);
+  // Phase 26 (ORG-01): resume-by-last-answered. The STEPS array grows over
+  // time (Phases 15..26 each appended steps); an integer stepIndex persisted
+  // in localStorage would land the advisor on the WRONG step after a STEPS
+  // insertion. Instead, derive the resume position from which record keys
+  // are populated — the advisor lands on the step AFTER the last answered
+  // one. STEP_RECORD_KEY maps each step id to the record key its `apply`
+  // writes (e.g. noc_confirm writes to confirmed_noc; og_confirm writes to
+  // confirmed_og). duties is a list, so we treat length > 0 as answered.
+  // Worst case on attacker-controlled localStorage: advisor lands on the
+  // wrong step (T-26-04 mitigation — non-destructive).
+  const [stepIndex, setStepIndex] = useState(() => {
+    try {
+      const raw = localStorage.getItem('jd-builder-v2-record');
+      if (!raw) return 0;
+      const rec = JSON.parse(raw);
+      const STEP_RECORD_KEY = {
+        title: 'title', branch: 'branch', reports: 'reports',
+        reports_to_military: 'reports_to_military', supervises: 'supervises',
+        summary: 'summary', qb_work_output_type: 'qb_work_output_type',
+        qb_work_audience: 'qb_work_audience',
+        qb_knowledge_specialization: 'qb_knowledge_specialization',
+        qb_policy_interpretation: 'qb_policy_interpretation',
+        qb_sector_gate: 'qb_sector_gate',
+        qb_health_social_cluster: 'qb_health_social_cluster',
+        qb_legal_cluster: 'qb_legal_cluster',
+        qb_technical_cluster: 'qb_technical_cluster',
+        qb_education_cluster: 'qb_education_cluster',
+        qb_programme_admin_cluster: 'qb_programme_admin_cluster',
+        noc_confirm: 'confirmed_noc',
+        og_confirm: 'confirmed_og',
+        og_level_questions: 'og_level_questions',
+        og_level: 'og_level',
+        org_context: 'org_context',
+        client_service_results: 'client_service_results',
+        duties: 'duties',
+        quals: 'quals',
+      };
+      const lastAnswered = STEPS.reduce((best, s, i) => {
+        const key = STEP_RECORD_KEY[s.id];
+        if (key === 'duties') {
+          return (rec[key] && rec[key].length > 0) ? i : best;
+        }
+        const answered = key && rec[key] !== undefined && rec[key] !== null;
+        return answered ? i : best;
+      }, -1);
+      return lastAnswered < 0 ? 0 : Math.min(lastAnswered + 1, STEPS.length - 1);
+    } catch { return 0; }
+  });
   const [draft, setDraft] = useState(() => initialAnswer(STEPS[0], {}));
   const [reviewing, setReviewing] = useState(false);
   const [editingReturn, setEditingReturn] = useState(false);
@@ -604,9 +655,15 @@ function App() {
   const SECTION_NAMES = {
     id: 'Position Identification',
     ov: 'Position Overview',
+    // Phase 26 (ORG-02): new section keys surfaced in the document preview
+    // Secs (org_context + client_service_results). Used by the amendment
+    // toast ("Note saved for Organizational Context.") — same pattern as
+    // the existing id/ov/du/cls/q/drf entries.
+    org_ctx: 'Organizational Context',
+    csr: 'Client Service Results',
     du: 'Key Responsibilities',
     cls: 'Classification & Evaluation',
-    q: 'Essential Qualifications',
+    q: 'Essential Qualification',
     drf: 'Defence Results Linkage',
   };
   function handleAmendSave(sectionKey, text) {

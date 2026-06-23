@@ -146,7 +146,7 @@ class WDPatchRequest(BaseModel):
     jes_total_points: Optional[int] = None
     duties: Optional[list[dict]] = None
     qualification: Optional[dict] = None
-
+    org_context: Optional[str] = Field(default=None, max_length=4000)  # Phase 26 — ORG-01 co-update; max_length per ASVS V5 DoS mitigation
 
 @router.post("/wd", status_code=201)
 async def create_wd(body: WDCreateRequest) -> dict:
