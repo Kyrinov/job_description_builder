@@ -66,16 +66,22 @@ def _og_code_from_group_level(group_level: str) -> tuple[str, int]:
       - "EN-ENG-NN"  -> ("EN", NN)
     Default: take the part before the first "-" as the OG code, the part
     after the last "-" as the integer level. Falls back to (string, 1) for
-    unparseable inputs (defensive).
+    unparseable inputs (defensive) so a malformed Group Level cell in the
+    SJD source file never crashes the backend at import time.
     """
     gl = group_level.strip()
-    if gl.startswith("CT-FIN-"):
-        return ("FI", int(gl.split("-")[-1]))
-    if gl.startswith("EN-ENG-"):
-        return ("EN", int(gl.split("-")[-1]))
-    parts = gl.split("-")
-    if len(parts) >= 2:
-        return (parts[0], int(parts[-1]))
+    try:
+        if gl.startswith("CT-FIN-"):
+            return ("FI", int(gl.split("-")[-1]))
+        if gl.startswith("EN-ENG-"):
+            return ("EN", int(gl.split("-")[-1]))
+        parts = gl.split("-")
+        if len(parts) >= 2:
+            return (parts[0], int(parts[-1]))
+    except ValueError:
+        # Non-numeric level suffix (e.g. "AS-pending") — honor the
+        # documented defensive contract instead of crashing on import.
+        pass
     return (gl, 1)
 
 
@@ -95,14 +101,13 @@ def _parse_sjd_file(path: pathlib.Path) -> list[SJDEntry]:
 
     The file format is a tab-delimited key-value stream with one blank line
     between entries. Multi-line `Organizational Context` fields continue onto
-    subsequent non-tab lines until the next key-value pair or blank line —
-    those continuation lines are not captured by this simple parser (the
-    `Organizational Context` column on each entry is left empty when the
-    value spans multiple physical lines). SJD_LIBRARY consumers do not
-    currently require the full context text.
+    subsequent non-tab lines until the next tab-delimited key or blank line —
+    those continuation lines are accumulated onto the most-recent key so the
+    full context text is preserved for the SJD browser preview.
     """
     entries: list[SJDEntry] = []
     current: dict[str, str] = {}
+    last_key: str | None = None
 
     with open(path, encoding="utf-8") as f:
         for raw_line in f:
@@ -113,10 +118,13 @@ def _parse_sjd_file(path: pathlib.Path) -> list[SJDEntry]:
                 if current.get("SJD Number"):
                     entries.append(_make_entry(current))
                 current = {}
+                last_key = None
                 continue
             if "\t" not in line:
                 # Continuation of a multi-line field (e.g. Organizational
-                # Context) — silently drop. See docstring.
+                # Context) — append to the most-recent key.
+                if last_key is not None and last_key in current:
+                    current[last_key] = (current[last_key] + "\n" + line.strip()).strip()
                 continue
             key, _, val = line.partition("\t")
             key = key.strip()
@@ -126,6 +134,7 @@ def _parse_sjd_file(path: pathlib.Path) -> list[SJDEntry]:
             # canonical occurrence (first one).
             if key and key not in current:
                 current[key] = val
+                last_key = key
 
     # Flush the final entry (file may not end with a blank line).
     if current.get("SJD Number"):
