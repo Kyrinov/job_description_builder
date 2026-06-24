@@ -116,6 +116,10 @@ async def map_work_description(
             model=settings.ollama_embed_model,
             input=work_description,
         )
+        if not embed_resp.embeddings:
+            raise ValueError(
+                "Embedding model returned no vectors — cannot rerank NOC candidates"
+            )
         query_vec: list[float] = embed_resp.embeddings[0]
 
         fts_codes = [row["noc_code"] for row in fts_rows]
