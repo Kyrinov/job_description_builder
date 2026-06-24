@@ -25,6 +25,9 @@ const FLASH = {
   // 'org_ctx' and 'csr' map to the new SECTION_NAMES entries below.
   org_context: 'org_ctx',
   client_service_results: 'csr',
+  // Phase 27 (RESP-02): flash key for the new Responsibilities Sec
+  // (rendered above Key Responsibilities in document.jsx).
+  responsibilities_narrative: 'resp_narrative',
   duties: 'duties', quals: 'quals',
 };
 
@@ -114,6 +117,12 @@ function App() {
         og_level: 'og_level',
         org_context: 'org_context',
         client_service_results: 'client_service_results',
+        // Phase 27 (RESP-01): responsibilities_narrative is a typed root
+        // field on WorkDescription; its record key is the same as its
+        // step id (apply writes to record.responsibilities_narrative).
+        // stepIndex resume-by-last-answered inherits this entry for free
+        // — STEPS.reduce walks STEP_RECORD_KEY[s.id] to find last answered.
+        responsibilities_narrative: 'responsibilities_narrative',
         duties: 'duties',
         quals: 'quals',
       };
@@ -297,7 +306,8 @@ function App() {
       step_index: stepIndex,
     };
     ['confirmed_noc', 'confirmed_og', 'og_level', 'reports_to_military',
-     'jes_scores', 'jes_total_points', 'org_context'].forEach(k => {
+     'jes_scores', 'jes_total_points', 'org_context',
+     'responsibilities_narrative'].forEach(k => {
       if (k in newRecord) wdPayload[k] = newRecord[k];
     });
     // Persist duties with provenance when committing the duties step (JD-02)
@@ -661,6 +671,10 @@ function App() {
     // the existing id/ov/du/cls/q/drf entries.
     org_ctx: 'Organizational Context',
     csr: 'Client Service Results',
+    // Phase 27 (RESP-02): 'Responsibilities' title for the new Sec — same
+    // title string used by the document.jsx Responsibilities Sec and by
+    // the amendment toast ("Note saved for Responsibilities.").
+    resp_narrative: 'Responsibilities',
     du: 'Key Responsibilities',
     cls: 'Classification & Evaluation',
     q: 'Essential Qualification',

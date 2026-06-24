@@ -678,10 +678,26 @@ const I = {
     /* ----- Phase 3: Duties ----- */
     { id: 'duties', phase: 3, icon: I.list,
       q: 'Here are the responsibilities managers usually pick for a role like this.',
-      helper: 'Tick the ones that fit, and add anything in your own words — we\u2019ll phrase them formally for you.',
+      helper: 'Tick the ones that fit, and add anything in your own words — we’ll phrase them formally for you.',
       input: { type: 'duties' },
       apply: (r, a) => ({ duties: a }),
       transcript: a => `${a.length} ${a.length === 1 ? 'responsibility' : 'responsibilities'}` },
+
+    /* Phase 27 (RESP-01): free-text responsibilities narrative step. Sits
+       at phase 3 immediately AFTER duties and BEFORE quals so the
+       conversation reads as Duties → Responsibilities narrative →
+       Qualifications. Single free-text textarea (RESP-01 wording is
+       explicit "free-text") — no new component needed; the existing
+       'textarea' input type already drives StepInput, answerValid, and
+       initialAnswer. apply() writes the assembled string to
+       record.responsibilities_narrative, which is the typed root field
+       on WorkDescription consumed by export_service.py. */
+    { id: 'responsibilities_narrative', phase: 3, icon: I.flag,
+      q: 'Describe the position’s key responsibilities and impact in your own words.',
+      helper: 'This narrative appears in the Responsibilities section of the job description. Write a few sentences covering what the role is accountable for and the scope of its impact.',
+      input: { type: 'textarea', placeholder: 'e.g. Leads the development of environmental policy; advises senior leadership on regulatory options; represents the department with central agencies.' },
+      apply: (r, a) => ({ responsibilities_narrative: a }),
+      transcript: a => a ? a.slice(0, 60) + (a.length > 60 ? '...' : '') : 'Pending' },
 
     /* ----- Phase 4: Qualifications ----- */
     { id: 'quals', phase: 4, icon: I.cap,

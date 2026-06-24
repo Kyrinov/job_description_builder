@@ -180,3 +180,19 @@ describe('Phase 26: org_context and CSR sections', () => {
     expect(screen.getByText('Client Service Results')).toBeTruthy(); // RED: Sec not in document.jsx yet
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 27 — RESP-02: Responsibilities section renders when
+// record.responsibilities_narrative is set (conditional Sec above Key
+// Responsibilities, dynamic n++).
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('Phase 27: responsibilities_narrative section', () => {
+  it('renders Responsibilities section when record.responsibilities_narrative is set', () => {
+    // Plan 27-01 Task 2: Responsibilities Sec rendered conditionally in
+    // DocumentPane above Key Responsibilities. Sourced from advisor's
+    // free-text responsibilities_narrative (RESP-02).
+    render(<DocumentPane record={{ responsibilities_narrative: 'Owns the environmental policy portfolio.' }} cls={null} flashes={new Set()} reviewing={false} onEditStep={() => {}} onJesOverride={() => {}} />);
+    expect(screen.getByText('Responsibilities')).toBeTruthy(); // RED: Sec not in document.jsx yet
+  });
+});

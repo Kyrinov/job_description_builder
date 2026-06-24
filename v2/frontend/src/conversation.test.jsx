@@ -427,16 +427,17 @@ describe('OGX-04: sector-gate + cluster questions gated by sector answer', () =>
     expect(visibleIds).not.toContain('qb_education_cluster');
   });
 
-  it('getVisibleSteps omits all cluster steps when no sector answer (23 - 9 = 14)', () => {
+  it('getVisibleSteps omits all cluster steps when no sector answer (24 - 9 = 15)', () => {
     // Phase 21 Plan 07: the 4 legacy work-type questions + the 4 cluster
     // questions + qb_programme_admin_cluster are all gated on the sector
     // answer. With no sector answer, all 9 of those are hidden. The 5
     // role + summary + sector + 4 post-cluster steps (noc/og/level/duties/quals)
-    // remain visible. Plus the Phase 23 client_service_results step and the
-    // Phase 26 org_context step (both unconditional).
-    // Total 14 = 23 - 9 gated. (Was 13 = 22 - 9 before Phase 26 added org_context.)
+    // remain visible. Plus the Phase 23 client_service_results step, the
+    // Phase 26 org_context step, and the Phase 27 responsibilities_narrative
+    // step (all three unconditional).
+    // Total 15 = 24 - 9 gated. (Was 14 = 23 - 9 before Phase 27 added responsibilities_narrative.)
     const visible = getVisibleSteps(STEPS, {});
-    expect(visible.length).toBe(14);
+    expect(visible.length).toBe(15);
     const visibleIds = visible.map(s => s.id);
     expect(visibleIds).not.toContain('qb_work_output_type');
     expect(visibleIds).not.toContain('qb_work_audience');
@@ -628,6 +629,35 @@ describe('Phase 26: OrgContextInput component', () => {
     expect(onChange).toHaveBeenCalledWith(expect.stringContaining('Strategic Policy program'));
   });
 
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 27 — RESP-01/02: STEPS responsibilities_narrative step shape
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('Phase 27: responsibilities_narrative step in STEPS', () => {
+  it('STEPS contains responsibilities_narrative step with phase 3 and type textarea', () => {
+    // Plan 27-01 Task 2: free-text responsibilities_narrative step inserted
+    // AFTER duties and BEFORE quals in STEPS. Single free-text textarea —
+    // no new component (mirrors Phase 26 simplification: RESP-01 wording is
+    // explicit "free-text", unlike the 4-part org_context assembly).
+    const step = STEPS.find(s => s.id === 'responsibilities_narrative');
+    expect(step).toBeDefined();                        // RED: step not in STEPS yet
+    expect(step.phase).toBe(3);
+    expect(step.input.type).toBe('textarea');
+  });
+
+  it('responsibilities_narrative step is positioned AFTER duties and BEFORE quals', () => {
+    // Phase 27 SPECIFIC: the step must sit between duties and quals so the
+    // conversation reads as Duties → Responsibilities narrative → Qualifications.
+    const dutiesIdx = STEPS.findIndex(s => s.id === 'duties');
+    const respIdx = STEPS.findIndex(s => s.id === 'responsibilities_narrative');
+    const qualsIdx = STEPS.findIndex(s => s.id === 'quals');
+    expect(dutiesIdx).toBeGreaterThanOrEqual(0);
+    expect(qualsIdx).toBeGreaterThanOrEqual(0);
+    expect(respIdx).toBeGreaterThan(dutiesIdx);
+    expect(respIdx).toBeLessThan(qualsIdx);
+  });
 });
 
   afterEach(() => { vi.restoreAllMocks(); });

@@ -338,8 +338,32 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
     );
   }
 
+  // 3c — Responsibilities narrative (Phase 27 — RESP-02).
+  // Renders above Key Responsibilities (key="du") when the advisor has
+  // populated record.responsibilities_narrative via the new Socratic
+  // step. Section number n is incremented conditionally so the downstream
+  // Classification / Qualifications / DRF sections renumber correctly
+  // when this section is hidden (responsibilities_narrative is null).
+  // Mirrors the org_ctx / csr Sec template exactly.
+  if (r.responsibilities_narrative) {
+    n++;
+    sections.push(
+      <Sec
+        key="resp_narrative" n={String(n)} title="Responsibilities"
+        src="Advisor-provided" fresh={isFresh('responsibilities_narrative')}
+        editable={reviewing} onEdit={() => onEditStep('responsibilities_narrative')}
+        sectionKey="resp_narrative" reviewing={reviewing}
+        amendmentNote={amendmentNotes?.resp_narrative}
+        amendmentPanel={amendmentPanels?.resp_narrative}
+        onAmendToggle={onAmendToggle} onAmendSave={onAmendSave}
+      >
+        <p className="prose">{r.responsibilities_narrative}</p>
+      </Sec>
+    );
+  }
+
   // Key Responsibilities (always rendered; renumbers dynamically when the
-  // optional org_context / csr Secs above are present)
+  // optional org_context / csr / resp_narrative Secs above are present)
   n++;
   sections.push(
     <Sec
