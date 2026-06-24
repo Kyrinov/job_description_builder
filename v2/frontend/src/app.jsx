@@ -992,6 +992,11 @@ return (
               onRunAudit={handleRunAudit}
               onAuditDecide={handleAuditDecide}
               completeness={completeness}
+              // Phase 28 (MGR-02): thread userRole so ReviewState can hide
+              // the "Classified as" checklist line + the entire compliance
+              // audit panel in manager mode. Default 'advisor' is enforced
+              // by ReviewState's signature — the prop is additive.
+              userRole={userRole}
             />
           : (
             <div className="thread" ref={threadRef}>
@@ -1045,7 +1050,10 @@ return (
             {reviewing ? 'Final document' : 'Building live'}
           </div>
           <div className="preview__spacer" />
-          <ClassifyBadge cls={cls} />
+          {/* Phase 28 (MGR-02): ClassifyBadge is HIDDEN in manager mode.
+              The badge exposes the OG group code (e.g. "EC") and confidence
+              ring — classification internals the manager must never see. */}
+          {userRole !== 'manager' && <ClassifyBadge cls={cls} />}
         </div>
         <div className="doc-scroll" ref={docRef}>
           <DocumentPane
@@ -1054,6 +1062,11 @@ return (
             onJesOverride={handleJesOverride}
             amendmentNotes={amendmentNotes} amendmentPanels={amendmentPanels}
             onAmendToggle={handleAmendToggle} onAmendSave={handleAmendSave}
+            // Phase 28 (MGR-02): thread userRole so DocumentPane can show
+            // the classification-team placeholder in the Classification Sec
+            // (instead of the OG code / JES scorecard) and suppress the
+            // CAF rank advisory in the Position Identification Sec.
+            userRole={userRole}
           />
         </div>
       </div>

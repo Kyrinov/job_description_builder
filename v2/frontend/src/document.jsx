@@ -232,7 +232,8 @@ function metaItem(k, v, strong) {
 }
 
 function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOverride,
-                        amendmentNotes, amendmentPanels, onAmendToggle, onAmendSave }) {
+                        amendmentNotes, amendmentPanels, onAmendToggle, onAmendSave,
+                        userRole = 'advisor' }) {
   const safeCls = cls || {};
   const overview = buildOverview(r);
   const hasDuties = r.duties && r.duties.length;
@@ -245,9 +246,16 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
   n++;
   // Classification value (for the metaItem): prefer the v2.0 evidence-based
   // confirmed_og + og_level over the legacy workType-based cls object.
-  const classificationValue = r.confirmed_og && r.og_level
-    ? `${r.confirmed_og.og_code}-${r.og_level < 10 ? '0' + r.og_level : r.og_level}`
-    : (safeCls.code || (safeCls.group ? safeCls.group + ' group' : null));
+  //
+  // Phase 28 (MGR-02): in manager mode the Classification metaItem must NOT
+  // show the OG code (e.g. "EC-04") — managers never see classification
+  // internals. Show a generic "To be completed" placeholder that signals the
+  // classification team will fill it in.
+  const classificationValue = (userRole === 'manager')
+    ? 'To be completed'
+    : (r.confirmed_og && r.og_level
+        ? `${r.confirmed_og.og_code}-${r.og_level < 10 ? '0' + r.og_level : r.og_level}`
+        : (safeCls.code || (safeCls.group ? safeCls.group + ' group' : null)));
   sections.push(
     <Sec
       key="id" n={'—'} title="Position Identification"
@@ -259,12 +267,14 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
     >
       <div className="doc__meta" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
         {metaItem('Position title', r.title)}
-        {metaItem('Classification', classificationValue, !!(r.confirmed_og && r.og_level))}
+        {metaItem('Classification', classificationValue, userRole !== 'manager' && !!(r.confirmed_og && r.og_level))}
         {metaItem('Branch / directorate', r.branch)}
         {metaItem('Reports to', r.reports)}
       </div>
-      {/* CLASS-05: CAF rank advisory — only when reports_to_military = true and OG confirmed */}
-      {r.reports_to_military && r.confirmed_og && r.og_level && (
+      {/* CLASS-05: CAF rank advisory — only when reports_to_military = true and OG confirmed.
+          Phase 28 (MGR-02): hidden in manager mode — CAF rank equivalence is
+          classification-internal (manager has no need to see the rank mapping). */}
+      {userRole !== 'manager' && r.reports_to_military && r.confirmed_og && r.og_level && (
         <div className="caf-advisory">
           <span className="caf-advisory__label">
             CAF Rank Equivalent (advisory — not authoritative):
@@ -402,8 +412,29 @@ function DocumentPane({ record: r, cls, flashes, reviewing, onEditStep, onJesOve
   // 4 — Classification & evaluation (CLASS-04 frontend gate)
   // Always render this section. "Classification pending" when confirmed_og or
   // og_level is null; resolved content when both are set.
+  //
+  // Phase 28 (MGR-02): manager mode never shows classification internals
+  // (OG code, JES factor names, JES scorecard). The branch is FIRST so
+  // manager mode never reaches the OG-code / JES-scorecard render path.
+  // The placeholder text makes clear that classification is the
+  // classification team's job, not the manager's.
   n++;
-  if (!r.confirmed_og || !r.og_level) {
+  if (userRole === 'manager') {
+    sections.push(
+      <Sec
+        key="cls" n={String(n)} title="Classification & Evaluation"
+        src="To be completed by classification team"
+        editable={false} reviewing={reviewing}
+        sectionKey="cls"
+        amendmentNote={amendmentNotes?.cls} amendmentPanel={amendmentPanels?.cls}
+        onAmendToggle={onAmendToggle} onAmendSave={onAmendSave}
+      >
+        <p className="sec__pending">
+          Classification pending — to be completed by the classification team.
+        </p>
+      </Sec>
+    );
+  } else if (!r.confirmed_og || !r.og_level) {
     sections.push(
       <Sec
         key="cls" n={String(n)} title="Classification & Evaluation"

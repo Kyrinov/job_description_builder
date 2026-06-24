@@ -186,11 +186,17 @@ function FindingCard({ finding, onAuditDecide }) {
 /* completion / review state */
 function ReviewState({ record, cls, onExport, onRestart, amendmentNotes = {},
                        auditFindings = [], auditRunning = false, auditRan = false,
-                       onRunAudit, onAuditDecide, completeness = null }) {
+                       onRunAudit, onAuditDecide, completeness = null,
+                       userRole = 'advisor' }) {
   const dutyCount = (record.duties || []).length;
+  // Phase 28 (MGR-02): in manager mode, the "Classified as {code} · {points}
+  // pts" checklist line is HIDDEN — it exposes classification internals (OG
+  // code + JES total points) to the manager. Build the checks array
+  // conditionally: manager mode gets 4 lines (no classification line);
+  // advisor mode gets the original 5 lines (regression guard).
   const checks = [
     ['Position identified', record.title],
-    [cls.code ? `Classified as ${cls.code} \u00b7 ${cls.points} pts` : 'Classified', cls.status === 'resolved'],
+    ...(userRole !== 'manager' ? [[cls.code ? `Classified as ${cls.code} \u00b7 ${cls.points} pts` : 'Classified', cls.status === 'resolved']] : []),
     [`${dutyCount} key ${dutyCount === 1 ? 'responsibility' : 'responsibilities'}, formally worded`, dutyCount > 0],
     [record.drf ? `Linked to: ${record.drf.cr}` : 'Defence result linked', !!record.drf],
     ['Essential qualifications set', !!record.qualsVisited]
@@ -249,41 +255,50 @@ function ReviewState({ record, cls, onExport, onRestart, amendmentNotes = {},
           </button>
         </div>
         {/* Phase 24 (AUDIT-01): Compliance audit — manual trigger only. Button
-            is disabled and shows "Auditing…" while the request is in flight. */}
-        <div className="audit-row" style={{ marginTop: '1rem' }}>
-          <button
-            className="btn--export"
-            onClick={onRunAudit}
-            disabled={auditRunning}
-            style={{ width: '100%' }}
-          >
-            {auditRunning ? 'Auditing\u2026' : 'Run compliance audit'}
-          </button>
-        </div>
+            is disabled and shows "Auditing…" while the request is in flight.
+            Phase 28 (MGR-02): the ENTIRE audit panel (button + findings) is
+            HIDDEN in manager mode. Managers do not run compliance audits
+            (the CBA citations are classification-internal). The conditional
+            wrap is OUTERMOST so the button, the clean-findings block, and
+            the findings list all share the same gate. */}
+        {userRole !== 'manager' && (
+          <>
+            <div className="audit-row" style={{ marginTop: '1rem' }}>
+              <button
+                className="btn--export"
+                onClick={onRunAudit}
+                disabled={auditRunning}
+                style={{ width: '100%' }}
+              >
+                {auditRunning ? 'Auditing\u2026' : 'Run compliance audit'}
+              </button>
+            </div>
 
-        {/* Phase 24 (AUDIT-01/04): Findings panel — hidden until audit runs.
-            Each finding shows severity, citation excerpt, recommendation, and
-            3 decision buttons. Manual Edit opens the existing Phase 19
-            amendment panel (AUDIT-05) via the onAuditDecide callback. */}
-        {auditRan && auditFindings.length === 0 && (
-          <div className="audit-findings audit-findings--clean" style={{ marginTop: '1rem' }}>
-            <h4 style={{ marginBottom: '0.5rem' }}>Compliance Findings</h4>
-            <p style={{ fontSize: '0.9rem', color: '#555' }}>
-              No outstanding compliance findings.
-            </p>
-          </div>
-        )}
-        {auditFindings.length > 0 && (
-          <div className="audit-findings" style={{ marginTop: '1rem' }}>
-            <h4 style={{ marginBottom: '0.5rem' }}>Compliance Findings</h4>
-            {auditFindings.map((finding, idx) => (
-              <FindingCard
-                key={finding.rule_id || idx}
-                finding={finding}
-                onAuditDecide={onAuditDecide}
-              />
-            ))}
-          </div>
+            {/* Phase 24 (AUDIT-01/04): Findings panel — hidden until audit runs.
+                Each finding shows severity, citation excerpt, recommendation,
+                and 3 decision buttons. Manual Edit opens the existing Phase 19
+                amendment panel (AUDIT-05) via the onAuditDecide callback. */}
+            {auditRan && auditFindings.length === 0 && (
+              <div className="audit-findings audit-findings--clean" style={{ marginTop: '1rem' }}>
+                <h4 style={{ marginBottom: '0.5rem' }}>Compliance Findings</h4>
+                <p style={{ fontSize: '0.9rem', color: '#555' }}>
+                  No outstanding compliance findings.
+                </p>
+              </div>
+            )}
+            {auditFindings.length > 0 && (
+              <div className="audit-findings" style={{ marginTop: '1rem' }}>
+                <h4 style={{ marginBottom: '0.5rem' }}>Compliance Findings</h4>
+                {auditFindings.map((finding, idx) => (
+                  <FindingCard
+                    key={finding.rule_id || idx}
+                    finding={finding}
+                    onAuditDecide={onAuditDecide}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         <button className="btn btn--ghost restart" onClick={onRestart} style={{ paddingLeft: 0 }}>← Start a new description</button>

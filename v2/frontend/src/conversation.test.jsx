@@ -971,3 +971,76 @@ describe('MGR-03: manager-track STEPS variant', () => {
     expect(implicit.map(s => s.id)).toEqual(explicitAdvisor.map(s => s.id));
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 28 — MGR-02: Manager-mode ReviewState UI suppression
+//
+// In manager mode, the ReviewState checklist must NOT show the "Classified as
+// {code} · {points} pts" line (which exposes classification internals to the
+// manager) and the entire compliance audit panel (button + findings) must be
+// hidden (managers do not run CBA audits). The advisor mode is unchanged.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('MGR-02: manager-mode ReviewState hides classification internals', () => {
+  const noop = () => {};
+
+  it('manager-mode ReviewState hides the "Classified as" checklist line', () => {
+    // Plan 28-02 Task 1: when userRole === 'manager', the checks array drops
+    // the "Classified as {code} · {points} pts" entry (the one referencing
+    // cls.code). The rendered checklist does NOT contain "Classified as".
+    const { container } = render(
+      <ReviewState
+        record={{ title: 'Test Position', duties: [{ id: 'd1', text: 'Develop software.' }] }}
+        cls={{ code: 'EC-04', points: 250, status: 'resolved' }}
+        onExport={noop}
+        onRestart={noop}
+        userRole="manager"
+      />
+    );
+    // The "Classified as EC-04 · 250 pts" string must NOT be present
+    expect(container.textContent).not.toMatch(/Classified as/);
+    // The "EC-04" classification string must NOT be present in the rendered DOM
+    expect(container.textContent).not.toMatch(/EC-04/);
+  });
+
+  it('manager-mode ReviewState hides the entire audit panel (button + findings)', () => {
+    // Plan 28-02 Task 1: in manager mode, the ENTIRE audit panel (the
+    // "Run compliance audit" button AND the findings list) is wrapped in a
+    // {userRole !== 'manager' && (...)} conditional. The "Run compliance audit"
+    // button is NOT present AND the "Compliance Findings" heading is NOT
+    // present even when auditRan=true and auditFindings are populated.
+    const { container, queryByText } = render(
+      <ReviewState
+        record={{ title: 'Test Position', duties: [{ id: 'd1', text: 'Develop software.' }] }}
+        cls={{ code: 'EC-04', points: 250, status: 'resolved' }}
+        onExport={noop}
+        onRestart={noop}
+        userRole="manager"
+        auditRan={true}
+        auditFindings={[{ rule_id: 'r1', section: 'du', citation: 'CBA article 32.01', severity: 'warning', recommendation: 'Review' }]}
+      />
+    );
+    // "Run compliance audit" button text must NOT be present
+    expect(queryByText(/Run compliance audit/)).toBeNull();
+    // "Compliance Findings" heading must NOT be present
+    expect(queryByText(/Compliance Findings/)).toBeNull();
+    // "CBA" citation must NOT leak into the rendered DOM
+    expect(container.textContent).not.toMatch(/CBA/);
+  });
+
+  it('advisor-mode ReviewState (no userRole) still shows the audit panel', () => {
+    // Regression guard: when userRole is not passed (or is 'advisor'), the
+    // existing "Run compliance audit" button IS present.
+    const { queryByText } = render(
+      <ReviewState
+        record={{ title: 'Test Position', duties: [{ id: 'd1', text: 'Develop software.' }] }}
+        cls={{ code: 'EC-04', points: 250, status: 'resolved' }}
+        onExport={noop}
+        onRestart={noop}
+        auditRan={true}
+      />
+    );
+    // "Run compliance audit" button text IS present in advisor mode
+    expect(queryByText(/Run compliance audit/)).toBeTruthy();
+  });
+});

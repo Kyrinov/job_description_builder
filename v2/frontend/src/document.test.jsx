@@ -196,3 +196,88 @@ describe('Phase 27: responsibilities_narrative section', () => {
     expect(screen.getByText('Responsibilities')).toBeTruthy(); // RED: Sec not in document.jsx yet
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 28 — MGR-02: Manager-mode UI suppression
+//
+// In manager mode, the DocumentPane must NEVER show OG codes, JES factor names,
+// or CBA clause references. The Classification & Evaluation Sec shows a
+// classification-team placeholder instead of the OG code / level / JES
+// scorecard. The advisor mode is unchanged (regression guard).
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('MGR-02: manager-mode DocumentPane shows classification-team placeholder', () => {
+  it('Classification Sec shows "to be completed by the classification team" in manager mode', () => {
+    // Plan 28-02 Task 1: when userRole === 'manager', the Classification &
+    // Evaluation Sec is short-circuited BEFORE the OG-code / JES-scorecard
+    // render path. The placeholder text makes clear that classification is
+    // the classification team's job, not the manager's.
+    const { container } = render(
+      <DocumentPane
+        record={{
+          confirmed_og: { og_code: 'EC', og_name: 'Economics' },
+          og_level: 4,
+          jes_total_points: 250,
+          jes_is_ec: true,
+          jes_scores: [{ factor_name: 'Decision making', degree: 3, points: 50 }],
+        }}
+        cls={null}
+        flashes={new Set()}
+        reviewing={false}
+        onEditStep={() => {}}
+        onJesOverride={() => {}}
+        userRole="manager"
+      />
+    );
+    // The classification-team placeholder must be present
+    expect(container.textContent).toMatch(/to be completed by the classification team/);
+    // The advisor-mode "Classification pending — confirm occupational group"
+    // text must NOT be present (we are showing the manager-specific placeholder)
+    expect(container.textContent).not.toMatch(/confirm occupational group and level/);
+  });
+
+  it('Classification Sec does NOT show the OG code or JES scorecard in manager mode', () => {
+    // Manager mode short-circuits BEFORE the resolved branch — no OG code
+    // (e.g. EC-04), no JES factor names ("Decision making"), no "Occupational
+    // group EC" rationale text in the rendered Classification Sec.
+    const { container } = render(
+      <DocumentPane
+        record={{
+          confirmed_og: { og_code: 'EC', og_name: 'Economics' },
+          og_level: 4,
+          jes_total_points: 250,
+          jes_is_ec: true,
+          jes_scores: [{ factor_name: 'Decision making', degree: 3, points: 50 }],
+        }}
+        cls={{ code: 'EC-04', points: 250, status: 'resolved' }}
+        flashes={new Set()}
+        reviewing={false}
+        onEditStep={() => {}}
+        onJesOverride={() => {}}
+        userRole="manager"
+      />
+    );
+    // No "EC-04" classification string in the rendered DOM
+    expect(container.textContent).not.toMatch(/EC-04/);
+    // No JES factor names in the rendered DOM
+    expect(container.textContent).not.toMatch(/Decision making/);
+  });
+
+  it('advisor-mode DocumentPane (no userRole) shows the existing "Classification pending" text', () => {
+    // Regression guard: when userRole is not passed (or is 'advisor'), the
+    // existing advisor pending branch is unchanged. The Classification Sec
+    // shows the existing "Classification pending — confirm occupational group
+    // and level to proceed." text for an advisor with no OG confirmed.
+    render(
+      <DocumentPane
+        record={{}}
+        cls={null}
+        flashes={new Set()}
+        reviewing={false}
+        onEditStep={() => {}}
+        onJesOverride={() => {}}
+      />
+    );
+    expect(screen.getByText(/Classification pending — confirm occupational group and level/)).toBeTruthy();
+  });
+});
