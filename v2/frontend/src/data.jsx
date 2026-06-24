@@ -708,22 +708,11 @@ const PHASES = ['Role', 'Work Type', 'Classification', 'Duties', 'Qualifications
     return r.json();
   }
 
-  /**
-   * Fetch a single SJD entry by sjd_number.
-   * @param {string} sjdNumber — e.g. "DND-EC-58355"
-   * @returns {Promise<Object>} SJDEntry dict
-   */
-  async function fetchSjdDetail(sjdNumber) {
-    const r = await fetch(`/api/sjd/${encodeURIComponent(sjdNumber)}`);
-    if (!r.ok) throw new Error(`fetchSjdDetail: HTTP ${r.status}`);
-    return r.json();
-  }
-
 export {
   I, STEPS, PHASES, OG_LEVELS, OG_DUTY_TIPS, DRF, WORK_TYPES, DUTY_SUGGESTIONS,
   QUAL_DEFAULT, QUAL_DEFAULTS, getQualDefault,
   EC_ELEMENTS, computeClassification, refineDuty, ecFactors,
   accumulateSignals, getDutySuggestions,
   isStepVisible, getVisibleSteps,
-  fetchSjds, fetchSjdDetail,
+  fetchSjds,
 };
