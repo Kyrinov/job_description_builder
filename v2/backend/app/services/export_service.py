@@ -342,7 +342,6 @@ def _build_wd_context(wd: WorkDescription, amendments: list[dict]) -> dict:
     scores = wd.jes_scores or []
     effort_factors = [s for s in scores if cat_map.get(s.get("factor_name", "")) == "Effort"]
     working_conditions_factors = [s for s in scores if cat_map.get(s.get("factor_name", "")) == "Conditions"]
-    responsibility_factors = [s for s in scores if cat_map.get(s.get("factor_name", "")) == "Responsibility"]
 
     # Placeholder convention: when a category has no factors, set the
     # corresponding placeholder to _ADVISOR_PLACEHOLDER; when factors are
@@ -351,13 +350,14 @@ def _build_wd_context(wd: WorkDescription, amendments: list[dict]) -> dict:
     effort_placeholder = "" if effort_factors else _ADVISOR_PLACEHOLDER
     wc_placeholder = "" if working_conditions_factors else _ADVISOR_PLACEHOLDER
 
-    if responsibility_factors:
-        responsibilities_text = "\n".join(
-            f"{s.get('factor_name')}: {s.get('rationale', '')}".rstrip(": ")
-            for s in responsibility_factors
-        )
-    else:
-        responsibilities_text = _ADVISOR_PLACEHOLDER
+    # Phase 27 (RESP-03 / R-RESP-03): the Part 2 Responsibility element is
+    # driven by the advisor-authored responsibilities_narrative typed
+    # field on WorkDescription. When empty, show the advisor placeholder
+    # (ROADMAP criterion #2) — NOT JES-derived responsibility factors and
+    # NOT a synthesized fallback. Verified safe: no existing test asserted
+    # the JES-derived responsibilities_text (only a docstring referenced
+    # it as the previous source).
+    responsibilities_text = (wd.responsibilities_narrative or "").strip() or _ADVISOR_PLACEHOLDER
 
     # Client service results — sourced from record.client_service_results
     # (captured by the conversation flow via the Writing Guide question

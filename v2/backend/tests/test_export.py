@@ -641,3 +641,45 @@ async def test_org_context_empty_string_falls_back(client, env_with_db):
     full_text = "\n".join(p.text for p in doc.paragraphs)
     assert "{{" not in full_text
     assert "organizational_context_text" not in full_text
+
+
+# ---------------------------------------------------------------------------
+# Phase 27 — RESP-03: RED baseline for responsibilities_narrative export priority
+# (R-RESP-03: DOCX Part 2 "Responsibility" content = wd.responsibilities_narrative
+#  when filled, else _ADVISOR_PLACEHOLDER. Replaces the JES-derived
+#  responsibilities_text block in _build_wd_context.)
+# ---------------------------------------------------------------------------
+
+async def test_responsibilities_narrative_in_export(client, env_with_db):
+    """RESP-03: When responsibilities_narrative is set, the typed value appears
+    in the DOCX Part 2 Responsibility section (asserts it is rendered — not
+    the JES-derived factor list)."""
+    wd_id = await _create_wd_ec(client)
+    patch_resp = await client.patch(
+        f"/api/wd/{wd_id}",
+        json={"responsibilities_narrative": "Owns the environmental policy portfolio and briefs senior leadership."},
+    )
+    assert patch_resp.status_code == 200
+
+    export_resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert export_resp.status_code == 200
+    doc = docx.Document(io.BytesIO(export_resp.content))
+    full_text = "\n".join(p.text for p in doc.paragraphs)
+    assert "Owns the environmental policy portfolio and briefs senior leadership." in full_text
+
+
+async def test_responsibilities_narrative_placeholder_in_export(client, env_with_db):
+    """RESP-03: When responsibilities_narrative is None/empty, the advisor
+    placeholder is rendered in the Part 2 Responsibility section — NOT
+    JES-derived factor text and NOT a {{template leak}}."""
+    wd_id = await _create_wd_ec(client)
+    # _create_wd_ec does NOT set responsibilities_narrative — stays None
+    export_resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert export_resp.status_code == 200
+    doc = docx.Document(io.BytesIO(export_resp.content))
+    full_text = "\n".join(p.text for p in doc.paragraphs)
+    # R-RESP-03: placeholder must appear when narrative is empty
+    assert "[To be completed by advisor]" in full_text
+    # No template leak
+    assert "{{" not in full_text
+    assert "responsibilities_text" not in full_text
