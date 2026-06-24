@@ -43,8 +43,8 @@ Declared values (must be multiples of 4):
 
 Exceptions:
 
-- `export-row` top margin: 26px (source: conversation.jsx `.export-row { margin-top: 26px }`). New JSON/CSV buttons join this same row — no extra margin introduced.
-- `.btn--export` padding: 12px 18px (existing; match exactly for visual alignment in the row).
+- `export-row` top margin: inherit from existing stylesheet (approx. 24–28px). Executor: match existing without change. New JSON/CSV buttons join this same row — no extra margin introduced.
+- `.btn--export` horizontal padding: inherit from existing stylesheet (approx. 16–20px). Executor: match existing without change for visual alignment in the row.
 - `.btn--export` icon size: 17px (existing; match for all four export buttons).
 
 Source: styles.css `.export-row`, `.btn--export` declarations.
@@ -56,9 +56,9 @@ Source: styles.css `.export-row`, `.btn--export` declarations.
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
 | Body | 15px | 400 | 1.55 |
-| Label / meta | 13.5px | 550 | 1.5 |
 | Button | 14.5px | 650 | 1 (single line) |
-| Mono badge | 9.5–11px | 600 | 1.25 |
+
+Inherited system weights not changed by this phase: 550 (label/meta at 13.5px), 600 (mono badge at 9.5–11px). Phase 29 new elements use only 400 and 650.
 
 Source: styles.css `.done-card__sub` (14px/1.55), `.btn` (14.5px/650), `.classify__state` (9.5px mono).
 
@@ -182,7 +182,7 @@ If inline SVG paths are difficult to render legibly at 17px, fall back to a gene
 - `aria-disabled="true"` during loading state alongside `disabled` attribute
 - `aria-live="polite"` region for toast notifications (existing `.toast` implementation already covers this — no change needed)
 - Tab order: JSON and CSV buttons follow Copy in DOM order; no `tabIndex` manipulation needed
-- Minimum touch target: 44×44px (the existing `.btn--export` at `padding: 12px 18px` with 14.5px text satisfies this at typical viewport widths)
+- Minimum touch target: 44×44px (the existing `.btn--export` at its inherited padding with 14.5px text satisfies this at typical viewport widths)
 
 ---
 
