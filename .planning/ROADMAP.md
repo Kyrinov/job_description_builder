@@ -65,7 +65,7 @@ v4.0 surfaces all 7 Part 2 sections of the TBS Accessible JD Template as a natur
 
 - [x] **Phase 26: Org Context Conversational Step** — Foundation phase: new org_context typed field on WorkDescription + WDPatchRequest (same-commit rule), 4-part Socratic step added to STEPS (with stepIndex regression fix before insertion), document preview rendering above Client Service Results, Accessible DOCX Part 2 export. (ORG-01, ORG-02, ORG-03) — **Complete: Plan 01 (Wave 0 RED baseline) + Plan 02 (Wave 1 GREEN) both done; 8/8 RED stubs GREEN; 153/153 backend + 65/65 frontend GREEN; ORG-01/02/03 closed**
 - [x] **Phase 27: Responsibilities Narrative + Completeness Audit** — Last new WD field (responsibilities_narrative + WDPatchRequest co-update), document preview section, Accessible DOCX export, POST /api/wd/{id}/validate-elements with 5-state matrix, Review phase completeness badge as soft gate with jump-to-fill navigation. (RESP-01, RESP-02, RESP-03, ELEM-01, ELEM-02, ELEM-03) (completed 2026-06-24)
-- [ ] **Phase 28: Manager-Track UX** — Role selector at app entry (jd-builder-v2-role localStorage key, never in WD model or answers dict), userRole state slice, conditional rendering suppressing OG/JES/CBA strings in manager mode, manager-track STEPS variant, require_og_confirmed bypass via wd_type field, DRAFT watermark on manager DOCX exports. (MGR-01, MGR-02, MGR-03) — **Plan 01 complete (Wave 1 MGR-01+MGR-03); Plan 02 next (Wave 2 MGR-02 UI suppression); 179 backend + 76 frontend GREEN**
+- [x] **Phase 28: Manager-Track UX** — Role selector at app entry (jd-builder-v2-role localStorage key, never in WD model or answers dict), userRole state slice, conditional rendering suppressing OG/JES/CBA strings in manager mode, manager-track STEPS variant, require_og_confirmed bypass via wd_type field, DRAFT watermark on manager DOCX exports. (MGR-01, MGR-02, MGR-03) — **Complete (Plans 01 + 02 done; MGR-01/02/03 all closed; 179 backend + 85 frontend GREEN; awaiting phase verification)**
 - [ ] **Phase 29: Structured Export + Enhanced Poster** — Shared build_seven_elements(wd) helper in export_service.py, POST /api/wd/{id}/export/json (7-element analytics JSON with provenance), POST /api/wd/{id}/export/csv (utf-8-sig DictWriter, one row per duty), SPA JSON + CSV download buttons, enhanced poster with "About the Organization" section, build_poster_template.py self-verify update. (SEXP-01, SEXP-02, SEXP-03, POST-01)
 
 **Coverage:** 16/16 v4.0 requirements mapped · 4 phases (26–29) · 0 unmapped · 0 orphans
@@ -282,8 +282,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 28-01-PLAN.md — Wave 1 Manager-track foundation vertical slice (MGR-01 + MGR-03): wd_type field co-update on WorkDescription + WDPatchRequest + WDCreateRequest, user_role rejection guard, require_og_confirmed bypass, DRAFT watermark, RoleSelector screen + userRole state, manager STEPS variant (skip noc_confirm/og_confirm/og_level_questions/og_level), wd_type in POST body, exportAs guard bypass
-- [ ] 28-02-PLAN.md — Wave 2 Manager-mode UI suppression (MGR-02): conditional ClassifyBadge/Classification Sec/ReviewState audit panel suppression + systematic MGR-02 inspection test suite (no OG codes, JES factor names, or CBA citations in manager-mode rendered output)
+- [x] 28-01-PLAN.md — Wave 1 Manager-track foundation vertical slice (MGR-01 + MGR-03): wd_type field co-update on WorkDescription + WDPatchRequest + WDCreateRequest, user_role rejection guard, require_og_confirmed bypass, DRAFT watermark, RoleSelector screen + userRole state, manager STEPS variant (skip noc_confirm/og_confirm/og_level_questions/og_level), wd_type in POST body, exportAs guard bypass
+- [x] 28-02-PLAN.md — Wave 2 Manager-mode UI suppression (MGR-02): conditional ClassifyBadge/Classification Sec/ReviewState audit panel suppression + systematic MGR-02 inspection test suite (no OG codes, JES factor names, or CBA citations in manager-mode rendered output)
 
 **UI hint**: yes
 
@@ -342,5 +342,5 @@ Plans:
 | 25. Accessible Template | v3.0 | 3/3 | Complete (pending UAT) | 2026-06-16 |
 | **26. Org Context Conversational Step** | **v4.0** | **2/2** | **Complete (Wave 0 RED + Wave 1 GREEN; 153 backend + 65 frontend GREEN; ORG-01/02/03 closed)** | — |
 | **27. Responsibilities Narrative + Completeness Audit** | **v4.0** | **0/2** | **Ready to execute** | — |
-| **28. Manager-Track UX** | **v4.0** | **1/2** | **Plan 01 complete (Wave 1 MGR-01+MGR-03); Plan 02 next (Wave 2 MGR-02 UI suppression)** | — |
+| **28. Manager-Track UX** | **v4.0** | **2/2** | **Complete (Plans 01 + 02 done; MGR-01/02/03 all closed; 179 backend + 85 frontend GREEN; awaiting phase verification)** | — |
 | **29. Structured Export + Enhanced Poster** | **v4.0** | **0/?** | **Not started** | — |

@@ -37,7 +37,7 @@
 ## Manager-Track UX (MGR) — 3 requirements
 
 - [x] **MGR-01** — A role selector screen precedes the conversation: "I am a classification advisor" / "I am a hiring manager"; selection is persisted to localStorage and does not modify the WD data model
-- [ ] **MGR-02** — Manager mode renders no OG codes, JES factor names, or CBA clause references in any user-visible text or UI label
+- [x] **MGR-02** — Manager mode renders no OG codes, JES factor names, or CBA clause references in any user-visible text or UI label
 - [x] **MGR-03** — Manager-track STEPS variant skips classification-internal steps (og_confirm, og_level, JES override); the manager's output is a draft JD for the classification team
 
 ---
@@ -92,7 +92,7 @@
 | ELEM-02 | Phase 27 | Complete |
 | ELEM-03 | Phase 27 | Complete |
 | MGR-01 | Phase 28 | Complete (Plan 28-01 — RoleSelector + userRole localStorage hydration + D-28-03 user_role drop guard test) |
-| MGR-02 | Phase 28 | Pending (Plan 28-02 — UI suppression layer) |
+| MGR-02 | Phase 28 | Complete (Plan 28-02 — ClassifyBadge / Classification Sec / ReviewState audit panel suppression + 3 MGR-02 inspection tests) |
 | MGR-03 | Phase 28 | Complete (Plan 28-01 — wd_type co-update + require_og_confirmed bypass + DRAFT watermark + MANAGER_SKIP_STEPS filter) |
 | SEXP-01 | Phase 29 | Pending |
 | SEXP-02 | Phase 29 | Pending |

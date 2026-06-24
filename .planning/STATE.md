@@ -4,21 +4,21 @@ milestone: v4.0
 milestone_name: Seven-Elements Conversational Architecture
 current_phase: 28
 status: executing
-last_updated: "2026-06-24T17:51:03.000Z"
+last_updated: "2026-06-24T18:04:00.000Z"
 progress:
   total_phases: 9
   completed_phases: 7
   total_plans: 31
-  completed_plans: 29
-  percent: 94
+  completed_plans: 30
+  percent: 97
 ---
 
 # Project State
 
-**Status:** Executing Phase 28 (Plan 01 complete; Plan 02 next)
+**Status:** Executing Phase 28 (Plans 01 + 02 complete; awaiting phase verification)
 **Current phase:** 28
 **Last updated:** 2026-06-24
-**Next action:** `/gsd-execute-phase 28` Plan 02 (Wave 2 MGR-02 UI suppression — ClassifyBadge / Classification Sec / ReviewState audit panel suppression + systematic MGR-02 inspection test suite)
+**Next action:** Phase 28 verification by orchestrator (Plan 02 complete; MGR-01/02/03 all closed)
 
 ---
 
@@ -33,7 +33,7 @@ progress:
 | 25 | Accessible Template | Complete (3 plans); 19/19 test_export.py + 150/150 full backend suite green; wd_accessible_template.docx live (37,872 bytes, 3 tables, 14 headings, 7 Part 2 subsections); TBS template + build script retired; poster unchanged; ACC-01/02/03/04 closed; pending 9-step human UAT |
 | 26 | Org Context Conversational Step | **Complete** — Plan 01 (Wave 0 RED baseline) + Plan 02 (Wave 1 GREEN) both done; 8/8 RED stubs GREEN; 153/153 backend + 65/65 frontend GREEN; ORG-01/02/03 closed |
 | 27 | Responsibilities Narrative + Completeness Audit | Complete (Plan 01 RESP vertical slice + Plan 02 ELEM completeness audit); 172 backend + 70 frontend GREEN; RESP-01/02/03 + ELEM-01/02/03 closed |
-| 28 | Manager-Track UX | Plan 01 complete (Wave 1 MGR-01 + MGR-03); Plan 02 next (Wave 2 MGR-02 UI suppression); 179 backend + 76 frontend GREEN; MGR-01/03 closed |
+| 28 | Manager-Track UX | Plan 01 + Plan 02 both complete (MGR-01 + MGR-02 + MGR-03 all closed); 179 backend + 85 frontend GREEN; awaiting phase verification |
 | 29 | Structured Export + Enhanced Poster | Not started |
 
 ---
@@ -249,3 +249,13 @@ None. v3.0 complete (Phase 25 done). v4.0 roadmap ready. Phase 26 unblocked.
 - Deviations: 4 Rule 1/2/3 auto-fixes — (1) userRole useState moved BEFORE stepIndex (TDZ constraint — lazy initializer closes over userRole for manager-skip guard in resume reduce), (2) resetStorage() now calls globalThis.localStorage.clear() instead of _store.clear() (vitest.setup.js installs its own InMemoryStorage with a different closure-bound _store; the test file's _store was unused), (3) manager-shorter test assertion relaxed to `toBeLessThan` with explicit spot-checks on the 3 NEW skips (og_level_questions is already hidden by the level-description gate when answers.og_confirm is empty, so manager mode adds 3 not 4), (4) seeded jd-builder-v2-role='advisor' in 5 existing test setups (more than anticipated by plan)
 - MGR-01 + MGR-03 marked complete in REQUIREMENTS.md (Plan 01 delivers user-visible functionality: role selector, manager STEPS variant, manager DOCX export without 409); MGR-02 stays Pending (Plan 02 scope — UI suppression layer)
 - Phase 28 Plan 02 (Wave 2 MGR-02) is unblocked — will reuse userRole state slice, record.wd_type, and MANAGER_SKIP_STEPS for conditional ClassifyBadge / Classification Sec / ReviewState audit panel rendering
+
+**Completed Plan:** 28 Plan 02 (Manager-Mode UI Suppression — MGR-02) — 2026-06-24T18:04Z
+
+- 2 atomic task commits (strict TDD-within-task sequence):
+  - Task 1 (`4090f38` feat): MGR-02 UI suppression — `userRole = 'advisor'` added to DocumentPane + ReviewState signatures (10th + 11th additive prop, preserves all 76 pre-existing advisor-mode call sites); DocumentPane Classification Sec gets a new `if (userRole === 'manager')` branch placed FIRST (before the existing `!r.confirmed_og || !r.og_level` check) that pushes a Sec with src="To be completed by classification team" + a classification-team placeholder body; Position Identification Sec's `classificationValue` becomes `'To be completed'` literal in manager mode + CAF rank advisory wrapped in `{userRole !== 'manager' && (...)}` (both are classification internals); ReviewState `checks` array built with conditional spread (manager mode drops the "Classified as {code} · {points} pts" line entirely); entire audit panel (button + clean-findings + findings list) wrapped in `{userRole !== 'manager' && (<>...</>)}` fragment; ClassifyBadge gated at app.jsx call site with `{userRole !== 'manager' && <ClassifyBadge cls={cls} />}` (component itself stays role-agnostic)
+  - Task 2 (`b6e6071` feat): MGR-02 systematic inspection tests — 3 new tests (2 DocumentPane + 1 ReviewState) render a fully-populated record (confirmed_og=EC, og_level=4, jes_total_points=250, jes_scores with Decision making + Knowledge of specialized fields) in manager mode and assert ABSENCE of every known classification string (OG code, JES factor names, "Classified as", "Occupational group", "CBA", "article 32.01", "Run compliance audit", "Compliance Findings"). Tests turn GREEN immediately because Task 1 suppression layer is in place; the tests LOCK the MGR-02 contract against any future regression
+- Tests: 179 backend GREEN (unchanged from Plan 01) + 85 frontend GREEN (76 pre-Plan-28 + 6 Plan 01 + 3 DocumentPane MGR-02 + 3 ReviewState MGR-02 + 3 MGR-02 inspection); 9 new tests in Plan 02 (4 RED stubs + 2 advisor regression guards + 3 inspection tests)
+- Deviations: 1 Rule 2 auto-fix — Position Identification Sec's Classification metaItem also gated in manager mode (initial Task 1 implementation only suppressed the Classification & Evaluation Sec; the inspection test "no OG-code classification string" caught the second surface — the metaItem was rendering "EC-04" in the position metadata table). Fixed by extending the manager branch in DocumentPane to cover both surfaces (Classification Sec + Position Identification Sec metaItem + CAF rank advisory wrap)
+- MGR-02 marked complete in REQUIREMENTS.md (Plan 02 delivers user-visible functionality: manager-mode UI never shows OG codes, JES factor names, or CBA citations — locked by automated inspection tests)
+- Phase 28 is structurally complete (Plans 01 + 02 both done; MGR-01/02/03 all closed). Phase 29 (Structured Export + Enhanced Poster) is unblocked — will reuse the userRole conditional render pattern (Manager-mode JSON/CSV exports will be similarly filtered) and the MGR-02 inspection test pattern (any new visible UI element that could leak classification internals should add a corresponding `not.toMatch` assertion)
