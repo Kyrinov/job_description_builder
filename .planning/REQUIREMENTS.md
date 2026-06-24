@@ -20,17 +20,17 @@
 
 ## Responsibilities Narrative (RESP) — 3 requirements
 
-- [ ] **RESP-01** — User can enter a free-text responsibilities narrative (available on all positions, not gated on supervisory flag); stored as `responsibilities_narrative: Optional[str]` on WorkDescription; `WDPatchRequest` updated in the same commit
-- [ ] **RESP-02** — Responsibilities narrative renders as its own section in the document live preview
-- [ ] **RESP-03** — Responsibilities narrative populates the Part 2 Responsibilities section of the Accessible JD DOCX export
+- [x] **RESP-01** — User can enter a free-text responsibilities narrative (available on all positions, not gated on supervisory flag); stored as `responsibilities_narrative: Optional[str]` on WorkDescription; `WDPatchRequest` updated in the same commit
+- [x] **RESP-02** — Responsibilities narrative renders as its own section in the document live preview
+- [x] **RESP-03** — Responsibilities narrative populates the Part 2 Responsibilities section of the Accessible JD DOCX export
 
 ---
 
 ## Seven-Elements Completeness Audit (ELEM) — 3 requirements
 
-- [ ] **ELEM-01** — `POST /api/wd/{id}/validate-elements` returns per-element status (populated / derived / missing) for all 7 Part 2 elements; JES-derived Effort and Working Conditions show as "derived" not "missing"; Responsibilities shows as "not_applicable" only when no text is provided (field is open to all positions)
-- [ ] **ELEM-02** — Review phase displays a completeness badge showing how many of the 7 elements are populated or derived (soft gate — advisor must acknowledge, not blocked from export)
-- [ ] **ELEM-03** — Structured data export (JSON and CSV) includes per-element completeness status alongside element values
+- [x] **ELEM-01** — `POST /api/wd/{id}/validate-elements` returns per-element status (populated / derived / missing) for all 7 Part 2 elements; JES-derived Effort and Working Conditions show as "derived" not "missing"; Responsibilities shows as "not_applicable" only when no text is provided (field is open to all positions)
+- [x] **ELEM-02** — Review phase displays a completeness badge showing how many of the 7 elements are populated or derived (soft gate — advisor must acknowledge, not blocked from export)
+- [x] **ELEM-03** — Structured data export (JSON and CSV) includes per-element completeness status alongside element values
 
 ---
 
@@ -85,12 +85,12 @@
 | ORG-01 | Phase 26 | Complete (Plan 26-02 — co-update + 4-part step + stepIndex resume) |
 | ORG-02 | Phase 26 | Complete (Plan 26-02 — DocumentPane org_ctx + csr Secs) |
 | ORG-03 | Phase 26 | Complete (Plan 26-02 — export_service priority over synthesized fallback) |
-| RESP-01 | Phase 27 | Pending |
-| RESP-02 | Phase 27 | Pending |
-| RESP-03 | Phase 27 | Pending |
-| ELEM-01 | Phase 27 | Pending |
-| ELEM-02 | Phase 27 | Pending |
-| ELEM-03 | Phase 27 | Pending |
+| RESP-01 | Phase 27 | Complete |
+| RESP-02 | Phase 27 | Complete |
+| RESP-03 | Phase 27 | Complete |
+| ELEM-01 | Phase 27 | Complete |
+| ELEM-02 | Phase 27 | Complete |
+| ELEM-03 | Phase 27 | Complete |
 | MGR-01 | Phase 28 | Pending |
 | MGR-02 | Phase 28 | Pending |
 | MGR-03 | Phase 28 | Pending |

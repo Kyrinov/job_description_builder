@@ -64,7 +64,7 @@ Full phase details in Phase Details section below.
 v4.0 surfaces all 7 Part 2 sections of the TBS Accessible JD Template as a natural conversational experience. Two new WD fields (org_context, responsibilities_narrative) are added, connected to a completeness audit, exposed as structured JSON/CSV export for workforce analytics, and branched into a Manager-Track UX that hides classification internals from hiring managers.
 
 - [x] **Phase 26: Org Context Conversational Step** — Foundation phase: new org_context typed field on WorkDescription + WDPatchRequest (same-commit rule), 4-part Socratic step added to STEPS (with stepIndex regression fix before insertion), document preview rendering above Client Service Results, Accessible DOCX Part 2 export. (ORG-01, ORG-02, ORG-03) — **Complete: Plan 01 (Wave 0 RED baseline) + Plan 02 (Wave 1 GREEN) both done; 8/8 RED stubs GREEN; 153/153 backend + 65/65 frontend GREEN; ORG-01/02/03 closed**
-- [ ] **Phase 27: Responsibilities Narrative + Completeness Audit** — Last new WD field (responsibilities_narrative + WDPatchRequest co-update), document preview section, Accessible DOCX export, POST /api/wd/{id}/validate-elements with 5-state matrix, Review phase completeness badge as soft gate with jump-to-fill navigation. (RESP-01, RESP-02, RESP-03, ELEM-01, ELEM-02, ELEM-03)
+- [x] **Phase 27: Responsibilities Narrative + Completeness Audit** — Last new WD field (responsibilities_narrative + WDPatchRequest co-update), document preview section, Accessible DOCX export, POST /api/wd/{id}/validate-elements with 5-state matrix, Review phase completeness badge as soft gate with jump-to-fill navigation. (RESP-01, RESP-02, RESP-03, ELEM-01, ELEM-02, ELEM-03) (completed 2026-06-24)
 - [ ] **Phase 28: Manager-Track UX** — Role selector at app entry (jd-builder-v2-role localStorage key, never in WD model or answers dict), userRole state slice, conditional rendering suppressing OG/JES/CBA strings in manager mode, manager-track STEPS variant, require_og_confirmed bypass via wd_type field, DRAFT watermark on manager DOCX exports. (MGR-01, MGR-02, MGR-03)
 - [ ] **Phase 29: Structured Export + Enhanced Poster** — Shared build_seven_elements(wd) helper in export_service.py, POST /api/wd/{id}/export/json (7-element analytics JSON with provenance), POST /api/wd/{id}/export/csv (utf-8-sig DictWriter, one row per duty), SPA JSON + CSV download buttons, enhanced poster with "About the Organization" section, build_poster_template.py self-verify update. (SEXP-01, SEXP-02, SEXP-03, POST-01)
 
@@ -255,11 +255,11 @@ Plans:
 4. The completeness audit reads wd.org_context (the typed root field), not the derived fallback text from _build_organizational_context_text() — confirmed by a test that leaves org_context None while record has branch/reports data, asserting the element status is "missing".
 5. The Review phase completeness badge shows N/7 elements as populated or derived; the advisor can proceed to export with any count after acknowledging the badge — the badge is a soft gate, not a hard block.
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 27-01-PLAN.md — Responsibilities Narrative vertical slice (RESP-01/02/03): typed responsibilities_narrative field + WDPatchRequest co-update, free-text STEPS step, DocumentPane Responsibilities Sec, DOCX export priority (narrative or placeholder)
-- [ ] 27-02-PLAN.md — Seven-Elements Completeness Audit (ELEM-01/02/03): build_seven_elements(wd) shared helper, POST /api/wd/{id}/validate-elements endpoint, Review-phase N/7 completeness badge (soft gate)
+- [x] 27-01-PLAN.md — Responsibilities Narrative vertical slice (RESP-01/02/03): typed responsibilities_narrative field + WDPatchRequest co-update, free-text STEPS step, DocumentPane Responsibilities Sec, DOCX export priority (narrative or placeholder)
+- [x] 27-02-PLAN.md — Seven-Elements Completeness Audit (ELEM-01/02/03): build_seven_elements(wd) shared helper, POST /api/wd/{id}/validate-elements endpoint, Review-phase N/7 completeness badge (soft gate)
 
 **UI hint**: yes
 
