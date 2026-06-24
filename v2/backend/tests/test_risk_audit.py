@@ -216,3 +216,28 @@ async def test_audit_decide(client, env_with_db):
     assert detail["rule_id"] == "ERR_DUTY_COVERAGE"
     assert detail["decision"] == "skip"
     assert detail["section"] == "du"
+
+
+@pytest.mark.parametrize(
+    "bad_body",
+    [
+        {"rule_id": "", "section": "du", "decision": "skip"},
+        {"rule_id": "x" * 101, "section": "du", "decision": "skip"},
+        {"rule_id": "ERR_DUTY_COVERAGE", "section": "bogus", "decision": "skip"},
+        {"rule_id": "ERR_DUTY_COVERAGE", "section": "du", "decision": "maybe"},
+    ],
+)
+async def test_audit_decide_rejects_invalid_body(client, env_with_db, bad_body):
+    """F-04: POST /api/wd/{id}/audit/decide returns 422 for invalid bodies.
+
+    Guards the AuditDecideRequest Pydantic constraints (rule_id length,
+    section Literal, decision Literal) so a regression loosening them would
+    be caught.
+    """
+    wd_id = await _create_wd(client)
+
+    resp = await client.post(
+        f"/api/wd/{wd_id}/audit/decide",
+        json=bad_body,
+    )
+    assert resp.status_code == 422
