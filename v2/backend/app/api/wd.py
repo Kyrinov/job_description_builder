@@ -14,6 +14,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.config import get_settings
+from app.data.sjd_library import SJDEntry
 from app.db import get_connection
 from app.models.work_description import WorkDescription
 
@@ -86,7 +87,7 @@ _SJD_DUTY_SUGGESTIONS: dict[str, list[dict]] = {
 _SJD_DUTY_SUGGESTIONS["default"] = list(_SJD_DUTY_SUGGESTIONS["EC"])  # defensive copy
 
 
-def _build_sjd_seed_duties(entry: object) -> list:
+def _build_sjd_seed_duties(entry: "SJDEntry") -> list:
     """Build DraftDuty list seeded from _SJD_DUTY_SUGGESTIONS for the SJD's OG group.
 
     Each duty has source='sjd' and sjd_number set to the entry's sjd_number.
