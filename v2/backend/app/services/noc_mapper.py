@@ -144,6 +144,12 @@ async def map_work_description(
             ).fetchall()
         )
 
+        if not vec_rows:
+            raise ValueError(
+                "sqlite-vec rerank returned no candidates — embedding has no "
+                "semantic overlap with the FTS5 shortlist"
+            )
+
         # --- Stage 3: instructor LLM justification ---
         candidate_block = _format_candidates(vec_rows)
         extra_kwargs: dict = {}
