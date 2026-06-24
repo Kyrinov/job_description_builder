@@ -626,3 +626,18 @@ async def test_org_context_fallback_in_export(client, env_with_db):
     full_text = "\n".join(p.text for p in doc.paragraphs)
     assert "{{" not in full_text
     assert "organizational_context_text" not in full_text
+
+
+async def test_org_context_empty_string_falls_back(client, env_with_db):
+    """F-01: A whitespace-only org_context must fall back to synthesized text,
+    not render a blank Organizational Context section (defense-in-depth)."""
+    wd_id = await _create_wd_ec(client)
+    patch_resp = await client.patch(f"/api/wd/{wd_id}", json={"org_context": "   "})
+    assert patch_resp.status_code == 200
+
+    export_resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert export_resp.status_code == 200
+    doc = docx.Document(io.BytesIO(export_resp.content))
+    full_text = "\n".join(p.text for p in doc.paragraphs)
+    assert "{{" not in full_text
+    assert "organizational_context_text" not in full_text

@@ -396,7 +396,7 @@ def _build_wd_context(wd: WorkDescription, amendments: list[dict]) -> dict:
         # so the section still renders (no {{template leak}}).
         "organizational_context_text": (
             wd.org_context
-            if wd.org_context is not None
+            if (wd.org_context or "").strip()
             else _build_organizational_context_text(wd)
         ),
         "client_service_results_text": client_service_results_text,
