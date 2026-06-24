@@ -279,7 +279,7 @@ Plans:
 3. The manager-track STEPS array skips og_confirm, og_level, and JES override steps; a manager can reach Review and trigger a DOCX download without a 409 from require_og_confirmed; the downloaded DOCX is watermarked as "DRAFT — PENDING CLASSIFICATION".
 4. The userRole value is never present in the WD PATCH body sent to /api/wd — confirmed by a test asserting WDPatchRequest does not accept a user_role key and that the field does not appear in the work_descriptions.data JSON column after a full conversation.
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 28-01-PLAN.md — Wave 1 Manager-track foundation vertical slice (MGR-01 + MGR-03): wd_type field co-update on WorkDescription + WDPatchRequest + WDCreateRequest, user_role rejection guard, require_og_confirmed bypass, DRAFT watermark, RoleSelector screen + userRole state, manager STEPS variant (skip noc_confirm/og_confirm/og_level_questions/og_level), wd_type in POST body, exportAs guard bypass
