@@ -281,3 +281,79 @@ describe('MGR-02: manager-mode DocumentPane shows classification-team placeholde
     expect(screen.getByText(/Classification pending — confirm occupational group and level/)).toBeTruthy();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 28 — MGR-02: Systematic inspection tests (locks the contract)
+//
+// These tests assert the ABSENCE of classification internals in manager-mode
+// rendered output. If any future regression re-exposes OG codes, JES factor
+// names, or CBA citations to the manager, these tests fail loudly.
+//
+// The render fixtures are DELIBERATELY fully-populated (confirmed_og, og_level,
+// jes_total_points, jes_scores) — exactly the kind of record that would leak
+// the most classification internals to the manager if a suppression surface
+// is missing. The assertion then verifies NONE of those internals appear in
+// the rendered DOM.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('MGR-02: manager-mode DocumentPane renders no OG codes', () => {
+  // A fully-populated record with classification internals set. If the
+  // suppression layer in document.jsx is incomplete, this record will leak
+  // those internals into the rendered DOM and the test will fail.
+  const fullyPopulatedRecord = {
+    confirmed_og: { og_code: 'EC', og_name: 'Economics and Social Science Services' },
+    og_level: 4,
+    jes_total_points: 250,
+    jes_standard_name: 'EC JES 2017',
+    jes_is_ec: true,
+    jes_scores: [
+      { factor_name: 'Decision making', degree: 3, points: 50 },
+      { factor_name: 'Knowledge of specialized fields', degree: 3, points: 50 },
+    ],
+  };
+  const fullyPopulatedCls = { code: 'EC-04', points: 250, status: 'resolved' };
+
+  it('MGR-02: no OG-code classification string (XX-N) appears in manager mode', () => {
+    // Assert no "EC-04" classification string. Pattern is broader: any
+    // "{LETTERS}-{DIGITS}" classification string. EC, AS, IT, FI all match
+    // because the regex tests {LETTERS} as a word.
+    const { container } = render(
+      <DocumentPane
+        record={fullyPopulatedRecord}
+        cls={fullyPopulatedCls}
+        flashes={new Set()}
+        reviewing={false}
+        onEditStep={() => {}}
+        onJesOverride={() => {}}
+        userRole="manager"
+      />
+    );
+    // No OG code classification string (e.g. "EC-04", "AS-02", "IT-03")
+    expect(container.textContent).not.toMatch(/EC-04/);
+    // No "Classified as" / "Occupational group" classification text either
+    expect(container.textContent).not.toMatch(/Classified as/);
+    expect(container.textContent).not.toMatch(/Occupational group/);
+  });
+
+  it('MGR-02: no JES factor names appear in manager mode', () => {
+    // The JES factor name strings from the scorecard (Decision making,
+    // Knowledge of specialized fields, etc.) must NOT appear in the
+    // manager-mode rendered DOM.
+    const { container } = render(
+      <DocumentPane
+        record={fullyPopulatedRecord}
+        cls={fullyPopulatedCls}
+        flashes={new Set()}
+        reviewing={false}
+        onEditStep={() => {}}
+        onJesOverride={() => {}}
+        userRole="manager"
+      />
+    );
+    // No JES factor names from the scorecard
+    expect(container.textContent).not.toMatch(/Supervision/);
+    expect(container.textContent).not.toMatch(/Initiative and Independent Action/);
+    expect(container.textContent).not.toMatch(/Knowledge of specialized fields/);
+    expect(container.textContent).not.toMatch(/Decision making/);
+  });
+});

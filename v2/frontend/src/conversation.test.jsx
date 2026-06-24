@@ -1044,3 +1044,64 @@ describe('MGR-02: manager-mode ReviewState hides classification internals', () =
     expect(queryByText(/Run compliance audit/)).toBeTruthy();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 28 — MGR-02: Systematic inspection test for ReviewState
+//
+// Locks the MGR-02 contract: manager-mode ReviewState renders no
+// classification codes, no audit panel, and no CBA clause references —
+// even when auditRan=true and auditFindings are populated. Any future
+// regression that re-exposes classification internals to the manager
+// will fail this test.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('MGR-02: manager-mode ReviewState renders no classification codes or audit citations', () => {
+  const noop = () => {};
+
+  // A fully-populated audit finding with a CBA citation. If the audit panel
+  // is leaked into manager mode, this citation will appear in the rendered
+  // DOM and the test will fail.
+  const cbaFinding = {
+    rule_id: 'r1',
+    section: 'du',
+    citation: 'CBA article 32.01 — exclusion clause on telework',
+    severity: 'warning',
+    recommendation: 'Review telework language for compliance with the relevant CBA clause.',
+  };
+
+  it('MGR-02: manager-mode ReviewState renders no classification codes, no audit panel, and no CBA citations', () => {
+    // Render manager-mode ReviewState with a fully-populated cls and a CBA
+    // finding. Assert NONE of the classification internals appear in the
+    // rendered DOM. The "Run compliance audit" button is hidden, so the
+    // finding never renders, so "CBA" never appears.
+    const { container, queryByText } = render(
+      <ReviewState
+        record={{
+          title: 'Test Position',
+          duties: [{ id: 'd1', text: 'Develop software.' }],
+        }}
+        cls={{ code: 'EC-04', points: 250, status: 'resolved' }}
+        onExport={noop}
+        onRestart={noop}
+        userRole="manager"
+        auditRan={true}
+        auditFindings={[cbaFinding]}
+        onRunAudit={noop}
+        onAuditDecide={noop}
+      />
+    );
+    // No "EC-04" classification string
+    expect(container.textContent).not.toMatch(/EC-04/);
+    // No "250 pts" classification summary
+    expect(container.textContent).not.toMatch(/250 pts/);
+    // No "Classified as" checklist line
+    expect(container.textContent).not.toMatch(/Classified as/);
+    // No audit panel — button text and heading absent
+    expect(queryByText(/Run compliance audit/)).toBeNull();
+    expect(queryByText(/Compliance Findings/)).toBeNull();
+    // No CBA citations in the rendered DOM (audit panel hidden, so the
+    // finding never reaches the DOM)
+    expect(container.textContent).not.toMatch(/CBA/);
+    expect(container.textContent).not.toMatch(/article 32\.01/);
+  });
+});
