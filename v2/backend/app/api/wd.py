@@ -14,6 +14,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.config import get_settings
+from app.data.constants import OG_DEFINITIONS
 from app.data.sjd_library import SJDEntry
 from app.db import get_connection
 from app.models.work_description import WorkDescription
@@ -356,7 +357,8 @@ async def sjd_start(wd_id: str, body: SJDStartRequest) -> WorkDescription:
         wd = WorkDescription.model_validate_json(row["data"])
 
         seed_duties = _build_sjd_seed_duties(entry)
-        wd.confirmed_og = {"og_code": entry.og_code, "og_name": entry.title}
+        og_name = OG_DEFINITIONS.get(entry.og_code, {}).get("og_name", entry.title)
+        wd.confirmed_og = {"og_code": entry.og_code, "og_name": og_name}
         wd.og_level = entry.og_level
         wd.duties = seed_duties
         wd.sjd_source = {
