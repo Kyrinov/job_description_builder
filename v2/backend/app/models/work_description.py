@@ -20,7 +20,7 @@ bare code; og_confirm persists the full candidate dict.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -55,6 +55,7 @@ class WorkDescription(BaseModel):
     sjd_source: Optional[dict] = None  # Phase 22: {sjd_number, title, og_code, og_level} — set by sjd-start
     org_context: Optional[str] = None  # Phase 26 — ORG-01
     responsibilities_narrative: Optional[str] = None  # Phase 27 — RESP-01
+    wd_type: Literal["advisor", "manager"] = "advisor"  # Phase 28 — MGR-03; default preserves all existing WD rows
     reports_to_military: Optional[bool] = None
     jes_scores: list[dict] = Field(default_factory=list)
     jes_total_points: Optional[int] = None

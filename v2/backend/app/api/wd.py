@@ -120,6 +120,7 @@ class WDCreateRequest(BaseModel):
     draft: Optional[dict] = None
     reviewing: bool = False
     editing_return: bool = False
+    wd_type: Literal["advisor", "manager"] = "advisor"  # Phase 28 — MGR-03 co-update (same commit as model field)
 
 
 class WDPatchRequest(BaseModel):
@@ -150,6 +151,7 @@ class WDPatchRequest(BaseModel):
     qualification: Optional[dict] = None
     org_context: Optional[str] = Field(default=None, max_length=4000)  # Phase 26 — ORG-01 co-update; max_length per ASVS V5 DoS mitigation
     responsibilities_narrative: Optional[str] = Field(default=None, max_length=4000)  # Phase 27 — RESP-01 co-update; max_length per ASVS V5 DoS mitigation (T-27-01, mirrors T-26-01)
+    wd_type: Optional[Literal["advisor", "manager"]] = None  # Phase 28 — MGR-03 co-update; user_role intentionally ABSENT (D-28-03 guard test)
 
 @router.post("/wd", status_code=201)
 async def create_wd(body: WDCreateRequest) -> dict:
@@ -164,6 +166,7 @@ async def create_wd(body: WDCreateRequest) -> dict:
         draft=body.draft,
         reviewing=body.reviewing,
         editing_return=body.editing_return,
+        wd_type=body.wd_type,  # Phase 28 — MGR-03
         created_at=now,
         last_modified=now,
     )

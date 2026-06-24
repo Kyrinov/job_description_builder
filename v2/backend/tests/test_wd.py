@@ -143,6 +143,106 @@ async def test_patch_responsibilities_narrative_rejects_over_length(client):
 
 
 # ---------------------------------------------------------------------------
+# Phase 28 — MGR-01/03: wd_type co-update on WorkDescription + WDCreateRequest +
+# WDPatchRequest + user_role rejection guard
+#
+# Co-update rule (D-28-04): the wd_type field must land on WorkDescription,
+# WDCreateRequest, AND WDPatchRequest in the same commit. WDPatchRequest uses
+# extra='ignore', so a missing field silently drops (HTTP 200) — the round-trip
+# tests below pin the contract.
+# ---------------------------------------------------------------------------
+
+async def test_patch_wd_type_round_trip(client):
+    """MGR-03: POST /api/wd with wd_type='manager' → GET → wd_type preserved.
+
+    RED because WDCreateRequest has no wd_type field yet → POST 422.
+    GREEN after the co-update lands wd_type on WDCreateRequest, WorkDescription,
+    AND create_wd().
+    """
+    create_resp = await client.post(
+        "/api/wd",
+        json={"record": {}, "answers": {}, "step_index": 0, "wd_type": "manager"},
+    )
+    assert create_resp.status_code == 201
+    wd_id = create_resp.json()["id"]
+
+    get_resp = await client.get(f"/api/wd/{wd_id}")
+    assert get_resp.status_code == 200
+    assert get_resp.json()["wd_type"] == "manager"
+
+
+async def test_patch_wd_type_default_advisor(client):
+    """MGR-03: POST /api/wd without wd_type → GET → wd_type defaults to 'advisor'.
+
+    RED because WDCreateRequest has no wd_type field yet → POST 422 on
+    the 'manager' literal accepted in test_patch_wd_type_round_trip. After
+    the co-update, POST without wd_type should still succeed and the stored
+    WD should default to 'advisor'.
+    """
+    create_resp = await client.post(
+        "/api/wd", json={"record": {}, "answers": {}, "step_index": 0}
+    )
+    assert create_resp.status_code == 201
+    wd_id = create_resp.json()["id"]
+
+    get_resp = await client.get(f"/api/wd/{wd_id}")
+    assert get_resp.status_code == 200
+    assert get_resp.json()["wd_type"] == "advisor"
+
+
+async def test_user_role_dropped_from_patch(client):
+    """MGR-01 D-28-03: PATCH with user_role='manager' does NOT land in stored WD.
+
+    Regression guard for the WDPatchRequest extra='ignore' contract — the
+    user_role key MUST NOT appear in work_descriptions.data after a PATCH
+    round-trip. Mirrors the Phase 26/27 co-update gate pattern.
+    """
+    create_resp = await client.post(
+        "/api/wd", json={"record": {}, "answers": {}, "step_index": 0}
+    )
+    wd_id = create_resp.json()["id"]
+
+    patch_resp = await client.patch(
+        f"/api/wd/{wd_id}", json={"user_role": "manager"}
+    )
+    assert patch_resp.status_code == 200
+
+    get_resp = await client.get(f"/api/wd/{wd_id}")
+    assert get_resp.status_code == 200
+    body = get_resp.json()
+    assert "user_role" not in body, (
+        f"user_role must be dropped from stored WD JSON; got keys: {sorted(body.keys())}"
+    )
+
+
+async def test_patch_wd_type_manager_preserved(client):
+    """MGR-03: POST with wd_type='manager' → PATCH unrelated field → wd_type unchanged.
+
+    RED because WDCreateRequest and WorkDescription have no wd_type field yet.
+    After the co-update, PATCHing a different field must NOT reset wd_type to
+    the default 'advisor' — the manager-track contract must round-trip.
+    """
+    create_resp = await client.post(
+        "/api/wd",
+        json={"record": {}, "answers": {}, "step_index": 0, "wd_type": "manager"},
+    )
+    assert create_resp.status_code == 201
+    wd_id = create_resp.json()["id"]
+
+    patch_resp = await client.patch(
+        f"/api/wd/{wd_id}", json={"record": {"title": "Hiring Manager Test"}}
+    )
+    assert patch_resp.status_code == 200
+
+    get_resp = await client.get(f"/api/wd/{wd_id}")
+    assert get_resp.status_code == 200
+    body = get_resp.json()
+    assert body["wd_type"] == "manager", (
+        f"PATCH must not reset wd_type; got {body.get('wd_type')!r}"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Phase 27 — ELEM-01: validate-elements endpoint integration tests
 # (Plan 27-02 — Seven-Elements Completeness Audit)
 #
