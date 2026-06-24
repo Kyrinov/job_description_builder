@@ -148,7 +148,7 @@ function App() {
   const [amendmentPanels, setAmendmentPanels] = useState({});  // { [sectionKey]: { open, text, saved } } — UI panel state
   // Phase 22 SJD-02: non-blocking "Browse SJDs" action surfaced after Role phase
   const [sjdPanelOpen, setSjdPanelOpen] = useState(false);
-  const [sjdEntries, setSjdEntries] = useState([]);
+  const [sjdAllEntries, setSjdAllEntries] = useState([]);
   const [sjdOgFilter, setSjdOgFilter] = useState('');
   const [sjdLoading, setSjdLoading] = useState(false);
   // Phase 24 (AUDIT-01): compliance audit findings — populated only by button click, never automatically
@@ -737,9 +737,9 @@ function App() {
     }
     setSjdPanelOpen(true);
     setSjdLoading(true);
-    setSjdEntries([]);
-    fetchSjds(sjdOgFilter || null)
-      .then(entries => { setSjdEntries(entries); setSjdLoading(false); })
+    setSjdAllEntries([]);
+    fetchSjds(null)
+      .then(entries => { setSjdAllEntries(entries); setSjdLoading(false); })
       .catch(() => {
         setToast('Could not load SJDs — try again.');
         setTimeout(() => setToast(null), 3500);
@@ -747,14 +747,10 @@ function App() {
       });
   }
 
-  // Filter change handler — refetch with the chosen OG group. og_code is
-  // URL-encoded inside fetchSjds (T-22-02 mitigation).
+  // Filter change handler — client-side filter (no refetch). The full SJD
+  // list is small (10 entries); filtering from sjdAllEntries is instant.
   function handleSjdFilterChange(ogCode) {
     setSjdOgFilter(ogCode);
-    setSjdLoading(true);
-    fetchSjds(ogCode || null)
-      .then(entries => { setSjdEntries(entries); setSjdLoading(false); })
-      .catch(() => { setSjdLoading(false); });
   }
 
   // SJD selection handler — POST /api/wd/{id}/sjd-start mirrors the updated
@@ -978,19 +974,19 @@ function App() {
                 onChange={e => handleSjdFilterChange(e.target.value)}
               >
                 <option value="">All groups</option>
-                <option value="AS">AS</option>
-                <option value="EC">EC</option>
-                <option value="FI">FI</option>
-                <option value="IT">IT</option>
-                <option value="EN">EN</option>
-                <option value="PE">PE</option>
-                <option value="WP">WP</option>
+                {[...new Set(sjdAllEntries.map(e => e.og_code))].sort().map(code => (
+                  <option key={code} value={code}>{code}</option>
+                ))}
               </select>
             </div>
             <div className="sjd-panel__list">
               {sjdLoading && <p>Loading…</p>}
-              {!sjdLoading && sjdEntries.length === 0 && <p>No SJDs found for this group.</p>}
-              {!sjdLoading && sjdEntries.map(entry => (
+              {!sjdLoading && (() => {
+                const visible = sjdOgFilter
+                  ? sjdAllEntries.filter(e => e.og_code === sjdOgFilter)
+                  : sjdAllEntries;
+                if (visible.length === 0) return <p>No SJDs found for this group.</p>;
+                return visible.map(entry => (
                 <div key={entry.sjd_number} className="sjd-entry">
                   <div className="sjd-entry__title">{entry.title}</div>
                   <div className="sjd-entry__meta">
@@ -1007,7 +1003,8 @@ function App() {
                     Use this SJD
                   </button>
                 </div>
-              ))}
+                ));
+              })()}
             </div>
           </div>
         </div>
