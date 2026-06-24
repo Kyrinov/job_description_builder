@@ -167,6 +167,10 @@ function App() {
   // "not run yet" from "ran clean, zero findings" so a clean run isn't
   // silently indistinguishable from a broken button (no panel either way).
   const [auditRan, setAuditRan] = useState(false);
+  // Phase 27 Plan 02 (ELEM-02): seven-elements completeness — hydrated from
+  // POST /api/wd/{id}/validate-elements when reviewing becomes true. Drives
+  // the soft-gate badge in ReviewState (export buttons stay enabled).
+  const [completeness, setCompleteness] = useState(null);
   const threadRef = useRef(null);
   const docRef = useRef(null);
 
@@ -237,6 +241,23 @@ function App() {
       })
       .catch(() => {});
   }, [wd_id, reviewing]);
+
+  // Phase 27 Plan 02 (ELEM-02): Seven-elements completeness audit — fetch
+  // POST /api/wd/{wd_id}/validate-elements once the user enters Review.
+  // Drives the soft-gate N/7 badge in ReviewState. Silent on failure
+  // (the badge simply doesn't appear). Mirrors the orphan_check /
+  // amendment_notes useEffect pattern.
+  useEffect(() => {
+    if (!reviewing || !wd_id) return;
+    let cancelled = false;
+    fetch(`/api/wd/${wd_id}/validate-elements`, { method: 'POST' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!cancelled && data) setCompleteness(data);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [reviewing, wd_id]);
 
   // committed record
   const baseRecord = record;
@@ -902,6 +923,7 @@ function App() {
               auditRan={auditRan}
               onRunAudit={handleRunAudit}
               onAuditDecide={handleAuditDecide}
+              completeness={completeness}
             />
           : (
             <div className="thread" ref={threadRef}>

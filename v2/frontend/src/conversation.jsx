@@ -186,7 +186,7 @@ function FindingCard({ finding, onAuditDecide }) {
 /* completion / review state */
 function ReviewState({ record, cls, onExport, onRestart, amendmentNotes = {},
                        auditFindings = [], auditRunning = false, auditRan = false,
-                       onRunAudit, onAuditDecide }) {
+                       onRunAudit, onAuditDecide, completeness = null }) {
   const dutyCount = (record.duties || []).length;
   const checks = [
     ['Position identified', record.title],
@@ -203,6 +203,18 @@ function ReviewState({ record, cls, onExport, onRestart, amendmentNotes = {},
       true,
     ]);
   }
+  // Phase 27 Plan 02 (ELEM-02): Seven-Elements Completeness badge.
+  // Soft gate (ROADMAP #5) — informational only; export buttons stay enabled
+  // at any count. Renders only when app.jsx has hydrated the `completeness`
+  // prop from POST /api/wd/{id}/validate-elements.
+  const completenessBadge = completeness ? (
+    <div className="check-row" data-testid="completeness-badge">
+      <div className="check-row__dot"><Check /></div>
+      <span>
+        Completeness: {completeness.complete_count}/{completeness.total} elements populated or derived
+      </span>
+    </div>
+  ) : null;
   return (
     <div className="thread">
       <div className="done-card">
@@ -220,6 +232,7 @@ function ReviewState({ record, cls, onExport, onRestart, amendmentNotes = {},
               <span>{label}</span>
             </div>
           ))}
+          {completenessBadge}
         </div>
         <div className="export-row">
           <button className="btn--export" onClick={() => onExport('Word document (.docx)')}>

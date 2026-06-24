@@ -8,6 +8,7 @@ import { describe, it, expect, beforeAll, vi, afterEach, beforeEach } from 'vite
 import { render, fireEvent, waitFor } from '@testing-library/react';
 import { STEPS, PHASES, accumulateSignals, isStepVisible, getVisibleSteps } from './data.jsx';
 import { StepInput, answerValid, OrgContextInput } from './components.jsx';
+import { ReviewState } from './conversation.jsx';
 import App from './app.jsx';
 
 // Helpers for driving the App through the conversation flow in integration
@@ -834,5 +835,67 @@ describe('OGX-07 + JES-LEV-01: clicking a sub-group button propagates sub_group 
     expect(onChangeMock).toHaveBeenCalledWith(
       expect.objectContaining({ og_code: 'NU', sub_group: 'HOS' })
     );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 27 Plan 02 — ELEM-02: Review-phase completeness badge (soft gate)
+//
+// ReviewState receives a `completeness` prop from app.jsx's validate-elements
+// fetch. The badge shows "Completeness: N/7 elements" in the checklist area.
+// The export buttons (DOCX / PDF / Copy) MUST stay enabled at any count —
+// this is a SOFT GATE per ROADMAP #5 (informational, not blocking).
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('Phase 27 Plan 02: ReviewState completeness badge', () => {
+  const noop = () => {};
+
+  it('renders a Completeness: 5/7 badge when completeness prop is {complete_count:5, total:7}', () => {
+    // Plan 27-02 Task 3: ReviewState accepts a `completeness` prop
+    // ({complete_count, total, elements}) and renders a check-row badge line
+    // inside the existing checklist with data-testid="completeness-badge".
+    const { getByTestId, container } = render(
+      <ReviewState
+        record={{ title: 'Test', duties: [] }}
+        cls={{ code: 'EC', points: 500, status: 'resolved' }}
+        onExport={noop}
+        onRestart={noop}
+        completeness={{ complete_count: 5, total: 7, elements: [] }}
+      />
+    );
+    const badge = getByTestId('completeness-badge');
+    expect(badge).toBeTruthy();
+    expect(badge.textContent).toContain('5');
+    expect(badge.textContent).toContain('7');
+    // The badge text must explicitly mention completeness (or elements)
+    expect(badge.textContent.toLowerCase()).toMatch(/completeness|elements/);
+  });
+
+  it('export buttons stay enabled (no completeness-dependent disabled) at complete_count < total', () => {
+    // ROADMAP #5: soft gate — export buttons (DOCX / PDF / Copy) MUST stay
+    // enabled at any completeness count. A regression that wires
+    // `disabled={completeness.complete_count < completeness.total}` would
+    // make export unreachable for partially-complete WDs. This test guards
+    // that no completeness-dependent disabled is added.
+    const { container } = render(
+      <ReviewState
+        record={{ title: 'Test', duties: [] }}
+        cls={{ code: 'EC', points: 500, status: 'resolved' }}
+        onExport={noop}
+        onRestart={noop}
+        completeness={{ complete_count: 2, total: 7, elements: [] }}
+      />
+    );
+    // Find the Export DOCX button (first .btn--export inside .export-row)
+    const exportDocxBtn = container.querySelector('.export-row .btn--export');
+    expect(exportDocxBtn).toBeTruthy();
+    // MUST NOT have a disabled attribute tied to completeness
+    expect(exportDocxBtn.hasAttribute('disabled')).toBe(false);
+    // All three export buttons stay enabled
+    const allExportBtns = container.querySelectorAll('.export-row .btn--export');
+    expect(allExportBtns.length).toBe(3);
+    allExportBtns.forEach(btn => {
+      expect(btn.hasAttribute('disabled')).toBe(false);
+    });
   });
 });
