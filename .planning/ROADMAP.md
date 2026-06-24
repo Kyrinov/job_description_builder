@@ -230,7 +230,7 @@ Plans:
 3. An existing session with a persisted stepIndex integer in localStorage resumes at the correct step after the org_context step is inserted into STEPS — confirming the resume-by-last-answered fix is in place before any STEPS entry is added.
 4. Downloading the Accessible JD DOCX for a WD with org_context filled shows that text in the Part 2 Organizational Context section; a WD without org_context shows the advisor placeholder string.
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 26-01-PLAN.md — Wave 0 RED test stubs (3 backend + 5 frontend = 8 total; 150 pre-existing backend + 60 pre-existing frontend GREEN; new stubs fail with AssertionErrors)
