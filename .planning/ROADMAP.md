@@ -304,7 +304,12 @@ Plans:
 4. Both JSON and CSV export routes succeed for a manager-track WD without a 409; classification fields not set by the manager use "[ADVISOR TO COMPLETE]" placeholder strings in the output.
 5. Downloading the job poster DOCX for a WD with org_context shows an "About the Organization" section; build_poster_template.py self-verifies with exit 0 after the template update.
 
-**Plans:** TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 29-01-PLAN.md — Wave 0 RED baseline (5 backend + 2 frontend stubs)
+- [ ] 29-02-PLAN.md — Backend JSON/CSV routes + poster org_context section
+- [ ] 29-03-PLAN.md — Frontend Export JSON + CSV buttons in ReviewState
 
 **UI hint**: yes
 
@@ -343,4 +348,4 @@ Plans:
 | **26. Org Context Conversational Step** | **v4.0** | **2/2** | **Complete (Wave 0 RED + Wave 1 GREEN; 153 backend + 65 frontend GREEN; ORG-01/02/03 closed)** | — |
 | **27. Responsibilities Narrative + Completeness Audit** | **v4.0** | **0/2** | **Ready to execute** | — |
 | **28. Manager-Track UX** | **v4.0** | **2/2** | **Complete (Plans 01 + 02 done; MGR-01/02/03 all closed; 179 backend + 85 frontend GREEN; awaiting phase verification)** | — |
-| **29. Structured Export + Enhanced Poster** | **v4.0** | **0/?** | **Not started** | — |
+| **29. Structured Export + Enhanced Poster** | **v4.0** | **0/3** | **Planning complete** | — |
