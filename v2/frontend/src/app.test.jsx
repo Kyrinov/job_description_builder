@@ -30,7 +30,12 @@ if (typeof globalThis.localStorage?.clear !== 'function') {
   globalThis.localStorage = new InMemoryStorage();
 }
 
-function resetStorage() { _store.clear(); }
+// resetStorage() must clear the SAME Map that globalThis.localStorage uses.
+// In vitest, vitest.setup.js installs an InMemoryStorage with its own
+// closure-bound _store — app.test.jsx's _store is unrelated. Use the
+// public clear() API on globalThis.localStorage so we're operating on
+// the same Map the app reads.
+function resetStorage() { globalThis.localStorage.clear(); }
 
 // jsdom does not implement Element.prototype.scrollTo; the App component
 // calls it inside a useEffect on the thread ref. Polyfill with a no-op so
@@ -43,7 +48,15 @@ beforeAll(() => {
 });
 
 describe('App state slices (FE-04)', () => {
-  beforeEach(() => resetStorage());
+  beforeEach(() => {
+    resetStorage();
+    // Phase 28 (MGR-01): seed the role so App skips the RoleSelector and
+    // exercises the advisor track. Without this seed, App renders the
+    // RoleSelector (because jd-builder-v2-role is absent from localStorage)
+    // and these tests would fail to find the .brand__name / .app shell
+    // they're asserting on.
+    globalThis.localStorage.setItem('jd-builder-v2-role', 'advisor');
+  });
   afterEach(() => resetStorage());
 
   it('App renders without crashing', () => {
@@ -77,7 +90,11 @@ describe('App state slices (FE-04)', () => {
 });
 
 describe('localStorage crash-recovery (FE-05)', () => {
-  beforeEach(() => resetStorage());
+  beforeEach(() => {
+    resetStorage();
+    // Phase 28 (MGR-01): seed the role so App exercises the advisor track.
+    globalThis.localStorage.setItem('jd-builder-v2-role', 'advisor');
+  });
   afterEach(() => resetStorage());
 
   it('localStorage.setItem called with key jd-builder-v2-record on mount', () => {
@@ -109,6 +126,8 @@ describe('WD PATCH payload mirrors classification fields to root (JES-01 fix)', 
   beforeEach(() => {
     resetStorage();
     vi.restoreAllMocks();
+    // Phase 28 (MGR-01): seed the role so App exercises the advisor track.
+    globalThis.localStorage.setItem('jd-builder-v2-role', 'advisor');
   });
   afterEach(() => {
     vi.restoreAllMocks();
@@ -170,6 +189,9 @@ describe('WD PATCH payload mirrors classification fields to root (JES-01 fix)', 
     // og_level sits at STEPS index 19 in the current STEPS array, so a
     // resume-by-last-answered initialiser must land at index 20 (one past
     // the last answered step), NOT 0 (the Title step).
+    // Phase 28 (MGR-01): seed the role so App exercises the advisor track
+    // (not the RoleSelector). The role seed is in beforeEach above; we
+    // just need the record seed here.
     globalThis.localStorage.setItem('jd-builder-v2-record', JSON.stringify({
       title: 'Policy Analyst',
       og_level: 3,
@@ -186,4 +208,58 @@ describe('WD PATCH payload mirrors classification fields to root (JES-01 fix)', 
     expect(idx).toBeGreaterThan(0);
   });
 
+});
+
+// ---------------------------------------------------------------------------
+// Phase 28 — MGR-01: RoleSelector + userRole state hydration from localStorage
+//
+// MGR-01 contract: on first load (jd-builder-v2-role absent from
+// localStorage) a role selector screen precedes the conversation. Selecting
+// a role persists to localStorage and launches the matching track. Refresh
+// does not re-show the selector because userRole hydrates from localStorage
+// on mount. user_role NEVER appears in the WD PATCH body (D-28-03, asserted
+// in the backend guard test test_user_role_dropped_from_patch).
+// ---------------------------------------------------------------------------
+
+describe('MGR-01: role selector + userRole hydration', () => {
+  beforeEach(() => {
+    resetStorage();
+    vi.restoreAllMocks();
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    resetStorage();
+  });
+
+  it('userRole hydrates from jd-builder-v2-role localStorage on mount', () => {
+    // Seed localStorage with 'manager' — the role selector must NOT appear
+    // because userRole resolved to 'manager' from the persisted key.
+    globalThis.localStorage.setItem('jd-builder-v2-role', 'manager');
+    const { container, queryByTestId } = render(<App />);
+    expect(queryByTestId('role-selector')).toBeNull();
+    // The main app shell IS shown.
+    expect(container.querySelector('.app')).not.toBeNull();
+  });
+
+  it('role selector renders when jd-builder-v2-role is absent', () => {
+    // localStorage cleared — role selector must be visible.
+    const { getByTestId } = render(<App />);
+    const selector = getByTestId('role-selector');
+    expect(selector).toBeTruthy();
+    // Both buttons render.
+    expect(getByTestId('role-advisor')).toBeTruthy();
+    expect(getByTestId('role-manager')).toBeTruthy();
+  });
+
+  it('selecting manager role persists to localStorage and launches manager track', () => {
+    // Clear localStorage — role selector renders.
+    const { getByTestId, queryByTestId } = render(<App />);
+    expect(getByTestId('role-selector')).toBeTruthy();
+    // Click the manager button.
+    fireEvent.click(getByTestId('role-manager'));
+    // localStorage was updated to 'manager'.
+    expect(globalThis.localStorage.getItem('jd-builder-v2-role')).toBe('manager');
+    // The role selector is no longer shown (the main app shell renders).
+    expect(queryByTestId('role-selector')).toBeNull();
+  });
 });

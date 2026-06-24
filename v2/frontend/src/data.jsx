@@ -455,9 +455,17 @@ const I = {
      This predicate returns true when a step should be shown given the current
      answers. Cluster questions are gated on the sector-gate answer; all other
      steps are unconditionally visible. The default-true fallback keeps the
-     linear flow intact when the sector question hasn't been answered yet. */
-  function isStepVisible(step, answers) {
+     linear flow intact when the sector question hasn't been answered yet.
+
+     Phase 28 (MGR-03): an optional `userRole` parameter adds the manager-
+     track step filter. When userRole === 'manager', classification-internal
+     steps (noc_confirm, og_confirm, og_level_questions, og_level) are hidden.
+     The userRole param is additive — all existing call sites that don't pass
+     it continue to work unchanged. */
+  const MANAGER_SKIP_STEPS = new Set(['noc_confirm', 'og_confirm', 'og_level_questions', 'og_level']);
+  function isStepVisible(step, answers, userRole) {
     if (!step || !step.id) return true;
+    if (userRole === 'manager' && MANAGER_SKIP_STEPS.has(step.id)) return false;
     const sector = answers && answers.qb_sector_gate && answers.qb_sector_gate.id;
     switch (step.id) {
       case 'qb_work_output_type':
@@ -489,9 +497,11 @@ const I = {
 
   /* Returns the subset of STEPS visible given the current answers. Order is
      preserved (matches STEPS); invisible steps are filtered out. Used by
-     app.jsx to skip cluster questions whose sector was not selected. */
-  function getVisibleSteps(steps, answers) {
-    return steps.filter(s => isStepVisible(s, answers));
+     app.jsx to skip cluster questions whose sector was not selected, and to
+     skip classification-internal steps in manager mode (Phase 28 MGR-03).
+     The optional `userRole` param is forwarded to isStepVisible. */
+  function getVisibleSteps(steps, answers, userRole) {
+    return steps.filter(s => isStepVisible(s, answers, userRole));
   }
 
   /* ============================================================
@@ -729,6 +739,6 @@ export {
   QUAL_DEFAULT, QUAL_DEFAULTS, getQualDefault,
   EC_ELEMENTS, computeClassification, refineDuty, ecFactors,
   accumulateSignals, getDutySuggestions,
-  isStepVisible, getVisibleSteps,
+  isStepVisible, getVisibleSteps, MANAGER_SKIP_STEPS,
   fetchSjds,
 };

@@ -2,7 +2,7 @@
    JD Builder — main application
    ============================================================ */
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { STEPS, PHASES, I, OG_LEVELS, OG_DUTY_TIPS, computeClassification, accumulateSignals, getVisibleSteps, isStepVisible, fetchSjds } from './data.jsx';
+import { STEPS, PHASES, I, OG_LEVELS, OG_DUTY_TIPS, computeClassification, accumulateSignals, getVisibleSteps, isStepVisible, MANAGER_SKIP_STEPS, fetchSjds } from './data.jsx';
 import { Icon, initialAnswer, answerValid } from './components.jsx';
 import { Header, Exchange, ActiveQuestion, ReviewState } from './conversation.jsx';
 import { DocumentPane } from './document.jsx';
@@ -72,6 +72,39 @@ function ClassifyBadge({ cls }) {
   );
 }
 
+// Phase 28 (MGR-01): RoleSelector — first-load screen that lets the user
+// declare their role. The selection persists to localStorage under
+// 'jd-builder-v2-role' and launches the matching track. user_role is NEVER
+// sent to the backend (D-28-01 / D-28-03 — it lives in localStorage only).
+function RoleSelector({ onSelect }) {
+  return (
+    <div className="role-selector" data-testid="role-selector">
+      <div className="role-selector__card">
+        <h2>Welcome to JD Builder</h2>
+        <p>Choose how you'll use this tool. You can describe a position as a hiring manager, or classify it as an advisor.</p>
+        <div className="role-selector__buttons">
+          <button
+            className="btn--role"
+            data-testid="role-advisor"
+            onClick={() => onSelect('advisor')}
+          >
+            <strong>I am a classification advisor</strong>
+            <span>Classify a position end-to-end (OG group, level, JES scorecard).</span>
+          </button>
+          <button
+            className="btn--role"
+            data-testid="role-manager"
+            onClick={() => onSelect('manager')}
+          >
+            <strong>I am a hiring manager</strong>
+            <span>Describe a position in plain language. The classification team will finalize it.</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   // record initialises lazily from localStorage so a refresh restores the WD in progress (FE-05)
   const [record, setRecord] = useState(() => {
@@ -93,6 +126,14 @@ function App() {
   // confirmed_og). duties is a list, so we treat length > 0 as answered.
   // Worst case on attacker-controlled localStorage: advisor lands on the
   // wrong step (T-26-04 mitigation — non-destructive).
+  //
+  // Phase 28 (MGR-01): userRole MUST be declared BEFORE stepIndex so its
+  // lazy initializer can read userRole without a Temporal Dead Zone error.
+  // The reduce below skips MANAGER_SKIP_STEPS in manager mode to keep the
+  // resume position on a visible step.
+  const [userRole, setUserRole] = useState(() => {
+    try { return localStorage.getItem('jd-builder-v2-role') || null; } catch { return null; }
+  });
   const [stepIndex, setStepIndex] = useState(() => {
     try {
       const raw = localStorage.getItem('jd-builder-v2-record');
@@ -127,6 +168,11 @@ function App() {
         quals: 'quals',
       };
       const lastAnswered = STEPS.reduce((best, s, i) => {
+        // Phase 28 (MGR-03): in manager mode, skip classification-internal
+        // steps so the resume-by-last-answered reduce never lands the user
+        // on a hidden step (noc_confirm / og_confirm / og_level_questions /
+        // og_level are filtered from getVisibleSteps in manager mode).
+        if (userRole === 'manager' && MANAGER_SKIP_STEPS.has(s.id)) return best;
         const key = STEP_RECORD_KEY[s.id];
         if (key === 'duties') {
           return (rec[key] && rec[key].length > 0) ? i : best;
@@ -182,11 +228,11 @@ function App() {
   // forward step is visible (all remaining steps filtered out), the
   // user is sent to review.
   const activeStepIndex = useMemo(() => {
-    if (isStepVisible(STEPS[stepIndex], answers)) return stepIndex;
+    if (isStepVisible(STEPS[stepIndex], answers, userRole)) return stepIndex;
     let i = stepIndex;
-    while (i < STEPS.length && !isStepVisible(STEPS[i], answers)) i++;
+    while (i < STEPS.length && !isStepVisible(STEPS[i], answers, userRole)) i++;
     return i;
-  }, [stepIndex, answers]);
+  }, [stepIndex, answers, userRole]);
   const step = STEPS[activeStepIndex];
 
   // Persist record to localStorage on every change (FE-05).
@@ -326,6 +372,11 @@ function App() {
       answers: newAnswers,
       step_index: stepIndex,
     };
+    // Phase 28 (MGR-03): wd_type travels with every POST/PATCH so the backend
+    // can route manager-track WDs through the require_og_confirmed bypass
+    // and the DRAFT watermark. user_role is intentionally NOT sent (D-28-01
+    // / D-28-03) — it lives in localStorage only.
+    wdPayload.wd_type = userRole === 'manager' ? 'manager' : 'advisor';
     ['confirmed_noc', 'confirmed_og', 'og_level', 'reports_to_military',
      'jes_scores', 'jes_total_points', 'org_context',
      'responsibilities_narrative'].forEach(k => {
@@ -571,7 +622,7 @@ function App() {
       setTimeout(() => setToast(null), 2600);
       return;
     }
-    if (!record.confirmed_og || !record.og_level) {
+    if (userRole !== 'manager' && (!record.confirmed_og || !record.og_level)) {
       setToast('Complete the OG group and level steps before exporting.');
       setTimeout(() => setToast(null), 5000);
       return;
@@ -906,7 +957,24 @@ function App() {
                 : undefined)
     : undefined;
 
+  // Phase 28 (MGR-01): role gate. When userRole is null (jd-builder-v2-role
+// absent from localStorage), the RoleSelector renders in place of the main
+// app shell. The selector persists the choice via setUserRole + a localStorage
+// setItem; once userRole is non-null, the standard app shell renders.
+if (userRole === null) {
   return (
+    <div className="app">
+      <RoleSelector
+        onSelect={(role) => {
+          try { localStorage.setItem('jd-builder-v2-role', role); } catch {}
+          setUserRole(role);
+        }}
+      />
+    </div>
+  );
+}
+
+return (
     <div className="app">
       {/* ---------- LEFT ---------- */}
       <div className="convo">

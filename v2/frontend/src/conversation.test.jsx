@@ -207,6 +207,13 @@ describe('CONVO-02: accumulateSignals pure function', () => {
 });
 
 describe('CONVO-02: jumpToExchange resets stepIndex', () => {
+  beforeEach(() => {
+    // Phase 28 (MGR-01): seed the role so App exercises the advisor track.
+    // Without this seed, App renders the RoleSelector and jumpToExchange
+    // isn't reachable from the rendered tree.
+    globalThis.localStorage.setItem('jd-builder-v2-role', 'advisor');
+  });
+
   it('clicking a prior exchange resets stepIndex to that exchange index', () => {
     // Renders App, advances past two steps via jumpToExchange(0), confirms stepIndex resets.
     // Wave 0 stub: fails RED until Plan 04 wires jumpToExchange in app.jsx.
@@ -577,6 +584,10 @@ describe('OGX-04 (Plan 07): qb_programme_admin_cluster visible only for programm
 
 describe('OGX-04 (bugfix round 3): screen does not blank after cluster step commit', () => {
   beforeEach(() => {
+    // Phase 28 (MGR-01): seed the role so App exercises the advisor track.
+    // Without this seed, App renders the RoleSelector and the conversation
+    // flow assertions below would fail (no .btn--primary, no .thread).
+    globalThis.localStorage.setItem('jd-builder-v2-role', 'advisor');
     // The App fires several fetch calls during the flow (NOC, OG, WD
     // persistence). Mock all of them to keep the test hermetic.
     globalThis.fetch = vi.fn().mockImplementation(async (url, init) => {
@@ -744,7 +755,10 @@ describe('Phase 27: responsibilities_narrative step in STEPS', () => {
       // step 0 and fillInput would fail (active step isn't a text input).
       // Clear localStorage at the start of each iteration so every render
       // starts at the Title step.
+      // Phase 28 (MGR-01): after clear, reseed the role so App renders the
+      // advisor track (not the RoleSelector).
       globalThis.localStorage.clear();
+      globalThis.localStorage.setItem('jd-builder-v2-role', 'advisor');
       const { container, unmount } = render(<App />);
       // Phase 0 — role (5 steps)
       fillInput(container, 'Worker');
@@ -897,5 +911,63 @@ describe('Phase 27 Plan 02: ReviewState completeness badge', () => {
     allExportBtns.forEach(btn => {
       expect(btn.hasAttribute('disabled')).toBe(false);
     });
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 28 — MGR-03: manager-track STEPS variant
+//
+// The manager track skips the classification-internal steps
+// { noc_confirm, og_confirm, og_level_questions, og_level } via an optional
+// userRole parameter on isStepVisible / getVisibleSteps. The userRole param
+// is additive — advisor mode (no userRole / 'advisor') returns the same
+// list as before (regression guard). Plan 28-01 Task 3; the implementation
+// lands in data.jsx alongside these tests.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('MGR-03: manager-track STEPS variant', () => {
+  it('getVisibleSteps skips classification-internal steps in manager mode', () => {
+    // Manager-mode getVisibleSteps must NOT include any of the
+    // classification-confirmation steps (noc_confirm, og_confirm,
+    // og_level_questions, og_level).
+    const visible = getVisibleSteps(STEPS, {}, 'manager');
+    const visibleIds = visible.map(s => s.id);
+    expect(visibleIds).not.toContain('noc_confirm');
+    expect(visibleIds).not.toContain('og_confirm');
+    expect(visibleIds).not.toContain('og_level_questions');
+    expect(visibleIds).not.toContain('og_level');
+  });
+
+  it('getVisibleSteps manager mode is strictly shorter than advisor mode', () => {
+    // The manager variant must skip AT LEAST the classification-internal
+    // steps not already hidden by the sector/level-description gates.
+    // advisor mode with `{}` returns 15 (per the no-sector test above).
+    // manager mode returns 12: og_level_questions is already hidden in
+    // advisor mode (level-description gate fires when answers.og_confirm
+    // is undefined), so the manager filter adds 3 (noc_confirm, og_confirm,
+    // og_level) — 15 - 3 = 12. The contract is: manager mode is strictly
+    // shorter than advisor mode AND contains none of the 4 MANAGER_SKIP_STEPS.
+    const advisorVisible = getVisibleSteps(STEPS, {});
+    const managerVisible = getVisibleSteps(STEPS, {}, 'manager');
+    expect(managerVisible.length).toBeLessThan(advisorVisible.length);
+    // Spot-check that the 3 NEW skips from the manager filter are real:
+    // noc_confirm + og_confirm + og_level were visible in advisor mode and
+    // are hidden in manager mode.
+    expect(advisorVisible.find(s => s.id === 'noc_confirm')).toBeDefined();
+    expect(advisorVisible.find(s => s.id === 'og_confirm')).toBeDefined();
+    expect(advisorVisible.find(s => s.id === 'og_level')).toBeDefined();
+    expect(managerVisible.find(s => s.id === 'noc_confirm')).toBeUndefined();
+    expect(managerVisible.find(s => s.id === 'og_confirm')).toBeUndefined();
+    expect(managerVisible.find(s => s.id === 'og_level')).toBeUndefined();
+  });
+
+  it('getVisibleSteps advisor mode unchanged when userRole passed explicitly', () => {
+    // Regression guard: the userRole param is ADDITIVE — passing 'advisor'
+    // (or any other value) must not change the advisor-mode list. The
+    // signature is `getVisibleSteps(steps, answers, userRole)` and only
+    // `userRole === 'manager'` triggers the skip filter.
+    const implicit = getVisibleSteps(STEPS, {});
+    const explicitAdvisor = getVisibleSteps(STEPS, {}, 'advisor');
+    expect(implicit.map(s => s.id)).toEqual(explicitAdvisor.map(s => s.id));
   });
 });
