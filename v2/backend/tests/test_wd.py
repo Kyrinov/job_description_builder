@@ -140,3 +140,122 @@ async def test_patch_responsibilities_narrative_rejects_over_length(client):
         f"/api/wd/{wd_id}", json={"responsibilities_narrative": "x" * 4001}
     )
     assert over_length_resp.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Phase 27 — ELEM-01: validate-elements endpoint integration tests
+# (Plan 27-02 — Seven-Elements Completeness Audit)
+#
+# POST /api/wd/{id}/validate-elements returns the 7-element status array
+# via build_seven_elements(wd). 404 on missing WD. Mirrors validate-duties
+# / orphan_check / audit pattern (load WD, run service, return dict).
+# ---------------------------------------------------------------------------
+
+
+async def test_validate_elements_returns_seven(client):
+    """ELEM-01: POST /api/wd/{id}/validate-elements on a fully-populated WD
+    returns 200 with elements length == 7, complete_count == 7, total == 7."""
+    create_resp = await client.post(
+        "/api/wd", json={"record": {}, "answers": {}, "step_index": 0}
+    )
+    wd_id = create_resp.json()["id"]
+
+    # Seed the WD with every Part 2 element populated/derivable.
+    patch_resp = await client.patch(
+        f"/api/wd/{wd_id}",
+        json={
+            "confirmed_og": {"og_code": "EC", "og_name": "Economics and Social Science Services"},
+            "og_level": 4,
+            "jes_total_points": 621,
+            "duties": [
+                {
+                    "id": "d1",
+                    "text": "Provides advice on economic policy.",
+                    "source": "noc",
+                    "provenance_noc_code": "4163",
+                    "advisor": False,
+                }
+            ],
+            "org_context": "Within Branch X, reporting to the Director, the Analyst provides advice.",
+            "responsibilities_narrative": "Owns the policy portfolio and briefs senior leadership.",
+            "qualification": {
+                "education": "Degree in economics.",
+                "experience": "5 years policy analysis.",
+                "source": "EC-05 default",
+                "last_modified": "2026-06-16T00:00:00Z",
+            },
+            "record": {
+                "client_service_results": "Citizens receive timely, accurate policy guidance.",
+            },
+        },
+    )
+    assert patch_resp.status_code == 200
+
+    resp = await client.post(f"/api/wd/{wd_id}/validate-elements")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["wd_id"] == wd_id
+    assert len(body["elements"]) == 7
+    assert body["total"] == 7
+    assert body["complete_count"] == 7
+    # Spot-check the element shape contract
+    expected_keys = {"key", "label", "status"}
+    for el in body["elements"]:
+        assert expected_keys.issubset(el.keys()), f"Element missing required keys: {el}"
+
+
+async def test_validate_elements_missing_wd_404(client):
+    """ELEM-01: POST /api/wd/{id}/validate-elements on a non-existent id returns 404.
+
+    Mirrors validate-duties / orphan_check / audit 404-guard pattern."""
+    resp = await client.post("/api/wd/does-not-exist/validate-elements")
+    assert resp.status_code == 404
+
+
+async def test_validate_elements_partial(client):
+    """ELEM-01: POST /api/wd/{id}/validate-elements on a WD with only duties +
+    jes_total_points returns 200 with complete_count reflecting only the
+    populated|derived elements (effort + working_conditions derived,
+    key_activities populated, others missing)."""
+    create_resp = await client.post(
+        "/api/wd", json={"record": {}, "answers": {}, "step_index": 0}
+    )
+    wd_id = create_resp.json()["id"]
+
+    # Seed only duties + jes_total_points; everything else stays missing.
+    patch_resp = await client.patch(
+        f"/api/wd/{wd_id}",
+        json={
+            "confirmed_og": {"og_code": "EC", "og_name": "Economics and Social Science Services"},
+            "og_level": 4,
+            "jes_total_points": 621,
+            "duties": [
+                {
+                    "id": "d1",
+                    "text": "Provides advice on economic policy.",
+                    "source": "noc",
+                    "provenance_noc_code": "4163",
+                    "advisor": False,
+                }
+            ],
+        },
+    )
+    assert patch_resp.status_code == 200
+
+    resp = await client.post(f"/api/wd/{wd_id}/validate-elements")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["wd_id"] == wd_id
+    assert len(body["elements"]) == 7
+    assert body["total"] == 7
+    # 3 complete: effort (derived), working_conditions (derived), key_activities (populated)
+    assert body["complete_count"] == 3
+    elements = {e["key"]: e for e in body["elements"]}
+    assert elements["key_activities"]["status"] == "populated"
+    assert elements["effort"]["status"] == "derived"
+    assert elements["working_conditions"]["status"] == "derived"
+    # Everything else must be missing (not derived, not populated, never not_applicable)
+    for key in ("organizational_context", "client_service_results", "skills", "responsibility"):
+        assert elements[key]["status"] == "missing", (
+            f"{key} should be missing when not seeded; got {elements[key]['status']!r}"
+        )

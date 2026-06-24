@@ -331,6 +331,39 @@ async def validate_duties_endpoint(wd_id: str) -> dict:
     return {"wd_id": wd_id, "findings": findings}
 
 
+@router.post("/wd/{wd_id}/validate-elements")
+async def validate_elements(wd_id: str) -> dict:
+    """ELEM-01: Return per-element completeness status for all 7 Part 2 elements.
+
+    Loads the WorkDescription from DB, calls build_seven_elements(wd) from
+    export_service, and returns each element's status (populated / derived /
+    missing) plus complete_count and total. Mirrors validate-duties: 404
+    when the WD is missing; never errors on incomplete data (returns
+    'missing' statuses).
+
+    The audit reads wd.org_context directly (typed root field) — never the
+    synthesized _build_organizational_context_text() fallback — per ROADMAP
+    criterion #4. Responsibility is never 'not_applicable' (ROADMAP #3).
+
+    Returns:
+        {"wd_id": str, "elements": [7 keys], "complete_count": int, "total": 7}
+    """
+    from app.services.export_service import build_seven_elements
+    settings = get_settings()
+    con = get_connection(settings.db_path)
+    try:
+        row = con.execute(
+            "SELECT data FROM work_descriptions WHERE id = ?", (wd_id,)
+        ).fetchone()
+    finally:
+        con.close()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Work description not found")
+    wd = WorkDescription.model_validate_json(row["data"])
+    result = build_seven_elements(wd)
+    return {"wd_id": wd_id, **result}
+
+
 class SJDStartRequest(BaseModel):
     """Request body for POST /api/wd/{id}/sjd-start."""
     sjd_number: str
