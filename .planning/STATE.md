@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: Seven-Elements Conversational Architecture
 current_phase: 28
-status: planning
-last_updated: "2026-06-24T16:42:00.031Z"
+status: executing
+last_updated: "2026-06-24T17:51:03.000Z"
 progress:
   total_phases: 9
   completed_phases: 7
-  total_plans: 30
-  completed_plans: 28
-  percent: 93
+  total_plans: 31
+  completed_plans: 29
+  percent: 94
 ---
 
 # Project State
 
-**Status:** Ready to plan
+**Status:** Executing Phase 28 (Plan 01 complete; Plan 02 next)
 **Current phase:** 28
 **Last updated:** 2026-06-24
-**Next action:** `/gsd-execute-phase 27` to execute Responsibilities Narrative + Completeness Audit (2 plans: Plan 01 Wave 1 = RESP vertical slice mirroring Phase 26; Plan 02 Wave 2 = ELEM completeness audit via build_seven_elements + validate-elements + Review badge)
+**Next action:** `/gsd-execute-phase 28` Plan 02 (Wave 2 MGR-02 UI suppression — ClassifyBadge / Classification Sec / ReviewState audit panel suppression + systematic MGR-02 inspection test suite)
 
 ---
 
@@ -32,8 +32,8 @@ progress:
 | 24 | Risk Audit | Complete (4 plans) |
 | 25 | Accessible Template | Complete (3 plans); 19/19 test_export.py + 150/150 full backend suite green; wd_accessible_template.docx live (37,872 bytes, 3 tables, 14 headings, 7 Part 2 subsections); TBS template + build script retired; poster unchanged; ACC-01/02/03/04 closed; pending 9-step human UAT |
 | 26 | Org Context Conversational Step | **Complete** — Plan 01 (Wave 0 RED baseline) + Plan 02 (Wave 1 GREEN) both done; 8/8 RED stubs GREEN; 153/153 backend + 65/65 frontend GREEN; ORG-01/02/03 closed |
-| 27 | Responsibilities Narrative + Completeness Audit | Ready to execute (2 plans; RESP-01/02/03 + ELEM-01/02/03) |
-| 28 | Manager-Track UX | Not started |
+| 27 | Responsibilities Narrative + Completeness Audit | Complete (Plan 01 RESP vertical slice + Plan 02 ELEM completeness audit); 172 backend + 70 frontend GREEN; RESP-01/02/03 + ELEM-01/02/03 closed |
+| 28 | Manager-Track UX | Plan 01 complete (Wave 1 MGR-01 + MGR-03); Plan 02 next (Wave 2 MGR-02 UI suppression); 179 backend + 76 frontend GREEN; MGR-01/03 closed |
 | 29 | Structured Export + Enhanced Poster | Not started |
 
 ---
@@ -238,3 +238,14 @@ None. v3.0 complete (Phase 25 done). v4.0 roadmap ready. Phase 26 unblocked.
 - Deviations: _QUAL_SEED needs source+last_modified (Pydantic); 3 tests strengthened beyond plan minimum for 6/6 RED state
 
 **Planned Phase:** 28 (Manager-Track UX) — 2 plans — 2026-06-24T16:42:00.020Z
+
+**Completed Plan:** 28 Plan 01 (Manager-Track Foundation Vertical Slice — MGR-01 + MGR-03) — 2026-06-24T17:51Z
+
+- 3 atomic task commits (strict TDD-within-task sequence):
+  - Task 1 (`e7e3d0b` feat): wd_type co-update — `WorkDescription.wd_type: Literal['advisor','manager']='advisor'` (typing.Literal added to imports) + `WDCreateRequest.wd_type` (default advisor) + `WDPatchRequest.wd_type: Optional[...] = None` (user_role intentionally ABSENT — D-28-03 contract) + `create_wd(wd_type=body.wd_type, ...)` wiring — ALL 4 land in the same commit (co-update rule)
+  - Task 2 (`93b1a1e` feat): require_og_confirmed manager bypass (getattr-safe, default 'advisor' preserves old WD rows) + `_apply_draft_watermark(file_bytes)` helper (python-docx inserts bold dark-red centered 'DRAFT — PENDING CLASSIFICATION' at DOCX index 0) + generate_wd_docx applies it when `getattr(wd, 'wd_type', 'advisor') == 'manager'`; advisor WDs untouched
+  - Task 3 (`49b51e4` feat): MANAGER_SKIP_STEPS filter on isStepVisible / getVisibleSteps (additive optional userRole param) + exported; RoleSelector first-load screen (data-testid='role-selector'/role-advisor/role-manager); userRole useState declared BEFORE stepIndex (TDZ-free closure for resume reduce); userRole hydrates from `jd-builder-v2-role` localStorage; stepIndex resume reduce skips MANAGER_SKIP_STEPS in manager mode; activeStepIndex useMemo passes userRole; `wdPayload.wd_type = userRole === 'manager' ? 'manager' : 'advisor'`; exportAs guard bypassed for manager (no OG required for manager export); main render wrapped with role gate (returns `<RoleSelector>` when userRole is null, main shell otherwise)
+- Tests: 179 backend GREEN (172 pre-existing + 4 wd_type round-trip / default-advisor / user_role-dropped guard / manager-preserved + 3 manager-bypass / DRAFT-watermark / advisor-still-409) + 76 frontend GREEN (70 pre-existing + 3 MGR-01 role-selector + 3 MGR-03 manager-STEPS-variant)
+- Deviations: 4 Rule 1/2/3 auto-fixes — (1) userRole useState moved BEFORE stepIndex (TDZ constraint — lazy initializer closes over userRole for manager-skip guard in resume reduce), (2) resetStorage() now calls globalThis.localStorage.clear() instead of _store.clear() (vitest.setup.js installs its own InMemoryStorage with a different closure-bound _store; the test file's _store was unused), (3) manager-shorter test assertion relaxed to `toBeLessThan` with explicit spot-checks on the 3 NEW skips (og_level_questions is already hidden by the level-description gate when answers.og_confirm is empty, so manager mode adds 3 not 4), (4) seeded jd-builder-v2-role='advisor' in 5 existing test setups (more than anticipated by plan)
+- MGR-01 + MGR-03 marked complete in REQUIREMENTS.md (Plan 01 delivers user-visible functionality: role selector, manager STEPS variant, manager DOCX export without 409); MGR-02 stays Pending (Plan 02 scope — UI suppression layer)
+- Phase 28 Plan 02 (Wave 2 MGR-02) is unblocked — will reuse userRole state slice, record.wd_type, and MANAGER_SKIP_STEPS for conditional ClassifyBadge / Classification Sec / ReviewState audit panel rendering
