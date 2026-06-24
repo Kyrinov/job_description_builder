@@ -83,7 +83,7 @@ _SJD_DUTY_SUGGESTIONS: dict[str, list[dict]] = {
          "polished": "Liaises with community partners, service providers and other departments to coordinate service delivery and promote awareness of available programs."},
     ],
 }
-_SJD_DUTY_SUGGESTIONS["default"] = _SJD_DUTY_SUGGESTIONS["EC"]  # fallback
+_SJD_DUTY_SUGGESTIONS["default"] = list(_SJD_DUTY_SUGGESTIONS["EC"])  # defensive copy
 
 
 def _build_sjd_seed_duties(entry: object) -> list:
