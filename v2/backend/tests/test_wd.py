@@ -76,3 +76,21 @@ async def test_patch_org_context_round_trip(client):
     get_resp = await client.get(f"/api/wd/{wd_id}")
     assert get_resp.status_code == 200
     assert get_resp.json()["org_context"] == "Test org context text"
+
+
+async def test_patch_org_context_rejects_over_length(client):
+    """F-02: PATCH org_context > 4000 chars returns 422 (ASVS V5 DoS mitigation).
+
+    Guards the Field(default=None, max_length=4000) constraint on
+    WDPatchRequest.org_context — a regression removing the constraint would
+    not otherwise be caught.
+    """
+    create_resp = await client.post(
+        "/api/wd", json={"record": {}, "answers": {}, "step_index": 0}
+    )
+    wd_id = create_resp.json()["id"]
+
+    over_length_resp = await client.patch(
+        f"/api/wd/{wd_id}", json={"org_context": "x" * 4001}
+    )
+    assert over_length_resp.status_code == 422
