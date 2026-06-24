@@ -89,6 +89,20 @@ def test_load_cba_unmapped_og():
     assert load_cba_data("UNKNOWN") is None, "Unknown OG code must return None"
 
 
+def test_load_cba_never_raises_on_malformed_json(monkeypatch):
+    """F-03: load_cba_data honors its 'Never raises' contract when the JSON is malformed.
+
+    A corrupted CBA file must not propagate a JSONDecodeError — the loader
+    returns None so the audit endpoint degrades gracefully instead of 500ing.
+    """
+    from app.services import risk_auditor
+
+    monkeypatch.setattr(risk_auditor.json, "load", lambda f: (_ for _ in ()).throw(
+        json.JSONDecodeError("malformed", "doc", 0)
+    ))
+    assert risk_auditor.load_cba_data("EC") is None
+
+
 def test_two_signal_false_positive():
     """AUDIT-02 — A WD with only one matching signal (no verbatim term) produces no CBA finding."""
     from app.services.risk_auditor import run_audit, load_cba_data

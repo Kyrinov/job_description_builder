@@ -71,7 +71,8 @@ def load_cba_data(og_code: str) -> dict | None:
     """Load CBA JSON for the given OG code.
 
     Returns None if no agreement directory mapping exists for this OG code
-    (e.g. NT, ED) or if the JSON file is absent. Never raises.
+    (e.g. NT, ED), if the JSON file is absent, or if the file is unreadable
+    or malformed. Never raises.
     """
     dir_name = OG_AGREEMENT_DIR.get(og_code)
     if not dir_name:
@@ -79,8 +80,11 @@ def load_cba_data(og_code: str) -> dict | None:
     json_path = DATA_DIR / dir_name / f"{dir_name}_full.json"
     if not json_path.exists():
         return None
-    with open(json_path, encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(json_path, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return None
 
 
 # ── ERR (Federal Court) rules ────────────────────────────────────────────────
