@@ -608,6 +608,34 @@ def _slugify_title(title: str, default: str) -> str:
     return slug or default
 
 
+def _apply_draft_watermark(file_bytes: bytes) -> bytes:
+    """Phase 28 (MGR-03): Insert a prominent DRAFT paragraph at the top of the DOCX.
+
+    Post-processes the rendered DOCX bytes with python-docx: insert a new
+    paragraph at index 0 with the text 'DRAFT — PENDING CLASSIFICATION' in
+    bold dark-red, centered. Applied only to manager-track exports
+    (wd.wd_type == 'manager'). The watermark is intrinsic to manager-track
+    exports and cannot be suppressed by the client (T-28-05 mitigation —
+    watermark text is a hardcoded constant; no user input reaches it).
+    """
+    import io
+    from docx import Document
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.shared import Pt, RGBColor
+
+    doc = Document(io.BytesIO(file_bytes))
+    # insert_paragraph_before on the first paragraph places the new para at index 0
+    new_para = doc.paragraphs[0].insert_paragraph_before("DRAFT — PENDING CLASSIFICATION")
+    for run in new_para.runs:
+        run.bold = True
+        run.font.size = Pt(14)
+        run.font.color.rgb = RGBColor(0xC0, 0x00, 0x00)  # dark red
+    new_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
+
+
 # ---------------------------------------------------------------------------
 # Public entry points
 # ---------------------------------------------------------------------------
@@ -640,6 +668,13 @@ async def generate_wd_docx(wd_id: str, db_path: str) -> dict:
         context = _build_wd_context(wd, amendments)
         template_path = _resolve_template_path("wd_accessible_template.docx")
         file_bytes = await _render_docx(template_path, context)
+        # Phase 28 (MGR-03): DRAFT watermark on manager-track exports. Applied
+        # here (inside generate_wd_docx) so the watermark is intrinsic to the
+        # wd_type field — no caller can bypass it. getattr() with default
+        # "advisor" keeps old WD rows (serialized before this field existed)
+        # behaving as advisor (no watermark).
+        if getattr(wd, "wd_type", "advisor") == "manager":
+            file_bytes = _apply_draft_watermark(file_bytes)
     finally:
         con.close()
 

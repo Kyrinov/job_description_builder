@@ -28,7 +28,15 @@ def require_og_confirmed(wd: WorkDescription) -> None:
     Fallback: also check wd.record (the SPA persists classification fields
     inside the record dict as well). If a SPA PATCH sets confirmed_og only
     inside record, the gate should still pass.
+
+    Phase 28 (MGR-03): manager-track WDs deliberately skip classification.
+    The bypass is intrinsic to wd_type — every caller (export.py DOCX/poster/
+    PDF, jes_scoring.py) inherits it for free. getattr() with default
+    "advisor" keeps old WD rows (serialized before this field existed)
+    behaving as advisor — the gate behaves exactly as before for them.
     """
+    if getattr(wd, "wd_type", "advisor") == "manager":
+        return
     record_og = (wd.record or {}).get("confirmed_og")
     record_level = (wd.record or {}).get("og_level")
     confirmed_og = wd.confirmed_og or record_og

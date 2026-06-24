@@ -296,6 +296,76 @@ async def test_export_docx_409_without_og(client, env_with_db):
     assert resp.json()["detail"]["error"] == "classification_pending"
 
 
+# ---------------------------------------------------------------------------
+# Phase 28 — MGR-03: manager-track bypass of require_og_confirmed + DRAFT watermark
+#
+# Plan 28-01 Task 2: require_og_confirmed must early-return when
+# wd.wd_type=='manager'. generate_wd_docx must apply a "DRAFT — PENDING
+# CLASSIFICATION" watermark at the top of the document for manager-track
+# exports. The bypass is intrinsic to wd_type — every caller (export.py
+# DOCX/poster, jes_scoring) inherits it for free (no call-site change).
+# ---------------------------------------------------------------------------
+
+async def test_export_docx_manager_bypasses_409(client, env_with_db):
+    """MGR-03: A manager-track WD exports DOCX without 409 even when
+    confirmed_og + og_level are both None.
+
+    RED because require_og_confirmed currently raises 409 for ANY WD without
+    confirmed_og (no wd_type bypass exists yet). GREEN after the
+    `getattr(wd, 'wd_type', 'advisor') == 'manager'` early-return lands.
+    """
+    wd_id = await _create_wd(client)
+    # Patch wd_type='manager' but leave confirmed_og + og_level empty.
+    patch_resp = await client.patch(
+        f"/api/wd/{wd_id}", json={"wd_type": "manager"}
+    )
+    assert patch_resp.status_code == 200
+
+    resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert resp.status_code == 200, (
+        f"manager-track WD must bypass the 409 OG gate; got {resp.status_code}: {resp.text!r}"
+    )
+    assert len(resp.content) > 0
+
+
+async def test_export_docx_manager_has_draft_watermark(client, env_with_db):
+    """MGR-03: Manager-track DOCX export has 'DRAFT — PENDING CLASSIFICATION'
+    as the first paragraph in the document.
+
+    RED because generate_wd_docx does not apply any watermark yet.
+    GREEN after _apply_draft_watermark() is wired into the manager-track path.
+    """
+    wd_id = await _create_wd(client)
+    patch_resp = await client.patch(
+        f"/api/wd/{wd_id}", json={"wd_type": "manager"}
+    )
+    assert patch_resp.status_code == 200
+
+    resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert resp.status_code == 200
+    # Open the rendered DOCX with python-docx and assert the first paragraph
+    # carries the DRAFT watermark.
+    doc = docx.Document(io.BytesIO(resp.content))
+    first_para_text = doc.paragraphs[0].text if doc.paragraphs else ""
+    assert "DRAFT — PENDING CLASSIFICATION" in first_para_text, (
+        f"First paragraph must contain the DRAFT watermark; got {first_para_text!r}"
+    )
+
+
+async def test_export_docx_advisor_still_409_without_og(client, env_with_db):
+    """MGR-03 regression guard: Advisor-track (wd_type='advisor', the default)
+    exports STILL 409 without confirmed_og — the bypass is manager-specific.
+
+    This test PASSES against current code; it locks that the bypass is not
+    universal (only manager WDs inherit it).
+    """
+    wd_id = await _create_wd(client)
+    # wd_type defaults to 'advisor' (no PATCH needed)
+    resp = await client.post(f"/api/wd/{wd_id}/export/docx")
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["error"] == "classification_pending"
+
+
 async def test_export_poster_409_without_og(client, env_with_db):
     """WR-09 — POST /api/wd/{id}/export/poster returns 409 when OG not confirmed."""
     wd_id = await _create_wd(client)
