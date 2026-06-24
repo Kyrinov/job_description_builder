@@ -94,3 +94,49 @@ async def test_patch_org_context_rejects_over_length(client):
         f"/api/wd/{wd_id}", json={"org_context": "x" * 4001}
     )
     assert over_length_resp.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Phase 27 — RESP-01: RED baseline for responsibilities_narrative round-trip
+# (co-update rule: stays RED until BOTH WorkDescription.responsibilities_narrative
+#  AND WDPatchRequest.responsibilities_narrative ship — extra="ignore" would
+#  silently drop an unknown PATCH key with HTTP 200, so the GET round-trip
+#  returns None and the assertion below fails).
+# ---------------------------------------------------------------------------
+
+async def test_patch_responsibilities_narrative_round_trip(client):
+    """RESP-01: PATCH responsibilities_narrative → GET → assert value round-trips."""
+    create_resp = await client.post(
+        "/api/wd", json={"record": {}, "answers": {}, "step_index": 0}
+    )
+    wd_id = create_resp.json()["id"]
+
+    patch_resp = await client.patch(
+        f"/api/wd/{wd_id}",
+        json={"responsibilities_narrative": "Owns the environmental policy portfolio and briefs senior leadership."},
+    )
+    assert patch_resp.status_code == 200
+
+    get_resp = await client.get(f"/api/wd/{wd_id}")
+    assert get_resp.status_code == 200
+    assert get_resp.json()["responsibilities_narrative"] == (
+        "Owns the environmental policy portfolio and briefs senior leadership."
+    )
+
+
+async def test_patch_responsibilities_narrative_rejects_over_length(client):
+    """T-27-01 (ASVS V5 DoS): PATCH responsibilities_narrative > 4000 chars returns 422.
+
+    Guards the Field(default=None, max_length=4000) constraint on
+    WDPatchRequest.responsibilities_narrative — a regression removing the
+    constraint would not otherwise be caught.
+    """
+    create_resp = await client.post(
+        "/api/wd", json={"record": {}, "answers": {}, "step_index": 0}
+    )
+    wd_id = create_resp.json()["id"]
+
+    over_length_resp = await client.patch(
+        f"/api/wd/{wd_id}", json={"responsibilities_narrative": "x" * 4001}
+    )
+    assert over_length_resp.status_code == 422
