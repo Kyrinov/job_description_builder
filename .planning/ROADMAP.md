@@ -279,7 +279,11 @@ Plans:
 3. The manager-track STEPS array skips og_confirm, og_level, and JES override steps; a manager can reach Review and trigger a DOCX download without a 409 from require_og_confirmed; the downloaded DOCX is watermarked as "DRAFT — PENDING CLASSIFICATION".
 4. The userRole value is never present in the WD PATCH body sent to /api/wd — confirmed by a test asserting WDPatchRequest does not accept a user_role key and that the field does not appear in the work_descriptions.data JSON column after a full conversation.
 
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 28-01-PLAN.md — Wave 1 Manager-track foundation vertical slice (MGR-01 + MGR-03): wd_type field co-update on WorkDescription + WDPatchRequest + WDCreateRequest, user_role rejection guard, require_og_confirmed bypass, DRAFT watermark, RoleSelector screen + userRole state, manager STEPS variant (skip noc_confirm/og_confirm/og_level_questions/og_level), wd_type in POST body, exportAs guard bypass
+- [ ] 28-02-PLAN.md — Wave 2 Manager-mode UI suppression (MGR-02): conditional ClassifyBadge/Classification Sec/ReviewState audit panel suppression + systematic MGR-02 inspection test suite (no OG codes, JES factor names, or CBA citations in manager-mode rendered output)
 
 **UI hint**: yes
 
@@ -338,5 +342,5 @@ Plans:
 | 25. Accessible Template | v3.0 | 3/3 | Complete (pending UAT) | 2026-06-16 |
 | **26. Org Context Conversational Step** | **v4.0** | **2/2** | **Complete (Wave 0 RED + Wave 1 GREEN; 153 backend + 65 frontend GREEN; ORG-01/02/03 closed)** | — |
 | **27. Responsibilities Narrative + Completeness Audit** | **v4.0** | **0/2** | **Ready to execute** | — |
-| **28. Manager-Track UX** | **v4.0** | **0/?** | **Not started** | — |
+| **28. Manager-Track UX** | **v4.0** | **0/2** | **Ready to execute** | — |
 | **29. Structured Export + Enhanced Poster** | **v4.0** | **0/?** | **Not started** | — |
