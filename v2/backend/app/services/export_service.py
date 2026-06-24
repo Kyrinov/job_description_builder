@@ -422,6 +422,114 @@ def _build_wd_context(wd: WorkDescription, amendments: list[dict]) -> dict:
     }
 
 
+def build_seven_elements(wd: WorkDescription) -> dict:
+    """Single source of truth for the 7 Part 2 elements + per-element status.
+
+    Phase 27 (ELEM-01): Consumed by POST /api/wd/{id}/validate-elements
+    (ELEM-01) and, in Phase 29, by the JSON/CSV export routes (SEXP-01/02).
+
+    Reads typed root fields directly — for Organizational Context it reads
+    wd.org_context ONLY (never the synthesized fallback from
+    _build_organizational_context_text), per ROADMAP criterion #4.
+    Responsibility reads the responsibilities_narrative typed field
+    (Phase 27 RESP-01) and is never 'not_applicable' (the field is open
+    to all positions) per ROADMAP criterion #3.
+
+    Status enum: 'populated' | 'derived' | 'missing'. Effort and Working
+    Conditions are 'derived' when wd.jes_total_points is not None,
+    'missing' otherwise (R-ELEM-01b).
+    """
+    record = wd.record or {}
+
+    # Organizational Context — typed root field ONLY (ROADMAP #4).
+    # The synthesized fallback _build_organizational_context_text() must
+    # NOT influence the audit status; otherwise a WD with record.branch
+    # + record.reports would falsely report "populated" even when the
+    # advisor skipped the conversational step.
+    oc_value = (wd.org_context or "").strip()
+
+    # Client Service Results — stored in record (captured by Phase 23
+    # client_service_results conversational step).
+    csr_value = (record.get("client_service_results") or "").strip()
+
+    # Key Activities — wd.duties (list). Non-empty list ⇒ populated.
+    ka_value = wd.duties or []
+
+    # Skills — qualification education OR experience. Falls back to
+    # record.quals when root qualification not yet persisted (mirrors
+    # _build_wd_context).
+    if wd.qualification is not None:
+        skills_present = bool(
+            (wd.qualification.education or "").strip()
+            or (wd.qualification.experience or "").strip()
+        )
+    else:
+        rq = record.get("quals") or {}
+        skills_present = bool(
+            (rq.get("education") or "").strip()
+            or (rq.get("experience") or "").strip()
+        )
+
+    # Effort / Working Conditions — derived from JES total points
+    # (R-ELEM-01b). The presence of jes_total_points is the "derived"
+    # signal that the JES ran; category-empty groups (e.g. MT) still
+    # count as derived when jes_total_points is set.
+    jes_present = wd.jes_total_points is not None
+
+    # Responsibility — typed root field (Phase 27 RESP-01). Never
+    # 'not_applicable' (R-ELEM-01a / ROADMAP #3).
+    resp_value = (wd.responsibilities_narrative or "").strip()
+
+    elements = [
+        {
+            "key": "organizational_context",
+            "label": "Organizational Context",
+            "status": "populated" if oc_value else "missing",
+            "value": oc_value,
+        },
+        {
+            "key": "client_service_results",
+            "label": "Client Service Results",
+            "status": "populated" if csr_value else "missing",
+            "value": csr_value,
+        },
+        {
+            "key": "key_activities",
+            "label": "Key Activities",
+            "status": "populated" if ka_value else "missing",
+            "value": ka_value,
+        },
+        {
+            "key": "skills",
+            "label": "Skills",
+            "status": "populated" if skills_present else "missing",
+            "value": None,
+        },
+        {
+            "key": "effort",
+            "label": "Effort",
+            "status": "derived" if jes_present else "missing",
+            "value": None,
+        },
+        {
+            "key": "responsibility",
+            "label": "Responsibility",
+            "status": "populated" if resp_value else "missing",
+            "value": resp_value,
+        },
+        {
+            "key": "working_conditions",
+            "label": "Working Conditions",
+            "status": "derived" if jes_present else "missing",
+            "value": None,
+        },
+    ]
+    complete_count = sum(
+        1 for e in elements if e["status"] in ("populated", "derived")
+    )
+    return {"elements": elements, "complete_count": complete_count, "total": 7}
+
+
 # ---------------------------------------------------------------------------
 # Poster context builder (EXP-02)
 # ---------------------------------------------------------------------------

@@ -683,3 +683,202 @@ async def test_responsibilities_narrative_placeholder_in_export(client, env_with
     # No template leak
     assert "{{" not in full_text
     assert "responsibilities_text" not in full_text
+
+
+# ---------------------------------------------------------------------------
+# Phase 27 — ELEM-01: build_seven_elements shared helper unit tests
+# (Plan 27-02 — Seven-Elements Completeness Audit)
+#
+# These are pure-function tests that import build_seven_elements directly
+# and construct WorkDescription objects inline (no HTTP). The helper is
+# the single source of truth for the 7 Part 2 elements + per-element
+# status, consumed by POST /api/wd/{id}/validate-elements (ELEM-01) and
+# Phase 29's JSON/CSV routes (SEXP-01/02).
+# ---------------------------------------------------------------------------
+
+
+def _wd_for_seven_elements(**overrides):
+    """Build a WorkDescription directly for build_seven_elements tests.
+
+    Mirrors the in-memory representation after PATCH + DB round-trip.
+    Required defaults: id="test-wd", created_at/last_modified set.
+    """
+    from datetime import datetime, timezone
+    from app.models.work_description import WorkDescription
+
+    base = {
+        "id": "test-wd",
+        "title": "",
+        "record": {},
+        "answers": {},
+        "step_index": 0,
+        "draft": None,
+        "reviewing": False,
+        "editing_return": False,
+        "duties": [],
+        "qualification": None,
+        "drf_id": None,
+        "noc_candidates": [],
+        "confirmed_noc": None,
+        "confirmed_og": None,
+        "confirmed_sub_group": None,
+        "og_level": None,
+        "sjd_source": None,
+        "org_context": None,
+        "responsibilities_narrative": None,
+        "reports_to_military": None,
+        "jes_scores": [],
+        "jes_total_points": None,
+        "schema_version": 1,
+        "created_at": datetime.now(timezone.utc),
+        "last_modified": datetime.now(timezone.utc),
+    }
+    base.update(overrides)
+    return WorkDescription(**base)
+
+
+def test_build_seven_elements_derived_effort_wc():
+    """ELEM-01 / R-ELEM-01b: jes_total_points set → effort + working_conditions
+    status == 'derived' (not 'missing') and counted in complete_count."""
+    from app.services.export_service import build_seven_elements
+
+    wd = _wd_for_seven_elements(
+        record={"client_service_results": "Citizens get answers.", "quals": {"education": "Degree", "experience": "5 yrs"}},
+        duties=[{"id": "d1", "text": "Provides advice.", "source": "noc",
+                 "provenance_noc_code": "4163", "advisor": False}],
+        org_context="Within Branch X.",
+        responsibilities_narrative="Owns the policy portfolio.",
+        jes_total_points=621,
+    )
+    result = build_seven_elements(wd)
+    elements = {e["key"]: e for e in result["elements"]}
+    assert elements["effort"]["status"] == "derived"
+    assert elements["working_conditions"]["status"] == "derived"
+    # All 7 elements + complete_count counts derived as complete
+    assert result["total"] == 7
+    assert result["complete_count"] == 7
+
+
+def test_build_seven_elements_no_jes_missing():
+    """ELEM-01 / R-ELEM-01b: jes_total_points None → effort + working_conditions
+    status == 'missing' (NOT 'derived')."""
+    from app.services.export_service import build_seven_elements
+
+    wd = _wd_for_seven_elements(
+        record={"client_service_results": "Citizens get answers."},
+        duties=[{"id": "d1", "text": "Provides advice.", "source": "noc",
+                 "provenance_noc_code": "4163", "advisor": False}],
+        org_context="Within Branch X.",
+        responsibilities_narrative="Owns the policy portfolio.",
+        jes_total_points=None,  # JES never ran
+    )
+    result = build_seven_elements(wd)
+    elements = {e["key"]: e for e in result["elements"]}
+    assert elements["effort"]["status"] == "missing"
+    assert elements["working_conditions"]["status"] == "missing"
+    # 5 populated (oc, csr, ka, skills vacuous w/o quals, resp) — but skills
+    # is missing too because quals are absent; let's count what's populated:
+    # oc=populated, csr=populated, ka=populated, skills=missing (no quals),
+    # effort=missing, resp=populated, wc=missing → complete_count=4
+    assert result["complete_count"] == 4
+
+
+def test_build_seven_elements_org_context_reads_typed_field():
+    """ELEM-01 / ROADMAP #4: org_context=None + record has branch/reports →
+    organizational_context status == 'missing' (NOT populated).
+
+    This is the audit guard: the completeness audit reads wd.org_context
+    (typed root field) and ignores the synthesized fallback from
+    _build_organizational_context_text(). A WD whose advisor skipped the
+    org_context step must NOT report Organizational Context as populated
+    just because record.branch/record.reports exist."""
+    from app.services.export_service import build_seven_elements
+
+    wd = _wd_for_seven_elements(
+        record={
+            "branch": "Department of National Defence",
+            "reports": "Director of Policy",
+            "summary": "performs duties as assigned",
+            "title": "Policy Analyst",
+            # Deliberately NO client_service_results / quals / duties here
+            # so only org_context is being tested.
+        },
+        duties=[{"id": "d1", "text": "Provides advice.", "source": "noc",
+                 "provenance_noc_code": "4163", "advisor": False}],
+        responsibilities_narrative="Owns the policy portfolio.",
+        jes_total_points=621,
+        # org_context stays None (typed field is empty)
+    )
+    result = build_seven_elements(wd)
+    elements = {e["key"]: e for e in result["elements"]}
+    # The audit guard: org_context reads the typed field ONLY
+    assert elements["organizational_context"]["status"] == "missing", (
+        "org_context audit must read wd.org_context (None) — "
+        "branch/reports in record must NOT make it populated"
+    )
+    # Effort + WC still derived from jes_total_points
+    assert elements["effort"]["status"] == "derived"
+    assert elements["working_conditions"]["status"] == "derived"
+
+
+def test_build_seven_elements_responsibility_missing_not_notapplicable():
+    """ELEM-01 / R-ELEM-01a: empty responsibilities_narrative →
+    responsibility status == 'missing' (NEVER 'not_applicable').
+
+    Locked ROADMAP criterion #3: the field is open to all positions, so
+    an empty value means missing, not not_applicable."""
+    from app.services.export_service import build_seven_elements
+
+    wd = _wd_for_seven_elements(
+        record={"client_service_results": "Citizens get answers.",
+                "quals": {"education": "Degree", "experience": "5 yrs"}},
+        duties=[{"id": "d1", "text": "Provides advice.", "source": "noc",
+                 "provenance_noc_code": "4163", "advisor": False}],
+        org_context="Within Branch X.",
+        # responsibilities_narrative stays None (advisor skipped the step)
+        jes_total_points=621,
+    )
+    result = build_seven_elements(wd)
+    elements = {e["key"]: e for e in result["elements"]}
+    # ROADMAP #3 explicit: missing (NOT not_applicable) when empty
+    assert elements["responsibility"]["status"] == "missing"
+    assert elements["responsibility"]["status"] != "not_applicable", (
+        "responsibility status must NEVER be 'not_applicable' per ROADMAP #3"
+    )
+
+
+def test_build_seven_elements_total_seven():
+    """ELEM-01: helper ALWAYS returns exactly 7 elements and total == 7.
+
+    Locks the helper's shape contract: consumers (validate-elements
+    endpoint, Phase 29 JSON/CSV routes) depend on 7 keys."""
+    from app.services.export_service import build_seven_elements
+
+    # Empty WD: every element missing, but exactly 7 keys still returned
+    wd_empty = _wd_for_seven_elements()
+    result_empty = build_seven_elements(wd_empty)
+    assert len(result_empty["elements"]) == 7
+    assert result_empty["total"] == 7
+    assert result_empty["complete_count"] == 0
+
+    # Fully populated WD: 7 elements, all populated/derived
+    wd_full = _wd_for_seven_elements(
+        record={"client_service_results": "Citizens get answers.",
+                "quals": {"education": "Degree", "experience": "5 yrs"}},
+        duties=[{"id": "d1", "text": "Provides advice.", "source": "noc",
+                 "provenance_noc_code": "4163", "advisor": False}],
+        org_context="Within Branch X.",
+        responsibilities_narrative="Owns the policy portfolio.",
+        jes_total_points=621,
+    )
+    result_full = build_seven_elements(wd_full)
+    assert len(result_full["elements"]) == 7
+    assert result_full["total"] == 7
+    assert result_full["complete_count"] == 7
+
+    # Every element has the required keys
+    expected_keys = {"key", "label", "status", "value"}
+    for el in result_full["elements"]:
+        assert expected_keys.issubset(el.keys()), (
+            f"Element missing required keys: {el}"
+        )
