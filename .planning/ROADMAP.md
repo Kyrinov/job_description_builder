@@ -255,7 +255,11 @@ Plans:
 4. The completeness audit reads wd.org_context (the typed root field), not the derived fallback text from _build_organizational_context_text() — confirmed by a test that leaves org_context None while record has branch/reports data, asserting the element status is "missing".
 5. The Review phase completeness badge shows N/7 elements as populated or derived; the advisor can proceed to export with any count after acknowledging the badge — the badge is a soft gate, not a hard block.
 
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 27-01-PLAN.md — Responsibilities Narrative vertical slice (RESP-01/02/03): typed responsibilities_narrative field + WDPatchRequest co-update, free-text STEPS step, DocumentPane Responsibilities Sec, DOCX export priority (narrative or placeholder)
+- [ ] 27-02-PLAN.md — Seven-Elements Completeness Audit (ELEM-01/02/03): build_seven_elements(wd) shared helper, POST /api/wd/{id}/validate-elements endpoint, Review-phase N/7 completeness badge (soft gate)
 
 **UI hint**: yes
 
@@ -333,6 +337,6 @@ Plans:
 | 24. Risk Audit | v3.0 | 4/4 | Complete | 2026-06-16 |
 | 25. Accessible Template | v3.0 | 3/3 | Complete (pending UAT) | 2026-06-16 |
 | **26. Org Context Conversational Step** | **v4.0** | **2/2** | **Complete (Wave 0 RED + Wave 1 GREEN; 153 backend + 65 frontend GREEN; ORG-01/02/03 closed)** | — |
-| **27. Responsibilities Narrative + Completeness Audit** | **v4.0** | **0/?** | **Not started** | — |
+| **27. Responsibilities Narrative + Completeness Audit** | **v4.0** | **0/2** | **Ready to execute** | — |
 | **28. Manager-Track UX** | **v4.0** | **0/?** | **Not started** | — |
 | **29. Structured Export + Enhanced Poster** | **v4.0** | **0/?** | **Not started** | — |
