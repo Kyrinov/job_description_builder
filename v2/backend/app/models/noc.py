@@ -18,6 +18,7 @@ class WorkDescriptionRequest(BaseModel):
     work_description: str = Field(
         ...,
         min_length=10,
+        max_length=2000,
         description="Free-text description of the work to classify against NOC 2021",
     )
 
