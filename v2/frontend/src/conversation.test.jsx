@@ -905,9 +905,12 @@ describe('Phase 27 Plan 02: ReviewState completeness badge', () => {
     expect(exportDocxBtn).toBeTruthy();
     // MUST NOT have a disabled attribute tied to completeness
     expect(exportDocxBtn.hasAttribute('disabled')).toBe(false);
-    // All three export buttons stay enabled
+    // All export buttons stay enabled (DOCX, PDF, Copy, JSON, CSV = 5 buttons
+    // since Phase 29 added structured-export buttons). The invariant being
+    // tested is "no completeness-dependent disabled" — the count check just
+    // confirms we're iterating over every .btn--export in the row.
     const allExportBtns = container.querySelectorAll('.export-row .btn--export');
-    expect(allExportBtns.length).toBe(3);
+    expect(allExportBtns.length).toBe(5);
     allExportBtns.forEach(btn => {
       expect(btn.hasAttribute('disabled')).toBe(false);
     });

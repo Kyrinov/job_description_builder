@@ -253,6 +253,14 @@ function ReviewState({ record, cls, onExport, onRestart, amendmentNotes = {},
             <Icon path='<rect x="6" y="3" width="11" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 6v9.5A1.5 1.5 0 005 17h8" fill="none" stroke="currentColor" stroke-width="1.6"/>' />
             Copy
           </button>
+          <button className="btn--export" onClick={() => onExport('json')}>
+            <Icon path='<text x="2" y="14" font-size="12" font-family="monospace" fill="currentColor">{}</text>' />
+            Export JSON
+          </button>
+          <button className="btn--export" onClick={() => onExport('csv')}>
+            <Icon path='<rect x="3" y="5" width="14" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h14M9 5v10" stroke="currentColor" stroke-width="1.4"/>' />
+            Export CSV
+          </button>
         </div>
         {/* Phase 24 (AUDIT-01): Compliance audit — manual trigger only. Button
             is disabled and shows "Auditing…" while the request is in flight.
