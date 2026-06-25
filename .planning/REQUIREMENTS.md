@@ -44,15 +44,15 @@
 
 ## Structured Data Export (SEXP) — 3 requirements
 
-- [ ] **SEXP-01** — `POST /api/wd/{id}/export/json` returns all 7 Part 2 elements (Organizational Context, Client Service Results, Key Activities, Skills, Effort, Responsibility, Working Conditions) plus classification metadata and provenance as JSON; uses a shared `build_seven_elements(wd)` helper in `export_service.py`
-- [ ] **SEXP-02** — `POST /api/wd/{id}/export/csv` returns the same 7-element schema as UTF-8-with-BOM CSV (Excel-compatible); uses `csv.DictWriter` with `io.StringIO`; per-element completeness status included
+- [x] **SEXP-01** — `POST /api/wd/{id}/export/json` returns all 7 Part 2 elements (Organizational Context, Client Service Results, Key Activities, Skills, Effort, Responsibility, Working Conditions) plus classification metadata and provenance as JSON; uses a shared `build_seven_elements(wd)` helper in `export_service.py`
+- [x] **SEXP-02** — `POST /api/wd/{id}/export/csv` returns the same 7-element schema as UTF-8-with-BOM CSV (Excel-compatible); uses `csv.DictWriter` with `io.StringIO`; per-element completeness status included
 - [ ] **SEXP-03** — SPA Review phase displays JSON and CSV download buttons alongside existing DOCX/PDF buttons; uses the same `exportAs()` async fetch + Blob + `URL.createObjectURL` pattern
 
 ---
 
 ## Enhanced Job Poster (POST) — 1 requirement
 
-- [ ] **POST-01** — Job poster DOCX gains an "About the organization" section populated from `org_context`; Key Activities and Skills sections sourced from the 7-element structured data; `build_poster_template.py` script updated and self-verifying
+- [x] **POST-01** — Job poster DOCX gains an "About the organization" section populated from `org_context`; Key Activities and Skills sections sourced from the 7-element structured data; `build_poster_template.py` script updated and self-verifying
 
 ---
 
@@ -94,7 +94,7 @@
 | MGR-01 | Phase 28 | Complete (Plan 28-01 — RoleSelector + userRole localStorage hydration + D-28-03 user_role drop guard test) |
 | MGR-02 | Phase 28 | Complete (Plan 28-02 — ClassifyBadge / Classification Sec / ReviewState audit panel suppression + 3 MGR-02 inspection tests) |
 | MGR-03 | Phase 28 | Complete (Plan 28-01 — wd_type co-update + require_og_confirmed bypass + DRAFT watermark + MANAGER_SKIP_STEPS filter) |
-| SEXP-01 | Phase 29 | Pending |
-| SEXP-02 | Phase 29 | Pending |
-| SEXP-03 | Phase 29 | Pending |
-| POST-01 | Phase 29 | Pending |
+| SEXP-01 | Phase 29 | Complete (Plan 29-02 — POST /api/wd/{id}/export/json + _build_json_export + build_seven_elements shared helper + [ADVISOR TO COMPLETE] manager-track placeholder) |
+| SEXP-02 | Phase 29 | Complete (Plan 29-02 — POST /api/wd/{id}/export/csv + _build_csv_export + utf-8-sig BOM + one row per duty + per-element status columns) |
+| SEXP-03 | Phase 29 | Pending (Plan 29-03 — Export JSON + Export CSV buttons in ReviewState .export-row) |
+| POST-01 | Phase 29 | Complete (Plan 29-02 — _build_poster_context org_context key + About the Organization section in poster_template.docx + build_poster_template.py self-verify update) |

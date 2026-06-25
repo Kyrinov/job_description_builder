@@ -4,21 +4,20 @@ milestone: v4.0
 milestone_name: Seven-Elements Conversational Architecture
 current_phase: 29
 status: executing
-last_updated: "2026-06-25T12:17:59Z"
+last_updated: "2026-06-25T12:27:00Z"
 progress:
   total_phases: 9
   completed_phases: 8
-  total_plans: 33
-  completed_plans: 32
+  total_plans: 34
+  completed_plans: 33
   percent: 97
 ---
-
 # Project State
 
-**Status:** Executing Phase 29 (Plan 01 done)
+**Status:** Executing Phase 29 (Plan 02 done)
 **Current phase:** 29
 **Last updated:** 2026-06-25
-**Next action:** Plan 29-02 (Wave 1 backend routes — /export/json + /export/csv + poster About the Organization section) turns the 5 RED stubs GREEN
+**Next action:** Plan 29-03 (Wave 2 frontend — Export JSON + Export CSV buttons in ReviewState) turns the 2 RED frontend stubs GREEN
 
 ---
 
@@ -34,7 +33,7 @@ progress:
 | 26 | Org Context Conversational Step | **Complete** — Plan 01 (Wave 0 RED baseline) + Plan 02 (Wave 1 GREEN) both done; 8/8 RED stubs GREEN; 153/153 backend + 65/65 frontend GREEN; ORG-01/02/03 closed |
 | 27 | Responsibilities Narrative + Completeness Audit | Complete (Plan 01 RESP vertical slice + Plan 02 ELEM completeness audit); 172 backend + 70 frontend GREEN; RESP-01/02/03 + ELEM-01/02/03 closed |
 | 28 | Manager-Track UX | Plan 01 + Plan 02 both complete (MGR-01 + MGR-02 + MGR-03 all closed); 179 backend + 85 frontend GREEN; awaiting phase verification |
-| 29 | Structured Export + Enhanced Poster | **Plan 01 complete** (Wave 0 RED baseline: 5 backend + 2 frontend RED stubs; 179 + 85 pre-existing GREEN preserved); Plans 02 (backend routes) + 03 (frontend buttons) pending |
+| 29 | Structured Export + Enhanced Poster | **Plans 01 + 02 complete** (Plan 01 = 5 backend + 2 frontend RED stubs; Plan 02 = JSON/CSV export routes + poster "About the Organization" section; 184/184 backend + 85/85 frontend GREEN; Plan 03 frontend buttons pending) |
 
 ---
 
@@ -270,3 +269,14 @@ None. v3.0 complete (Phase 25 done). v4.0 roadmap ready. Phase 26 unblocked.
 - Deviations: 2 Rule 1 auto-fixes (Task 2) — (1) `cls={null}` replaced with minimal valid `cls={{code: 'EC-04', points: 250, status: 'resolved'}}` (ReviewState reads cls.code unconditionally for advisor mode; null would crash render before button assertion runs — violates plan's "AssertionError not ReferenceError/SyntaxError" acceptance criterion), (2) `screen` added to existing `@testing-library/react` import (plan body uses screen.queryByText but file only imported render/fireEvent/waitFor)
 - SEXP-01/02/03/04 + POST-01 left Pending in REQUIREMENTS.md (Wave 0 delivers tests, not user-facing functionality)
 - Next: Plan 29-02 (Wave 1 backend) turns the 5 RED stubs GREEN — implementation order from PLAN.md: `/export/json` route → `/export/csv` route → poster DOCX 'About the Organization' section. `build_seven_elements(wd)` helper from Phase 27 is the natural data source for the JSON export
+
+**Completed Plan:** 29 Plan 02 (Structured Export + Enhanced Poster — Wave 1 backend GREEN) — 2026-06-25T12:27Z
+
+- 3 atomic task commits (1 chore hygiene; production code in 2):
+  - Task 1 (`e344c2b` feat): JSON + CSV export routes in v2/backend/app/api/export.py — `_MANAGER_PLACEHOLDER = "[ADVISOR TO COMPLETE]"` constant; `_build_json_export(wd)` returning 7 Part 2 element keys + element_status dict + classification metadata (with [ADVISOR TO COMPLETE] fallback for manager-track) + provenance + export_date; `_build_csv_export(wd)` returning UTF-8-BOM bytes (encode("utf-8-sig")) with one row per duty (DraftDuty .text + .provenance_noc_code attribute access — NOT dict subscript) + scalar context columns; POST /api/wd/{id}/export/json route (SEXP-01); POST /api/wd/{id}/export/csv route (SEXP-02); both routes deliberately OMIT require_og_confirmed(wd) so manager-track WDs (wd_type='manager') export successfully (SEXP-04 SC-4)
+  - Task 2 (`d89d30e` feat): poster About the Organization section — `_build_poster_context()` returns new `org_context` key ((wd.org_context or "").strip() or "[To be provided / À fournir]"); build_poster_template.py adds "About the Organization / À propos de l'organisation" heading + `{{ org_context }}` body paragraph after Branch block; "org_context" added to required set in self-verify block; poster_template.docx regenerated from repo root (37,004 bytes, contains the new Jinja2 variable)
+  - Chore (`7bdc194` chore): python-docx non-determinism hygiene — captured the freshly regenerated poster_template.docx binary (same 37,004 bytes, differs at byte level from Task 2 commit due to internal timestamps/ZIP ordering in python-docx output) so HEAD matches what a fresh build produces
+- Tests: 5 RED stubs from Plan 29-01 ALL GREEN — test_export_json_returns_all_seven_keys, test_export_json_metadata_and_provenance, test_export_csv_utf8_bom_one_row_per_duty, test_export_json_manager_no_409, test_poster_org_context_section. test_export.py: 37 passed, 0 failed (32 pre-existing + 5 Wave 0 stubs). Full backend suite: 184 passed, 0 failed
+- Deviations: 1 chore commit (Rule 3 — capture fresh-build binary to match HEAD; no behavioral or test-visible change)
+- SEXP-01/02 + POST-01 marked complete in REQUIREMENTS.md traceability (Plan 02 delivers user-visible functionality: JSON+CSV routes work, poster has About the Organization section). SEXP-03 (frontend buttons) + SEXP-04 SC-3/4 verification items remain pending — Plan 03 closes SEXP-03; SEXP-04 backend half (manager JSON without 409) is now locked by test_export_json_manager_no_409
+- Next: Plan 29-03 (Wave 2 frontend) turns the 2 RED frontend stubs GREEN — Export JSON + Export CSV buttons in ReviewState's existing .export-row; follows the same fetchAsBlob pattern as the docx/poster/pdf buttons already there; completeness-soft-gate invariant from Phase 27 preserved (buttons stay enabled at any complete_count value)
