@@ -562,6 +562,7 @@ def _build_poster_context(wd: WorkDescription) -> dict:
         "experience": experience_text,
         "duties": [{"text": d.text} for d in (wd.duties or [])[:5]],
         "bilingual_title_fr": "",
+        "org_context": (wd.org_context or "").strip() or "[To be provided / À fournir]",
     }
 
 

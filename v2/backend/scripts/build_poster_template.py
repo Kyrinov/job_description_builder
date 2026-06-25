@@ -87,6 +87,14 @@ def build() -> None:
     doc.add_paragraph("{{ branch }}")
 
     # ------------------------------------------------------------------
+    # About the Organization / À propos de l'organisation
+    # ------------------------------------------------------------------
+    org_head = doc.add_paragraph()
+    org_run = org_head.add_run("About the Organization / À propos de l'organisation:")
+    org_run.bold = True
+    doc.add_paragraph("{{ org_context }}")
+
+    # ------------------------------------------------------------------
     # Key Duties / Principales fonctions — paragraph-level loop
     # The export service slices the full duties list to top 3-5 entries
     # before passing the context dict to the template.
@@ -138,6 +146,7 @@ if __name__ == "__main__":
         "position_title", "bilingual_title_fr",
         "og_level", "og_name", "branch",
         "duties", "education_text", "experience_text",
+        "org_context",
     }
     missing = required - set(undeclared)
     if missing:
