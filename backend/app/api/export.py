@@ -12,6 +12,7 @@ import asyncio
 import csv
 import io
 import json
+import logging
 from datetime import date
 
 from fastapi import APIRouter, HTTPException
@@ -32,6 +33,8 @@ from app.services.export_service import (
     generate_wd_docx,
 )
 from app.services.jes_service import score_jes_v2
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -94,8 +97,13 @@ async def export_wd_docx(wd_id: str) -> Response:
                     duties=duties,
                     db_path=settings.db_path,
                 )
-            except Exception:
-                pass  # proceed with empty JES section rather than blocking
+            except Exception as exc:
+                # Best-effort self-heal: proceed with empty JES section rather
+                # than blocking export, but surface the failure for diagnosis.
+                logger.warning(
+                    "export: best-effort JES scoring failed for wd_id=%s: %s",
+                    wd_id, exc,
+                )
         wd = _load_wd(wd_id, settings.db_path)
     result = await generate_wd_docx(wd_id=wd_id, db_path=settings.db_path)
     return Response(
@@ -175,8 +183,13 @@ async def export_pdf(wd_id: str) -> Response:
                     duties=duties_heal,
                     db_path=settings.db_path,
                 )
-            except Exception:
-                pass  # proceed with empty JES section rather than blocking
+            except Exception as exc:
+                # Best-effort self-heal: proceed with empty JES section rather
+                # than blocking export, but surface the failure for diagnosis.
+                logger.warning(
+                    "export: best-effort JES scoring failed for wd_id=%s: %s",
+                    wd_id, exc,
+                )
         wd = _load_wd(wd_id, settings.db_path)
 
     # Build HTML representation from WD data — never accept raw HTML from the client

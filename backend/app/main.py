@@ -52,7 +52,7 @@ def create_app() -> FastAPI:
         body = None
         try:
             body = await request.json()
-        except Exception:
+        except (ValueError, UnicodeDecodeError):
             body = "<unparseable>"
         logging.getLogger("app.main").warning(
             "422 %s %s — validation errors: %s — body keys: %s",
