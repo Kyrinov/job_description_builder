@@ -5,7 +5,7 @@
  * and Plan 04 (app.jsx + components.jsx wiring) complete.
  */
 import { describe, it, expect, beforeAll, vi, afterEach, beforeEach } from 'vitest';
-import { render, fireEvent, waitFor } from '@testing-library/react';
+import { render, fireEvent, screen, waitFor } from '@testing-library/react';
 import { STEPS, PHASES, accumulateSignals, isStepVisible, getVisibleSteps } from './data.jsx';
 import { StepInput, answerValid, OrgContextInput } from './components.jsx';
 import { ReviewState } from './conversation.jsx';
@@ -1104,4 +1104,41 @@ describe('MGR-02: manager-mode ReviewState renders no classification codes or au
     expect(container.textContent).not.toMatch(/CBA/);
     expect(container.textContent).not.toMatch(/article 32\.01/);
   });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 29 — Wave 0 RED stubs: Export JSON + CSV buttons
+// ---------------------------------------------------------------------------
+
+it('ReviewState renders an Export JSON button in the export row', () => {
+  // RED: Export JSON button not yet added to conversation.jsx ReviewState.
+  // Minimal valid cls (code + points + status) — ReviewState reads cls.code
+  // unconditionally for advisor mode, so null/undefined would crash before
+  // our button assertion runs. Plan Rule 1 fix: provide minimal valid cls
+  // so the render succeeds and the missing-button assertion is the failure.
+  render(
+    <ReviewState
+      record={{ title: 'Test Position', confirmed_og: { og_code: 'EC' }, og_level: 4 }}
+      cls={{ code: 'EC-04', points: 250, status: 'resolved' }}
+      onExport={() => {}}
+      onRestart={() => {}}
+    />
+  );
+  const btn = screen.queryByText('Export JSON');
+  expect(btn).not.toBeNull();
+});
+
+it('ReviewState renders an Export CSV button in the export row', () => {
+  // RED: Export CSV button not yet added to conversation.jsx ReviewState.
+  // Minimal valid cls (code + points + status) — see Export JSON test comment.
+  render(
+    <ReviewState
+      record={{ title: 'Test Position', confirmed_og: { og_code: 'EC' }, og_level: 4 }}
+      cls={{ code: 'EC-04', points: 250, status: 'resolved' }}
+      onExport={() => {}}
+      onRestart={() => {}}
+    />
+  );
+  const btn = screen.queryByText('Export CSV');
+  expect(btn).not.toBeNull();
 });
