@@ -9,6 +9,10 @@ Routes:
 from __future__ import annotations
 
 import asyncio
+import csv
+import io
+import json
+from datetime import date
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
@@ -18,10 +22,12 @@ from app.db import get_connection
 from app.models.work_description import WorkDescription
 from app.services.classification_gate import require_og_confirmed
 from app.services.export_service import (
+    _build_v2_manifest,
     _og_code_from,
     _og_level_str,
     _probe_weasyprint,
     _slugify_title,
+    build_seven_elements,
     generate_poster_docx,
     generate_wd_docx,
 )
@@ -32,6 +38,13 @@ router = APIRouter()
 DOCX_MEDIA_TYPE = (
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 )
+
+# Manager-track export placeholder (SEXP-04 SC-4 — JSON/CSV routes deliberately
+# bypass the require_og_confirmed 409 gate so a manager WD without confirmed_og
+# still exports. Classification metadata is replaced with this string instead
+# of null, so analytics consumers see "[ADVISOR TO COMPLETE]" rather than
+# silently inferring "no classification".
+_MANAGER_PLACEHOLDER = "[ADVISOR TO COMPLETE]"
 
 
 def _load_wd(wd_id: str, db_path: str) -> WorkDescription:
@@ -200,4 +213,144 @@ async def export_pdf(wd_id: str) -> Response:
         content=pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{pdf_filename}.pdf"'},
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 29 — Structured Export (SEXP-01 JSON, SEXP-02 CSV)
+# ---------------------------------------------------------------------------
+# These two routes deliberately OMIT the require_og_confirmed(wd) gate so a
+# manager-track WD (wd_type == 'manager', no confirmed_og) can still export.
+# Classification metadata is rendered as "[ADVISOR TO COMPLETE]" instead of
+# null so workforce analytics can detect the gap explicitly (SEXP-04 SC-4).
+
+
+def _build_json_export(wd) -> dict:
+    """Build 7-element analytics JSON for SEXP-01.
+
+    Returns the 7 Part 2 element values plus per-element status, the
+    complete_count/total progress pair, classification metadata (og_level /
+    jes_total_points / og_name) with [ADVISOR TO COMPLETE] fallback for
+    manager-track WDs, the deduplicated source provenance list from
+    _build_v2_manifest(wd), and an export_date stamp for downstream
+    analytics partitioning.
+    """
+    seven = build_seven_elements(wd)
+    elements = {e["key"]: e for e in seven["elements"]}
+    og_code = _og_code_from(wd)
+    og_level_str = _og_level_str(og_code, wd.og_level or 0) if og_code else None
+
+    return {
+        "organizational_context": elements["organizational_context"]["value"] or None,
+        "client_service_results": elements["client_service_results"]["value"] or None,
+        "key_activities": [
+            {"text": d.text, "noc_code": d.provenance_noc_code or None}
+            for d in (elements["key_activities"]["value"] or [])
+        ],
+        "skills": None,
+        "effort": None,
+        "responsibility": elements["responsibility"]["value"] or None,
+        "working_conditions": None,
+        "element_status": {e["key"]: e["status"] for e in seven["elements"]},
+        "complete_count": seven["complete_count"],
+        "total": seven["total"],
+        "classification": {
+            "og_level": og_level_str or _MANAGER_PLACEHOLDER,
+            "jes_total_points": wd.jes_total_points if wd.jes_total_points is not None else _MANAGER_PLACEHOLDER,
+            "og_name": (wd.confirmed_og.get("og_name", "") if isinstance(wd.confirmed_og, dict) else "") or _MANAGER_PLACEHOLDER,
+        },
+        "provenance": _build_v2_manifest(wd),
+        "wd_type": getattr(wd, "wd_type", "advisor"),
+        "export_date": str(date.today()),
+    }
+
+
+def _build_csv_export(wd) -> bytes:
+    """Build UTF-8-with-BOM CSV; one row per key activity (duty). SEXP-02.
+
+    Each row carries the duty text + NOC code plus a copy of every scalar
+    context (org_context, csr, status enums for the elements we don't
+    unpack, classification metadata). Wraps with encode("utf-8-sig") so the
+    leading \\xef\\xbb\\xbf BOM byte sequence is present and Excel
+    auto-detects UTF-8 on open.
+    """
+    seven = build_seven_elements(wd)
+    elements = {e["key"]: e for e in seven["elements"]}
+
+    buf = io.StringIO()
+    fieldnames = [
+        "duty_text", "duty_noc_code",
+        "organizational_context", "client_service_results",
+        "skills_status", "effort_status", "responsibility",
+        "working_conditions_status",
+        "og_level", "jes_total_points", "complete_count", "total",
+    ]
+    writer = csv.DictWriter(buf, fieldnames=fieldnames)
+    writer.writeheader()
+
+    og_code = _og_code_from(wd)
+    og_level_str = _og_level_str(og_code, wd.og_level or 0) if og_code else None
+    scalar = {
+        "organizational_context": elements["organizational_context"]["value"] or _MANAGER_PLACEHOLDER,
+        "client_service_results": elements["client_service_results"]["value"] or _MANAGER_PLACEHOLDER,
+        "skills_status": elements["skills"]["status"],
+        "effort_status": elements["effort"]["status"],
+        "responsibility": elements["responsibility"]["value"] or _MANAGER_PLACEHOLDER,
+        "working_conditions_status": elements["working_conditions"]["status"],
+        "og_level": og_level_str or _MANAGER_PLACEHOLDER,
+        "jes_total_points": str(wd.jes_total_points) if wd.jes_total_points is not None else _MANAGER_PLACEHOLDER,
+        "complete_count": seven["complete_count"],
+        "total": seven["total"],
+    }
+    duties = elements["key_activities"]["value"] or []
+    if duties:
+        for d in duties:
+            # d is a DraftDuty Pydantic model — use .text and .provenance_noc_code (attribute access, NOT dict subscript)
+            writer.writerow({**scalar, "duty_text": d.text, "duty_noc_code": d.provenance_noc_code or ""})
+    else:
+        writer.writerow({**scalar, "duty_text": _MANAGER_PLACEHOLDER, "duty_noc_code": ""})
+
+    # encode("utf-8-sig") prepends the BOM byte sequence (\xef\xbb\xbf) — Excel auto-detects UTF-8
+    return buf.getvalue().encode("utf-8-sig")
+
+
+@router.post("/wd/{wd_id}/export/json")
+async def export_wd_json(wd_id: str) -> Response:
+    """SEXP-01 — Export 7-element analytics JSON.
+
+    Manager-track WDs (wd_type='manager', no confirmed_og) deliberately
+    skip the require_og_confirmed 409 gate so the export still succeeds;
+    the classification block in the JSON carries [ADVISOR TO COMPLETE]
+    placeholders instead.
+    """
+    settings = get_settings()
+    wd = _load_wd(wd_id, settings.db_path)
+    # NO require_og_confirmed — manager-track WDs must succeed (SEXP-04 success criterion)
+    payload = _build_json_export(wd)
+    safe_title = _slugify_title((wd.record or {}).get("title", ""), "work-description")
+    filename = f"{safe_title}.json"
+    return Response(
+        content=json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8"),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.post("/wd/{wd_id}/export/csv")
+async def export_wd_csv(wd_id: str) -> Response:
+    """SEXP-02 — Export 7-element analytics CSV (UTF-8-BOM for Excel).
+
+    Manager-track WDs deliberately skip the require_og_confirmed 409 gate
+    so a manager WD without confirmed_og still exports (SEXP-04 SC-4).
+    """
+    settings = get_settings()
+    wd = _load_wd(wd_id, settings.db_path)
+    # NO require_og_confirmed — manager-track WDs must succeed (SEXP-04 success criterion)
+    csv_bytes = _build_csv_export(wd)
+    safe_title = _slugify_title((wd.record or {}).get("title", ""), "work-description")
+    filename = f"{safe_title}.csv"
+    return Response(
+        content=csv_bytes,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
