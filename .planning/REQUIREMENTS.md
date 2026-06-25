@@ -46,7 +46,7 @@
 
 - [x] **SEXP-01** — `POST /api/wd/{id}/export/json` returns all 7 Part 2 elements (Organizational Context, Client Service Results, Key Activities, Skills, Effort, Responsibility, Working Conditions) plus classification metadata and provenance as JSON; uses a shared `build_seven_elements(wd)` helper in `export_service.py`
 - [x] **SEXP-02** — `POST /api/wd/{id}/export/csv` returns the same 7-element schema as UTF-8-with-BOM CSV (Excel-compatible); uses `csv.DictWriter` with `io.StringIO`; per-element completeness status included
-- [ ] **SEXP-03** — SPA Review phase displays JSON and CSV download buttons alongside existing DOCX/PDF buttons; uses the same `exportAs()` async fetch + Blob + `URL.createObjectURL` pattern
+- [x] **SEXP-03** — SPA Review phase displays JSON and CSV download buttons alongside existing DOCX/PDF buttons; uses the same `exportAs()` async fetch + Blob + `URL.createObjectURL` pattern
 
 ---
 
@@ -96,5 +96,5 @@
 | MGR-03 | Phase 28 | Complete (Plan 28-01 — wd_type co-update + require_og_confirmed bypass + DRAFT watermark + MANAGER_SKIP_STEPS filter) |
 | SEXP-01 | Phase 29 | Complete (Plan 29-02 — POST /api/wd/{id}/export/json + _build_json_export + build_seven_elements shared helper + [ADVISOR TO COMPLETE] manager-track placeholder) |
 | SEXP-02 | Phase 29 | Complete (Plan 29-02 — POST /api/wd/{id}/export/csv + _build_csv_export + utf-8-sig BOM + one row per duty + per-element status columns) |
-| SEXP-03 | Phase 29 | Pending (Plan 29-03 — Export JSON + Export CSV buttons in ReviewState .export-row) |
+| SEXP-03 | Phase 29 | Complete (Plan 29-03 — Export JSON + Export CSV buttons in ReviewState .export-row + 4-branch exportAs() dispatch in app.jsx + OG guard bypass for json/csv + kind-specific success/error toasts) |
 | POST-01 | Phase 29 | Complete (Plan 29-02 — _build_poster_context org_context key + About the Organization section in poster_template.docx + build_poster_template.py self-verify update) |

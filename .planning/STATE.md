@@ -4,20 +4,20 @@ milestone: v4.0
 milestone_name: Seven-Elements Conversational Architecture
 current_phase: 29
 status: executing
-last_updated: "2026-06-25T12:27:00Z"
+last_updated: "2026-06-25T12:38:40Z"
 progress:
   total_phases: 9
   completed_phases: 8
   total_plans: 34
-  completed_plans: 33
-  percent: 97
+  completed_plans: 34
+  percent: 100
 ---
 # Project State
 
-**Status:** Executing Phase 29 (Plan 02 done)
+**Status:** Executing Phase 29 (Plan 03 done — all 3 plans of Phase 29 complete; awaiting phase verification)
 **Current phase:** 29
 **Last updated:** 2026-06-25
-**Next action:** Plan 29-03 (Wave 2 frontend — Export JSON + Export CSV buttons in ReviewState) turns the 2 RED frontend stubs GREEN
+**Next action:** Phase 29 verification (all 3 plans complete; 184 backend + 87 frontend GREEN; SEXP-01/02/03 + POST-01 + SEXP-04 manager-bypass all closed)
 
 ---
 
@@ -33,7 +33,7 @@ progress:
 | 26 | Org Context Conversational Step | **Complete** — Plan 01 (Wave 0 RED baseline) + Plan 02 (Wave 1 GREEN) both done; 8/8 RED stubs GREEN; 153/153 backend + 65/65 frontend GREEN; ORG-01/02/03 closed |
 | 27 | Responsibilities Narrative + Completeness Audit | Complete (Plan 01 RESP vertical slice + Plan 02 ELEM completeness audit); 172 backend + 70 frontend GREEN; RESP-01/02/03 + ELEM-01/02/03 closed |
 | 28 | Manager-Track UX | Plan 01 + Plan 02 both complete (MGR-01 + MGR-02 + MGR-03 all closed); 179 backend + 85 frontend GREEN; awaiting phase verification |
-| 29 | Structured Export + Enhanced Poster | **Plans 01 + 02 complete** (Plan 01 = 5 backend + 2 frontend RED stubs; Plan 02 = JSON/CSV export routes + poster "About the Organization" section; 184/184 backend + 85/85 frontend GREEN; Plan 03 frontend buttons pending) |
+| 29 | Structured Export + Enhanced Poster | **Plans 01 + 02 + 03 all complete** (Plan 01 = 5 backend + 2 frontend RED stubs; Plan 02 = JSON/CSV export routes + poster "About the Organization" section; Plan 03 = Export JSON + Export CSV buttons in ReviewState.export-row with 4-branch exportAs() dispatch and OG guard bypass; 184/184 backend + 87/87 frontend GREEN; SEXP-01/02/03 + POST-01 + SEXP-04 manager-bypass all closed) |
 
 ---
 
@@ -280,3 +280,13 @@ None. v3.0 complete (Phase 25 done). v4.0 roadmap ready. Phase 26 unblocked.
 - Deviations: 1 chore commit (Rule 3 — capture fresh-build binary to match HEAD; no behavioral or test-visible change)
 - SEXP-01/02 + POST-01 marked complete in REQUIREMENTS.md traceability (Plan 02 delivers user-visible functionality: JSON+CSV routes work, poster has About the Organization section). SEXP-03 (frontend buttons) + SEXP-04 SC-3/4 verification items remain pending — Plan 03 closes SEXP-03; SEXP-04 backend half (manager JSON without 409) is now locked by test_export_json_manager_no_409
 - Next: Plan 29-03 (Wave 2 frontend) turns the 2 RED frontend stubs GREEN — Export JSON + Export CSV buttons in ReviewState's existing .export-row; follows the same fetchAsBlob pattern as the docx/poster/pdf buttons already there; completeness-soft-gate invariant from Phase 27 preserved (buttons stay enabled at any complete_count value)
+
+**Completed Plan:** 29 Plan 03 (Structured Export + Enhanced Poster — Wave 2 frontend GREEN) — 2026-06-25T12:38Z
+
+- 2 atomic task commits (no chore needed):
+  - Task 1 (`0ee76f5` feat): exportAs() in v2/frontend/src/app.jsx — OG guard now skips for `kind !== 'json' && kind !== 'csv'` (manager-track + any WD analytics exports bypass the classification gate); 2-branch PDF/docx endpoint dispatch replaced with 4-branch if/else (PDF/json/csv/docx); success toast added (net-new — didn't exist before) with kind-specific copy ('Structured data downloaded (JSON)' / 'Structured data downloaded (CSV)' / `{ext.toUpperCase()} exported` fallback); error toast now kind-specific ('JSON export failed — {detail}...' / 'CSV export failed — {detail}...' / 'Export export failed — ...' for PDF/DOCX)
+  - Task 2 (`143f68c` feat): Export JSON + Export CSV buttons in ReviewState.export-row — both `btn--export`, both visible in manager AND advisor mode (NO userRole gate per UI-SPEC), button labels 'Export JSON' and 'Export CSV' match Wave 0 stub assertions via screen.queryByText. Inline SVG Icon paths use the components.jsx Icon idiom (JSON uses `<text>` with monospace family, CSV uses rect+path "table" shape). Phase 27 completeness-soft-gate test updated to expect 5 .export-row .btn--export buttons (was 3; invariant "no completeness-dependent disabled" preserved)
+- Tests: 87/87 frontend GREEN (85 pre-existing + 2 Wave 0 stubs now GREEN — `ReviewState renders an Export JSON button in the export row` + `ReviewState renders an Export CSV button in the export row`); 184/184 backend unchanged GREEN; 0 regressions
+- Deviations: 2 Rule 1 auto-fixes bundled into the task commits — (1) added net-new success toast (plan's Change 3 assumed a success toast existed; the actual code had only error/exception toasts; net-new code added after `URL.revokeObjectURL(href)` with 2600ms setTimeout pattern matching the clipboard branch), (2) Phase 27 completeness-soft-gate test count updated from `=== 3` to `=== 5` (mechanical sync of incidental assertion; invariant under test preserved)
+- SEXP-03 marked complete in REQUIREMENTS.md traceability (Plan 03 delivers user-visible functionality: Export JSON + Export CSV buttons work end-to-end against the Wave 1 backend routes). SEXP-04 SC-3/4 remain pending in requirements traceability but are functionally verified (SC-4 backend half locked by `test_export_json_manager_no_409` from Plan 29-02; SC-3 "manager-track UI shows both buttons" is now structurally true because the new buttons have no userRole gate)
+- Phase 29 is STRUCTURALLY COMPLETE — all 3 plans done, all 5 backend + 2 frontend Wave 0 stubs GREEN, SEXP-01/02/03 + POST-01 + SEXP-04 manager-bypass all closed. v4.0 milestone (Phases 26-29) Phase 29 closes the 7-element + structured export arc. Next: phase verification (verify-work), then proceed to Phase 30 (Workforce Analytics) which can now consume the JSON/CSV export shape directly

@@ -66,7 +66,7 @@ v4.0 surfaces all 7 Part 2 sections of the TBS Accessible JD Template as a natur
 - [x] **Phase 26: Org Context Conversational Step** — Foundation phase: new org_context typed field on WorkDescription + WDPatchRequest (same-commit rule), 4-part Socratic step added to STEPS (with stepIndex regression fix before insertion), document preview rendering above Client Service Results, Accessible DOCX Part 2 export. (ORG-01, ORG-02, ORG-03) — **Complete: Plan 01 (Wave 0 RED baseline) + Plan 02 (Wave 1 GREEN) both done; 8/8 RED stubs GREEN; 153/153 backend + 65/65 frontend GREEN; ORG-01/02/03 closed**
 - [x] **Phase 27: Responsibilities Narrative + Completeness Audit** — Last new WD field (responsibilities_narrative + WDPatchRequest co-update), document preview section, Accessible DOCX export, POST /api/wd/{id}/validate-elements with 5-state matrix, Review phase completeness badge as soft gate with jump-to-fill navigation. (RESP-01, RESP-02, RESP-03, ELEM-01, ELEM-02, ELEM-03) (completed 2026-06-24)
 - [x] **Phase 28: Manager-Track UX** — Role selector at app entry (jd-builder-v2-role localStorage key, never in WD model or answers dict), userRole state slice, conditional rendering suppressing OG/JES/CBA strings in manager mode, manager-track STEPS variant, require_og_confirmed bypass via wd_type field, DRAFT watermark on manager DOCX exports. (MGR-01, MGR-02, MGR-03) — **Complete (Plans 01 + 02 done; MGR-01/02/03 all closed; 179 backend + 85 frontend GREEN; awaiting phase verification)**
-- [ ] **Phase 29: Structured Export + Enhanced Poster** — Shared build_seven_elements(wd) helper in export_service.py, POST /api/wd/{id}/export/json (7-element analytics JSON with provenance), POST /api/wd/{id}/export/csv (utf-8-sig DictWriter, one row per duty), SPA JSON + CSV download buttons, enhanced poster with "About the Organization" section, build_poster_template.py self-verify update. (SEXP-01, SEXP-02, SEXP-03, POST-01) — **Plans 01 + 02 complete (Plan 01 = 5 backend + 2 frontend RED stubs; Plan 02 = JSON/CSV export routes + poster About the Organization section; 184/184 backend + 85/85 frontend GREEN); Plan 03 (frontend buttons) pending**
+- [x] **Phase 29: Structured Export + Enhanced Poster** — Shared build_seven_elements(wd) helper in export_service.py, POST /api/wd/{id}/export/json (7-element analytics JSON with provenance), POST /api/wd/{id}/export/csv (utf-8-sig DictWriter, one row per duty), SPA JSON + CSV download buttons, enhanced poster with "About the Organization" section, build_poster_template.py self-verify update. (SEXP-01, SEXP-02, SEXP-03, POST-01) — **Complete (Plans 01 + 02 + 03 all done; Plan 01 = 5 backend + 2 frontend RED stubs; Plan 02 = JSON/CSV export routes + poster About the Organization section; Plan 03 = Export JSON + Export CSV buttons in ReviewState.export-row with 4-branch exportAs() dispatch and OG guard bypass for structured analytics; 184/184 backend + 87/87 frontend GREEN; SEXP-01/02/03 + POST-01 + SEXP-04 manager-bypass all closed; awaiting phase verification)**
 
 **Coverage:** 16/16 v4.0 requirements mapped · 4 phases (26–29) · 0 unmapped · 0 orphans
 
@@ -308,8 +308,8 @@ Plans:
 
 Plans:
 - [x] 29-01-PLAN.md — Wave 0 RED baseline (5 backend + 2 frontend stubs)
-- [ ] 29-02-PLAN.md — Backend JSON/CSV routes + poster org_context section
-- [ ] 29-03-PLAN.md — Frontend Export JSON + CSV buttons in ReviewState
+- [x] 29-02-PLAN.md — Backend JSON/CSV routes + poster org_context section
+- [x] 29-03-PLAN.md — Frontend Export JSON + CSV buttons in ReviewState
 
 **UI hint**: yes
 
@@ -348,4 +348,4 @@ Plans:
 | **26. Org Context Conversational Step** | **v4.0** | **2/2** | **Complete (Wave 0 RED + Wave 1 GREEN; 153 backend + 65 frontend GREEN; ORG-01/02/03 closed)** | — |
 | **27. Responsibilities Narrative + Completeness Audit** | **v4.0** | **0/2** | **Ready to execute** | — |
 | **28. Manager-Track UX** | **v4.0** | **2/2** | **Complete (Plans 01 + 02 done; MGR-01/02/03 all closed; 179 backend + 85 frontend GREEN; awaiting phase verification)** | — |
-| **29. Structured Export + Enhanced Poster** | **v4.0** | **0/3** | **Planning complete** | — |
+| **29. Structured Export + Enhanced Poster** | **v4.0** | **3/3** | **Complete (Plans 01 + 02 + 03 all done; 184 backend + 87 frontend GREEN; SEXP-01/02/03 + POST-01 + SEXP-04 manager-bypass all closed; awaiting phase verification)** | — |
