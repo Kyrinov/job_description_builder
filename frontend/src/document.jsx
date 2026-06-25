@@ -56,7 +56,7 @@ function OrphanBadge({ rationale }) {
 
 /* Compact JS copy of CAF rank equivalence lookup.
    Returns matching rank entries for a given og_code + og_level combination.
-   Source: CAF_RANK_OG_EQUIVALENCE constant in v2/backend/app/data/constants.py.
+   Source: CAF_RANK_OG_EQUIVALENCE constant in backend/app/data/constants.py.
    Advisory only — not authoritative. */
 function getCafEquivalence(ogCode, ogLevel) {
   if (!ogCode || !ogLevel) return null;

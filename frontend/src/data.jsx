@@ -24,7 +24,7 @@ const I = {
     warn: '<path d="M10 3L18 17H2L10 3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><line x1="10" y1="9" x2="10" y2="13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="15" r="0.8" fill="currentColor"/>'
   };
 
-  // JS copy of OG_LEVELS from v2/backend/app/data/constants.py.
+  // JS copy of OG_LEVELS from backend/app/data/constants.py.
   // Avoids an API round-trip for static reference data used in og_level cfgOverride.
   // Phase 21 additions: 10 new groups with verified level counts from rates CSVs.
   const OG_LEVELS = {
@@ -53,7 +53,7 @@ const I = {
     WP: [1,2,3,4,5,6],
   };
 
-  // JS copy of OG_DEFINITIONS tip text from v2/backend/app/data/constants.py.
+  // JS copy of OG_DEFINITIONS tip text from backend/app/data/constants.py.
   // Source: inclusions if non-empty, else definition. Capped at 200 chars at render time.
   // Groups where tip text is under 80 chars: CR, PM, GT, AI, AU, ED — tip suppressed.
   const OG_DUTY_TIPS = {
@@ -328,7 +328,7 @@ const I = {
 
   /* ---- Qualification standard defaults (keyed by OG group) -------- */
   /* Phase 19 QUAL-01: Replaces the hardcoded EC-05 environmental text with
-     a per-OG-group map. Source text mirrors v2/backend QUAL_STANDARDS constant
+     a per-OG-group map. Source text mirrors backend QUAL_STANDARDS constant
      in app/data/constants.py (verbatim TBS Qualification Standards reference).
      Phase 21 OGX-03: 12 new groups added; parity with backend QUAL_STANDARDS. */
   const QUAL_DEFAULTS = {

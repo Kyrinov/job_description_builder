@@ -2,8 +2,8 @@
 # verify.sh — check the 5 Phase 10 success criteria. Exits 0 on pass.
 set -uo pipefail
 
-V2_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$V2_DIR"
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT_DIR"
 
 # Pick an open port for the backend (8000 may be in use)
 BACKEND_PORT=8765
@@ -45,18 +45,18 @@ echo ""
 # Criterion 4 first: SQLite schema (doesn't need a running server)
 echo "[Criterion 4: SQLite schema]"
 check "DB_PATH is created on startup" \
-  "cd $V2_DIR/backend && DB_PATH=$DB_PATH PROJECT_ROOT=$PROJECT_ROOT python -c 'from app.config import Settings; from app.db import get_connection, create_schema; s=Settings(); con=get_connection(s.db_path); create_schema(con); import sqlite3; rows=con.execute(\"SELECT name FROM sqlite_master WHERE type=\\\"table\\\"\").fetchall(); names={r[0] for r in rows}; assert \"work_descriptions\" in names and \"audit_log\" in names, names'"
+  "cd $ROOT_DIR/backend && DB_PATH=$DB_PATH PROJECT_ROOT=$PROJECT_ROOT python -c 'from app.config import Settings; from app.db import get_connection, create_schema; s=Settings(); con=get_connection(s.db_path); create_schema(con); import sqlite3; rows=con.execute(\"SELECT name FROM sqlite_master WHERE type=\\\"table\\\"\").fetchall(); names={r[0] for r in rows}; assert \"work_descriptions\" in names and \"audit_log\" in names, names'"
 
 # Criterion 5: Pydantic models
 echo ""
 echo "[Criterion 5: Pydantic models]"
 check "5 models importable from app.models" \
-  "cd $V2_DIR/backend && python -c 'from app.models import WorkDescription, DraftDuty, Classification, JESFactor, QualificationStandard; print(\"all 5 models OK\")'"
+  "cd $ROOT_DIR/backend && python -c 'from app.models import WorkDescription, DraftDuty, Classification, JESFactor, QualificationStandard; print(\"all 5 models OK\")'"
 
 # Criterion 1: Backend /api/health
 echo ""
 echo "[Criterion 1: Backend /api/health]"
-cd "$V2_DIR/backend"
+cd "$ROOT_DIR/backend"
 DB_PATH="$DB_PATH" PROJECT_ROOT="$PROJECT_ROOT" nohup uvicorn app.main:app --port "$BACKEND_PORT" > /tmp/uvi-verify.log 2>&1 < /dev/null &
 disown
 UVI_PID=$!
@@ -75,7 +75,7 @@ wait $UVI_PID 2>/dev/null || true
 # Criterion 2 + 3: Frontend dev server + Vite proxy
 echo ""
 echo "[Criterion 2: Vite dev server]"
-cd "$V2_DIR/frontend"
+cd "$ROOT_DIR/frontend"
 nohup npm run dev > /tmp/vite-verify.log 2>&1 < /dev/null &
 disown
 VITE_PID=$!
@@ -92,7 +92,7 @@ check "Vite serves index.html with 'JD Builder' title" \
 echo ""
 echo "[Criterion 3: Vite proxy /api -> :8000]"
 # Restart backend on 8000 for the proxy test
-cd "$V2_DIR/backend"
+cd "$ROOT_DIR/backend"
 DB_PATH="$DB_PATH" PROJECT_ROOT="$PROJECT_ROOT" nohup uvicorn app.main:app --port 8000 > /tmp/uvi-verify2.log 2>&1 < /dev/null &
 disown
 UVI_PID2=$!

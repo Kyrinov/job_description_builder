@@ -2,8 +2,8 @@
 # dev.sh — start backend + frontend concurrently. Ctrl-C tears down both.
 set -euo pipefail
 
-V2_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$V2_DIR"
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT_DIR"
 
 # Trap Ctrl-C to kill both children
 cleanup() {

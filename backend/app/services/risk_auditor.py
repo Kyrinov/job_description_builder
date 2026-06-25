@@ -18,10 +18,9 @@ from typing import Literal
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
-# Repo-root resolved: v2/backend/app/services/risk_auditor.py -> 4 levels up to repo root,
-# then into data/agreements/. The .parents[3] used in the stub would resolve to v2/
-# (one level too shallow); .parents[4] lands at the repo root where data/ lives.
-DATA_DIR = Path(__file__).parents[4] / "data" / "agreements"
+# Repo-root resolved: backend/app/services/risk_auditor.py -> parents[3] is the repo
+# root (services -> app -> backend -> root), then into data/agreements/.
+DATA_DIR = Path(__file__).parents[3] / "data" / "agreements"
 
 OG_AGREEMENT_DIR: dict[str, str] = {
     "EC": "EC",

@@ -48,10 +48,10 @@ class SJDEntry:
 # ---------------------------------------------------------------------------
 # Data file path
 # ---------------------------------------------------------------------------
-# sjd_library.py is at v2/backend/app/data/sjd_library.py.
-# Five parents up reaches the repo root (job_description_builder/) which
+# sjd_library.py is at backend/app/data/sjd_library.py.
+# Four parents up reaches the repo root (job_description_builder/) which
 # contains the data/ directory.
-_SJD_FILE_PATH = pathlib.Path(__file__).parent.parent.parent.parent.parent / "data" / "SJD Examples.txt"
+_SJD_FILE_PATH = pathlib.Path(__file__).parent.parent.parent.parent / "data" / "SJD Examples.txt"
 
 
 # ---------------------------------------------------------------------------

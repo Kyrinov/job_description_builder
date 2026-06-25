@@ -1,10 +1,10 @@
 """
-v2/backend/scripts/build_poster_template.py — Generate the docxtpl Job Poster template.
+backend/scripts/build_poster_template.py — Generate the docxtpl Job Poster template.
 
-Run from the repo root to (re)generate v2/backend/app/templates/poster_template.docx:
+Run from the repo root to (re)generate backend/app/templates/poster_template.docx:
 
     cd /home/charles/job_description_builder
-    python v2/backend/scripts/build_poster_template.py
+    python backend/scripts/build_poster_template.py
 
 The .docx is a committed binary artifact — the contract that the export service
 (Plan 20-02) fills via a context dict. The Jinja2 variable names listed below
@@ -35,7 +35,7 @@ from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docxtpl import DocxTemplate
 
-OUTPUT_PATH = "v2/backend/app/templates/poster_template.docx"
+OUTPUT_PATH = "backend/app/templates/poster_template.docx"
 
 
 def _set_cell_text(cell, text: str, *, bold: bool = False, italic: bool = False) -> None:

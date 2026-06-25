@@ -5,7 +5,7 @@ Reads DB_PATH and PROJECT_ROOT from env (or .env file). Required fields
 have no default — instantiation raises ValidationError with the field name
 when missing.
 
-.env resolution: v2/backend/.env (co-located, CWD-independent via absolute path).
+.env resolution: backend/.env (co-located, CWD-independent via absolute path).
 
 Note: the project-root .env exists for other dev tools (Ollama, v1.0 ingest
 scripts) and intentionally has its own DB_PATH field that points at the v1.0
@@ -21,7 +21,7 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# v2/backend/app/config.py → backend dir (1 level up)
+# backend/app/config.py → backend dir (1 level up)
 _BACKEND_DIR = Path(__file__).resolve().parents[1]
 
 

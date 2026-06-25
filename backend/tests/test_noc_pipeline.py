@@ -5,7 +5,7 @@ All tests use pytest.importorskip so they skip gracefully before Plan 02
 creates app/ai/noc_ranking.py and app/services/noc_mapper.py.
 
 Import paths: v2 backend uses `app.*` (same as v1.0 because the v2 backend
-is launched with PYTHONPATH=v2/backend/). These tests run from v2/backend/.
+is launched with PYTHONPATH=backend/). These tests run from backend/.
 """
 from __future__ import annotations
 
