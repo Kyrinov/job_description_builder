@@ -78,28 +78,119 @@ function ClassifyBadge({ cls }) {
 // sent to the backend (D-28-01 / D-28-03 — it lives in localStorage only).
 function RoleSelector({ onSelect }) {
   return (
-    <div className="role-selector" data-testid="role-selector">
-      <div className="role-selector__card">
-        <h2>Welcome to JD Builder</h2>
-        <p>Choose how you'll use this tool. You can describe a position as a hiring manager, or classify it as an advisor.</p>
-        <div className="role-selector__buttons">
-          <button
-            className="btn--role"
-            data-testid="role-advisor"
-            onClick={() => onSelect('advisor')}
-          >
-            <strong>I am a classification advisor</strong>
-            <span>Classify a position end-to-end (OG group, level, JES scorecard).</span>
-          </button>
-          <button
-            className="btn--role"
-            data-testid="role-manager"
-            onClick={() => onSelect('manager')}
-          >
-            <strong>I am a hiring manager</strong>
-            <span>Describe a position in plain language. The classification team will finalize it.</span>
-          </button>
+    <div className="land" data-testid="role-selector">
+      {/* top bar */}
+      <div className="land__top">
+        <div className="brand">
+          <div className="brand__mark">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5 13.9 11.4 12 16l-1.9-4.6L5.5 9.5l4.6-1.9z" fill="currentColor"/></svg>
+          </div>
+          <div>
+            <div className="brand__name">JD Builder</div>
+            <div className="brand__sub">Guided work-description assistant</div>
+          </div>
         </div>
+        <div className="brand__dept">National Defence · Défense nationale</div>
+      </div>
+
+      {/* hero */}
+      <div className="hero">
+        <span className="hero__eyebrow">Standardized Work Descriptions</span>
+        <h1 className="hero__title">Build a classification-ready job description, <em>one question at a time.</em></h1>
+        <p className="hero__sub">JD Builder turns plain answers into a well-structured, standardized work description — mapped to the right occupational group and level, linked to Defence results, and traceable to source. No HR jargon required.</p>
+
+        {/* gate */}
+        <div className="gate__q">First, which best describes you?</div>
+        <div className="paths">
+
+          {/* Manager path */}
+          <button className="path path--manager" data-testid="role-manager" onClick={() => onSelect('manager')}>
+            <span className="path__tag">Most guidance</span>
+            <div className="path__head">
+              <div className="path__icon">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="6.5" r="3.2" fill="none" stroke="currentColor" strokeWidth="1.7"/><path d="M3.5 17c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
+              </div>
+              <div>
+                <div className="path__kicker">For the hiring side</div>
+                <div className="path__title">I'm a hiring manager</div>
+              </div>
+            </div>
+            <p className="path__desc">You know the role you need to fill. We'll handle the classification, wording, and standards behind the scenes — you just answer in plain language.</p>
+            <ul className="path__feats">
+              <li>
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10l4 4 8-9" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span>Plain-language questions, no classification expertise needed</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10l4 4 8-9" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span>Your words refined into formal duty statements</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10l4 4 8-9" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span>Group &amp; level suggested for you as you go</span>
+              </li>
+            </ul>
+            <div className="path__cta">
+              <span>Start guided build</span>
+              <span className="arrow">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </span>
+            </div>
+          </button>
+
+          {/* Advisor path */}
+          <button className="path path--advisor" data-testid="role-advisor" onClick={() => onSelect('advisor')}>
+            <span className="path__tag">Full control</span>
+            <div className="path__head">
+              <div className="path__icon">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M10 2v2.5M10 15.5V18M18 10h-2.5M4.5 10H2M15.7 4.3l-1.8 1.8M6.1 13.9l-1.8 1.8M15.7 15.7l-1.8-1.8M6.1 6.1L4.3 4.3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </div>
+              <div>
+                <div className="path__kicker">For HR classification</div>
+                <div className="path__title">I'm a classification advisor</div>
+              </div>
+            </div>
+            <p className="path__desc">You own the standards. Move faster with editable rationale, visible factor-by-factor evaluation, and override control at every step.</p>
+            <ul className="path__feats">
+              <li>
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10l4 4 8-9" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span>Adjust degrees and override the suggested level</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10l4 4 8-9" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span>Full JES factor breakdown &amp; point rationale</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10l4 4 8-9" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span>Source citations on by default for defensible files</span>
+              </li>
+            </ul>
+            <div className="path__cta">
+              <span>Open advisor workspace</span>
+              <span className="arrow">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </span>
+            </div>
+          </button>
+
+        </div>
+      </div>
+
+      {/* footer */}
+      <div className="land__foot">
+        <div className="land__foot-item">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3l6 2v5c0 4-2.6 6.4-6 7.5C6.6 16.4 4 14 4 10V5z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>
+          <span>Aligned to the <b>TBS Job Evaluation Standards</b></span>
+        </div>
+        <div className="land__foot-item">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 4C9 4 4 8 4 15c5 1 12-2 12-11z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M7 13c3-3 6-4 8-4.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+          <span>Linked to the <b>DND Departmental Results Framework</b></span>
+        </div>
+        <div className="land__foot-spacer" />
+        <button className="land__resume" onClick={() => onSelect('advisor')}>
+          Continue without selecting
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
       </div>
     </div>
   );
@@ -977,14 +1068,12 @@ function App() {
 // setItem; once userRole is non-null, the standard app shell renders.
 if (userRole === null) {
   return (
-    <div className="app">
-      <RoleSelector
-        onSelect={(role) => {
-          try { localStorage.setItem('jd-builder-v2-role', role); } catch {}
-          setUserRole(role);
-        }}
-      />
-    </div>
+    <RoleSelector
+      onSelect={(role) => {
+        try { localStorage.setItem('jd-builder-v2-role', role); } catch {}
+        setUserRole(role);
+      }}
+    />
   );
 }
 
