@@ -25,6 +25,10 @@ env/
 app.db
 data/cache/
 
+# Node
+node_modules/
+.vite/
+
 # Build artifacts
 build/
 dist/
