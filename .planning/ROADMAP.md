@@ -304,7 +304,7 @@ Plans:
 4. Both JSON and CSV export routes succeed for a manager-track WD without a 409; classification fields not set by the manager use "[ADVISOR TO COMPLETE]" placeholder strings in the output.
 5. Downloading the job poster DOCX for a WD with org_context shows an "About the Organization" section; build_poster_template.py self-verifies with exit 0 after the template update.
 
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 29-01-PLAN.md — Wave 0 RED baseline (5 backend + 2 frontend stubs)
