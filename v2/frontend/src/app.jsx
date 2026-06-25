@@ -622,16 +622,22 @@ function App() {
       setTimeout(() => setToast(null), 2600);
       return;
     }
-    if (userRole !== 'manager' && (!record.confirmed_og || !record.og_level)) {
+    if (userRole !== 'manager' && kind !== 'json' && kind !== 'csv'
+        && (!record.confirmed_og || !record.og_level)) {
       setToast('Complete the OG group and level steps before exporting.');
       setTimeout(() => setToast(null), 5000);
       return;
     }
-    const isPdf = kind === 'PDF';
-    const endpoint = isPdf
-      ? `/api/wd/${wd_id}/export/pdf`
-      : `/api/wd/${wd_id}/export/docx`;
-    const ext = isPdf ? 'pdf' : 'docx';
+    let endpoint, ext;
+    if (kind === 'PDF') {
+      endpoint = `/api/wd/${wd_id}/export/pdf`; ext = 'pdf';
+    } else if (kind === 'json') {
+      endpoint = `/api/wd/${wd_id}/export/json`; ext = 'json';
+    } else if (kind === 'csv') {
+      endpoint = `/api/wd/${wd_id}/export/csv`; ext = 'csv';
+    } else {
+      endpoint = `/api/wd/${wd_id}/export/docx`; ext = 'docx';
+    }
     const filename = `${(record.title || 'work-description').toLowerCase().replace(/\s+/g, '-')}.${ext}`;
     try {
       const resp = await fetch(endpoint, { method: 'POST' });
@@ -657,7 +663,8 @@ function App() {
             }
           }
         } catch (_e) { /* non-JSON body — keep status code only */ }
-        setToast(`Export failed — ${detail}`);
+        const kindLabel = kind === 'json' ? 'JSON' : kind === 'csv' ? 'CSV' : 'Export';
+        setToast(`${kindLabel} export failed — ${detail}. Try again or contact support.`);
         setTimeout(() => setToast(null), 5000);
         return;
       }
@@ -670,6 +677,13 @@ function App() {
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(href), 0);
+      const successMsg = kind === 'json'
+        ? 'Structured data downloaded (JSON)'
+        : kind === 'csv'
+          ? 'Structured data downloaded (CSV)'
+          : `${ext.toUpperCase()} exported`;
+      setToast(successMsg);
+      setTimeout(() => setToast(null), 2600);
     } catch (_err) {
       setToast('Export failed. Please try again.');
       setTimeout(() => setToast(null), 2600);
