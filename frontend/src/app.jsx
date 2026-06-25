@@ -275,7 +275,16 @@ function App() {
     } catch { return 0; }
   });
   const [draft, setDraft] = useState(() => initialAnswer(STEPS[0], {}));
-  const [reviewing, setReviewing] = useState(false);
+  const [reviewing, setReviewing] = useState(() => {
+    // Phase 26 resume: if the persisted record has qualsVisited:true the user
+    // completed the full flow before this reload — re-enter ReviewState instead
+    // of landing them on the quals question (step 24).
+    try {
+      const raw = localStorage.getItem('jd-builder-v2-record');
+      if (!raw) return false;
+      return !!JSON.parse(raw).qualsVisited;
+    } catch { return false; }
+  });
   const [editingReturn, setEditingReturn] = useState(false);
   const [flashes, setFlashes] = useState(new Set());
   const [toast, setToast] = useState(null);
