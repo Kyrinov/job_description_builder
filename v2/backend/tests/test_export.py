@@ -952,3 +952,89 @@ def test_build_seven_elements_total_seven():
         assert expected_keys.issubset(el.keys()), (
             f"Element missing required keys: {el}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Phase 29 — Structured Export + Enhanced Poster — Wave 0 RED stubs
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_export_json_returns_all_seven_keys(client, env_with_db):
+    """SEXP-01 — POST /api/wd/{id}/export/json returns all 7 Part 2 element keys.
+    RED: route does not exist yet — will 404 until Plan 29-02 adds it.
+    """
+    wd_id = await _create_wd_ec(client)
+    resp = await client.post(f"/api/wd/{wd_id}/export/json")
+    assert resp.status_code == 200
+    data = resp.json()
+    for key in (
+        "organizational_context", "client_service_results", "key_activities",
+        "skills", "effort", "responsibility", "working_conditions",
+    ):
+        assert key in data, f"Missing key: {key}"
+
+
+@pytest.mark.asyncio
+async def test_export_json_metadata_and_provenance(client, env_with_db):
+    """SEXP-01 — JSON export includes classification metadata + provenance list.
+    RED: route does not exist yet.
+    """
+    wd_id = await _create_wd_ec(client)
+    resp = await client.post(f"/api/wd/{wd_id}/export/json")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "classification" in data
+    assert "provenance" in data
+    assert isinstance(data["provenance"], list)
+    assert "export_date" in data
+
+
+@pytest.mark.asyncio
+async def test_export_csv_utf8_bom_one_row_per_duty(client, env_with_db):
+    """SEXP-02 — POST /api/wd/{id}/export/csv returns UTF-8-BOM CSV, one row per duty.
+    RED: route does not exist yet — will 404 until Plan 29-02 adds it.
+    """
+    import csv as _csv
+    import io as _io
+
+    wd_id = await _create_wd_ec(client)
+    resp = await client.post(f"/api/wd/{wd_id}/export/csv")
+    assert resp.status_code == 200
+    # UTF-8-BOM: first 3 bytes must be \xef\xbb\xbf
+    assert resp.content[:3] == b"\xef\xbb\xbf", "Missing UTF-8 BOM"
+    text = resp.content.decode("utf-8-sig")
+    reader = _csv.DictReader(_io.StringIO(text))
+    rows = list(reader)
+    assert len(rows) >= 1
+    assert "duty_text" in rows[0]
+
+
+@pytest.mark.asyncio
+async def test_export_json_manager_no_409(client, env_with_db):
+    """SEXP-04 (SC-4) — manager-track WD exports JSON without 409.
+    RED: route does not exist yet.
+    """
+    wd_id = await _create_wd(client)
+    await client.patch(f"/api/wd/{wd_id}", json={"wd_type": "manager"})
+    resp = await client.post(f"/api/wd/{wd_id}/export/json")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["classification"]["og_level"] == "[ADVISOR TO COMPLETE]"
+
+
+@pytest.mark.asyncio
+async def test_poster_org_context_section(client, env_with_db):
+    """POST-01 — Poster DOCX contains 'About the Organization' section when org_context set.
+    RED: build_poster_template.py and _build_poster_context() not yet extended.
+    """
+    import docx as _docx
+    import io as _io
+
+    wd_id = await _create_wd_with_jes_scores(client)
+    await client.patch(f"/api/wd/{wd_id}", json={"org_context": "We are the Department of Test."})
+    resp = await client.post(f"/api/wd/{wd_id}/export/poster")
+    assert resp.status_code == 200
+    doc = _docx.Document(_io.BytesIO(resp.content))
+    text = "\n".join(p.text for p in doc.paragraphs)
+    assert "About the Organization" in text, "Poster is missing 'About the Organization' heading"
+    assert "We are the Department of Test." in text, "Poster is missing org_context body text"
