@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: Seven-Elements Conversational Architecture
 current_phase: 29
-status: ready_to_execute
-last_updated: "2026-06-24T19:30:00.000Z"
+status: executing
+last_updated: "2026-06-25T12:17:59Z"
 progress:
   total_phases: 9
   completed_phases: 8
   total_plans: 33
-  completed_plans: 30
-  percent: 91
+  completed_plans: 32
+  percent: 97
 ---
 
 # Project State
 
-**Status:** Ready to plan
+**Status:** Executing Phase 29 (Plan 01 done)
 **Current phase:** 29
-**Last updated:** 2026-06-24
-**Next action:** Phase 28 verification by orchestrator (Plan 02 complete; MGR-01/02/03 all closed)
+**Last updated:** 2026-06-25
+**Next action:** Plan 29-02 (Wave 1 backend routes — /export/json + /export/csv + poster About the Organization section) turns the 5 RED stubs GREEN
 
 ---
 
@@ -34,7 +34,7 @@ progress:
 | 26 | Org Context Conversational Step | **Complete** — Plan 01 (Wave 0 RED baseline) + Plan 02 (Wave 1 GREEN) both done; 8/8 RED stubs GREEN; 153/153 backend + 65/65 frontend GREEN; ORG-01/02/03 closed |
 | 27 | Responsibilities Narrative + Completeness Audit | Complete (Plan 01 RESP vertical slice + Plan 02 ELEM completeness audit); 172 backend + 70 frontend GREEN; RESP-01/02/03 + ELEM-01/02/03 closed |
 | 28 | Manager-Track UX | Plan 01 + Plan 02 both complete (MGR-01 + MGR-02 + MGR-03 all closed); 179 backend + 85 frontend GREEN; awaiting phase verification |
-| 29 | Structured Export + Enhanced Poster | Ready to execute (3 plans: Wave 0 RED baseline + Wave 1 backend routes + Wave 2 frontend buttons) |
+| 29 | Structured Export + Enhanced Poster | **Plan 01 complete** (Wave 0 RED baseline: 5 backend + 2 frontend RED stubs; 179 + 85 pre-existing GREEN preserved); Plans 02 (backend routes) + 03 (frontend buttons) pending |
 
 ---
 
@@ -260,3 +260,13 @@ None. v3.0 complete (Phase 25 done). v4.0 roadmap ready. Phase 26 unblocked.
 - Deviations: 1 Rule 2 auto-fix — Position Identification Sec's Classification metaItem also gated in manager mode (initial Task 1 implementation only suppressed the Classification & Evaluation Sec; the inspection test "no OG-code classification string" caught the second surface — the metaItem was rendering "EC-04" in the position metadata table). Fixed by extending the manager branch in DocumentPane to cover both surfaces (Classification Sec + Position Identification Sec metaItem + CAF rank advisory wrap)
 - MGR-02 marked complete in REQUIREMENTS.md (Plan 02 delivers user-visible functionality: manager-mode UI never shows OG codes, JES factor names, or CBA citations — locked by automated inspection tests)
 - Phase 28 is structurally complete (Plans 01 + 02 both done; MGR-01/02/03 all closed). Phase 29 (Structured Export + Enhanced Poster) is unblocked — will reuse the userRole conditional render pattern (Manager-mode JSON/CSV exports will be similarly filtered) and the MGR-02 inspection test pattern (any new visible UI element that could leak classification internals should add a corresponding `not.toMatch` assertion)
+
+**Completed Plan:** 29 Plan 01 (Structured Export + Enhanced Poster — Wave 0 RED baseline) — 2026-06-25T12:17Z
+
+- 2 atomic task commits (test-only; no production code touched):
+  - Task 1 (`2393f8c` test): 5 RED backend stubs appended to test_export.py after test_build_seven_elements_total_seven — `test_export_json_returns_all_seven_keys` (SEXP-01 / 404 on missing route), `test_export_json_metadata_and_provenance` (SEXP-01), `test_export_csv_utf8_bom_one_row_per_duty` (SEXP-02), `test_export_json_manager_no_409` (SEXP-04 SC-4 manager bypass), `test_poster_org_context_section` (POST-01 — assertion on 'About the Organization' heading in DOCX text). Uses existing _create_wd, _create_wd_ec, _create_wd_with_jes_scores fixtures
+  - Task 2 (`7893596` test): 2 RED frontend stubs appended to conversation.test.jsx after the MGR-02 inspection test — ReviewState renders an Export JSON button + ReviewState renders an Export CSV button (both gate SEXP-03 button presence)
+- Tests: backend 5 failed + 179 passed (184 total) — 5 new RED stubs fail with 404 (json/csv routes absent) or AssertionError on missing poster section; pre-existing 179 GREEN preserved. Frontend 2 failed + 85 passed (87 total) — 2 new RED stubs fail with `AssertionError: expected null not to be null` on screen.queryByText; pre-existing 85 GREEN preserved
+- Deviations: 2 Rule 1 auto-fixes (Task 2) — (1) `cls={null}` replaced with minimal valid `cls={{code: 'EC-04', points: 250, status: 'resolved'}}` (ReviewState reads cls.code unconditionally for advisor mode; null would crash render before button assertion runs — violates plan's "AssertionError not ReferenceError/SyntaxError" acceptance criterion), (2) `screen` added to existing `@testing-library/react` import (plan body uses screen.queryByText but file only imported render/fireEvent/waitFor)
+- SEXP-01/02/03/04 + POST-01 left Pending in REQUIREMENTS.md (Wave 0 delivers tests, not user-facing functionality)
+- Next: Plan 29-02 (Wave 1 backend) turns the 5 RED stubs GREEN — implementation order from PLAN.md: `/export/json` route → `/export/csv` route → poster DOCX 'About the Organization' section. `build_seven_elements(wd)` helper from Phase 27 is the natural data source for the JSON export
