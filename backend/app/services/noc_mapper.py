@@ -29,7 +29,7 @@ import sqlite3
 import sqlite_vec
 from ollama import AsyncClient as OllamaAsyncClient
 
-from app.ai.noc_ranking import NOCCandidate, NOCRankingResult, instructor_client
+from app.ai.noc_ranking import NOCRankingResult, instructor_client
 from app.config import get_settings
 from app.db import get_noc_connection
 

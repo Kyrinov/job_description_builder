@@ -19,8 +19,6 @@ Security (per threat model T-17-01 to T-17-04, T-21-08-01 to T-21-08-03):
 """
 from __future__ import annotations
 
-import json
-import sqlite3
 from collections import Counter
 
 from fastapi import APIRouter, HTTPException

@@ -303,24 +303,6 @@ def _build_wd_context(wd: WorkDescription, amendments: list[dict]) -> dict:
     og_level_int = wd.og_level or 0
     og_level_str = _og_level_str(og_code, og_level_int)
 
-    # SW/ED routing-code resolution — replicate jes_service.py score_jes_v2
-    # (lines 192-217). The dict keys in JES_FACTORS_BY_GROUP are routing codes
-    # (e.g. "SW-SCW", "ED-LAT"), not raw og_codes, so a naive og_code lookup
-    # would KeyError or silently mis-classify.
-    sub_group = getattr(wd, "confirmed_sub_group", None)
-    routing_code = og_code
-    if og_code == "SW":
-        routing_code = "SW-SCW" if sub_group == "SCW" else "SW-CHA"
-    elif og_code == "ED":
-        if sub_group == "EDS":
-            routing_code = "ED-EDS"
-        elif sub_group == "LAT":
-            routing_code = "ED-LAT"
-        elif sub_group == "EST":
-            routing_code = "ED-EST"
-        else:
-            routing_code = "ED-LAT"
-
     # Qualification — fall back to record.quals when root qualification not yet persisted
     if wd.qualification is not None:
         education_text = wd.qualification.education
