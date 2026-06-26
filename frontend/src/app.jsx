@@ -839,7 +839,15 @@ function App() {
     setDraft(initialAnswer(STEPS[0], {})); setReviewing(false); setEditingReturn(false);
     setWdId(null); setNocCandidates([]); setNocLoading(false);
     setOgCandidates([]); setOgLoading(false); setOgAlert(null);
-    try { localStorage.removeItem('jd-builder-v2-wd-id'); } catch {}
+    // Clear the role too so the gate at userRole===null re-renders the
+    // RoleSelector landing page, and purge the persisted session so a reload
+    // does not resume the work description we just discarded.
+    setUserRole(null);
+    try {
+      localStorage.removeItem('jd-builder-v2-wd-id');
+      localStorage.removeItem('jd-builder-v2-record');
+      localStorage.removeItem('jd-builder-v2-role');
+    } catch {}
   }
 
   // JES override handler — fires POST /api/jes/override/{wd_id}/{factor_name}
@@ -1134,7 +1142,17 @@ return (
     <div className="app">
       {/* ---------- LEFT ---------- */}
       <div className="convo">
-        <Header phaseIdx={phaseIdx} />
+        <Header
+          phaseIdx={phaseIdx}
+          onHome={() => {
+            // Guard the destructive reset — a misclick should not wipe an
+            // in-progress work description. Skip the prompt on an empty record.
+            const hasWork = Object.keys(record).length > 0;
+            if (!hasWork || window.confirm('Discard this work description and return to the start page?')) {
+              restart();
+            }
+          }}
+        />
         {reviewing
           ? <ReviewState
               record={record}

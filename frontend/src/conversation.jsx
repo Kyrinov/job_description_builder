@@ -6,7 +6,7 @@ import { PHASES, I } from './data.jsx';
 import { Icon, Check, StepInput, answerValid } from './components.jsx';
 
 /* brand + phase progress header */
-function Header({ phaseIdx }) {
+function Header({ phaseIdx, onHome }) {
   return (
     <div className="convo__head">
       <div className="brand">
@@ -18,6 +18,16 @@ function Header({ phaseIdx }) {
           <div className="brand__sub">Guided work-description assistant</div>
         </div>
         <div className="brand__spacer" />
+        {onHome && (
+          <button
+            type="button"
+            className="brand__home"
+            onClick={onHome}
+            title="Discard this work description and return to the start page"
+          >
+            Home
+          </button>
+        )}
         <div className="brand__dept">National Defence</div>
       </div>
       <div className="phases">

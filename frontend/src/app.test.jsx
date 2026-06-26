@@ -262,4 +262,25 @@ describe('MGR-01: role selector + userRole hydration', () => {
     // The role selector is no longer shown (the main app shell renders).
     expect(queryByTestId('role-selector')).toBeNull();
   });
+
+  it('Home button clears role + record and returns to the RoleSelector landing page', () => {
+    // Seed a mid-session state: role chosen, record has answered fields.
+    globalThis.localStorage.setItem('jd-builder-v2-role', 'advisor');
+    globalThis.localStorage.setItem('jd-builder-v2-record', JSON.stringify({ title: 'Policy Analyst', og_level: 3 }));
+    // Confirm guard fires because the record is non-empty — accept the prompt.
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    const { container, getByText, queryByTestId, getByTestId } = render(<App />);
+    // The app shell (not the selector) is shown initially.
+    expect(queryByTestId('role-selector')).toBeNull();
+
+    // Click the always-visible Home button in the header.
+    fireEvent.click(getByText('Home'));
+
+    expect(confirmSpy).toHaveBeenCalled();
+    // Returns to the landing page and purges the persisted session.
+    expect(getByTestId('role-selector')).toBeTruthy();
+    expect(globalThis.localStorage.getItem('jd-builder-v2-role')).toBeNull();
+    confirmSpy.mockRestore();
+  });
 });

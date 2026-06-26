@@ -131,6 +131,25 @@ input, textarea { font-family: inherit; }
   margin-top: 1px;
 }
 .brand__spacer { flex: 1; }
+.brand__home {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  background: transparent;
+  border: 1px solid var(--line);
+  padding: 5px 11px;
+  border-radius: 100px;
+  white-space: nowrap;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: color 0.12s, border-color 0.12s;
+}
+.brand__home:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
 .brand__dept {
   font-family: var(--mono);
   font-size: 10.5px;
