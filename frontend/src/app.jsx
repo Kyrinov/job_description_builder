@@ -623,6 +623,12 @@ function App() {
     if (step.id === 'org_context') {
       const parts = newRecord.org_context_parts || {};
       setToast('Generating organizational context…');
+      // Hard client-side bound so the toast can never hang on a slow upstream
+      // (or a misbehaving proxy/connection beyond the server's 30s timeout).
+      // The plain-text fallback is already in record.org_context, so aborting
+      // simply keeps it — no error surfaces to the advisor.
+      const orgCtl = new AbortController();
+      const orgTimer = setTimeout(() => orgCtl.abort(), 30000);
       wdPromise
         .then(id => fetch('/api/org-context/synthesize', {
           method: 'POST',
@@ -633,6 +639,7 @@ function App() {
             work_stream: parts.work_stream || '',
             additional: parts.additional || '',
           }),
+          signal: orgCtl.signal,
         })
           .then(r => r.ok ? r.json() : Promise.reject(r.status))
           .then(data => ({ id, data })))
@@ -649,7 +656,7 @@ function App() {
           }
         })
         .catch(() => {}) // fallback joined text already in record.org_context
-        .finally(() => setToast(null));
+        .finally(() => { clearTimeout(orgTimer); setToast(null); });
     }
 
     if (editingReturn) {
