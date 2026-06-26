@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from . import health, noc_mapping, wd, og_classification, jes_scoring, amendments, export, sjd
+from . import health, noc_mapping, wd, og_classification, jes_scoring, amendments, export, sjd, org_context
 
 api_router = APIRouter()
 api_router.include_router(health.router)
@@ -24,5 +24,6 @@ api_router.include_router(jes_scoring.router)
 api_router.include_router(amendments.router)
 api_router.include_router(export.router)
 api_router.include_router(sjd.router)
+api_router.include_router(org_context.router)
 
 __all__ = ["api_router"]
