@@ -288,6 +288,10 @@ function App() {
   const [editingReturn, setEditingReturn] = useState(false);
   const [flashes, setFlashes] = useState(new Set());
   const [toast, setToast] = useState(null);
+  // True while the org-context synthesis call is in flight. Disables the
+  // org_context Continue button (shows "Generating…") and the step
+  // auto-advances when the call resolves — no second click required.
+  const [orgGenerating, setOrgGenerating] = useState(false);
   const [wd_id, setWdId] = useState(() => {
     try { return localStorage.getItem('jd-builder-v2-wd-id') || null; } catch { return null; }
   });
@@ -621,18 +625,35 @@ function App() {
     // Chains off wdPromise so the WD row exists before we PATCH the prose back.
     // Non-blocking: on any failure the fallback string stays and no error shows.
     if (step.id === 'org_context') {
+      // In the forward flow we gate: show "Generating…", then auto-advance
+      // when the call resolves. In edit-return mode we still regenerate the
+      // prose but let the editingReturn block below send the user to review.
+      const gated = !editingReturn;
       const parts = newRecord.org_context_parts || {};
       setToast('Generating organizational context…');
-      // Hard client-side bound so the toast can never hang on a slow upstream
+      if (gated) setOrgGenerating(true);
+      // Hard client-side bound so the call can never hang on a slow upstream
       // (or a misbehaving proxy/connection beyond the server's 30s timeout).
       // The plain-text fallback is already in record.org_context, so aborting
       // simply keeps it — no error surfaces to the advisor.
       const orgCtl = new AbortController();
       const orgTimer = setTimeout(() => orgCtl.abort(), 30000);
-      // Safety net: the "Generating…" toast self-dismisses even if the promise
-      // chain never settles (e.g. wdPromise itself stalls and the .finally
-      // below never runs). Mirrors the auto-clear every other toast uses.
-      const orgToastSafety = setTimeout(() => setToast(null), 33000);
+
+      // Advance to the next visible step. Deferred until the synthesis
+      // resolves so the step "just moves forward" once the prose is ready,
+      // rather than gating behind a second Continue click.
+      const advance = () => {
+        let i = stepIndex + 1;
+        while (i < STEPS.length && !isStepVisible(STEPS[i], newAnswers)) i++;
+        if (i >= STEPS.length) {
+          setReviewing(true);
+        } else {
+          setStepIndex(i);
+          const ns = STEPS[i];
+          setDraft(newAnswers[ns.id] !== undefined ? newAnswers[ns.id] : initialAnswer(ns, newRecord));
+        }
+      };
+
       wdPromise
         .then(id => fetch('/api/org-context/synthesize', {
           method: 'POST',
@@ -667,10 +688,16 @@ function App() {
         .catch(() => { setToast('Using the text you entered for organizational context'); })
         .finally(() => {
           clearTimeout(orgTimer);
-          clearTimeout(orgToastSafety);
-          // Let the success/fallback message show briefly, then clear.
+          if (gated) {
+            setOrgGenerating(false);
+            advance();                            // ← auto-advance once complete
+          }
           setTimeout(() => setToast(null), 2600);
         });
+      // Forward flow: the promise handles advancement, so skip the synchronous
+      // advance below. Edit-return flow falls through to the editingReturn
+      // block, which routes the user back to review.
+      if (gated) return;
     }
 
     if (editingReturn) {
@@ -1200,6 +1227,8 @@ return (
                 canBack={stepIndex > 0 && !editingReturn}
                 isLast={stepIndex === STEPS.length - 1}
                 cfgOverride={stepCfgOverride}
+                busy={orgGenerating && step.id === 'org_context'}
+                busyLabel="Generating…"
                 dataTestid={`jump-${stepIndex}`}
                 dataStepId={step.id}
               />

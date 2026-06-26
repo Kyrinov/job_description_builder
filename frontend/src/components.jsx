@@ -724,28 +724,29 @@ function QualEditor({ value, onChange, og_code }) {
 // State is seeded from `value` so re-editing the step in Review repopulates the
 // fields. Do NOT use dangerouslySetInnerHTML — values render as React text nodes.
 function OrgContextInput({ value, onChange }) {
-  const [parts, setParts] = useState({
-    work_stream: value?.work_stream || '',
-    additional: value?.additional || '',
-  });
+  // Fully controlled — read straight from `value` (the parent draft) so the
+  // displayed text and the validated draft can never desync. A prior version
+  // seeded internal useState from `value` only once, which left answerValid
+  // looking at a stale/empty draft (work_stream missing) while the textarea
+  // showed text, disabling Continue and stalling the step.
+  const work_stream = value?.work_stream || '';
+  const additional = value?.additional || '';
 
   function handlePart(key, val) {
-    const updated = { ...parts, [key]: val };
-    setParts(updated);
-    onChange(updated);
+    onChange({ work_stream, additional, [key]: val });
   }
 
   return (
     <div className="org-context-input">
       <div className="org-context-input__field">
         <label>Work stream or program</label>
-        <textarea className="tf" rows={2} value={parts.work_stream}
+        <textarea className="tf" rows={2} value={work_stream}
           placeholder="e.g. This position sits within the Strategic Policy program area…"
           onChange={e => handlePart('work_stream', e.target.value)} />
       </div>
       <div className="org-context-input__field">
         <label>Additional context (optional)</label>
-        <textarea className="tf" rows={2} value={parts.additional}
+        <textarea className="tf" rows={2} value={additional}
           placeholder="Any other relevant context about the position's role in the organization…"
           onChange={e => handlePart('additional', e.target.value)} />
       </div>

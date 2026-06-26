@@ -63,7 +63,7 @@ function helperHtml(step, record) {
   return h;
 }
 
-function ActiveQuestion({ step, record, draft, setDraft, onCommit, onBack, canBack, isLast, cfgOverride, dataTestid, dataStepId }) {
+function ActiveQuestion({ step, record, draft, setDraft, onCommit, onBack, canBack, isLast, cfgOverride, dataTestid, dataStepId, busy, busyLabel }) {
   const qText = typeof step.q === 'function' ? step.q(record) : step.q;
   const valid = answerValid(step, draft);
   const showEnter = step.input.type === 'text';
@@ -93,18 +93,20 @@ function ActiveQuestion({ step, record, draft, setDraft, onCommit, onBack, canBa
           cfg={cfgOverride || step.input}
           value={draft}
           onChange={setDraft}
-          onSubmit={() => { if (valid) onCommit(); }}
+          onSubmit={() => { if (valid && !busy) onCommit(); }}
           record={record}
         />
       </div>
       <div className="actions">
         <button
           className="btn btn--primary"
-          disabled={!valid}
+          disabled={!valid || busy}
           onClick={onCommit}
         >
-          {isLast ? 'Finish & review' : 'Continue'}
-          <Icon path='<path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' size={16} />
+          {busy ? (busyLabel || 'Working…') : (isLast ? 'Finish & review' : 'Continue')}
+          {!busy && (
+            <Icon path='<path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' size={16} />
+          )}
         </button>
         {canBack && (
           <button className="btn btn--ghost" onClick={onBack}>Back</button>

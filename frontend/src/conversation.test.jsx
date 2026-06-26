@@ -652,6 +652,22 @@ describe('Phase 26: OrgContextInput component', () => {
     expect(textareas[1].value).toBe('More');
   });
 
+  it('OrgContextInput is controlled — a new value prop updates the display (no stale desync)', () => {
+    // Regression: the previous version seeded useState from `value` only once,
+    // so an externally-updated draft (e.g. restored or reset by the parent)
+    // left the textarea and the validated draft out of sync — which disabled
+    // Continue while text was visible. A controlled component reflects the
+    // latest value prop on every render.
+    const { container, rerender } = render(
+      <OrgContextInput value={{ work_stream: '', additional: '' }} onChange={() => {}} />,
+    );
+    let textareas = container.querySelectorAll('textarea');
+    expect(textareas[0].value).toBe('');
+    rerender(<OrgContextInput value={{ work_stream: 'Set externally', additional: '' }} onChange={() => {}} />);
+    textareas = container.querySelectorAll('textarea');
+    expect(textareas[0].value).toBe('Set externally');
+  });
+
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
