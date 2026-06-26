@@ -615,6 +615,43 @@ function App() {
         .catch(() => {}); // non-blocking; silent on failure
     }
 
+    // Org-context synthesis — fires when the org_context step is committed.
+    // step.apply already wrote a joined-plain-text fallback to org_context; this
+    // upgrades it to fluid LLM prose built from branch + reports + the two fields.
+    // Chains off wdPromise so the WD row exists before we PATCH the prose back.
+    // Non-blocking: on any failure the fallback string stays and no error shows.
+    if (step.id === 'org_context') {
+      const parts = newRecord.org_context_parts || {};
+      setToast('Generating organizational context…');
+      wdPromise
+        .then(id => fetch('/api/org-context/synthesize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            branch: newRecord.branch || '',
+            reports: newRecord.reports || '',
+            work_stream: parts.work_stream || '',
+            additional: parts.additional || '',
+          }),
+        })
+          .then(r => r.ok ? r.json() : Promise.reject(r.status))
+          .then(data => ({ id, data })))
+        .then(({ id, data }) => {
+          if (data && data.prose) {
+            setRecord(prev => ({ ...prev, org_context: data.prose }));
+            if (id) {
+              return fetch(`/api/wd/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ org_context: data.prose }),
+              }).catch(() => {});
+            }
+          }
+        })
+        .catch(() => {}) // fallback joined text already in record.org_context
+        .finally(() => setToast(null));
+    }
+
     if (editingReturn) {
       // Invalidate NOC + OG state when re-answering any Work Type phase step
       if (step.phase === 1) {

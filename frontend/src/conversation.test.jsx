@@ -624,21 +624,32 @@ describe('Phase 26: org_context step in STEPS', () => {
 });
 
 describe('Phase 26: OrgContextInput component', () => {
-  it('OrgContextInput calls onChange with assembled string when a sub-field is filled', () => {
-    // Plan 26-02 Task 2: OrgContextInput is now a named export from
-    // components.jsx. The test renders it directly and fires a change on
-    // the first textarea (work_stream sub-field). The component's
-    // handlePart() assembles the non-empty parts joined by single spaces
-    // and emits the assembled string via onChange — so the first change
-    // produces an onChange call whose argument contains the typed text.
-    // Uses `container.querySelector` rather than `screen` to avoid adding
-    // a new import to this file's import block.
+  it('OrgContextInput emits a { work_stream, additional } object on change', () => {
+    // 260626-ejt: OrgContextInput was pruned to two fields (work_stream +
+    // additional) — org placement and reporting were redundant with the
+    // Phase 0 branch/reports steps. It now emits the raw parts as an object
+    // (app.jsx synthesizes fluid prose from them on Continue) rather than a
+    // pre-assembled string. Uses container.querySelector rather than `screen`
+    // to avoid adding a new import to this file's import block.
     const onChange = vi.fn();
-    const { container } = render(<OrgContextInput value="" onChange={onChange} />);
+    const { container } = render(<OrgContextInput value={{}} onChange={onChange} />);
     const textareas = container.querySelectorAll('textarea');
-    expect(textareas.length).toBeGreaterThanOrEqual(1);
+    expect(textareas.length).toBe(2);
     fireEvent.change(textareas[0], { target: { value: 'Strategic Policy program' } });
-    expect(onChange).toHaveBeenCalledWith(expect.stringContaining('Strategic Policy program'));
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ work_stream: 'Strategic Policy program' }),
+    );
+  });
+
+  it('OrgContextInput seeds its fields from the value object (re-edit repopulates)', () => {
+    // The component initializes state from `value` so returning to the step in
+    // Review shows the previously entered text instead of blank fields.
+    const { container } = render(
+      <OrgContextInput value={{ work_stream: 'Existing stream', additional: 'More' }} onChange={() => {}} />,
+    );
+    const textareas = container.querySelectorAll('textarea');
+    expect(textareas[0].value).toBe('Existing stream');
+    expect(textareas[1].value).toBe('More');
   });
 
 });

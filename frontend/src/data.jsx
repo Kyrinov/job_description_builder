@@ -669,14 +669,24 @@ const I = {
        where the position fits. Sits at phase 3 immediately before
        client_service_results so the conversation reads as Role → Work Type
        → Classification → Org Context + Client Service Results → Duties.
-       apply() writes a single assembled string to record.org_context,
-       which is the typed root field consumed by export_service.py. */
+       The input emits an object { work_stream, additional }. apply() stashes
+       those raw parts in org_context_parts and writes a joined-plain-text
+       fallback to record.org_context (the typed root field consumed by
+       export_service.py). On Continue, app.jsx commit() sends branch + reports
+       + these two fields to /api/org-context/synthesize and replaces
+       org_context with fluid LLM prose, keeping the fallback if synthesis fails. */
     { id: 'org_context', phase: 3, icon: I.org,
       q: 'Tell me about the organizational context for this position.',
       helper: 'Answer the questions below about where this position fits in the organization.',
       input: { type: 'org_context_input' },
-      apply: (r, a) => ({ org_context: a }),
-      transcript: a => a ? a.slice(0, 60) + (a.length > 60 ? '...' : '') : 'Pending' },
+      apply: (r, a) => ({
+        org_context_parts: a,
+        org_context: [a?.work_stream, a?.additional].filter(s => s && s.trim()).join(' '),
+      }),
+      transcript: a => {
+        const t = [a?.work_stream, a?.additional].filter(s => s && s.trim()).join(' ');
+        return t ? t.slice(0, 60) + (t.length > 60 ? '...' : '') : 'Pending';
+      } },
 
     { id: 'client_service_results', phase: 3, icon: I.flag,
       q: 'What client service results does this position deliver?',
