@@ -629,6 +629,10 @@ function App() {
       // simply keeps it — no error surfaces to the advisor.
       const orgCtl = new AbortController();
       const orgTimer = setTimeout(() => orgCtl.abort(), 30000);
+      // Safety net: the "Generating…" toast self-dismisses even if the promise
+      // chain never settles (e.g. wdPromise itself stalls and the .finally
+      // below never runs). Mirrors the auto-clear every other toast uses.
+      const orgToastSafety = setTimeout(() => setToast(null), 33000);
       wdPromise
         .then(id => fetch('/api/org-context/synthesize', {
           method: 'POST',
@@ -646,6 +650,7 @@ function App() {
         .then(({ id, data }) => {
           if (data && data.prose) {
             setRecord(prev => ({ ...prev, org_context: data.prose }));
+            setToast('Organizational context generated');
             if (id) {
               return fetch(`/api/wd/${id}`, {
                 method: 'PATCH',
@@ -653,10 +658,19 @@ function App() {
                 body: JSON.stringify({ org_context: data.prose }),
               }).catch(() => {});
             }
+          } else {
+            // No prose came back — keep the joined-text fallback, but tell
+            // the advisor so the step never looks like it silently stalled.
+            setToast('Using the text you entered for organizational context');
           }
         })
-        .catch(() => {}) // fallback joined text already in record.org_context
-        .finally(() => { clearTimeout(orgTimer); setToast(null); });
+        .catch(() => { setToast('Using the text you entered for organizational context'); })
+        .finally(() => {
+          clearTimeout(orgTimer);
+          clearTimeout(orgToastSafety);
+          // Let the success/fallback message show briefly, then clear.
+          setTimeout(() => setToast(null), 2600);
+        });
     }
 
     if (editingReturn) {
