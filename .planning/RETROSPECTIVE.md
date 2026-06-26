@@ -58,15 +58,63 @@
 
 ---
 
+## Milestone: v4.0 — Seven-Elements Conversational Architecture
+
+**Shipped:** 2026-06-26
+**Phases:** 4 (26–29) | **Plans:** 9 | **Timeline:** 7 days
+
+### What Was Built
+
+- Org Context conversational step → typed `org_context` field, preview, Accessible DOCX Part 2
+- Responsibilities narrative → typed field on all positions, preview, Accessible DOCX
+- Seven-Elements completeness audit → `build_seven_elements(wd)`, `POST /api/wd/{id}/validate-elements`, Review-phase N/7 soft-gate badge
+- Manager-Track UX → localStorage role selector, `wd_type` field, classification-gate bypass, DRAFT watermark, systematic OG/JES/CBA suppression
+- Structured export → JSON (7-element + provenance) + CSV (UTF-8-BOM, RFC 4180), SPA buttons, manager-track bypass
+- Enhanced poster → "About the Organization" from org_context
+
+### What Worked
+
+- **Co-update rule as a hard convention**: adding each typed field to `WorkDescription` and `WDPatchRequest` in the same commit eliminated the silent field-drop class of bug. The one regression (Phase 26 CR-01) was an SPA mirror-list omission, not a model gap — and was caught by a round-trip test.
+- **Sequencing the stepIndex resume fix before STEPS insertion**: landing the resume-by-last-answered initializer first meant three new conversational steps were inserted across the milestone with zero resume regressions.
+- **Single-source-of-truth helper**: `build_seven_elements(wd)` fed the audit, JSON export, and CSV export, so element-status logic never diverged across consumers.
+- **Vertical-slice mirroring**: Phase 27's RESP slice deliberately mirrored Phase 26's org_context slice (field → step → preview → export), making the second field cheaper and lower-risk than the first.
+- **TDD wave pattern held**: Wave 0 RED stubs → GREEN implementation continued to produce clean, regression-free phases (184 backend + 87 frontend GREEN at ship).
+
+### What Was Inefficient
+
+- **Progress table drifted**: the ROADMAP.md Progress table still showed Phase 27 as "0/2 Ready to execute" at milestone close even though the phase was complete — the per-phase docs commit didn't update the summary table. (Same lesson as v1.0 lesson #2.)
+- **Milestone close hygiene slipped earlier**: v3.0 was never given a MILESTONES.md entry and v2.0's archive links point to files that were never created — reconstructed during this close.
+- **Post-ship UX churn on org-context**: synthesis hangs/timeouts, toast hangs, and a redundant-field prune all landed as quick-task fixes after Phase 26 rather than being designed in — the 4-part step shipped before the LLM-synthesis UX was fully thought through.
+
+### Patterns Established
+
+- **Typed root field + co-update + preview Sec + export priority** is now the standard recipe for adding a Part 2 element to the conversational flow.
+- **localStorage-only UI role, separate `wd_type` data field** keeps presentation concerns (which UI track) out of the persisted domain model while still recording the substantive fact (this is a manager draft).
+- **Systematic suppression inspection tests**: asserting the *absence* of whole categories of strings (OG codes, JES factor names, CBA citations) locks a privacy/role contract that ad-hoc tests would miss.
+
+### Key Lessons
+
+1. **Automate the Progress table or stop maintaining it by hand** — it drifted in both v1.0 and v4.0. Either derive it from `roadmap.analyze` at close or drop it in favor of the per-phase details.
+2. **Close milestones when they ship, not in bulk later** — reconstructing v3.0/v2.0 metadata at v4.0 close cost more than an entry would have at the time.
+3. **Design the LLM-assist UX with the step, not after** — the org-context synthesis hangs were avoidable had the timeout/cancel/empty-state been part of Phase 26's plan.
+4. **Mirror the first vertical slice for the second** — RESP mirroring org_context was the cheapest phase of the milestone.
+
+### Cost Observations
+
+- Org-context synthesis runs on cloud MiniMax (or Ollama fallback) via a module-level `AsyncOpenAI` singleton; bounded with a 30s client timeout after initial hangs
+- Otherwise the v4.0 flow remains deterministic (no LLM in the classification path), consistent with the v2.0 architecture bet
+
+---
+
 ## Cross-Milestone Trends
 
-| Metric | v1.0 |
-|--------|------|
-| Timeline | 7 days |
-| Phases | 10 (incl. 1 inserted) |
-| Plans | 38 |
-| Tests at ship | 188 |
-| Requirements delivered | 21/21 |
-| Regressions | 0 |
-| Phase insertions | 1 (8.1) |
-| Phase reverts needed | 0 (2 mid-phase reverts in 09-04, not full phase reverts) |
+| Metric | v1.0 | v4.0 |
+|--------|------|------|
+| Timeline | 7 days | 7 days |
+| Phases | 10 (incl. 1 inserted) | 4 |
+| Plans | 38 | 9 |
+| Tests at ship | 188 | 271 (184 backend + 87 frontend) |
+| Requirements delivered | 21/21 | 16/16 |
+| Regressions | 0 | 0 |
+| Phase insertions | 1 (8.1) | 0 |
+| Phase reverts needed | 0 (2 mid-phase reverts in 09-04, not full phase reverts) | 0 |

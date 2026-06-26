@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v4.0
 milestone_name: Seven-Elements Conversational Architecture
 current_phase: 29
-status: milestone_complete
-last_updated: "2026-06-25T12:38:40Z"
+status: milestone_shipped
+last_updated: "2026-06-26T00:00:00Z"
 progress:
   total_phases: 9
   completed_phases: 9
@@ -15,11 +15,11 @@ progress:
 
 # Project State
 
-**Status:** Milestone complete
-**Current phase:** 29
+**Status:** v4.0 shipped — tagged v4.0 (2026-06-26)
+**Current phase:** 29 (last phase of v4.0)
 **Last updated:** 2026-06-26
-**Last activity:** 2026-06-26 - Completed quick task 260626-ejt: org-context fluid-prose synthesis + redundant-field prune
-**Next action:** Phase 29 verification (all 3 plans complete; 184 backend + 87 frontend GREEN; SEXP-01/02/03 + POST-01 + SEXP-04 manager-bypass all closed)
+**Last activity:** 2026-06-26 - Closed v4.0 milestone: archived ROADMAP + REQUIREMENTS to milestones/v4.0-*, evolved PROJECT.md, updated RETROSPECTIVE, tagged v4.0
+**Next action:** Start next milestone (`/gsd-new-milestone`) — ICM Workspace (Phases 30–33) or a v5 app milestone for the v4.0 deferrals
 
 ---
 
@@ -59,7 +59,9 @@ backend tests green. Build clean (216.05 kB JS / 24.86 kB CSS).
 
 ## Project Reference
 
-See: `.planning/PROJECT.md`
+See: `.planning/PROJECT.md` (updated 2026-06-26 after v4.0 close)
+
+**Current focus:** Planning next milestone — ICM Workspace (Phases 30–33, parallel track, no app changes) or a v5 app milestone for the v4.0 deferrals (SJD pre-fill for org_context, DND org-unit dropdown, NOC→OaSIS crosswalk, dedicated Effort/Working Conditions steps).
 
 **Core value:** An HR advisor can describe work in plain language and receive a legally defensible, fully traceable job description — grounded in NOC, collective agreement, and TBS classification policy — in minutes instead of hours.
 
