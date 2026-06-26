@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.api.org_context import OrgContextRequest, build_user_prompt
+from app.api.org_context import OrgContextRequest, build_user_prompt, strip_think
 
 
 def _mock_completion(content: str) -> SimpleNamespace:
@@ -33,6 +33,32 @@ def test_build_user_prompt_omits_empty_fields():
     assert "Policy" in prompt
     assert "Reports to:" not in prompt
     assert "Additional context:" not in prompt
+
+
+def test_strip_think_removes_reasoning_block():
+    """A complete <think>…</think> block is removed, leaving only the answer."""
+    raw = "<think>Let me draft this.\nMaybe two sentences.</think>\n\nThe position sits within the Branch."
+    assert strip_think(raw) == "The position sits within the Branch."
+
+
+def test_strip_think_drops_truncated_open_block():
+    """A truncated block (no closing tag) yields empty rather than raw reasoning."""
+    raw = "<think>The user wants me to write a paragraph. Let me deliberate at length"
+    assert strip_think(raw) == ""
+
+
+@pytest.mark.asyncio
+async def test_synthesize_strips_think_block(client, env_with_db):
+    """Reasoning <think> output is stripped before the prose is returned."""
+    raw = "<think>deliberating…</think>\n\nThe position reports to the Director."
+    with patch("app.api.org_context.org_context_client") as mock_client:
+        mock_client.chat.completions.create = AsyncMock(return_value=_mock_completion(raw))
+        resp = await client.post(
+            "/api/org-context/synthesize",
+            json={"branch": "Strategic Policy Branch", "reports": "", "work_stream": "", "additional": ""},
+        )
+    assert resp.status_code == 200
+    assert resp.json()["prose"] == "The position reports to the Director."
 
 
 @pytest.mark.asyncio

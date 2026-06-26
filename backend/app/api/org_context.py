@@ -17,6 +17,8 @@ record.org_context, so the advisor never sees an error.
 """
 from __future__ import annotations
 
+import re
+
 from fastapi import APIRouter, HTTPException
 from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
@@ -24,6 +26,25 @@ from pydantic import BaseModel, Field
 from app.config import get_settings
 
 router = APIRouter()
+
+# Fail fast to the frontend's plain-text fallback rather than hanging the
+# "Generating organizational context…" toast on the OpenAI default (600s).
+LLM_TIMEOUT_SECONDS = 30.0
+
+# MiniMax-M3 is a reasoning model: it emits a <think>…</think> block before the
+# answer. Strip it so the thinking never leaks into the stored org context.
+_THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+
+
+def strip_think(text: str) -> str:
+    """Remove <think>…</think> reasoning blocks (and any dangling open tag)."""
+    text = _THINK_RE.sub("", text)
+    # Defend against a truncated block (no closing tag) — drop everything after
+    # an unmatched <think> so we never surface raw chain-of-thought.
+    open_tag = text.lower().find("<think>")
+    if open_tag != -1:
+        text = text[:open_tag]
+    return text.strip()
 
 
 # ---------------------------------------------------------------------------
@@ -105,10 +126,13 @@ async def synthesize_org_context(req: OrgContextRequest) -> OrgContextResponse:
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": build_user_prompt(req)},
             ],
-            max_tokens=400,
+            # Budget for the reasoning <think> block AND the answer. At 400 the
+            # think block can consume the whole budget, truncating the answer.
+            max_tokens=1024,
             temperature=0.3,
+            timeout=LLM_TIMEOUT_SECONDS,
         )
-        prose = (completion.choices[0].message.content or "").strip()
+        prose = strip_think(completion.choices[0].message.content or "")
     except Exception as exc:  # noqa: BLE001 — surface as 502; frontend keeps fallback
         raise HTTPException(status_code=502, detail="Org context synthesis failed") from exc
 
